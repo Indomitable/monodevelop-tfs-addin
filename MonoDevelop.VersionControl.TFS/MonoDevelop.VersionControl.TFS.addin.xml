@@ -1,0 +1,20 @@
+<Addin id          = "VersionControl.TFS"
+       namespace   = "MonoDevelop"
+       name        = "TFS support"
+       author      = "Ventsislav Mladenov"
+       copyright   = "MIT X11"
+       url         = "http://www.monodevelop.com/"
+       description = "TFS support for the Version Control Add-in"
+       category    = "Version Control"
+       version     = "4.1.11">
+ 
+	<Dependencies>
+	    <Addin id="Core" version="4.1.11"/>
+	    <Addin id="Ide" version="4.1.11"/>
+	    <Addin id="VersionControl" version="4.1.11"/>
+	</Dependencies>
+
+	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
+		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
+	</Extension>
+</Addin>
