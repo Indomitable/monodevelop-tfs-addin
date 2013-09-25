@@ -4,6 +4,18 @@ namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSRepository : UrlBasedRepository
     {
+        public TFSRepository()
+        {
+            var builder = new UriBuilder();
+            builder.Scheme = "http";
+            builder.Host = "server";
+            builder.Port = 8080;
+            builder.Path = "tfs";
+            builder.UserName = "user";
+            builder.Password = "password";
+            Url = builder.ToString();
+        }
+
         #region implemented abstract members of Repository
 
         public override string GetBaseText(MonoDevelop.Core.FilePath localFile)

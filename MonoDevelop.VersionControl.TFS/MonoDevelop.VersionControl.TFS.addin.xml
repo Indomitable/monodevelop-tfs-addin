@@ -17,4 +17,11 @@
 	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
 		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
 	</Extension>
+
+	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
+		<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorer"
+			_label = "View Source Control Exporer"
+			defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerCommandHandler"
+			description = "View Source Control Exporer"/>
+	</Extension>
 </Addin>

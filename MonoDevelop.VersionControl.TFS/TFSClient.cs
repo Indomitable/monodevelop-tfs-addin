@@ -12,12 +12,12 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override Repository OnCreateRepositoryInstance()
         {
-            throw new NotImplementedException();
+            return new TFSRepository();
         }
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
         {
-            throw new NotImplementedException();
+            return new UrlBasedRepositoryEditor ((TFSRepository)repo);
         }
 
         public override string Name
