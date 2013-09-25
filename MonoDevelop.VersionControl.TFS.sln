@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.Wo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.WorkItemTracking.Client", "OpenTF\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj", "{D0953653-D640-4338-BDAE-91DA9C3583F8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDevelop.VersionControl.TFS.Tests", "MonoDevelop.VersionControl.TFS.Tests\MonoDevelop.VersionControl.TFS.Tests.csproj", "{9FC22AA3-D1F4-478C-8B22-6790EA407534}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{5D3D4474-FFFB-4B95-A525-AB43CCFFF7B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D3D4474-FFFB-4B95-A525-AB43CCFFF7B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D3D4474-FFFB-4B95-A525-AB43CCFFF7B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FC22AA3-D1F4-478C-8B22-6790EA407534}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FC22AA3-D1F4-478C-8B22-6790EA407534}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FC22AA3-D1F4-478C-8B22-6790EA407534}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FC22AA3-D1F4-478C-8B22-6790EA407534}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A0953653-D640-4338-BDAE-91DA9C3583F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A0953653-D640-4338-BDAE-91DA9C3583F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0953653-D640-4338-BDAE-91DA9C3583F8}.Release|Any CPU.ActiveCfg = Release|Any CPU

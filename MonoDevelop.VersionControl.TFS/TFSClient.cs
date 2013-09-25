@@ -24,11 +24,26 @@ namespace MonoDevelop.VersionControl.TFS
         {
             get
             {
-                throw new NotImplementedException();
+                return "TFS";
             }
         }
 
         #endregion
+
+        public override bool IsInstalled
+        {
+            get
+            {
+                return true;
+            }
+        }
+
+        public override Repository GetRepositoryReference(MonoDevelop.Core.FilePath path, string id)
+        {
+            if (path.IsNullOrEmpty)
+                return null;
+            return null;
+        } 
     }
 }
 
