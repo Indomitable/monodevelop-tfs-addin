@@ -72,6 +72,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                             var userName = credentialsDialog.Credentials.Domain + "\\" + credentialsDialog.Credentials.UserName;
                             var password = credentialsDialog.Credentials.Password;
                             PasswordService.AddWebUserNameAndPassword(dialog.Url, userName, password);
+                            var userPass = PasswordService.GetWebUserNameAndPassword(dialog.Url);
+                            if (userPass == null) //No Password Service Provider
+                            {
+
+                            }
                         }
                     }
                 }
