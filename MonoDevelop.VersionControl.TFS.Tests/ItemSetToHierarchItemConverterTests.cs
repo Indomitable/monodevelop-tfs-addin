@@ -1,31 +1,32 @@
 using NUnit.Framework;
-using System;
 using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Common;
-using MonoDevelop.VersionControl.TFS.Helpers;
-using System.Net;
-using System.Diagnostics;
+using Microsoft.TeamFoundation.Server;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    [TestFixture()]
-    public class ItemSetToHierarchItemConverterTests
+    [TestFixture]
+    public class ItemSetToHierarchItemConverterTests : BaseTFSConnectTest
     {
-        [Test()]
-        public void TestCase()
+        [Test]
+        public void Connect()
         {
-            using (var tfsServer = new TeamFoundationServer("http://localhost:8080/tfs", new NetworkCredential() { UserName = "", Password = "" }))
+            using (var tfsServer = GetServer())
             {
                 tfsServer.Authenticate();
-                var versionControl = (VersionControlServer)tfsServer.GetService(typeof(VersionControlServer));
-                var itemSet = versionControl.GetItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
-                Stopwatch watch = new Stopwatch();
-                watch.Start();
-                HierarchyItem topItem = ItemSetToHierarchItemConverter.Convert(itemSet.Items);
-                watch.Stop();
-                Console.WriteLine(watch.ElapsedMilliseconds);
-                Assert.AreEqual(32, topItem.Children.Count);
+            }
+
+        }
+
+        [Test]
+        public void TestProject()
+        {
+            using (var tfsServer = GetServer())
+            {
+                tfsServer.Authenticate();
+
+                ICommonStructureService structureService = (ICommonStructureService)tfsServer.GetService(typeof(ICommonStructureService));
+                Assert.AreEqual(1, structureService.ListAllProjects().Length);
+                Assert.IsNotNull(structureService.GetProjectFromName("TestProjectForTFSPlugin"));
             }
         }
     }
