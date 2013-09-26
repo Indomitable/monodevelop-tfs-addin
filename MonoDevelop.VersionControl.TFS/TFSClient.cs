@@ -17,7 +17,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
         {
-            return new UrlBasedRepositoryEditor ((TFSRepository)repo);
+            return null;//new UrlBasedRepositoryEditor((TFSRepository)repo);
         }
 
         public override string Name
@@ -43,7 +43,7 @@ namespace MonoDevelop.VersionControl.TFS
             if (path.IsNullOrEmpty)
                 return null;
             return null;
-        } 
+        }
     }
 }
 

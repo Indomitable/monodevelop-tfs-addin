@@ -4,18 +4,18 @@ using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS
 {
-    public class TFSRepository : UrlBasedRepository
+    public class TFSRepository : Repository
     {
         public TFSRepository()
         {
-            var builder = new UriBuilder();
-            builder.Scheme = "http";
-            builder.Host = "server";
-            builder.Port = 8080;
-            builder.Path = "tfs";
-            builder.UserName = "user";
-            builder.Password = "password";
-            Url = builder.ToString();
+//            var builder = new UriBuilder();
+//            builder.Scheme = "http";
+//            builder.Host = "server";
+//            builder.Port = 8080;
+//            builder.Path = "tfs";
+//            builder.UserName = "user";
+//            builder.Password = "password";
+//            Url = builder.ToString();
         }
 
         #region implemented abstract members of Repository
@@ -57,9 +57,9 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnCheckout(MonoDevelop.Core.FilePath targetLocalPath, Revision rev, bool recurse, MonoDevelop.Core.IProgressMonitor monitor)
         {
-            SourceControlExplorerView view = new SourceControlExplorerView(monitor);
-            view.Load(Url);
-            IdeApp.Workbench.OpenDocument(view, true);
+//            SourceControlExplorerView view = new SourceControlExplorerView(monitor);
+//            view.Load(Url);
+//            IdeApp.Workbench.OpenDocument(view, true);
         }
 
         protected override void OnRevert(MonoDevelop.Core.FilePath[] localPaths, bool recurse, MonoDevelop.Core.IProgressMonitor monitor)
@@ -114,18 +114,17 @@ namespace MonoDevelop.VersionControl.TFS
 
         #endregion
 
-        #region implemented abstract members of UrlBasedRepository
-
-        public override string[] SupportedProtocols
-        {
-            get
-            {
-                return new [] { "http", "https" };
-            }
-        }
-
-        #endregion
-
+        //        #region implemented abstract members of UrlBasedRepository
+        //
+        //        public override string[] SupportedProtocols
+        //        {
+        //            get
+        //            {
+        //                return new [] { "http", "https" };
+        //            }
+        //        }
+        //
+        //        #endregion
     }
 }
 

@@ -29,37 +29,35 @@
 using System;
 using System.Net;
 using System.Web.Services.Protocols;
-using Microsoft.TeamFoundation.Server;
 
 namespace Microsoft.TeamFoundation.Client
 {
-	[System.Web.Services.WebServiceBindingAttribute(Name="ServerStatusSoap", Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03")]
-	[System.Diagnostics.DebuggerStepThroughAttribute()]
-	[System.ComponentModel.DesignerCategoryAttribute("code")]
-	internal class Authenticator : System.Web.Services.Protocols.SoapHttpClientProtocol 
-	{
-		public Authenticator(Uri uri, ICredentials credentials) 
-			{
-				this.Url = String.Format("{0}/{1}", uri.ToString(), "Services/v1.0/ServerStatus.asmx");
-				this.Credentials = credentials;
-			}
-		
-		[System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03/CheckAuthentication", RequestNamespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03", ResponseNamespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03", ParameterStyle=System.Web.Services.Protocols.SoapParameterStyle.Wrapped, Use=System.Web.Services.Description.SoapBindingUse.Literal)]
-			public string CheckAuthentication() 
-			{
-				try
-				{
-					object[] results = this.Invoke("CheckAuthentication", new object[0]);
-					return ((string)(results[0]));
-				}
-				catch (SoapException ex)
-				{
-					//	string msg = String.Format("TF30063: You are not authorized to access {0} ({1}).\n--> Did you supply the correct username, password, and domain?", 
-					//(new Uri(this.Url)).Host, "CheckAuthentication");
-					Console.WriteLine(ex.ToString());
-				}
+    [System.Web.Services.WebServiceBindingAttribute(Name = "ServerStatusSoap", Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03")]
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    [System.ComponentModel.DesignerCategoryAttribute("code")]
+    internal class Authenticator : SoapHttpClientProtocol
+    {
+        public Authenticator(Uri uri, ICredentials credentials)
+        {
+            this.Url = String.Format("{0}/{1}", uri, "Services/v1.0/ServerStatus.asmx");
+            this.Credentials = credentials;
+        }
 
-				return String.Empty;
-			}
-	}
+        [SoapDocumentMethodAttribute("http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03/CheckAuthentication", RequestNamespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03", ResponseNamespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03", ParameterStyle = System.Web.Services.Protocols.SoapParameterStyle.Wrapped, Use = System.Web.Services.Description.SoapBindingUse.Literal)]
+        public string CheckAuthentication()
+        {
+            try
+            {
+                object[] results = this.Invoke("CheckAuthentication", new object[0]);
+                return ((string)(results[0]));
+            }
+            catch (SoapException ex)
+            {
+                //	string msg = String.Format("TF30063: You are not authorized to access {0} ({1}).\n--> Did you supply the correct username, password, and domain?", 
+                //(new Uri(this.Url)).Host, "CheckAuthentication");
+                Console.WriteLine(ex.ToString());
+            }
+            return String.Empty;
+        }
+    }
 }

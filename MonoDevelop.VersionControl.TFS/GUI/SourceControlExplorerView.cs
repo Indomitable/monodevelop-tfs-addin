@@ -34,12 +34,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public override void Load(string fileName)
         {
             LoadTreeView(new Uri(fileName));
-//            DataField<string> name = new DataField<string>();
-//            ListStore store = new ListStore(name);
-//            _listView.DataSource = store;
-//            _listView.Columns.Add(new ListViewColumn("Name", new TextCellView(name) { Editable = false }));
-//            var rowNum = store.AddRow();
-//            store.SetValue(rowNum, name, fileName);
         }
 
         #endregion

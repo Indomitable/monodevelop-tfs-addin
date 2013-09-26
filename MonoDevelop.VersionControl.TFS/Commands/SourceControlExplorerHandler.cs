@@ -5,12 +5,12 @@ using MonoDevelop.VersionControl.TFS.GUI;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
-    public class SourceControlExplorerCommandHandler : CommandHandler
+    public class SourceControlExplorerHandler : CommandHandler
     {
         protected override void Run()
         {
             SourceControlExplorerView view = new SourceControlExplorerView();
-            IdeApp.Workbench.OpenDocument (view, true);
+            IdeApp.Workbench.OpenDocument(view, true);
         }
     }
 }

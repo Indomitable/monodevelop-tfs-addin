@@ -18,10 +18,25 @@
 		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
 	</Extension>
 
-	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
+	<Extension path = "/MonoDevelop/Ide/Commands">
+		<Category _name = "Team Foundation" id = "TeamFoundation">
+			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer"
+				_label = "_Connect to server"
+				defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ConnectToServerHandler"
+				description = "Connect to Team Foundation Server."/>
+		</Category>
+	</Extension>
+
+	<Extension path = "/MonoDevelop/Ide/MainMenu">
+		<ItemSet id = "TeamFoundation" _label = "Team Foundation" insertafter = "VersionControl" >
+			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
+		</ItemSet>
+	</Extension>
+
+<!--	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
 		<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorer"
 			_label = "View Source Control Exporer"
 			defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerCommandHandler"
 			description = "View Source Control Exporer"/>
-	</Extension>
+	</Extension>-->
 </Addin>

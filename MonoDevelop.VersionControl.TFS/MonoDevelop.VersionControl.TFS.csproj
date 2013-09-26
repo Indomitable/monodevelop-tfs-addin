@@ -32,10 +32,12 @@
     <Compile Include="TFSClient.cs" />
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
-    <Compile Include="Commands\SourceControlExplorer.cs" />
     <Compile Include="GUI\SourceControlExplorerView.cs" />
     <Compile Include="Helpers\UserInfoHelper.cs" />
     <Compile Include="Helpers\HierarchyItem.cs" />
+    <Compile Include="Commands\ConnectToServerHandler.cs" />
+    <Compile Include="Commands\SourceControlExplorerHandler.cs" />
+    <Compile Include="GUI\ConnectToServerDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
