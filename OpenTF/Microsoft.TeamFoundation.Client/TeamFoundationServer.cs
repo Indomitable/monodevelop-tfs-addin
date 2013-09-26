@@ -46,21 +46,29 @@ namespace Microsoft.TeamFoundation.Client
 			this.name = url;
 		}
 
-		public TeamFoundationServer(string url, ICredentials creds)
-		{
-			this.uri = new Uri(url);
-			this.name = this.uri.Host;
+        public TeamFoundationServer(string url, ICredentials creds)
+            :this(url)
+        {
+            credentials = creds;
+        }
 
-			credentials = creds;
-		}
+        public TeamFoundationServer(string url, ICredentialsProvider creds)
+            :this(url)
+        {
+            credentials = creds.GetCredentials(Uri, null);
+        }
 
-		public TeamFoundationServer(string url, ICredentialsProvider creds)
-		{
-			this.uri = new Uri(url);
-			this.name = this.uri.Host;
+        public TeamFoundationServer(Uri uri)
+        {
+            this.uri = uri;
+            this.name = uri.ToString();
+        }
 
-			credentials = creds.GetCredentials(Uri, null);
-		}
+        public TeamFoundationServer(Uri uri, ICredentials creds)
+            :this(uri)
+        {
+            this.credentials = creds;
+        }
 
 		public object GetService(Type serviceType)
 		{

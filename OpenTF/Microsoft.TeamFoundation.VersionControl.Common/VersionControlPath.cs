@@ -30,14 +30,14 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Common
 {
-	public static class VersionControlPath
-	{
-		public const string RootFolder="$/";
-		public const string Separator="/";
+    public static class VersionControlPath
+    {
+        public const string RootFolder = "$/";
+        public const char Separator = '/';
 
-		public static bool IsServerItem(string path)
-		{
-			return path.StartsWith(RootFolder);
-		}
-	}
+        public static bool IsServerItem(string path)
+        {
+            return path.StartsWith(RootFolder, StringComparison.Ordinal);
+        }
+    }
 }

@@ -1,4 +1,6 @@
 using System;
+using MonoDevelop.VersionControl.TFS.GUI;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -55,7 +57,9 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnCheckout(MonoDevelop.Core.FilePath targetLocalPath, Revision rev, bool recurse, MonoDevelop.Core.IProgressMonitor monitor)
         {
-            throw new NotImplementedException();
+            SourceControlExplorerView view = new SourceControlExplorerView(monitor);
+            view.Load(Url);
+            IdeApp.Workbench.OpenDocument(view, true);
         }
 
         protected override void OnRevert(MonoDevelop.Core.FilePath[] localPaths, bool recurse, MonoDevelop.Core.IProgressMonitor monitor)
@@ -121,6 +125,7 @@ namespace MonoDevelop.VersionControl.TFS
         }
 
         #endregion
+
     }
 }
 

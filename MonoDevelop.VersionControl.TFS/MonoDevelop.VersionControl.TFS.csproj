@@ -20,6 +20,7 @@
         <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
       </CustomCommands>
     </CustomCommands>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -33,6 +34,8 @@
     <Compile Include="Commands\TFSCommands.cs" />
     <Compile Include="Commands\SourceControlExplorer.cs" />
     <Compile Include="GUI\SourceControlExplorerView.cs" />
+    <Compile Include="Helpers\UserInfoHelper.cs" />
+    <Compile Include="Helpers\HierarchyItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -58,9 +61,34 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="Xwt">
+      <HintPath>..\External\monodevelop\main\build\bin\Xwt.dll</HintPath>
+    </Reference>
+    <Reference Include="ICSharpCode.NRefactory">
+      <HintPath>..\External\monodevelop\main\build\bin\ICSharpCode.NRefactory.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
     <Folder Include="GUI\" />
+    <Folder Include="Helpers\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
+      <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Common\Microsoft.TeamFoundation.Common.csproj">
+      <Project>{E0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
+      <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Common\Microsoft.TeamFoundation.VersionControl.Common.csproj">
+      <Project>{A0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.VersionControl.Common</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
