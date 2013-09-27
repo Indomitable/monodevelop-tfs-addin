@@ -5,7 +5,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
 
-namespace MonoDevelop.VersionControl.TFS.Helpers
+namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
     public class HierarchyItem
     {

@@ -33,8 +33,6 @@
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
     <Compile Include="GUI\SourceControlExplorerView.cs" />
-    <Compile Include="Helpers\UserInfoHelper.cs" />
-    <Compile Include="Helpers\HierarchyItem.cs" />
     <Compile Include="Commands\ConnectToServerHandler.cs" />
     <Compile Include="Commands\SourceControlExplorerHandler.cs" />
     <Compile Include="GUI\ConnectToServerDialog.cs" />
@@ -43,6 +41,7 @@
     <Compile Include="Commands\InitHandler.cs" />
     <Compile Include="GUI\TeamExplorerPad.cs" />
     <Compile Include="Infrastructure\Objects\ServerEntry.cs" />
+    <Compile Include="Infrastructure\Objects\HierarchyItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

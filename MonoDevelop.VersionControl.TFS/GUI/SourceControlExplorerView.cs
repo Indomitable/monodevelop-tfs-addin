@@ -7,10 +7,11 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 using MonoDevelop.Ide.Gui;
 using Xwt;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
-    public class SourceControlExplorerView : AbstractXwtViewContent
+    public class SourceControlExplorerView : IPadContent
     {
         readonly VBox _view;
         TreeView _treeView;
@@ -29,23 +30,42 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _monitor = monitor;
         }
 
-        #region implemented abstract members of AbstractViewContent
+        #region IPadContent implementation
 
-        public override void Load(string fileName)
+        public void Initialize(IPadWindow window)
         {
-            LoadTreeView(new Uri(fileName));
+            //BuildContent();
+        }
+
+        public void RedrawContent()
+        {
+            //throw new NotImplementedException();
+        }
+
+        public Gtk.Widget Control
+        {
+            get
+            {
+                return (Gtk.Widget)Toolkit.CurrentEngine.GetNativeWidget(_view);
+            }
         }
 
         #endregion
 
-        #region implemented abstract members of AbstractXwtViewContent
+        #region IDisposable implementation
 
-        public override Widget Widget
+        public void Dispose()
         {
-            get
-            {
-                return _view;
-            }
+
+        }
+
+        #endregion
+
+        #region implemented abstract members of AbstractViewContent
+
+        public void Load(string fileName)
+        {
+            LoadTreeView(new Uri(fileName));
         }
 
         #endregion
@@ -68,8 +88,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void LoadTreeView(Uri serverUrl)
         {
-            NetworkCredential credentials = UserInfoHelper.ExtractCredentials(serverUrl);
-            using (var tfsServer = new TeamFoundationServer(serverUrl, credentials))
+            var credentials = CredentialsManager.LoadCredential(serverUrl);
+            using (var tfsServer = TeamFoundationServerFactory.GetServer(serverUrl, credentials))
             {
                 if (_monitor != null)
                     _monitor.Log.Write("Authenticating ...");

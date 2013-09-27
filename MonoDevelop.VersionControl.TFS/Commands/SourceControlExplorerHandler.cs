@@ -9,8 +9,8 @@ namespace MonoDevelop.VersionControl.TFS.Commands
     {
         protected override void Run()
         {
-            SourceControlExplorerView view = new SourceControlExplorerView();
-            IdeApp.Workbench.OpenDocument(view, true);
+            //SourceControlExplorerView view = new SourceControlExplorerView();
+            //IdeApp.Workbench.OpenDocument(view, true);
         }
     }
 }

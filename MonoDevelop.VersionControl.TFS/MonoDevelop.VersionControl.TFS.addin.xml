@@ -36,6 +36,8 @@
 	<Extension path = "/MonoDevelop/Ide/Pads">
 		<Pad id = "MonoDevelop.VersionControl.TFS.TeamExplorerPad" defaultLayout="Solution" defaultPlacement = "Right" 
 			class = "MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad" _label="Team Explorer" />
+		<Pad id = "MonoDevelop.VersionControl.TFS.GUI.SourceControlExplorerView" defaultLayout="Solution" defaultPlacement = "CenterBefore" 
+			class = "MonoDevelop.VersionControl.TFS.GUI.SourceControlExplorerView" _label="Source Explorer" />
 	</Extension>
 
 <!--	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
