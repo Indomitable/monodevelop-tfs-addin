@@ -1,6 +1,6 @@
-using System;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.GUI;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
@@ -10,7 +10,7 @@ namespace MonoDevelop.VersionControl.TFS.Commands
         {
             using (var dialog = new ConnectToServerDialog())
             {
-                dialog.Run();
+                dialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow));
             }
         }
     }

@@ -1,4 +1,5 @@
 using System;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS
 {

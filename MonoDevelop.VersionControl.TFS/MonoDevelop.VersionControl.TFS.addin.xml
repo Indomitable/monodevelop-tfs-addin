@@ -39,4 +39,13 @@
 			defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerCommandHandler"
 			description = "View Source Control Exporer"/>
 	</Extension>-->
+
+<!--	<Extension path = "/MonoDevelop/Ide/StartupHandlers">
+		<Class class="MonoDevelop.VersionControl.TFS.Commands.InitHandler" />
+	</Extension>-->
+
+	<Extension path = "/MonoDevelop/Core/UserDataMigration">
+		<!-- 4.0+ -->
+		<Migration sourceVersion="4.0+" kind="Config" path="VersionControl.TFS.config" />
+	</Extension>
 </Addin>

@@ -3,18 +3,23 @@ using Xwt;
 using MonoDevelop.Core;
 using System.Text.RegularExpressions;
 using System.Net;
-using System.Security;
-using MonoDevelop.Ide.TypeSystem;
+using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public class ConnectToServerDialog : Dialog
     {
-        private ListView _serverList;
+        private readonly ListView _serverList = new ListView();
+        private readonly DataField<string> _name = new DataField<string>();
+        private readonly DataField<string> _url = new DataField<string>();
+        private readonly ListStore _store;
 
         public ConnectToServerDialog()
         {
+            _store = new ListStore(_name, _url);
             BuildGui();
+            UpdateServersList();
         }
 
         private void BuildGui()
@@ -25,17 +30,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             table.Add(new Label(GettextCatalog.GetString("Team Foundation Server list")), 0, 0, 1, 2);
 
-            _serverList = new ListView();
+            _serverList.SelectionMode = SelectionMode.Single;
             _serverList.MinWidth = 500;
             _serverList.MinHeight = 400;
+            _serverList.Columns.Add(new ListViewColumn("Name", new TextCellView(_name) { Editable = false }));
+            _serverList.Columns.Add(new ListViewColumn("Url", new TextCellView(_url) { Editable = false }));
+            _serverList.DataSource = _store;
             table.Add(_serverList, 0, 1);
-
-            DataField<string> name = new DataField<string>();
-            DataField<string> url = new DataField<string>();
-            ListStore store = new ListStore(name, url);
-            _serverList.DataSource = store;
-            _serverList.Columns.Add(new ListViewColumn("Name", new TextCellView(name) { Editable = false }));
-            _serverList.Columns.Add(new ListViewColumn("Url", new TextCellView(name) { Editable = false }));
 
             VBox buttonBox = new VBox();
             const int buttonWidth = 80;
@@ -65,21 +66,48 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 if (dialog.Run(this) == Command.Ok && dialog.Url != null)
                 {
+                    if (TFSVersionControlService.Instance.HasServer(dialog.Name))
+                    {
+                        MessageService.ShowError("Server with same name already exists!");
+                        return;
+                    }
                     using (var credentialsDialog = new CredentialsDialog())
                     {
                         if (credentialsDialog.Run(this) == Command.Ok && credentialsDialog.Credentials != null)
                         {
-                            var userName = credentialsDialog.Credentials.Domain + "\\" + credentialsDialog.Credentials.UserName;
-                            var password = credentialsDialog.Credentials.Password;
-                            PasswordService.AddWebUserNameAndPassword(dialog.Url, userName, password);
-                            var userPass = PasswordService.GetWebUserNameAndPassword(dialog.Url);
-                            if (userPass == null) //No Password Service Provider
+                            var uriBuilder = new UriBuilder(dialog.Url);
+                            uriBuilder.UserName = credentialsDialog.Credentials.Domain + "\\" + credentialsDialog.Credentials.UserName;
+                            if (!CredentialsManager.StoreCredential(uriBuilder.Uri, credentialsDialog.Credentials.Password))
                             {
-
+                                MessageService.ShowWarning("No keyring service found!\nPassword has been saved as plain text in server URL");
                             }
+                            uriBuilder.Password = credentialsDialog.Credentials.Password;
+                            TFSVersionControlService.Instance.AddServer(dialog.Name, uriBuilder.Uri.ToString());
+                            UpdateServersList();
                         }
                     }
                 }
+            }
+        }
+
+        void OnRemoveServer(object sender, EventArgs e)
+        {
+            if (MessageService.Confirm("Are you sure you want to delete this server!", AlertButton.Delete))
+            {
+                var serverName = _store.GetValue(_serverList.SelectedRow, _name);
+                TFSVersionControlService.Instance.RemoveServer(serverName);
+                UpdateServersList();
+            }
+        }
+
+        private void UpdateServersList()
+        {
+            _store.Clear();
+            foreach (var server in TFSVersionControlService.Instance.Servers)
+            {
+                var row = _store.AddRow();
+                _store.SetValue(row, _name, server.Key);
+                _store.SetValue(row, _url, server.Value);
             }
         }
     }

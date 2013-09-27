@@ -38,6 +38,9 @@
     <Compile Include="Commands\ConnectToServerHandler.cs" />
     <Compile Include="Commands\SourceControlExplorerHandler.cs" />
     <Compile Include="GUI\ConnectToServerDialog.cs" />
+    <Compile Include="Helpers\CredentialsManager.cs" />
+    <Compile Include="TFSVersionControlService.cs" />
+    <Compile Include="Commands\InitHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -69,6 +72,11 @@
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\External\monodevelop\main\build\bin\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
+    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5">
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
