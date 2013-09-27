@@ -30,9 +30,9 @@ using System;
 
 namespace Microsoft.TeamFoundation.Server
 {
-	public interface IGroupSecurityService
-	{
-    Identity ReadIdentity(SearchFactor factor, string factorValue,
-													QueryMembership query);
-	}
+    public interface IGroupSecurityService : ITeamFoundationService
+    {
+        Identity ReadIdentity(SearchFactor factor, string factorValue,
+                          QueryMembership query);
+    }
 }

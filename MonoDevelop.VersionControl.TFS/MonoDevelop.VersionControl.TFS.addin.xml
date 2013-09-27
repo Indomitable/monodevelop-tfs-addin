@@ -33,6 +33,11 @@
 		</ItemSet>
 	</Extension>
 
+	<Extension path = "/MonoDevelop/Ide/Pads">
+		<Pad id = "MonoDevelop.VersionControl.TFS.TeamExplorerPad" defaultLayout="Solution" defaultPlacement = "Right" 
+			class = "MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad" _label="Team Explorer" />
+	</Extension>
+
 <!--	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
 		<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorer"
 			_label = "View Source Control Exporer"

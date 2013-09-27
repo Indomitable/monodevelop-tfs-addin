@@ -41,6 +41,8 @@
     <Compile Include="Helpers\CredentialsManager.cs" />
     <Compile Include="TFSVersionControlService.cs" />
     <Compile Include="Commands\InitHandler.cs" />
+    <Compile Include="GUI\TeamExplorerPad.cs" />
+    <Compile Include="Infrastructure\Objects\ServerEntry.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -77,11 +79,16 @@
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
     <Folder Include="GUI\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Infrastructure\" />
+    <Folder Include="Infrastructure\Objects\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
@@ -99,6 +106,10 @@
     <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Common\Microsoft.TeamFoundation.VersionControl.Common.csproj">
       <Project>{A0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.VersionControl.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
+      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

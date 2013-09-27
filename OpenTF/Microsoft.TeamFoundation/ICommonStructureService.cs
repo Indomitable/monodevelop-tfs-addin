@@ -30,12 +30,16 @@ using System;
 
 namespace Microsoft.TeamFoundation.Server
 {
-	public interface ICommonStructureService
-	{
-    void GetProjectProperties(string projectUri, out string projectName, out string state, out int templateId, out ProjectProperty[] properties);
-    ProjectInfo GetProject(string projectUri);
-    ProjectInfo GetProjectFromName(string projectName);
-		ProjectInfo[] ListProjects();
-		ProjectInfo[] ListAllProjects();
-	}
+    public interface ICommonStructureService : ITeamFoundationService
+    {
+        void GetProjectProperties(string projectUri, out string projectName, out string state, out int templateId, out ProjectProperty[] properties);
+
+        ProjectInfo GetProject(string projectUri);
+
+        ProjectInfo GetProjectFromName(string projectName);
+
+        ProjectInfo[] ListProjects();
+
+        ProjectInfo[] ListAllProjects();
+    }
 }

@@ -132,5 +132,9 @@
       <Project>{A0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.VersionControl.Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
+      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>

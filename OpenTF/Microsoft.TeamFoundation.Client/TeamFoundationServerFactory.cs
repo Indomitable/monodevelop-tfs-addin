@@ -32,27 +32,25 @@ using System.Net;
 
 namespace Microsoft.TeamFoundation.Client
 {
-	public static class TeamFoundationServerFactory 
-	{
-		static internal Dictionary<string, TeamFoundationServer> tfInstances = 
-			new Dictionary<string, TeamFoundationServer>(StringComparer.InvariantCultureIgnoreCase);
+    public static class TeamFoundationServerFactory
+    {
+        static internal Dictionary<Uri, TeamFoundationServer> tfInstances = new Dictionary<Uri, TeamFoundationServer>();
 
-		static public TeamFoundationServer GetServer(string url)
-		{
-			return GetServer(url, null);
-		}
+        static public TeamFoundationServer GetServer(Uri url)
+        {
+            return GetServer(url, null);
+        }
 
-		static public TeamFoundationServer GetServer(string url, ICredentials credentials)
-		{
-			TeamFoundationServer tfs;
-			if (tfInstances.TryGetValue(url, out tfs))
-				return tfs;
+        static public TeamFoundationServer GetServer(Uri url, ICredentials credentials)
+        {
+            TeamFoundationServer tfs;
+            if (tfInstances.TryGetValue(url, out tfs))
+                return tfs;
 
-			tfs = new TeamFoundationServer(url, credentials);
-			tfInstances.Add(url, tfs);
-			return tfs;
-		}
-
-	}
+            tfs = new TeamFoundationServer(url, credentials);
+            tfInstances.Add(url, tfs);
+            return tfs;
+        }
+    }
 }
 

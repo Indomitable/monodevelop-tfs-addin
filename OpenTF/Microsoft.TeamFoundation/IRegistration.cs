@@ -30,8 +30,8 @@ using System;
 
 namespace Microsoft.TeamFoundation.Server
 {
-	public interface IRegistration
-	{
-    RegistrationEntry[] GetRegistrationEntries(string toolId);
-	}
+    public interface IRegistration : ITeamFoundationService
+    {
+        RegistrationEntry[] GetRegistrationEntries(string toolId);
+    }
 }

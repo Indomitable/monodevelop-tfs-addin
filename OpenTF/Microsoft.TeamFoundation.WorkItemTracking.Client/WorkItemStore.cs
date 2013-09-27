@@ -35,83 +35,84 @@ using System.Net;
 using System.Xml;
 using System.Web.Services;
 using Microsoft.TeamFoundation.Client;
+using Microsoft.TeamFoundation;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
-	/// <remarks/>
-	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03")]
-	public class MetadataTableHaveEntry {
+    /// <remarks/>
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03")]
+    public class MetadataTableHaveEntry
+    {
+        public MetadataTableHaveEntry()
+        {
+        }
 
-		public MetadataTableHaveEntry()
-		{
-		}
+        public MetadataTableHaveEntry(string tableName, int rowVersion)
+        {
+            TableName = tableName; 
+            RowVersion = rowVersion;
+        }
 
-		public MetadataTableHaveEntry(string tableName, int rowVersion)
-		{
-			TableName = tableName; 
-			RowVersion = rowVersion;
-		}
+        /// <remarks/>
+        public string TableName;
+        /// <remarks/>
+        public long RowVersion;
+    }
 
-		/// <remarks/>
-		public string TableName;
-		
-		/// <remarks/>
-		public long RowVersion;
-	}
+    public sealed class WorkItemStore : ITeamFoundationService
+    {
+        private ClientService clientService;
+        private ProjectCollection project;
+        private TeamFoundationServer teamFoundationServer;
 
-	public sealed class WorkItemStore
-	{
-		private ClientService clientService;
-		private ProjectCollection project;
-		private TeamFoundationServer teamFoundationServer;
+        public WorkItemStore(TeamFoundationServer teamFoundationServer)
+        {
+            this.teamFoundationServer = teamFoundationServer;
+            clientService = new ClientService(teamFoundationServer.Uri, teamFoundationServer.Credentials);
+            List<MetadataTableHaveEntry> metadataHave = new List<MetadataTableHaveEntry>();
+            metadataHave.Add(new MetadataTableHaveEntry("Hierarchy", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("Fields", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("HierarchyProperties", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("Constants", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("Rules", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("ConstantSets", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("FieldUsages", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("WorkItemTypes", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("Actions", 0));
+            metadataHave.Add(new MetadataTableHaveEntry("WorkItemTypeUsages", 0));
 
-		public WorkItemStore(TeamFoundationServer teamFoundationServer)
-		{
-			this.teamFoundationServer = teamFoundationServer;
-			clientService = new ClientService(teamFoundationServer.Uri, teamFoundationServer.Credentials);
-			List<MetadataTableHaveEntry> metadataHave = new List<MetadataTableHaveEntry>();
-			metadataHave.Add(new MetadataTableHaveEntry("Hierarchy", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("Fields", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("HierarchyProperties", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("Constants", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("Rules", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("ConstantSets", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("FieldUsages", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("WorkItemTypes", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("Actions", 0));
-			metadataHave.Add(new MetadataTableHaveEntry("WorkItemTypeUsages", 0));
+            int mode = 0;
+            int comparisonStyle = 0;
+            int locale = 0;
+            string dbStamp = String.Empty;
+            DataSet dataSet = clientService.GetMetadataEx2(metadataHave.ToArray(), true, out dbStamp, out locale, out comparisonStyle, out mode); 
 
-			int mode = 0; int comparisonStyle = 0; int locale = 0;
-			string dbStamp = String.Empty;
-			DataSet dataSet = clientService.GetMetadataEx2(metadataHave.ToArray(), true, out dbStamp, out locale, out comparisonStyle, out mode); 
+            foreach (DataTable table in dataSet.Tables)
+            {
+                Console.WriteLine(table.TableName);
+                Console.WriteLine("========================================================");
 
-			foreach(DataTable table in dataSet.Tables)
-				{
-					Console.WriteLine(table.TableName);
-					Console.WriteLine("========================================================");
+                foreach (DataRow row in table.Rows)
+                {
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        Console.Write(column.ColumnName + "=" + row[column] + ", ");
+                    }
+                    Console.WriteLine();
+                }
 
-					foreach(DataRow row in table.Rows)
-						{
-							foreach (DataColumn column in table.Columns)
-								{
-									Console.Write(column.ColumnName + "=" + row[column] + ", ");
-								}
-							Console.WriteLine();
-						}
+                Console.WriteLine();
+            }
+        }
 
-						Console.WriteLine();
-				}
-		}
+        public WorkItem GetWorkItem(int id)
+        {
+            return null;
+        }
 
-		public WorkItem GetWorkItem (int id)
-		{
-			return null;
-		}
-
-		public ProjectCollection Projects
-		{
-			get { return project; }
-		}
-
-	}
+        public ProjectCollection Projects
+        {
+            get { return project; }
+        }
+    }
 }

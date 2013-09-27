@@ -125,12 +125,7 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             return true;
         }
 
-        /// <summary>
-        /// Loads the credential.
-        /// </summary>
-        /// <returns>The credential.</returns>
-        /// <param name="url">URL.</param>
-        public static string LoadCredential(Uri url)
+        private static string GetPassword(Uri url)
         {
             if (Platform.IsMac || Platform.IsWindows)
             {
@@ -145,6 +140,28 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
                 }
                 return new UriBuilder(url).Password;
             }
+        }
+
+        /// <summary>
+        /// Loads the credential.
+        /// </summary>
+        /// <returns>The credential.</returns>
+        /// <param name="url">URL.</param>
+        public static NetworkCredential LoadCredential(Uri url)
+        {
+            NetworkCredential credentials = new NetworkCredential();
+            var userAndDomain = url.UserInfo.Split('\\');
+            if (userAndDomain.Length > 1)
+            {
+                credentials.Domain = userAndDomain[0];
+                credentials.UserName = userAndDomain[1];
+            }
+            else
+            {
+                credentials.UserName = url.UserInfo;
+            }
+            credentials.Password = GetPassword(url);
+            return credentials;
         }
     }
 }

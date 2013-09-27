@@ -79,7 +79,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 if (_monitor != null)
                     _monitor.Log.Write("Loading ...");
 
-                var versionControl = (VersionControlServer)tfsServer.GetService(typeof(VersionControlServer));
+                var versionControl = tfsServer.GetService<VersionControlServer>();
                 var itemSet = versionControl.GetItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
                 if (_monitor != null)

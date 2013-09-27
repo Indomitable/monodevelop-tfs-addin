@@ -3,12 +3,14 @@ using MonoDevelop.Core;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
+using System;
 
 namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSVersionControlService
     {
-        private readonly Dictionary<string, string> _registredServers = new Dictionary<string, string>();
+        private readonly List<ServerEntry> _registredServers = new List<ServerEntry>();
         private static TFSVersionControlService _instance;
 
         public TFSVersionControlService()
@@ -40,8 +42,8 @@ namespace MonoDevelop.VersionControl.TFS
                 doc.Add(new XElement("TFSRoot"));
                 doc.Root.Add(new XElement("TFSServers", from server in _registredServers
                                                                     select new XElement("TFSServer", 
-                                                                            new XAttribute("Name", server.Key),
-                                                                            new XAttribute("Url", server.Value))));
+                                                                            new XAttribute("Name", server.Name),
+                                                                            new XAttribute("Url", server.Url))));
                 doc.Save(file);
                 file.Close();
             }
@@ -59,7 +61,11 @@ namespace MonoDevelop.VersionControl.TFS
                     XDocument doc = XDocument.Load(file);
                     foreach (var serverElement in doc.Root.Element("TFSServers").Elements("TFSServer"))
                     {
-                        _registredServers.Add(serverElement.Attribute("Name").Value, serverElement.Attribute("Url").Value);
+                        _registredServers.Add(new ServerEntry
+                        {
+                            Name = serverElement.Attribute("Name").Value,
+                            Url = new Uri(serverElement.Attribute("Url").Value)
+                        });
                     }
                     file.Close();
                 }
@@ -68,36 +74,51 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 return;
             }
+            if (_registredServers.Any())
+            {
+                RaiseServersChange();
+            }
         }
 
-        public void AddServer(string name, string url)
+        public void AddServer(string name, Uri url)
         {
-            if (_registredServers.ContainsKey(name))
+            if (HasServer(name))
                 return;
-            _registredServers.Add(name, url);
+            _registredServers.Add(new ServerEntry { Name = name, Url = url });
+            RaiseServersChange();
             StorePrefs();
         }
 
         public void RemoveServer(string name)
         {
-            if (!_registredServers.ContainsKey(name))
+            if (!HasServer(name))
                 return;
-            _registredServers.Remove(name);
+            _registredServers.RemoveAll(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            RaiseServersChange();
             StorePrefs();
         }
 
         public bool HasServer(string name)
         {
-            return _registredServers.ContainsKey(name);
+            return _registredServers.Any(x => string.Equals(x.Name, name, System.StringComparison.OrdinalIgnoreCase));
         }
 
-        public Dictionary<string, string> Servers
+        public List<ServerEntry> Servers
         {
             get
             {
                 return _registredServers;
             }
         }
+
+        public event Action OnServersChange;
+
+        private void RaiseServersChange()
+        {
+            if (OnServersChange != null)
+            {
+                OnServersChange();
+            }
+        }
     }
 }
-

@@ -47,6 +47,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             var removeButton = new Button(GettextCatalog.GetString("Remove"));
             removeButton.MinWidth = buttonWidth;
+            removeButton.Clicked += OnRemoveServer;
             buttonBox.PackStart(removeButton);
 
             var closeButton = new Button(GettextCatalog.GetString("Close"));
@@ -82,7 +83,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                                 MessageService.ShowWarning("No keyring service found!\nPassword has been saved as plain text in server URL");
                             }
                             uriBuilder.Password = credentialsDialog.Credentials.Password;
-                            TFSVersionControlService.Instance.AddServer(dialog.Name, uriBuilder.Uri.ToString());
+                            TFSVersionControlService.Instance.AddServer(dialog.Name, uriBuilder.Uri);
                             UpdateServersList();
                         }
                     }
@@ -106,8 +107,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
                 var row = _store.AddRow();
-                _store.SetValue(row, _name, server.Key);
-                _store.SetValue(row, _url, server.Value);
+                _store.SetValue(row, _name, server.Name);
+                _store.SetValue(row, _url, server.Url.ToString());
             }
         }
     }

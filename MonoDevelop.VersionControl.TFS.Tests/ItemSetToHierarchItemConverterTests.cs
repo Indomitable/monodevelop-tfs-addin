@@ -24,6 +24,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             {
                 tfsServer.Authenticate();
 
+                Microsoft.TeamFoundation.VersionControl.Client.VersionControlServer x;
                 ICommonStructureService structureService = (ICommonStructureService)tfsServer.GetService(typeof(ICommonStructureService));
                 Assert.AreEqual(1, structureService.ListAllProjects().Length);
                 Assert.IsNotNull(structureService.GetProjectFromName("TestProjectForTFSPlugin"));

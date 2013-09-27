@@ -30,30 +30,31 @@ using System;
 using System.IO;
 using System.Net;
 using Microsoft.TeamFoundation.Server;
+using System.Threading.Tasks;
 
 namespace Microsoft.TeamFoundation.Client
 {
-	public sealed class TeamFoundationServer : IServiceProvider, IDisposable
-	{
-		private string name;
-		private Uri uri;
-		private ICredentials credentials;
-		private bool hasAuthenticated = false;
+    public sealed class TeamFoundationServer : IServiceProvider, IDisposable
+    {
+        private string name;
+        private Uri uri;
+        private ICredentials credentials;
+        private bool hasAuthenticated = false;
 
-		public TeamFoundationServer(string url)
-		{
-			this.uri = new Uri(url);
-			this.name = url;
-		}
+        public TeamFoundationServer(string url)
+        {
+            this.uri = new Uri(url);
+            this.name = url;
+        }
 
         public TeamFoundationServer(string url, ICredentials creds)
-            :this(url)
+            : this(url)
         {
             credentials = creds;
         }
 
         public TeamFoundationServer(string url, ICredentialsProvider creds)
-            :this(url)
+            : this(url)
         {
             credentials = creds.GetCredentials(Uri, null);
         }
@@ -65,75 +66,88 @@ namespace Microsoft.TeamFoundation.Client
         }
 
         public TeamFoundationServer(Uri uri, ICredentials creds)
-            :this(uri)
+            : this(uri)
         {
             this.credentials = creds;
         }
 
-		public object GetService(Type serviceType)
-		{
-			EnsureAuthenticated();
+        public T GetService<T>()
+            where T: class, ITeamFoundationService
+        {
+            return GetService(typeof(T)) as T;
+        }
 
-			if (serviceType == typeof(ICommonStructureService))
-				return new CommonStructureService(this);
-			else if (serviceType == typeof(ILinking))
-				return new Linking(this);
-			else if (serviceType == typeof(IRegistration))
-				return new Registration(this);
-			else if (serviceType == typeof(IGroupSecurityService))
-				return new GroupSecurityService(this);
-			else
-				return Activator.CreateInstance(serviceType, new object[]{ this });
-		}
+        public object GetService(Type serviceType)
+        {
+            EnsureAuthenticated();
 
-		public void EnsureAuthenticated()
-		{
-			if (!hasAuthenticated) Authenticate();
-		}
+            if (serviceType == typeof(ICommonStructureService))
+                return new CommonStructureService(this);
+            else if (serviceType == typeof(ILinking))
+                return new Linking(this);
+            else if (serviceType == typeof(IRegistration))
+                return new Registration(this);
+            else if (serviceType == typeof(IGroupSecurityService))
+                return new GroupSecurityService(this);
+            else
+                return Activator.CreateInstance(serviceType, new object[]{ this });
+        }
 
-		public void Authenticate()
-		{
-			Authenticator authenticator = new Authenticator(uri, credentials);
-			authenticator.CheckAuthentication();
-			hasAuthenticated = true;
-		}
-		
-		public void Dispose()
-		{
-		}
+        public void EnsureAuthenticated()
+        {
+            if (!hasAuthenticated)
+                Authenticate();
+        }
 
-		public ICredentials Credentials {
-			get { return credentials; }
-		}
+        public void Authenticate()
+        {
+            Authenticator authenticator = new Authenticator(uri, credentials);
+            authenticator.CheckAuthentication();
+            hasAuthenticated = true;
+        }
 
-		public string Name {
-			get { return name; }
-		}
-		
-		public Uri Uri {
-			get { return uri; }
-		}
+        public void Dispose()
+        {
+        }
 
-		public bool HasAuthenticated
-		{
-			get { return hasAuthenticated; }
-		}
+        public ICredentials Credentials
+        {
+            get { return credentials; }
+        }
 
-		public static string ClientCacheDirectory {
-			get {
-				string personal = Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
-				string tf = Path.Combine(personal, ".tf");
-				return Path.Combine(tf, "Cache");
-			}
-		}
+        public string Name
+        {
+            get { return name; }
+        }
 
-		public static string ClientSettingsDirectory {
-			get {
-				string personal = Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
-				return Path.Combine(personal, ".tf");
-			}
-		}
+        public Uri Uri
+        {
+            get { return uri; }
+        }
 
-	}
+        public bool HasAuthenticated
+        {
+            get { return hasAuthenticated; }
+        }
+
+        public static string ClientCacheDirectory
+        {
+            get
+            {
+                string personal = Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+                string tf = Path.Combine(personal, ".tf");
+                return Path.Combine(tf, "Cache");
+            }
+        }
+
+        public static string ClientSettingsDirectory
+        {
+            get
+            {
+                string personal = Environment.GetFolderPath(System.Environment.SpecialFolder.Personal);
+                return Path.Combine(personal, ".tf");
+            }
+        }
+    }
 }
 

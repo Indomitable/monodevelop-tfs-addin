@@ -31,9 +31,9 @@ using System.Net;
 
 namespace Microsoft.TeamFoundation
 {
-	public interface ILinking
-	{
-		Artifact[] GetReferencingArtifacts (string[] uriList, LinkFilter[] filters);
-	}
+    public interface ILinking : ITeamFoundationService
+    {
+        Artifact[] GetReferencingArtifacts(string[] uriList, LinkFilter[] filters);
+    }
 }
 

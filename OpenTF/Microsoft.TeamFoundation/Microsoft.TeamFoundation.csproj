@@ -49,6 +49,7 @@
     <Compile Include="RegistrationEntry.cs" />
     <Compile Include="SearchFactor.cs" />
     <Compile Include="ServiceInterface.cs" />
+    <Compile Include="ITeamFoundationService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
