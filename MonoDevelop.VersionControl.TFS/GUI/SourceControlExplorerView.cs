@@ -8,64 +8,53 @@ using MonoDevelop.Ide.Gui;
 using Xwt;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
+using MonoDevelop.Ide;
+using MonoDevelop.Core;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
-    public class SourceControlExplorerView : IPadContent
+    public class SourceControlExplorerView : AbstractXwtViewContent
     {
-        readonly VBox _view;
-        TreeView _treeView;
-        ListView _listView;
-        readonly MonoDevelop.Core.IProgressMonitor _monitor;
+        readonly VBox _view = new VBox();
+        readonly TreeView _treeView = new TreeView();
+        readonly ListView _listView = new ListView();
+        readonly DataField<string> _name = new DataField<string>();
+        readonly DataField<string> _path = new DataField<string>();
+        readonly TreeStore _treeStore;
 
         public SourceControlExplorerView()
         {
-            _view = new VBox();    
+            ContentName = GettextCatalog.GetString("Source Explorer");
+            _treeStore = new TreeStore(_name, _path);
             BuildContent();
         }
 
-        public SourceControlExplorerView(MonoDevelop.Core.IProgressMonitor monitor)
-            : this()
-        {
-            _monitor = monitor;
-        }
-
-        #region IPadContent implementation
-
-        public void Initialize(IPadWindow window)
-        {
-            //BuildContent();
-        }
-
-        public void RedrawContent()
-        {
-            //throw new NotImplementedException();
-        }
-
-        public Gtk.Widget Control
-        {
-            get
-            {
-                return (Gtk.Widget)Toolkit.CurrentEngine.GetNativeWidget(_view);
-            }
-        }
-
-        #endregion
-
-        #region IDisposable implementation
-
-        public void Dispose()
-        {
-
-        }
-
-        #endregion
+        public string ServerName { get; set; }
 
         #region implemented abstract members of AbstractViewContent
 
-        public void Load(string fileName)
+        public override void Load(string serverName)
         {
-            LoadTreeView(new Uri(fileName));
+            if (string.Equals(serverName, this.ServerName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            this.ServerName = serverName;
+            var server = TFSVersionControlService.Instance.GetServer(this.ServerName);
+            ContentName = GettextCatalog.GetString("Source Explorer") + " - " + this.ServerName;
+            LoadTreeView(server.Url);
+        }
+
+        #endregion
+
+        #region implemented abstract members of AbstractXwtViewContent
+
+        public override Widget Widget
+        {
+            get
+            {
+                return _view;
+            }
         }
 
         #endregion
@@ -77,10 +66,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _view.PackStart(topBox);
 
             HBox box = new HBox();
-            _treeView = new TreeView();
             _treeView.MinWidth = 300;
             box.PackStart(_treeView);
-            _listView = new ListView();
+
+            _treeView.Columns.Add(new ListViewColumn("Name", new TextCellView(_name) { Editable = false }));
+            _treeView.DataSource = _treeStore;
+
             box.PackStart(_listView, true, true);
 
             _view.PackStart(box, true, true);
@@ -88,60 +79,69 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void LoadTreeView(Uri serverUrl)
         {
+            _treeStore.Clear();
             var credentials = CredentialsManager.LoadCredential(serverUrl);
             using (var tfsServer = TeamFoundationServerFactory.GetServer(serverUrl, credentials))
             {
-                if (_monitor != null)
-                    _monitor.Log.Write("Authenticating ...");
-
                 tfsServer.Authenticate();
-
-                if (_monitor != null)
-                    _monitor.Log.Write("Loading ...");
 
                 var versionControl = tfsServer.GetService<VersionControlServer>();
                 var itemSet = versionControl.GetItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
-                if (_monitor != null)
-                    _monitor.BeginTask(null, itemSet.Items.Length);
-
-                DataField<string> name = new DataField<string>();
-                DataField<string> path = new DataField<string>();
-
-                TreeStore store = new TreeStore(name, path);
                 var root = ItemSetToHierarchItemConverter.Convert(itemSet.Items);
-
-                var node = store.AddNode().SetValue(name, root.Name).SetValue(path, root.ServerPath);
-                UpdateProgress();
-                AddChilds(name, path, node, root.Children);
-
-                _treeView.Columns.Add(new ListViewColumn("Name", new TextCellView(name) { Editable = false }));
-                //_treeView.Columns.Add(new ListViewColumn("Path", new TextCellView(path) { Editable = false, Visible = false }));
-                _treeView.DataSource = store;
-
-
-                if (_monitor != null)
-                    _monitor.EndTask();
+                var node = _treeStore.AddNode().SetValue(_name, root.Name).SetValue(_path, root.ServerPath);
+                AddChilds(node, root.Children);
+                var topNode = _treeStore.GetFirstNode();
+                _treeView.ExpandRow(topNode.CurrentPosition, false);
             }
         }
 
-        private void AddChilds(DataField<string> name, DataField<string> path, TreeNavigator node, List<HierarchyItem> children)
+        private void AddChilds(TreeNavigator node, List<HierarchyItem> children)
         {
             foreach (var child in children)
             {
-                UpdateProgress();
-                node.AddChild().SetValue(name, child.Name).SetValue(path, child.ServerPath);
-                AddChilds(name, path, node, child.Children);
+                node.AddChild().SetValue(_name, child.Name).SetValue(_path, child.ServerPath);
+                AddChilds(node, child.Children);
                 node.MoveToParent();
             }
         }
 
-        private void UpdateProgress()
+        public void ExpandProject(string projectName)
         {
-            if (_monitor != null)
+            if (string.IsNullOrEmpty(projectName))
+                return;
+            var node = _treeStore.GetFirstNode();
+            node.MoveToChild();
+            while (!string.Equals(node.GetValue(_name), projectName, StringComparison.OrdinalIgnoreCase))
             {
-                _monitor.Step(1);
+                if (!node.MoveNext())
+                {
+                    return;
+                }
             }
+            _treeView.ExpandRow(node.CurrentPosition, false);
+            _treeView.ScrollToRow(node.CurrentPosition);
+            _treeView.SelectRow(node.CurrentPosition);
+        }
+
+        public static void Open(string serverName, string projectName)
+        {
+            foreach (var view in IdeApp.Workbench.Documents)
+            {
+                var sourceDoc = view.GetContent<SourceControlExplorerView>();
+                if (sourceDoc != null)
+                {
+                    sourceDoc.Load(serverName);
+                    sourceDoc.ExpandProject(projectName);
+                    view.Window.SelectWindow();
+                    return;
+                }
+            }
+
+            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
+            sourceControlExplorerView.Load(serverName);
+            sourceControlExplorerView.ExpandProject(projectName);
+            IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
     }
 }

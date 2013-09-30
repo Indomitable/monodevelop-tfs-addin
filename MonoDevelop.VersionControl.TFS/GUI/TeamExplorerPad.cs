@@ -24,14 +24,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly VBox _content = new VBox();
         private readonly TreeView _treeView = new TreeView();
         private readonly DataField<string> _name = new DataField<string>();
-        private readonly DataField<string> _value = new DataField<string>();
         private readonly DataField<NodeType> _type = new DataField<NodeType>();
         private readonly TreeStore _treeStore;
         private System.Action onServersChanged;
 
         public TeamExplorerPad()
         {
-            _treeStore = new TreeStore(_name, _type, _value);
+            _treeStore = new TreeStore(_name, _type);
         }
 
         #region IPadContent implementation
@@ -81,7 +80,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _treeStore.Clear();
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                var node = _treeStore.AddNode().SetValue(_name, server.Name).SetValue(_type, NodeType.Server).SetValue(_value, server.Url.ToString());
+                var node = _treeStore.AddNode().SetValue(_name, server.Name).SetValue(_type, NodeType.Server);
 
                 var credentials = CredentialsManager.LoadCredential(server.Url);
                 using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
@@ -91,7 +90,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     var projectService = tfsServer.GetService<ICommonStructureService>();
                     foreach (var projectInfo in projectService.ListProjects().OrderBy(x => x.Name))
                     {
-                        node.AddChild().SetValue(_name, projectInfo.Name).SetValue(_type, NodeType.Project).SetValue(_value, projectInfo.Uri);
+                        node.AddChild().SetValue(_name, projectInfo.Name).SetValue(_type, NodeType.Project);
                         node.AddChild().SetValue(_name, "Work Items").SetValue(_type, NodeType.WorkItems);
                         node.MoveToParent();
                         node.AddChild().SetValue(_name, "Source Control").SetValue(_type, NodeType.SourceControl);
@@ -112,14 +111,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             switch (nodeType)
             {
                 case NodeType.SourceControl:
-                    var sourceView = new SourceControlExplorerView();
                     node.MoveToParent();
+                    var projectName = node.GetValue(_name);
                     node.MoveToParent();
-                    var serverUrl = node.GetValue(_value);
-                    IdeApp.Workbench.GetPad<SourceControlExplorerView>().Visible = true;
-                    //IdeApp.Workbench.ShowPad(sourceView, "MonoDevelop.VersionControl.TFS.GUI.SourceControlExplorerView", "Source Control", "Center", MonoDevelop.Components.Docking.DockItemStatus.Dockable, MonoDevelop.Core.IconId.Null);
-                    sourceView.Load(serverUrl);
-                    //IdeApp.Workbench.OpenDocument(sourceView, true);
+                    var serverName = node.GetValue(_name);
+                    SourceControlExplorerView.Open(serverName, projectName);
                     break;
                 default:
                     break;

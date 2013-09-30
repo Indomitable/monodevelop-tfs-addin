@@ -36,16 +36,7 @@
 	<Extension path = "/MonoDevelop/Ide/Pads">
 		<Pad id = "MonoDevelop.VersionControl.TFS.TeamExplorerPad" defaultLayout="Solution" defaultPlacement = "Right" 
 			class = "MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad" _label="Team Explorer" />
-		<Pad id = "MonoDevelop.VersionControl.TFS.GUI.SourceControlExplorerView" defaultLayout="Solution" defaultPlacement = "CenterBefore" 
-			class = "MonoDevelop.VersionControl.TFS.GUI.SourceControlExplorerView" _label="Source Explorer" />
 	</Extension>
-
-<!--	<Extension path = "/MonoDevelop/Ide/Commands/VersionControl">
-		<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorer"
-			_label = "View Source Control Exporer"
-			defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerCommandHandler"
-			description = "View Source Control Exporer"/>
-	</Extension>-->
 
 <!--	<Extension path = "/MonoDevelop/Ide/StartupHandlers">
 		<Class class="MonoDevelop.VersionControl.TFS.Commands.InitHandler" />

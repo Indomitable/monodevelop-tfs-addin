@@ -98,6 +98,11 @@ namespace MonoDevelop.VersionControl.TFS
             StorePrefs();
         }
 
+        public ServerEntry GetServer(string name)
+        {
+            return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
+
         public bool HasServer(string name)
         {
             return _registredServers.Any(x => string.Equals(x.Name, name, System.StringComparison.OrdinalIgnoreCase));

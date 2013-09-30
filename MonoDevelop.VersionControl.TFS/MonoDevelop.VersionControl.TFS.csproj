@@ -34,7 +34,6 @@
     <Compile Include="Commands\TFSCommands.cs" />
     <Compile Include="GUI\SourceControlExplorerView.cs" />
     <Compile Include="Commands\ConnectToServerHandler.cs" />
-    <Compile Include="Commands\SourceControlExplorerHandler.cs" />
     <Compile Include="GUI\ConnectToServerDialog.cs" />
     <Compile Include="Helpers\CredentialsManager.cs" />
     <Compile Include="TFSVersionControlService.cs" />
