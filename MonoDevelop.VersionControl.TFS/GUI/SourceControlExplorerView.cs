@@ -21,12 +21,36 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         readonly DataField<string> _name = new DataField<string>();
         readonly DataField<string> _path = new DataField<string>();
         readonly TreeStore _treeStore;
+        readonly ComboBox _workspaces = new ComboBox();
+        readonly DataField<string> _workspaceName = new DataField<string>();
+        readonly ListStore _workspaceStore;
 
         public SourceControlExplorerView()
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
             _treeStore = new TreeStore(_name, _path);
+            _workspaceStore = new ListStore(_workspaceName);
             BuildContent();
+        }
+
+        public static void Open(string serverName, string projectName)
+        {
+            foreach (var view in IdeApp.Workbench.Documents)
+            {
+                var sourceDoc = view.GetContent<SourceControlExplorerView>();
+                if (sourceDoc != null)
+                {
+                    sourceDoc.Load(serverName);
+                    sourceDoc.ExpandProject(projectName);
+                    view.Window.SelectWindow();
+                    return;
+                }
+            }
+
+            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
+            sourceControlExplorerView.Load(serverName);
+            sourceControlExplorerView.ExpandProject(projectName);
+            IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         public string ServerName { get; set; }
@@ -42,6 +66,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             this.ServerName = serverName;
             var server = TFSVersionControlService.Instance.GetServer(this.ServerName);
             ContentName = GettextCatalog.GetString("Source Explorer") + " - " + this.ServerName;
+            FillWorkspaces();
             LoadTreeView(server.Url);
         }
 
@@ -62,7 +87,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void BuildContent()
         {
             HBox topBox = new HBox();
-            topBox.HeightRequest = 20;
+            topBox.HeightRequest = 25;
+
+            topBox.PackStart(new Label(GettextCatalog.GetString("Workspace") + ":"));
+            _workspaces.ItemsSource = _workspaceStore;
+            topBox.PackStart(_workspaces);
+            Button button = new Button(GettextCatalog.GetString("Manage"));
+            button.Clicked += OnManageWorkspaces;
+
             _view.PackStart(topBox);
 
             HBox box = new HBox();
@@ -70,6 +102,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             box.PackStart(_treeView);
 
             _treeView.Columns.Add(new ListViewColumn("Name", new TextCellView(_name) { Editable = false }));
+
+        
             _treeView.DataSource = _treeStore;
 
             box.PackStart(_listView, true, true);
@@ -106,7 +140,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
-        public void ExpandProject(string projectName)
+        private void ExpandProject(string projectName)
         {
             if (string.IsNullOrEmpty(projectName))
                 return;
@@ -124,24 +158,45 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _treeView.SelectRow(node.CurrentPosition);
         }
 
-        public static void Open(string serverName, string projectName)
+        public override void Dispose()
         {
-            foreach (var view in IdeApp.Workbench.Documents)
-            {
-                var sourceDoc = view.GetContent<SourceControlExplorerView>();
-                if (sourceDoc != null)
-                {
-                    sourceDoc.Load(serverName);
-                    sourceDoc.ExpandProject(projectName);
-                    view.Window.SelectWindow();
-                    return;
-                }
-            }
+            base.Dispose();
+            _listView.Dispose();
+            _treeView.Dispose();
+            _treeStore.Dispose();
 
-            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
-            sourceControlExplorerView.Load(serverName);
-            sourceControlExplorerView.ExpandProject(projectName);
-            IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
+            _workspaces.Dispose();
+            _workspaceStore.Dispose();
+
+            _view.Dispose();
+        }
+
+        private void FillWorkspaces()
+        {
+            var server = TFSVersionControlService.Instance.GetServer(ServerName);
+            _workspaceStore.Clear();
+            var credentials = CredentialsManager.LoadCredential(server.Url);
+            using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
+            {
+                tfsServer.Authenticate();
+                var versionControl = tfsServer.GetService<VersionControlServer>();
+
+                var workspaces = versionControl.QueryWorkspaces(string.Empty, credentials.UserName, string.Empty); //"VMLADENOV-7"
+                foreach (var workspace in workspaces)
+                {
+                    var row = _workspaceStore.AddRow();
+                    _workspaceStore.SetValue(row, _workspaceName, workspace.Name);
+                }
+//                if (_workspaces.Items.Count > 0)
+//                {
+//                    _workspaces.SelectedIndex = 0;
+//                }
+            }
+        }
+
+        private void OnManageWorkspaces(object sender, EventArgs e)
+        {
+
         }
     }
 }

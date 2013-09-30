@@ -31,82 +31,90 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
-	public sealed class WorkingFolder 
-	{
-		private bool isCloaked;
-		private string localItem;
-		private string serverItem;
-    private WorkingFolderType type = WorkingFolderType.Map;
+    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
+    public sealed class WorkingFolder
+    {
+        private bool isCloaked;
+        private string localItem;
+        private string serverItem;
+        private WorkingFolderType type = WorkingFolderType.Map;
 
-		public WorkingFolder(string serverItem, string localItem)
-		{
-			CheckServerPathStartsWithDollarSlash(serverItem);
-			this.serverItem = serverItem;
-			this.localItem = Path.GetFullPath(localItem);
-		}
+        public WorkingFolder(string serverItem, string localItem)
+        {
+            CheckServerPathStartsWithDollarSlash(serverItem);
+            this.serverItem = serverItem;
+            this.localItem = Path.GetFullPath(localItem);
+        }
 
-		internal static WorkingFolder FromXml(Repository repository, XmlReader reader)
-		{
-			string local = TfsPath.ToPlatformPath(reader.GetAttribute("local"));
-			string serverItem = reader.GetAttribute("item");
-			return new WorkingFolder(serverItem, local);
-		}
+        internal static WorkingFolder FromXml(Repository repository, XmlReader reader)
+        {
+            string local = TfsPath.ToPlatformPath(reader.GetAttribute("local"));
+            string serverItem = reader.GetAttribute("item");
+            return new WorkingFolder(serverItem, local);
+        }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement("WorkingFolder");
-			writer.WriteAttributeString("local", TfsPath.FromPlatformPath(LocalItem));
-			writer.WriteAttributeString("item", ServerItem);
-			//			writer.WriteAttributeString("type", Type.ToString());
-			writer.WriteEndElement();
-		}
+        internal static WorkingFolder FromXml(Repository repository, XElement element)
+        {
+            string local = TfsPath.ToPlatformPath(element.Attribute("local").Value);
+            string serverItem = element.Attribute("item").Value;
+            return new WorkingFolder(serverItem, local);
+        }
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+        internal void ToXml(XmlWriter writer, string element)
+        {
+            writer.WriteStartElement("WorkingFolder");
+            writer.WriteAttributeString("local", TfsPath.FromPlatformPath(LocalItem));
+            writer.WriteAttributeString("item", ServerItem);
+            //			writer.WriteAttributeString("type", Type.ToString());
+            writer.WriteEndElement();
+        }
 
-			sb.Append("WorkingFolder instance ");
-			sb.Append(GetHashCode());
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			sb.Append("\n	 LocalItem: ");
-			sb.Append(LocalItem);
+            sb.Append("WorkingFolder instance ");
+            sb.Append(GetHashCode());
 
-			sb.Append("\n	 ServerItem: ");
-			sb.Append(ServerItem);
+            sb.Append("\n	 LocalItem: ");
+            sb.Append(LocalItem);
 
-			return sb.ToString();
-		}
+            sb.Append("\n	 ServerItem: ");
+            sb.Append(ServerItem);
 
-		internal void CheckServerPathStartsWithDollarSlash(string serverItem)
-		{
-			if (VersionControlPath.IsServerItem(serverItem)) return;
-			string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, VersionControlPath.RootFolder);
-			throw new InvalidPathException(msg);
-		}
+            return sb.ToString();
+        }
 
-		public bool IsCloaked
-		{
-			get { return isCloaked; }
-		}
+        internal void CheckServerPathStartsWithDollarSlash(string serverItem)
+        {
+            if (VersionControlPath.IsServerItem(serverItem))
+                return;
+            string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, VersionControlPath.RootFolder);
+            throw new InvalidPathException(msg);
+        }
 
-		public string LocalItem
-		{
-			get { return localItem; }
-		}
+        public bool IsCloaked
+        {
+            get { return isCloaked; }
+        }
 
-		public WorkingFolderType Type
-		{
-			get { return type; }
-		}
+        public string LocalItem
+        {
+            get { return localItem; }
+        }
 
-		public string ServerItem
-		{
-			get { return serverItem; }
-		}
+        public WorkingFolderType Type
+        {
+            get { return type; }
+        }
 
-	}
+        public string ServerItem
+        {
+            get { return serverItem; }
+        }
+    }
 }

@@ -39,11 +39,14 @@
     <Reference Include="MonoDevelop.Core">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TFSRepositoryTests.cs" />
     <Compile Include="ItemSetToHierarchItemConverterTests.cs" />
     <Compile Include="BaseTFSConnectTest.cs" />
+    <Compile Include="OpenTF\WorkspaceTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -67,5 +70,8 @@
       <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="OpenTF\" />
   </ItemGroup>
 </Project>

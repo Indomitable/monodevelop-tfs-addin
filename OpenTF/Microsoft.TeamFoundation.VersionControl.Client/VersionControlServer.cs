@@ -64,15 +64,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public LabelResult[] CreateLabel(VersionControlLabel label,
-                                    LabelItemSpec[] labelSpecs,
-                                    LabelChildOption childOption)
+                                         LabelItemSpec[] labelSpecs,
+                                         LabelChildOption childOption)
         {
             Workspace workspace = GetWorkspace(labelSpecs[0].ItemSpec.Item);
             return repository.LabelItem(workspace, label, labelSpecs, childOption);
         }
 
         public LabelResult[] UnlabelItem(string labelName, string labelScope,
-                                    ItemSpec[] itemSpecs, VersionSpec version)
+                                         ItemSpec[] itemSpecs, VersionSpec version)
         {
             Workspace workspace = GetWorkspace(itemSpecs[0].Item);
             return repository.UnlabelItem(workspace, labelName, labelScope, 
@@ -85,7 +85,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public Workspace CreateWorkspace(string name, string owner, string comment,
-                                   WorkingFolder[] folders, string computer)
+                                         WorkingFolder[] folders, string computer)
         {
             Workspace w1 = new Workspace(this, name, owner, comment, folders, computer);
             Workspace w2 = repository.CreateWorkspace(w1);
@@ -110,7 +110,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public BranchHistoryTreeItem[][] GetBranchHistory(ItemSpec[] itemSpecs,
-                                                    VersionSpec version)
+                                                          VersionSpec version)
         {
             if (itemSpecs.Length == 0)
                 return null;
@@ -139,7 +139,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public Changeset GetChangeset(int changesetId, bool includeChanges,
-                                 bool includeDownloadInfo)
+                                      bool includeDownloadInfo)
         {
             return repository.QueryChangeset(changesetId, includeChanges, includeDownloadInfo);
         }
@@ -176,11 +176,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public Item GetItem(string path, VersionSpec versionSpec,
-                      int deletionId, bool includeDownloadInfo)
+                            int deletionId, bool includeDownloadInfo)
         {
             ItemSpec itemSpec = new ItemSpec(path, RecursionType.None);
             ItemSet itemSet = GetItems(itemSpec, versionSpec, DeletedState.NonDeleted,
-                         ItemType.Any, includeDownloadInfo);
+                                  ItemType.Any, includeDownloadInfo);
 
             Item[] items = itemSet.Items;
             if (items.Length > 0)
@@ -201,7 +201,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ItemSet GetItems(string path, VersionSpec versionSpec, 
-                          RecursionType recursionType)
+                                RecursionType recursionType)
         {
             ItemSpec itemSpec = new ItemSpec(path, recursionType);
             return GetItems(itemSpec, versionSpec, DeletedState.NonDeleted,
@@ -209,19 +209,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ItemSet GetItems(ItemSpec itemSpec, VersionSpec versionSpec,
-                          DeletedState deletedState, ItemType itemType, 
-                          bool includeDownloadInfo)
+                                DeletedState deletedState, ItemType itemType, 
+                                bool includeDownloadInfo)
         {
             List<ItemSpec> itemSpecs = new List<ItemSpec>();
             itemSpecs.Add(itemSpec);
             ItemSet[] itemSet = GetItems(itemSpecs.ToArray(), versionSpec, deletedState,
-                           itemType, includeDownloadInfo);
+                                    itemType, includeDownloadInfo);
             return itemSet[0];
         }
 
         public ItemSet[] GetItems(ItemSpec[] itemSpecs, VersionSpec versionSpec,
-                            DeletedState deletedState, ItemType itemType, 
-                            bool includeDownloadInfo)
+                                  DeletedState deletedState, ItemType itemType, 
+                                  bool includeDownloadInfo)
         {
             if (itemSpecs.Length == 0)
                 return null;
@@ -246,8 +246,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ExtendedItem[] GetExtendedItems(string path,
-                                         DeletedState deletedState,
-                                         ItemType itemType)
+                                               DeletedState deletedState,
+                                               ItemType itemType)
         {
             List<ItemSpec> itemSpecs = new List<ItemSpec>();
             itemSpecs.Add(new ItemSpec(path, RecursionType.OneLevel));
@@ -259,8 +259,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ExtendedItem[][] GetExtendedItems(ItemSpec[] itemSpecs,
-                                            DeletedState deletedState,
-                                            ItemType itemType)
+                                                 DeletedState deletedState,
+                                                 ItemType itemType)
         {
             return Repository.QueryItemsExtended(null, null,
                 itemSpecs, deletedState, itemType);
@@ -290,10 +290,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public IEnumerable QueryHistory(string path, VersionSpec version,
-                                   int deletionId, RecursionType recursion,
-                                   string user, VersionSpec versionFrom,
-                                   VersionSpec versionTo, int maxCount,
-                                   bool includeChanges, bool slotMode)
+                                        int deletionId, RecursionType recursion,
+                                        string user, VersionSpec versionFrom,
+                                        VersionSpec versionTo, int maxCount,
+                                        bool includeChanges, bool slotMode)
         {
             return QueryHistory(path, version, deletionId, recursion,
                 user, versionFrom, versionTo, maxCount,
@@ -301,11 +301,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public IEnumerable QueryHistory(string path, VersionSpec version,
-                                   int deletionId, RecursionType recursion,
-                                   string user, VersionSpec versionFrom,
-                                   VersionSpec versionToOrig, int maxCount,
-                                   bool includeChanges, bool slotMode,
-                                   bool includeDownloadInfo)
+                                        int deletionId, RecursionType recursion,
+                                        string user, VersionSpec versionFrom,
+                                        VersionSpec versionToOrig, int maxCount,
+                                        bool includeChanges, bool slotMode,
+                                        bool includeDownloadInfo)
         {
             ItemSpec itemSpec = new ItemSpec(path, recursion, deletionId);
 
@@ -330,9 +330,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 int batchMax = Math.Min(256, total);
                 int batchCnt = repository.QueryHistory(workspaceName, workspaceOwner, itemSpec, 
-                        version, user, versionFrom, versionTo,
-                        batchMax, includeChanges, slotMode, 
-                        includeDownloadInfo, ref changes);
+                                   version, user, versionFrom, versionTo,
+                                   batchMax, includeChanges, slotMode, 
+                                   includeDownloadInfo, ref changes);
 
                 if (batchCnt < batchMax)
                     break;
@@ -346,9 +346,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ChangesetMerge[] QueryMerges(string sourcePath, VersionSpec sourceVersion,
-                                       string targetPath, VersionSpec targetVersion,
-                                       VersionSpec versionFrom, VersionSpec versionTo,
-                                       RecursionType recursion)
+                                            string targetPath, VersionSpec targetVersion,
+                                            VersionSpec versionFrom, VersionSpec versionTo,
+                                            RecursionType recursion)
         {
             string workspaceName = String.Empty;
             string workspaceOwner = String.Empty;
@@ -369,10 +369,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             ItemSpec targetItem = new ItemSpec(targetPath, recursion);
             ChangesetMerge[] merges = repository.QueryMerges(workspaceName, workspaceOwner,
-                                 sourceItem, sourceVersion,
-                                 targetItem, targetVersion,
-                                 versionFrom, versionTo,
-                                 Int32.MaxValue);
+                                          sourceItem, sourceVersion,
+                                          targetItem, targetVersion,
+                                          versionFrom, versionTo,
+                                          Int32.MaxValue);
             return merges;
         }
 
@@ -385,24 +385,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public VersionControlLabel[] QueryLabels(string labelName, string labelScope, 
-                                           string owner, bool includeItems)
+                                                 string owner, bool includeItems)
         {
             return repository.QueryLabels(null, null, labelName, labelScope, owner, null,
                 VersionSpec.Latest, includeItems, false);
         }
 
         public VersionControlLabel[] QueryLabels(string labelName, string labelScope, 
-                                           string owner, bool includeItems,
-                                           string filterItem, VersionSpec versionFilterItem)
+                                                 string owner, bool includeItems,
+                                                 string filterItem, VersionSpec versionFilterItem)
         {
             return repository.QueryLabels(null, null, labelName, labelScope, owner, filterItem, 
                 versionFilterItem, includeItems, false);
         }
 
         public VersionControlLabel[] QueryLabels(string labelName, string labelScope, 
-                                           string owner, bool includeItems,
-                                           string filterItem, VersionSpec versionFilterItem,
-                                           bool generateDownloadUrls)
+                                                 string owner, bool includeItems,
+                                                 string filterItem, VersionSpec versionFilterItem,
+                                                 bool generateDownloadUrls)
         {
             return repository.QueryLabels(null, null, labelName, labelScope, owner, filterItem, 
                 versionFilterItem, includeItems, generateDownloadUrls);
@@ -414,7 +414,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public ItemSecurity[] GetPermissions(string[] identityNames, string[] items, 
-                                       RecursionType recursion)
+                                             RecursionType recursion)
         {
             return Repository.QueryItemPermissions(identityNames, items, recursion);
         }
@@ -424,8 +424,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return repository.QueryShelvesets(shelvesetName, shelvesetOwner);
         }
 
-        public Workspace[] QueryWorkspaces(string workspaceName, string ownerName,
-                                     string computer)
+        public List<Workspace> QueryWorkspaces(string workspaceName, string ownerName,
+                                               string computer)
         {
             return repository.QueryWorkspaces(workspaceName, ownerName, computer);
         }

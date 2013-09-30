@@ -71,6 +71,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public void Dispose()
         {
             TFSVersionControlService.Instance.OnServersChange -= onServersChanged;
+            _treeView.Dispose();
+            _treeStore.Dispose();
+            _content.Dispose();
         }
 
         #endregion
@@ -98,6 +101,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         node.MoveToParent();
                     }
                 }
+            }
+            ExpandServers();
+        }
+
+        private void ExpandServers()
+        {
+            var node = _treeStore.GetFirstNode();
+            if (node == null)
+                return;
+            _treeView.ExpandRow(node.CurrentPosition, false);
+            while (node.MoveNext())
+            {
+                _treeView.ExpandRow(node.CurrentPosition, false);
             }
         }
 

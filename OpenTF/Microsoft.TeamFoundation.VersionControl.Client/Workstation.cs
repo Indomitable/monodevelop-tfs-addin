@@ -36,239 +36,244 @@ using Microsoft.TeamFoundation.Client;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class Workstation
-	{
-		internal static readonly string ConfigFile = "VersionControl.config";
-		internal static Workstation current = new Workstation();
-		internal static object mutex;
-		internal static WorkstationSettings settings = new WorkstationSettings();
+    public sealed class Workstation
+    {
+        internal static readonly string ConfigFile = "VersionControl.config";
+        internal static Workstation current = new Workstation();
+        internal static object mutex;
+        internal static WorkstationSettings settings = new WorkstationSettings();
 
-		public static Workstation Current
-		{
-			get { return current; }
-		}
+        public static Workstation Current
+        {
+            get { return current; }
+        }
 
-		internal static WorkstationSettings Settings
-		{
-			get {	return settings; }
-		}
+        internal static WorkstationSettings Settings
+        {
+            get { return settings; }
+        }
 
-		private Workstation()
-		{
-		}
+        private Workstation()
+        {
+        }
 
-		public WorkspaceInfo GetLocalWorkspaceInfo(string path)
-		{
-			WorkspaceInfo[] wInfos = GetAllLocalWorkspaceInfo();
+        public WorkspaceInfo GetLocalWorkspaceInfo(string path)
+        {
+            WorkspaceInfo[] wInfos = GetAllLocalWorkspaceInfo();
 
-			WorkspaceInfo returnedInfo = null;
-			int maxPath = 0;
+            WorkspaceInfo returnedInfo = null;
+            int maxPath = 0;
 
-			foreach (WorkspaceInfo wInfo in wInfos)
-				{
-					foreach (string mPath in wInfo.MappedPaths)
-						{
-							char[] charsToTrim = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
-							string trimmedPath = mPath.TrimEnd(charsToTrim);
+            foreach (WorkspaceInfo wInfo in wInfos)
+            {
+                foreach (string mPath in wInfo.MappedPaths)
+                {
+                    char[] charsToTrim = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+                    string trimmedPath = mPath.TrimEnd(charsToTrim);
 
-							if (path.StartsWith(trimmedPath, TfsPath.PlatformComparison)
-									&& trimmedPath.Length > maxPath)
-								{
-									returnedInfo = wInfo;
-									maxPath = trimmedPath.Length;
-								}
-						}
-				}
+                    if (path.StartsWith(trimmedPath, TfsPath.PlatformComparison)
+                    && trimmedPath.Length > maxPath)
+                    {
+                        returnedInfo = wInfo;
+                        maxPath = trimmedPath.Length;
+                    }
+                }
+            }
 		
-			return returnedInfo;
-		}
+            return returnedInfo;
+        }
 
-		public WorkspaceInfo GetLocalWorkspaceInfo(VersionControlServer versionControl, 
-																							 string workspaceName,
-																							 string workspaceOwner)
-		{
-			InternalServerInfo[] servers = ReadCachedWorkspaceInfo();
-			foreach (InternalServerInfo sInfo in servers)
-				{
-					if (sInfo.Uri != versionControl.Uri) continue;
+        public WorkspaceInfo GetLocalWorkspaceInfo(VersionControlServer versionControl, 
+                                             string workspaceName,
+                                             string workspaceOwner)
+        {
+            InternalServerInfo[] servers = ReadCachedWorkspaceInfo();
+            foreach (InternalServerInfo sInfo in servers)
+            {
+                if (sInfo.Uri != versionControl.Uri)
+                    continue;
 
-					foreach (WorkspaceInfo info in sInfo.Workspaces)
-						{
-							if (info.Name == workspaceName && info.OwnerName == workspaceOwner)
-								{
-									return info;
-								}
-						}
-				}
+                foreach (WorkspaceInfo info in sInfo.Workspaces)
+                {
+                    if (info.Name == workspaceName && info.OwnerName == workspaceOwner)
+                    {
+                        return info;
+                    }
+                }
+            }
 
-			return null;
-		}
+            return null;
+        }
 
-		public WorkspaceInfo[] GetAllLocalWorkspaceInfo()
-		{
-			InternalServerInfo[] servers = ReadCachedWorkspaceInfo();
+        public WorkspaceInfo[] GetAllLocalWorkspaceInfo()
+        {
+            InternalServerInfo[] servers = ReadCachedWorkspaceInfo();
 
-			List<WorkspaceInfo> wInfos = new List<WorkspaceInfo>();
-			foreach (InternalServerInfo sInfo in servers)
-				{
-					foreach (WorkspaceInfo wInfo in sInfo.Workspaces)
-						{
-							wInfos.Add(wInfo);
-						}
-				}
+            List<WorkspaceInfo> wInfos = new List<WorkspaceInfo>();
+            foreach (InternalServerInfo sInfo in servers)
+            {
+                foreach (WorkspaceInfo wInfo in sInfo.Workspaces)
+                {
+                    wInfos.Add(wInfo);
+                }
+            }
 
-			return wInfos.ToArray();
-		}
+            return wInfos.ToArray();
+        }
 
-		internal void AddCachedWorkspaceInfo(Guid serverGuid,
-																				 Uri serverUri, Workspace workspace)
-		{
-			InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
-			XmlElement servers = InitWorkspaceInfoCache();
+        internal void AddCachedWorkspaceInfo(Guid serverGuid,
+                                       Uri serverUri, Workspace workspace)
+        {
+            InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
+            XmlElement servers = InitWorkspaceInfoCache();
 
-			bool added = false;
-			foreach (InternalServerInfo sInfo in serverInfos)
-				{
-					if (sInfo.Uri == serverUri)
-						{
-							List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
-							foreach (WorkspaceInfo info in sInfo.Workspaces)
-								{
-									workspaces.Add(info);
-								}
+            bool added = false;
+            foreach (InternalServerInfo sInfo in serverInfos)
+            {
+                if (sInfo.Uri == serverUri)
+                {
+                    List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
+                    foreach (WorkspaceInfo info in sInfo.Workspaces)
+                    {
+                        workspaces.Add(info);
+                    }
 
-							added = true;
-							workspaces.Add(new WorkspaceInfo(sInfo, workspace));
-							sInfo.Workspaces = workspaces.ToArray();
-						}
+                    added = true;
+                    workspaces.Add(new WorkspaceInfo(sInfo, workspace));
+                    sInfo.Workspaces = workspaces.ToArray();
+                }
 
-					if (sInfo.Workspaces.Length == 0) continue;
+                if (sInfo.Workspaces.Length == 0)
+                    continue;
 
-					XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
-					servers.AppendChild(serverInfoElement);
-				}
+                XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
+                servers.AppendChild(serverInfoElement);
+            }
 
-			if (!added)
-				{
-					InternalServerInfo sInfo = new InternalServerInfo(serverUri.ToString(), serverGuid, workspace);
-					XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
-					servers.AppendChild(serverInfoElement);
-				}
+            if (!added)
+            {
+                InternalServerInfo sInfo = new InternalServerInfo(serverUri.ToString(), serverGuid, workspace);
+                XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
+                servers.AppendChild(serverInfoElement);
+            }
 
-			SaveWorkspaceInfoCache(servers.OwnerDocument);
-		}
+            SaveWorkspaceInfoCache(servers.OwnerDocument);
+        }
 
-		public void RemoveCachedWorkspaceInfo(Uri serverUri, string workspaceName)
-		{
-			InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
-			XmlElement servers = InitWorkspaceInfoCache();
+        public void RemoveCachedWorkspaceInfo(Uri serverUri, string workspaceName)
+        {
+            InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
+            XmlElement servers = InitWorkspaceInfoCache();
 
-			foreach (InternalServerInfo sInfo in serverInfos)
-				{
-					if (sInfo.Uri == serverUri)
-						{
-							List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
-							foreach (WorkspaceInfo info in sInfo.Workspaces)
-								{
-									if (info.Name != workspaceName)
-										workspaces.Add(info);
-								}
+            foreach (InternalServerInfo sInfo in serverInfos)
+            {
+                if (sInfo.Uri == serverUri)
+                {
+                    List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
+                    foreach (WorkspaceInfo info in sInfo.Workspaces)
+                    {
+                        if (info.Name != workspaceName)
+                            workspaces.Add(info);
+                    }
 
-							sInfo.Workspaces = workspaces.ToArray();
-						}
+                    sInfo.Workspaces = workspaces.ToArray();
+                }
 
-					if (sInfo.Workspaces.Length == 0) continue;
+                if (sInfo.Workspaces.Length == 0)
+                    continue;
 
-					XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
-					servers.AppendChild(serverInfoElement);
-				}
+                XmlElement serverInfoElement = sInfo.ToXml(servers.OwnerDocument);
+                servers.AppendChild(serverInfoElement);
+            }
 
-			SaveWorkspaceInfoCache(servers.OwnerDocument);
-		}
+            SaveWorkspaceInfoCache(servers.OwnerDocument);
+        }
 
-		public void UpdateWorkspaceInfoCache(VersionControlServer versionControl,
-																				 string ownerName)
-		{
-			InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
-			XmlElement servers = InitWorkspaceInfoCache();
+        public void UpdateWorkspaceInfoCache(VersionControlServer versionControl,
+                                       string ownerName)
+        {
+            InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
+            XmlElement servers = InitWorkspaceInfoCache();
 
-			Workspace[] workspaces = versionControl.QueryWorkspaces(null, ownerName, Name);
-			InternalServerInfo newServerInfo = new InternalServerInfo(versionControl.Uri.ToString(), versionControl.ServerGuid, workspaces);
+            var workspaces = versionControl.QueryWorkspaces(null, ownerName, Name);
+            InternalServerInfo newServerInfo = new InternalServerInfo(versionControl.Uri.ToString(), versionControl.ServerGuid, workspaces);
 
-			bool found = false;
-			foreach (InternalServerInfo sInfo in serverInfos)
-				{
-					InternalServerInfo finalInfo = sInfo;
-					if (sInfo.Uri == versionControl.Uri)
-						{
-							finalInfo = newServerInfo;
-							found = true;
-						}
+            bool found = false;
+            foreach (InternalServerInfo sInfo in serverInfos)
+            {
+                InternalServerInfo finalInfo = sInfo;
+                if (sInfo.Uri == versionControl.Uri)
+                {
+                    finalInfo = newServerInfo;
+                    found = true;
+                }
 
-					XmlElement serverInfoElement = finalInfo.ToXml(servers.OwnerDocument);
-					servers.AppendChild(serverInfoElement);
-				}
+                XmlElement serverInfoElement = finalInfo.ToXml(servers.OwnerDocument);
+                servers.AppendChild(serverInfoElement);
+            }
 
-			if (!found)
-				{
-					XmlElement serverInfoElement = newServerInfo.ToXml(servers.OwnerDocument);
-					servers.AppendChild(serverInfoElement);
-				}
+            if (!found)
+            {
+                XmlElement serverInfoElement = newServerInfo.ToXml(servers.OwnerDocument);
+                servers.AppendChild(serverInfoElement);
+            }
 
-			SaveWorkspaceInfoCache(servers.OwnerDocument);
-		}
+            SaveWorkspaceInfoCache(servers.OwnerDocument);
+        }
 
-		internal void SaveWorkspaceInfoCache(XmlDocument doc)
-		{
-			string dataDirectory = TeamFoundationServer.ClientCacheDirectory;
-			if (!Directory.Exists(dataDirectory)) Directory.CreateDirectory(dataDirectory);
+        internal void SaveWorkspaceInfoCache(XmlDocument doc)
+        {
+            string dataDirectory = TeamFoundationServer.ClientCacheDirectory;
+            if (!Directory.Exists(dataDirectory))
+                Directory.CreateDirectory(dataDirectory);
 
-			string cacheFilename = Path.Combine(dataDirectory, ConfigFile);
+            string cacheFilename = Path.Combine(dataDirectory, ConfigFile);
 
-			using (XmlTextWriter writer = new XmlTextWriter(cacheFilename, null))
-				{
-					writer.Formatting = Formatting.Indented;
-					doc.Save(writer);			
-				}
-		}
+            using (XmlTextWriter writer = new XmlTextWriter(cacheFilename, null))
+            {
+                writer.Formatting = Formatting.Indented;
+                doc.Save(writer);			
+            }
+        }
 
-		internal InternalServerInfo[] ReadCachedWorkspaceInfo()
-		{
-			string dataDirectory = TeamFoundationServer.ClientCacheDirectory;
-			string configFilePath = Path.Combine(dataDirectory, ConfigFile);
+        internal InternalServerInfo[] ReadCachedWorkspaceInfo()
+        {
+            string dataDirectory = TeamFoundationServer.ClientCacheDirectory;
+            string configFilePath = Path.Combine(dataDirectory, ConfigFile);
 
-			List<InternalServerInfo> servers = new List<InternalServerInfo>();
+            List<InternalServerInfo> servers = new List<InternalServerInfo>();
 
-			if (!File.Exists(configFilePath)) return servers.ToArray();
+            if (!File.Exists(configFilePath))
+                return servers.ToArray();
 
-			using (XmlTextReader reader = new XmlTextReader(configFilePath))
-				{
-					while (reader.Read())
-						{
-							if (reader.NodeType == XmlNodeType.Element && reader.Name == "ServerInfo")
-								servers.Add(InternalServerInfo.FromXml(reader));
-						}
-				}
+            using (XmlTextReader reader = new XmlTextReader(configFilePath))
+            {
+                while (reader.Read())
+                {
+                    if (reader.NodeType == XmlNodeType.Element && reader.Name == "ServerInfo")
+                        servers.Add(InternalServerInfo.FromXml(reader));
+                }
+            }
 
-			return servers.ToArray();
-		}
+            return servers.ToArray();
+        }
 
-		internal XmlElement InitWorkspaceInfoCache()
-		{
-			XmlDocument doc = new XmlDocument();
+        internal XmlElement InitWorkspaceInfoCache()
+        {
+            XmlDocument doc = new XmlDocument();
 
-			XmlElement vcs = doc.CreateElement("VersionControlServer");
-			doc.AppendChild(vcs);
+            XmlElement vcs = doc.CreateElement("VersionControlServer");
+            doc.AppendChild(vcs);
 
-			XmlElement servers = doc.CreateElement("Servers");
-			vcs.AppendChild(servers);
+            XmlElement servers = doc.CreateElement("Servers");
+            vcs.AppendChild(servers);
 
-			return servers;
-		}
+            return servers;
+        }
 
-		public string Name
-		{
-			get { return Environment.MachineName; }
-		}
-	}
-}		
+        public string Name
+        {
+            get { return Environment.MachineName; }
+        }
+    }
+}

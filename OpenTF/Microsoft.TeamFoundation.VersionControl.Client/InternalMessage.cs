@@ -42,86 +42,85 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal class Message 
-	{
-		private const string SoapEnvelopeNamespace = "http://schemas.xmlsoap.org/soap/envelope/";
-		private const string MessageNamespace =	"http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
-		private WebRequest request;
-		private XmlTextWriter xtw;
-		private string methodName;
+    internal class Message
+    {
+        private const string SoapEnvelopeNamespace = "http://schemas.xmlsoap.org/soap/envelope/";
+        private const string MessageNamespace =	"http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
+        private WebRequest request;
+        private XmlTextWriter xtw;
+        private string methodName;
 
-		public XmlTextWriter Body
-		{
-			get { return xtw; }
-		}	 
+        public XmlTextWriter Body
+        {
+            get { return xtw; }
+        }
 
-		public WebRequest Request
-		{
-			get { return request; }
-		}	 
+        public WebRequest Request
+        {
+            get { return request; }
+        }
 
-		public string MethodName 
-		{
-			get { return methodName; }
-		}
+        public string MethodName
+        {
+            get { return methodName; }
+        }
 
-		public XmlReader ResponseReader(HttpWebResponse response)
-		{
-			//Console.WriteLine(new StreamReader(response.GetResponseStream()).ReadToEnd());
-			StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding (false), false);
-			XmlReader reader = new XmlTextReader(sr);
+        public XmlReader ResponseReader(HttpWebResponse response)
+        {
+            //Console.WriteLine(new StreamReader(response.GetResponseStream()).ReadToEnd());
+            StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding(false), false);
+            XmlReader reader = new XmlTextReader(sr);
 
-			string resultName = MethodName + "Result";
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.Element && reader.Name == resultName)
-						break;
-				}
+            string resultName = MethodName + "Result";
+            while (reader.Read())
+            {
+                if (reader.NodeType == XmlNodeType.Element && reader.Name == resultName)
+                    break;
+            }
+            return reader;
+        }
 
-			return reader;
-		}
+        public Message(WebRequest request, string methodName)
+        {
+            this.methodName = methodName;
+            this.request = request;
+            this.request.Method = "POST";
 
-		public Message(WebRequest request, string methodName)
-		{
-			this.methodName = methodName;
-			this.request = request;
-			this.request.Method = "POST";
+            // PreAuth can't be used with NTLM afaict
+            //this.request.PreAuthenticate=true;
 
-			// PreAuth can't be used with NTLM afaict
-			//this.request.PreAuthenticate=true;
+            // must allow buffering for NTLM authentication
+            HttpWebRequest req = request as HttpWebRequest;
+            req.AllowWriteStreamBuffering = true;
 
-			// must allow buffering for NTLM authentication
-			HttpWebRequest req = request as HttpWebRequest;
-			req.AllowWriteStreamBuffering = true;
+            //http://blogs.x2line.com/al/archive/2005/01/04/759.aspx#780
+            //req.KeepAlive = false;
+            //req.ProtocolVersion = HttpVersion.Version10;
 
-			//http://blogs.x2line.com/al/archive/2005/01/04/759.aspx#780
-			//req.KeepAlive = false;
-			//req.ProtocolVersion = HttpVersion.Version10;
+            this.request.ContentType = "text/xml; charset=utf-8";
+            this.request.Headers.Add("X-TFS-Version", "1.0.0.0");
+            this.request.Headers.Add("accept-language", "en-US");
+            this.request.Headers.Add("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886");
 
-			this.request.ContentType = "text/xml; charset=utf-8";
-			this.request.Headers.Add ("X-TFS-Version", "1.0.0.0");
-			this.request.Headers.Add ("accept-language", "en-US");
-			this.request.Headers.Add ("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886");
-
-			xtw = new XmlTextWriter (request.GetRequestStream(), new UTF8Encoding (false));
-			//xtw.Formatting = Formatting.Indented;
+            xtw = new XmlTextWriter(request.GetRequestStream(), new UTF8Encoding(false));
+            //xtw.Formatting = Formatting.Indented;
 			
-			xtw.WriteStartDocument();
-			xtw.WriteStartElement("soap", "Envelope", SoapEnvelopeNamespace);
-			xtw.WriteAttributeString("xmlns", "xsi", null, XmlSchema.InstanceNamespace);
-			xtw.WriteAttributeString("xmlns", "xsd", null, XmlSchema.Namespace);
+            xtw.WriteStartDocument();
+            xtw.WriteStartElement("soap", "Envelope", SoapEnvelopeNamespace);
+            xtw.WriteAttributeString("xmlns", "xsi", null, XmlSchema.InstanceNamespace);
+            xtw.WriteAttributeString("xmlns", "xsd", null, XmlSchema.Namespace);
 
-			xtw.WriteStartElement("soap", "Body", SoapEnvelopeNamespace);
-			xtw.WriteStartElement("", methodName, MessageNamespace);
-		}
+            xtw.WriteStartElement("soap", "Body", SoapEnvelopeNamespace);
+            xtw.WriteStartElement("", methodName, MessageNamespace);
+        }
 
-		public void End ()
-		{
-			xtw.WriteEndElement(); // methodName
-			xtw.WriteEndElement(); // soap:body
-			xtw.WriteEndElement(); // soap:Envelope
-			xtw.Flush();
-			xtw.Close();
-		}
-	}
+        public void End()
+        {
+            xtw.WriteEndElement(); // methodName
+            xtw.WriteEndElement(); // soap:body
+            xtw.WriteEndElement(); // soap:Envelope
+            xtw.Flush();
+            xtw.Close();
+        }
+    }
 }
