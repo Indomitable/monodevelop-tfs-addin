@@ -954,20 +954,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return shelvesets.ToArray();
         }
 
+        const string workspace = "Workspace";
+
         public Workspace QueryWorkspace(string workspaceName, string ownerName)
         {
             Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryWorkspace");
             msg.Body.WriteElementString("workspaceName", workspaceName);
             msg.Body.WriteElementString("ownerName", ownerName);
 
-            Workspace workspace;
             using (HttpWebResponse response = Invoke(msg))
             {
                 XmlReader results = msg.ResponseReader(response);
-                workspace = Workspace.FromXml(this, results);
+                XElement elementResult = XElement.Load(results);
+                return Workspace.FromXml(this, elementResult.Element(XName.Get("Workspace", Namespace)));
             }
-
-            return workspace;
         }
 
         public List<Workspace> QueryWorkspaces(string workspaceName, string ownerName,

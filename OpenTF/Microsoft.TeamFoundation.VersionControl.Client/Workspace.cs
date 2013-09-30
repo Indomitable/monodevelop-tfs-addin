@@ -650,15 +650,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 throw new Exception("Invalid workspace element!");
             }
+            string nameSpace = element.Name.NamespaceName;
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
             string owner = element.Attribute("owner").Value;
             //bool isLocal = Convert.ToBoolean(element.Attribute("islocal").Value);
 
-            string comment = element.Element(XName.Get("Comment", element.Name.NamespaceName)).Value;
-            DateTime lastAccessDate = DateTime.Parse(element.Element(XName.Get("LastAccessDate", element.Name.NamespaceName)).Value);
-            var folders = new List<WorkingFolder>(element.Element(XName.Get("Folders", element.Name.NamespaceName))
-                                                         .Elements(XName.Get("WorkingFolder", element.Name.NamespaceName))
+            string comment = element.Element(XName.Get("Comment", nameSpace)).Value;
+            DateTime lastAccessDate = DateTime.Parse(element.Element(XName.Get("LastAccessDate", nameSpace)).Value);
+            var folders = new List<WorkingFolder>(element.Element(XName.Get("Folders", nameSpace))
+                                                         .Elements(XName.Get("WorkingFolder", nameSpace))
                                                          .Select(el => WorkingFolder.FromXml(repository, el)));
 
             return new Workspace(repository.VersionControlServer, name, owner, comment, folders.ToArray(), computer)

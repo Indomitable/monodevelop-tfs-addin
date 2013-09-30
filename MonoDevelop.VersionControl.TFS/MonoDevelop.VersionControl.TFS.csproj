@@ -41,6 +41,8 @@
     <Compile Include="GUI\TeamExplorerPad.cs" />
     <Compile Include="Infrastructure\Objects\ServerEntry.cs" />
     <Compile Include="Infrastructure\Objects\HierarchyItem.cs" />
+    <Compile Include="GUI\WorkspacesDialog.cs" />
+    <Compile Include="Helpers\WorkspaceHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

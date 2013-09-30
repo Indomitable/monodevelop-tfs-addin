@@ -91,10 +91,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             topBox.PackStart(new Label(GettextCatalog.GetString("Workspace") + ":"));
             _workspaces.ItemsSource = _workspaceStore;
+            _workspaces.Views.Add(new TextCellView(_workspaceName));
             topBox.PackStart(_workspaces);
             Button button = new Button(GettextCatalog.GetString("Manage"));
             button.Clicked += OnManageWorkspaces;
-
+            topBox.PackStart(button);
             _view.PackStart(topBox);
 
             HBox box = new HBox();
@@ -173,30 +174,25 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void FillWorkspaces()
         {
-            var server = TFSVersionControlService.Instance.GetServer(ServerName);
             _workspaceStore.Clear();
-            var credentials = CredentialsManager.LoadCredential(server.Url);
-            using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
+            var workspaces = WorkspaceHelper.GetLocalWorkspaces(ServerName);
+            foreach (var workspace in workspaces)
             {
-                tfsServer.Authenticate();
-                var versionControl = tfsServer.GetService<VersionControlServer>();
-
-                var workspaces = versionControl.QueryWorkspaces(string.Empty, credentials.UserName, string.Empty); //"VMLADENOV-7"
-                foreach (var workspace in workspaces)
-                {
-                    var row = _workspaceStore.AddRow();
-                    _workspaceStore.SetValue(row, _workspaceName, workspace.Name);
-                }
-//                if (_workspaces.Items.Count > 0)
-//                {
-//                    _workspaces.SelectedIndex = 0;
-//                }
+                var row = _workspaceStore.AddRow();
+                _workspaceStore.SetValue(row, _workspaceName, workspace.Name);
+            }
+            if (workspaces.Count > 0)
+            {
+                _workspaces.SelectedIndex = 0;
             }
         }
 
         private void OnManageWorkspaces(object sender, EventArgs e)
         {
-
+            using (var dialog = new WorkspacesDialog(this.ServerName))
+            {
+                dialog.Run(this.Widget.ParentWindow);
+            }
         }
     }
 }
