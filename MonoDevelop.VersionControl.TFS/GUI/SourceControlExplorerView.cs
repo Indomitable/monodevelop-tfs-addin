@@ -16,20 +16,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     public class SourceControlExplorerView : AbstractXwtViewContent
     {
         readonly VBox _view = new VBox();
-        readonly TreeView _treeView = new TreeView();
         readonly ListView _listView = new ListView();
-        readonly DataField<string> _name = new DataField<string>();
-        readonly DataField<string> _path = new DataField<string>();
-        readonly TreeStore _treeStore;
         readonly ComboBox _workspaces = new ComboBox();
         readonly DataField<string> _workspaceName = new DataField<string>();
         readonly ListStore _workspaceStore;
+        readonly ServerFoldersView _foldersView;
+        private ServerEntry _server;
 
         public SourceControlExplorerView()
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
-            _treeStore = new TreeStore(_name, _path);
             _workspaceStore = new ListStore(_workspaceName);
+            _foldersView = new ServerFoldersView();
             BuildContent();
         }
 
@@ -41,7 +39,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(serverName);
-                    sourceDoc.ExpandProject(projectName);
+                    sourceDoc._foldersView.ExpandProject(projectName);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -49,25 +47,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(serverName);
-            sourceControlExplorerView.ExpandProject(projectName);
+            sourceControlExplorerView._foldersView.ExpandProject(projectName);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
-
-        public string ServerName { get; set; }
 
         #region implemented abstract members of AbstractViewContent
 
         public override void Load(string serverName)
         {
-            if (string.Equals(serverName, this.ServerName, StringComparison.OrdinalIgnoreCase))
+            if (this._server != null && string.Equals(serverName, this._server.Name, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
-            this.ServerName = serverName;
-            var server = TFSVersionControlService.Instance.GetServer(this.ServerName);
-            ContentName = GettextCatalog.GetString("Source Explorer") + " - " + this.ServerName;
+            _server = TFSVersionControlService.Instance.GetServer(serverName);
+            ContentName = GettextCatalog.GetString("Source Explorer") + " - " + serverName;
             FillWorkspaces();
-            LoadTreeView(server.Url);
+            _foldersView.FillTreeView(_server);
         }
 
         #endregion
@@ -99,72 +94,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _view.PackStart(topBox);
 
             HBox box = new HBox();
-            _treeView.MinWidth = 300;
-            box.PackStart(_treeView);
-
-            _treeView.Columns.Add(new ListViewColumn("Name", new TextCellView(_name) { Editable = false }));
-
-        
-            _treeView.DataSource = _treeStore;
+            _foldersView.TreeView.MinWidth = 300;
+            box.PackStart(_foldersView.TreeView);
 
             box.PackStart(_listView, true, true);
 
             _view.PackStart(box, true, true);
         }
 
-        private void LoadTreeView(Uri serverUrl)
-        {
-            _treeStore.Clear();
-            var credentials = CredentialsManager.LoadCredential(serverUrl);
-            using (var tfsServer = TeamFoundationServerFactory.GetServer(serverUrl, credentials))
-            {
-                tfsServer.Authenticate();
-
-                var versionControl = tfsServer.GetService<VersionControlServer>();
-                var itemSet = versionControl.GetItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
-
-                var root = ItemSetToHierarchItemConverter.Convert(itemSet.Items);
-                var node = _treeStore.AddNode().SetValue(_name, root.Name).SetValue(_path, root.ServerPath);
-                AddChilds(node, root.Children);
-                var topNode = _treeStore.GetFirstNode();
-                _treeView.ExpandRow(topNode.CurrentPosition, false);
-            }
-        }
-
-        private void AddChilds(TreeNavigator node, List<HierarchyItem> children)
-        {
-            foreach (var child in children)
-            {
-                node.AddChild().SetValue(_name, child.Name).SetValue(_path, child.ServerPath);
-                AddChilds(node, child.Children);
-                node.MoveToParent();
-            }
-        }
-
-        private void ExpandProject(string projectName)
-        {
-            if (string.IsNullOrEmpty(projectName))
-                return;
-            var node = _treeStore.GetFirstNode();
-            node.MoveToChild();
-            while (!string.Equals(node.GetValue(_name), projectName, StringComparison.OrdinalIgnoreCase))
-            {
-                if (!node.MoveNext())
-                {
-                    return;
-                }
-            }
-            _treeView.ExpandRow(node.CurrentPosition, false);
-            _treeView.ScrollToRow(node.CurrentPosition);
-            _treeView.SelectRow(node.CurrentPosition);
-        }
-
         public override void Dispose()
         {
             base.Dispose();
             _listView.Dispose();
-            _treeView.Dispose();
-            _treeStore.Dispose();
+            _foldersView.Dispose();
 
             _workspaces.Dispose();
             _workspaceStore.Dispose();
@@ -175,7 +117,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillWorkspaces()
         {
             _workspaceStore.Clear();
-            var workspaces = WorkspaceHelper.GetLocalWorkspaces(ServerName);
+            var workspaces = WorkspaceHelper.GetLocalWorkspaces(_server);
             foreach (var workspace in workspaces)
             {
                 var row = _workspaceStore.AddRow();
@@ -189,7 +131,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void OnManageWorkspaces(object sender, EventArgs e)
         {
-            using (var dialog = new WorkspacesDialog(this.ServerName))
+            using (var dialog = new WorkspacesDialog(_server))
             {
                 dialog.Run(this.Widget.ParentWindow);
             }

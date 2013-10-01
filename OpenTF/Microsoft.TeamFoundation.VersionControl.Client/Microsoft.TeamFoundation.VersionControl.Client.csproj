@@ -116,6 +116,7 @@
     <Compile Include="WorkspaceVersionSpec.cs" />
     <Compile Include="Workstation.cs" />
     <Compile Include="WorkstationSettings.cs" />
+    <Compile Include="WorkspaceData.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

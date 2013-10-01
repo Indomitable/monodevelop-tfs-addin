@@ -81,16 +81,28 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public Workspace CreateWorkspace(string name, string owner)
         {
-            return CreateWorkspace(name, owner, null, new WorkingFolder[0], Environment.MachineName);
+            WorkspaceData workspaceData = new WorkspaceData
+            {
+                Name = name,
+                Owner = owner,
+                Comment = string.Empty,
+                Computer = Environment.MachineName
+            };
+            return CreateWorkspace(workspaceData);
         }
 
-        public Workspace CreateWorkspace(string name, string owner, string comment,
-                                         WorkingFolder[] folders, string computer)
+        public Workspace CreateWorkspace(WorkspaceData workspaceData)
         {
-            Workspace w1 = new Workspace(this, name, owner, comment, folders, computer);
-            Workspace w2 = repository.CreateWorkspace(w1);
-            Workstation.Current.AddCachedWorkspaceInfo(ServerGuid, Uri, w2);
-            return w2;
+            Workspace workspace = repository.CreateWorkspace(new Workspace(this, workspaceData));
+            Workstation.Current.AddCachedWorkspaceInfo(ServerGuid, Uri, workspace);
+            return workspace;
+        }
+
+        public Workspace UpdateWorkspace(string oldWorkspaceName, string oldWorkspaceOwner, WorkspaceData workspaceData)
+        {
+            var workspace = repository.UpdateWorkspace(oldWorkspaceName, oldWorkspaceOwner, new Workspace(this, workspaceData));
+            Workstation.Current.UpdateWorkspaceInfoCache(this, workspaceData.Owner);
+            return workspace;
         }
 
         public void DeleteWorkspace(string workspaceName, string workspaceOwner)

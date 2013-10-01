@@ -64,13 +64,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return new WorkingFolder(serverItem, local);
         }
 
-        internal void ToXml(XmlWriter writer, string element)
+        internal XElement ToXml()
         {
-            writer.WriteStartElement("WorkingFolder");
-            writer.WriteAttributeString("local", TfsPath.FromPlatformPath(LocalItem));
-            writer.WriteAttributeString("item", ServerItem);
-            //			writer.WriteAttributeString("type", Type.ToString());
-            writer.WriteEndElement();
+            return new XElement("WorkingFolder", 
+                new XAttribute("local", TfsPath.FromPlatformPath(LocalItem)), 
+                new XAttribute("item", ServerItem));
         }
 
         public override string ToString()

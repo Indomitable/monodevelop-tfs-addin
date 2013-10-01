@@ -2,14 +2,14 @@ using System;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Collections.Generic;
 using Microsoft.TeamFoundation.Client;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.Helpers
 {
     public static class WorkspaceHelper
     {
-        public static List<Workspace> GetLocalWorkspaces(string serverName)
+        public static List<Workspace> GetLocalWorkspaces(ServerEntry server)
         {
-            var server = TFSVersionControlService.Instance.GetServer(serverName);
             var credentials = CredentialsManager.LoadCredential(server.Url);
             using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
             {
@@ -20,9 +20,8 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             }
         }
 
-        public static List<Workspace> GetRemoteWorkspaces(string serverName)
+        public static List<Workspace> GetRemoteWorkspaces(ServerEntry server)
         {
-            var server = TFSVersionControlService.Instance.GetServer(serverName);
             var credentials = CredentialsManager.LoadCredential(server.Url);
             using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
             {
@@ -30,6 +29,18 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
                 var versionControl = tfsServer.GetService<VersionControlServer>();
 
                 return  versionControl.QueryWorkspaces(string.Empty, credentials.UserName, string.Empty);
+            }
+        }
+
+        public static Workspace GetWorkspace(ServerEntry server, string name)
+        {
+            var credentials = CredentialsManager.LoadCredential(server.Url);
+            using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
+            {
+                tfsServer.Authenticate();
+                var versionControl = tfsServer.GetService<VersionControlServer>();
+
+                return  versionControl.GetWorkspace(name, credentials.UserName);
             }
         }
     }

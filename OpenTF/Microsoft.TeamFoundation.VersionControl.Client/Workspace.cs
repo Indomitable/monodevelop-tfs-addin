@@ -81,6 +81,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.computer = info.Computer;
         }
 
+        internal Workspace(VersionControlServer versionControlServer, WorkspaceData workspaceData) : this()
+        {
+            this.versionControlServer = versionControlServer;
+            this.name = workspaceData.Name;
+            this.ownerName = workspaceData.Owner;
+            this.computer = workspaceData.Computer;
+            this.comment = workspaceData.Comment;
+            this.folders = workspaceData.WorkingFolders.ToArray();
+        }
+
         public int CheckIn(PendingChange[] changes, string comment)
         {
             if (changes.Length == 0)
@@ -646,10 +656,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         internal static Workspace FromXml(Repository repository, XElement element)
         {
-            if (!string.Equals(element.Name.LocalName, Workspace.XmlElementName, StringComparison.Ordinal))
-            {
-                throw new Exception("Invalid workspace element!");
-            }
             string nameSpace = element.Name.NamespaceName;
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
@@ -668,27 +674,40 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             };
         }
 
-        internal void ToXml(XmlWriter writer, string element)
+        internal XElement ToXml(string elementName)
         {
-            writer.WriteStartElement(element);
-            writer.WriteAttributeString("computer", Computer);
-            writer.WriteAttributeString("name", Name);
-            writer.WriteAttributeString("owner", OwnerName);
-            writer.WriteElementString("Comment", Comment);
+            XElement element = new XElement(elementName, 
+                                   new XAttribute("computer", Computer), 
+                                   new XAttribute("name", Name),
+                                   new XAttribute("owner", OwnerName), 
+                                   new XElement("Comment", Comment));
 
             if (folders != null)
             {
-                writer.WriteStartElement("Folders");
-
-                foreach (WorkingFolder folder in folders)
-                {
-                    folder.ToXml(writer, element);
-                }
-					
-                writer.WriteEndElement();
+                element.Add(new XElement("Folders", from f in folders
+                                                                select f.ToXml()));
             }
-
-            writer.WriteEndElement();
+            return element;
+            //workspaceElm.WriteTo(writer);
+//            writer.WriteStartElement(element);
+//            writer.WriteAttributeString("computer", Computer);
+//            writer.WriteAttributeString("name", Name);
+//            writer.WriteAttributeString("owner", OwnerName);
+//            writer.WriteElementString("Comment", Comment);
+//
+//            if (folders != null)
+//            {
+//                writer.WriteStartElement("Folders");
+//
+//                foreach (WorkingFolder folder in folders)
+//                {
+//                    folder.ToXml(writer, element);
+//                }
+//					
+//                writer.WriteEndElement();
+//            }
+//
+//            writer.WriteEndElement();
         }
 
         public override string ToString()

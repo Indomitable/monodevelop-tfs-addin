@@ -39,19 +39,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             table.Add(_serverList, 0, 1);
 
             VBox buttonBox = new VBox();
-            const int buttonWidth = 80;
             var addButton = new Button(GettextCatalog.GetString("Add"));
             addButton.Clicked += OnAddServer;
-            addButton.MinWidth = buttonWidth;
+            addButton.MinWidth = Constants.ButtonWidth;
             buttonBox.PackStart(addButton);
 
             var removeButton = new Button(GettextCatalog.GetString("Remove"));
-            removeButton.MinWidth = buttonWidth;
+            removeButton.MinWidth = Constants.ButtonWidth;
             removeButton.Clicked += OnRemoveServer;
             buttonBox.PackStart(removeButton);
 
             var closeButton = new Button(GettextCatalog.GetString("Close"));
-            closeButton.MinWidth = buttonWidth;
+            closeButton.MinWidth = Constants.ButtonWidth;
             closeButton.Clicked += (sender, e) => this.Respond(Command.Close);
             buttonBox.PackStart(closeButton);
 

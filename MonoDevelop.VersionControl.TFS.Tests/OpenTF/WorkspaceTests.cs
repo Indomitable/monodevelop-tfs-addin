@@ -15,7 +15,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
             {
                 server.Authenticate();
                 var versionControl = server.GetService<VersionControlServer>();
-                versionControl.CreateWorkspace("TestWorkSpace", "mono_tfs_plugin_cp");
+                versionControl.CreateWorkspace("TestWorkSpace1", "mono_tfs_plugin_cp");
             }
         }
     }

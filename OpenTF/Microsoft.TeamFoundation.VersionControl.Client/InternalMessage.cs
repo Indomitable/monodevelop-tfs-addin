@@ -39,6 +39,7 @@ using System.Web.Services.Description;
 using System.Web.Services.Discovery;
 using System.Web.Services.Protocols;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {

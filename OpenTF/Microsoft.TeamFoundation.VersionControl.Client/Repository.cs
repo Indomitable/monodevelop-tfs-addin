@@ -240,8 +240,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public Workspace CreateWorkspace(Workspace workspace)
         {
             Message msg = new Message(GetWebRequest(new Uri(Url)), "CreateWorkspace");
-            workspace.ToXml(msg.Body, "workspace");
-
+            msg.Body.WriteRaw(workspace.ToXml("workspace").ToString());
             Workspace newWorkspace;
             using (HttpWebResponse response = Invoke(msg))
             {
@@ -966,7 +965,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 XmlReader results = msg.ResponseReader(response);
                 XElement elementResult = XElement.Load(results);
-                return Workspace.FromXml(this, elementResult.Element(XName.Get("Workspace", Namespace)));
+                return Workspace.FromXml(this, elementResult);
             }
         }
 
@@ -998,7 +997,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateWorkspace");
             msg.Body.WriteElementString("oldWorkspaceName", oldWorkspaceName);
             msg.Body.WriteElementString("ownerName", ownerName);
-            newWorkspace.ToXml(msg.Body, "newWorkspace");
+            msg.Body.WriteRaw(newWorkspace.ToXml("newWorkspace").ToString());
+
 
             Workspace workspace;
             using (HttpWebResponse response = Invoke(msg))
@@ -1094,7 +1094,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             // TFS servers corrupt *nix type paths
             if (!runningOnUnix)
                 return path;
-            return "C:" + path.Replace('/', '\\');
+            return "U:" + path.Replace('/', '\\'); //Use U: like git-tf
         }
     }
 }

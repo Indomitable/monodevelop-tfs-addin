@@ -24,11 +24,17 @@
 				_label = "_Connect to server"
 				defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ConnectToServerHandler"
 				description = "Connect to Team Foundation Server."/>
+			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer"
+				_label = "_Team Explorer"
+				defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.TeamExplorerHandler"
+				description = "Team Explorer."/>
 		</Category>
 	</Extension>
 
 	<Extension path = "/MonoDevelop/Ide/MainMenu">
-		<ItemSet id = "TeamFoundation" _label = "Team Foundation" insertafter = "VersionControl" >
+		<ItemSet id = "TeamFoundation" _label = "Team" insertafter = "VersionControl" >
+			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
+			<SeparatorItem/>
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
 		</ItemSet>
 	</Extension>
