@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,37 +27,28 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Text;
-using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class LabelVersionSpec : VersionSpec
-	{
-		private string label;
+    public class LabelVersionSpec : VersionSpec
+    {
+        private readonly string label;
 
-		public LabelVersionSpec(string label)
-		{
-			this.label = label;
-		}
+        public LabelVersionSpec(string label)
+        {
+            this.label = label;
+        }
 
-		internal override void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("xsi:type", "LabelVersionSpec");
-			writer.WriteAttributeString("label", Label);
-			writer.WriteEndElement();
-		}
+        internal override XElement ToXml(XName element)
+        {
+            return new XElement(element,
+                new XAttribute(XsiNs + "type", "LabelVersionSpec"),
+                new XAttribute("label", Label));
+        }
 
-		public string Label
-		{
-			get { return label; }
-		}
+        public string Label { get { return label; } }
 
-		public override string DisplayString
-		{
-			get { return "L" + label; }
-		}
-	}
+        public override string DisplayString { get { return "L" + label; } }
+    }
 }

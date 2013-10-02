@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,51 +27,31 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Text;
-using System.Xml;
-using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class LabelItemSpec 
-	{
-		private ItemSpec itemSpec;
-		private VersionSpec version;
-		private bool exclude;
+    public sealed class LabelItemSpec
+    {
+        public LabelItemSpec(ItemSpec itemSpec, VersionSpec version, bool exclude)
+        {
+            this.ItemSpec = itemSpec;
+            this.Version = version;
+            this.Exclude = exclude;
+        }
 
-		public LabelItemSpec (ItemSpec itemSpec, VersionSpec version, bool exclude)
-		{
-			this.itemSpec = itemSpec;
-			this.version = version;
-			this.exclude = exclude;
-		}
+        internal XElement ToXml(XName element)
+        {
+            return new XElement(element, 
+                new XAttribute("ex", Exclude ? "true" : "false"),
+                ItemSpec.ToXml(),
+                Version.ToXml(XmlNamespaces.MessageNs + "Version"));
+        }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("ex", exclude.ToString().ToLower());
-			ItemSpec.ToXml(writer, "ItemSpec");
-			Version.ToXml(writer, "Version");
-			writer.WriteEndElement();
-		}
+        public bool Exclude { get; set; }
 
-		public bool Exclude
-		{
-			get { return exclude; }
-			set { exclude = value; }
-		}
-		
-		public ItemSpec ItemSpec
-		{
-			get { return itemSpec; }
-			set { itemSpec = value; }
-		}
+        public ItemSpec ItemSpec { get; set; }
 
-		public VersionSpec Version
-		{
-			get { return version; }
-			set { version = value; }
-		}
-	}
+        public VersionSpec Version { get; set; }
+    }
 }

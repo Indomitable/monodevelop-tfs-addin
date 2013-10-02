@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,71 +28,50 @@
 //
 
 using System;
-using System.Text;
-using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ItemSpec 
-	{
-		private int deletionId = 0;
-		private string item;
-		private RecursionType recursionType;
+    public class ItemSpec
+    {
+        public ItemSpec(string item, RecursionType recursionType)
+        {
+            if (string.IsNullOrEmpty(item))
+                throw new ArgumentException("Value cannot be null or empty.");
 
-		public ItemSpec(string item, RecursionType recursionType)
-		{
-			if (String.IsNullOrEmpty(item))
-				throw new ArgumentException("Value cannot be null or empty.");
+            this.Item = item;
+            this.RecursionType = recursionType;
+        }
 
-			this.item = item;
-			this.recursionType = recursionType;
-		}
+        public ItemSpec(string item, RecursionType recursionType, int deletionId)
+        {
+            if (string.IsNullOrEmpty(item))
+                throw new ArgumentException("Value cannot be null or empty.");
 
-		public ItemSpec(string item, RecursionType recursionType, int deletionId)
-		{
-			if (String.IsNullOrEmpty(item))
-				throw new ArgumentException("Value cannot be null or empty.");
+            this.Item = item;
+            this.RecursionType = recursionType;
+            this.DeletionId = deletionId;
+        }
 
-			this.item = item;
-			this.recursionType = recursionType;
-			this.deletionId = deletionId;
-		}
+        internal XElement ToXml(string element = "ItemSpec")
+        {
+            XElement result = new XElement(XmlNamespaces.MessageNs + element);
+            if (this.RecursionType != RecursionType.None)
+                result.Add(new XAttribute("recurse", RecursionType));
+            if (this.DeletionId != 0)
+                result.Add(new XAttribute("did", DeletionId));
+            if (VersionControlPath.IsServerItem(Item))
+                result.Add(new XAttribute("item", Item));
+            else
+                result.Add(new XAttribute("item", TfsPath.FromPlatformPath(Item)));
+            return result;
+        }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			if (String.IsNullOrEmpty(item)) return;
+        public int DeletionId { get; set; }
 
-			writer.WriteStartElement(element);
+        public string Item { get; set; }
 
-			if (this.RecursionType != RecursionType.None)
-				writer.WriteAttributeString("recurse", RecursionType.ToString());
-			if (this.DeletionId != 0) 
-				writer.WriteAttributeString("did", DeletionId.ToString());
-
-			// only convert local path specs from platform paths to tfs paths 
-			if (VersionControlPath.IsServerItem(Item)) writer.WriteAttributeString("item", Item);
-			else writer.WriteAttributeString("item", TfsPath.FromPlatformPath(Item));
-
-			writer.WriteEndElement();
-		}
-
-		public int DeletionId
-		{
-			get { return deletionId; }
-			set { deletionId = value; }
-		}
-
-		public string Item
-		{
-			get { return item; }
-			set { item = value; }
-		}
-
-		public RecursionType RecursionType
-		{
-			get { return recursionType; }
-			set { recursionType = value; }
-		}
-	}
+        public RecursionType RecursionType { get; set; }
+    }
 }

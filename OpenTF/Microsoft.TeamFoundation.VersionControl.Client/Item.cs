@@ -36,6 +36,7 @@ using System.Xml;
 using System.Web.Services;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -69,34 +70,29 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
         //		<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><QueryItemsResponse xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03"><QueryItemsResult><ItemSet><QueryPath>$/LSG-1.0</QueryPath><Pattern>*</Pattern><Item cs="7550" date="2006-07-31T18:28:33.933Z" enc="1252" type="File" itemid="41475" item="$/LSG-1.0/configure" hash="KW/KR55BW9qI4Fcg0cEVJQ==" len="146815" durl="sfid=62793,109833,108681,62795,72164,108744,72943,87351,72163,21458&amp;ts=633006048546770184&amp;s=ZNoNAgB8PlCgbs2Lqc4
         //zH21A4SRFW3edqRcbnRKOeC%2F1IZ02f%2FHe8EdYvcU8PNwnBPhBGSGgaKcQWNjPussH3LgjhxQLzxZsfXQWDAllOnbf%2BrOMQYY30SF9e4R4eUjg1wccIkUpkEMOv1edrteyDu5H5ZjISxHQWhLTJ4OyJQ%3D&amp;fid=72164" /><Item cs="7043" date="2006-06-14T20:33:16.16Z" enc="-3" type="Folder" itemid="41609" item="$/LSG-1.0/db" hash="" />
-        internal static Item FromXml(Repository repository, XmlReader reader)
+        internal static Item FromXml(Repository repository, XElement element)
         {
-            string serverItem = reader.GetAttribute("item");
-			
+            string serverItem = element.Attribute("item").Value;
             Item item = new Item(repository.VersionControlServer, serverItem);
 
-            string itype = reader.GetAttribute("type");
-            if (!String.IsNullOrEmpty(itype))
-                item.itemType = (ItemType)Enum.Parse(typeof(ItemType), itype, true);
+            if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
+                item.itemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
 
-            string sdate = reader.GetAttribute("date");
-            if (!String.IsNullOrEmpty(sdate))
-                item.checkinDate = DateTime.Parse(sdate);
+            if (element.Attribute("date") != null && !string.IsNullOrEmpty(element.Attribute("date").Value))
+                item.checkinDate = DateTime.Parse(element.Attribute("date").Value);
 
-            item.changesetId = Convert.ToInt32(reader.GetAttribute("cs"));
-            item.itemId = Convert.ToInt32(reader.GetAttribute("itemid"));
-            item.encoding = Convert.ToInt32(reader.GetAttribute("enc"));
+            item.changesetId = Convert.ToInt32(element.Attribute("cs").Value);
+            item.itemId = Convert.ToInt32(element.Attribute("itemid").Value);
+            item.encoding = Convert.ToInt32(element.Attribute("enc").Value);
 
             if (item.ItemType == ItemType.File)
             {
-                item.contentLength = Convert.ToInt32(reader.GetAttribute("len"));
-                item.downloadUrl = reader.GetAttribute("durl");
+                item.contentLength = Convert.ToInt32(element.Attribute("len").Value);
+                item.downloadUrl = element.Attribute("durl").Value;
 
-                string hash = reader.GetAttribute("hash");
-                if (!String.IsNullOrEmpty(hash))
-                    item.hashValue = Convert.FromBase64String(hash);
+                if (element.Attribute("hash") != null && !string.IsNullOrEmpty(element.Attribute("hash").Value))
+                    item.hashValue = Convert.FromBase64String(element.Attribute("hash").Value);
             }
-
             return item;
         }
 
@@ -140,45 +136,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return sb.ToString();
         }
 
-        public int ContentLength
-        {
-            get { return contentLength; }
-        }
+        public int ContentLength { get { return contentLength; } }
 
-        public ItemType ItemType
-        {
-            get { return itemType; }
-        }
+        public ItemType ItemType { get { return itemType; } }
 
-        public DateTime CheckinDate
-        {
-            get { return checkinDate; }
-        }
+        public DateTime CheckinDate { get { return checkinDate; } }
 
-        public int ChangesetId
-        {
-            get { return changesetId; }
-        }
+        public int ChangesetId { get { return changesetId; } }
 
-        public int DeletionId
-        {
-            get { return deletionId; }
-        }
+        public int DeletionId { get { return deletionId; } }
 
-        public int Encoding
-        {
-            get { return encoding; }
-        }
+        public int Encoding { get { return encoding; } }
 
-        public int ItemId
-        {
-            get { return itemId; }
-        }
+        public int ItemId { get { return itemId; } }
 
-        public byte[] HashValue
-        {
-            get { return hashValue; }
-        }
+        public byte[] HashValue { get { return hashValue; } }
 
         public Uri ArtifactUri
         {
@@ -194,15 +166,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public string ServerItem
-        {
-            get { return serverItem; }
-        }
+        public string ServerItem { get { return serverItem; } }
 
-        public VersionControlServer VersionControlServer
-        {
-            get { return versionControlServer; }
-        }
+        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
 
         internal class ItemGenericComparer : IComparer<Item>
         {
@@ -214,13 +180,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        internal static IComparer<Item> GenericComparer
-        {
-            get
-            { 
-                return ItemGenericComparer.Instance; 
-            }
-        }
+        internal static IComparer<Item> GenericComparer { get { return ItemGenericComparer.Instance; } }
 
         internal class ItemComparer : IComparer
         {
@@ -234,13 +194,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public static IComparer Comparer
-        {
-            get
-            { 
-                return ItemComparer.Instance; 
-            }
-        }
+        public static IComparer Comparer { get { return ItemComparer.Instance; } }
     }
 }
 

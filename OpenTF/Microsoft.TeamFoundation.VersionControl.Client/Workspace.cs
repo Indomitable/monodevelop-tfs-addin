@@ -29,10 +29,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
 using System.Text;
-using System.Xml;
-using System.Web.Services;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
@@ -615,57 +612,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
         }
 
-        internal static Workspace FromXml(Repository repository, XmlReader reader)
-        {
-            string elementName = reader.Name;
-
-            string computer = reader.GetAttribute("computer");
-            string name = reader.GetAttribute("name");
-            string owner = reader.GetAttribute("owner");
-
-            string comment = "";
-            DateTime lastAccessDate = DateTime.Now;
-            List<WorkingFolder> folders = new List<WorkingFolder>();
-
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-                    break;
-
-                if (reader.NodeType == XmlNodeType.Element)
-                {
-                    switch (reader.Name)
-                    {
-                        case "WorkingFolder":
-                            folders.Add(WorkingFolder.FromXml(repository, reader));
-                            break;
-                        case "Comment":
-                            comment = reader.ReadString();
-                            break;
-                        case "LastAccessDate":
-                            lastAccessDate = reader.ReadElementContentAsDateTime();
-                            break;
-                    }
-                }
-            }
-
-            Workspace w = new Workspace(repository.VersionControlServer, name, owner, comment, folders.ToArray(), computer);
-            w.lastAccessDate = lastAccessDate;
-            return w;
-        }
-
         internal static Workspace FromXml(Repository repository, XElement element)
         {
-            string nameSpace = element.Name.NamespaceName;
+            XNamespace nameSpace = element.Name.Namespace;
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
             string owner = element.Attribute("owner").Value;
             //bool isLocal = Convert.ToBoolean(element.Attribute("islocal").Value);
 
-            string comment = element.Element(XName.Get("Comment", nameSpace)).Value;
-            DateTime lastAccessDate = DateTime.Parse(element.Element(XName.Get("LastAccessDate", nameSpace)).Value);
-            var folders = new List<WorkingFolder>(element.Element(XName.Get("Folders", nameSpace))
-                                                         .Elements(XName.Get("WorkingFolder", nameSpace))
+            string comment = element.Element(nameSpace + "Comment").Value;
+            DateTime lastAccessDate = DateTime.Parse(element.Element(nameSpace + "LastAccessDate").Value);
+            var folders = new List<WorkingFolder>(element.Element(nameSpace + "Folders")
+                                                         .Elements(nameSpace + "WorkingFolder")
                                                          .Select(el => WorkingFolder.FromXml(repository, el)));
 
             return new Workspace(repository.VersionControlServer, name, owner, comment, folders.ToArray(), computer)

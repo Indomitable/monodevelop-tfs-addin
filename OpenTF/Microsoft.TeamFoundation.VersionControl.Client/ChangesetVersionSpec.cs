@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,42 +28,31 @@
 //
 
 using System;
-using System.Text;
-using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ChangesetVersionSpec : VersionSpec
-	{
-		private int changesetId;
+    public class ChangesetVersionSpec : VersionSpec
+    {
+        public ChangesetVersionSpec(string changesetId)
+        {
+            this.ChangesetId = Convert.ToInt32(changesetId);
+        }
 
-		public ChangesetVersionSpec(string changesetId)
-			{
-				this.changesetId = Convert.ToInt32(changesetId);
-			}
+        public ChangesetVersionSpec(int changesetId)
+        {
+            this.ChangesetId = changesetId;
+        }
 
-		public ChangesetVersionSpec(int changesetId)
-			{
-				this.changesetId = changesetId;
-			}
+        internal override XElement ToXml(XName element)
+        {
+            return new XElement(element, 
+                new XAttribute(XsiNs + "type", "ChangesetVersionSpec"),
+                new XAttribute("cs", ChangesetId));
+        }
 
-		internal override void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("xsi:type", "ChangesetVersionSpec");
-			writer.WriteAttributeString("cs", Convert.ToString(changesetId));
-			writer.WriteEndElement();
-		}
+        public int ChangesetId { get; set; }
 
-		public int ChangesetId
-		{
-			get { return changesetId; }
-			set { changesetId = value; }
-		}
-
-		public override string DisplayString
-		{
-			get { return String.Format("C{0}", changesetId); }
-		}
-	}
+        public override string DisplayString { get { return String.Format("C{0}", ChangesetId); } }
+    }
 }

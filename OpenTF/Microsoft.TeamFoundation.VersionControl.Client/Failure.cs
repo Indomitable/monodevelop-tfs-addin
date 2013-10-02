@@ -29,117 +29,113 @@
 using System;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class Failure
-	{
-		private RequestType requestType;
-		private string code;
-		private string computerName;
-		private string identityName;
-		private string localItem;
-		private string message;		
-		private string serverItem;
-		private string resourceName;
-		private string workspaceOwner;
-		private string workspaceName;
+    public sealed class Failure
+    {
+        private RequestType requestType;
+        private string code;
+        private string computerName;
+        private string identityName;
+        private string localItem;
+        private string message;
+        private string serverItem;
+        private string resourceName;
+        private string workspaceOwner;
+        private string workspaceName;
+        //<Failure req="None or Add or Branch or Encoding or Edit or Delete or Lock or Rename or Undelete or Property" code="string" sev="Error or Warning" computer="string" ident="string" local="string" res="string" item="string" itemid="int" ws="string" owner="string">
+        //    <Warnings>
+        //        <Warning xsi:nil="true" />
+        //        <Warning xsi:nil="true" />
+        //    </Warnings>
+        //    <Message>string</Message>
+        //</Failure>
+        internal static Failure FromXml(XElement element)
+        {
+            XNamespace nameSpace = element.Name.Namespace;
+            Failure failure = new Failure();
+            string requestType = element.Attribute("req").Value;
+            if (!String.IsNullOrEmpty(requestType))
+            {
+                failure.requestType = (RequestType)Enum.Parse(typeof(RequestType), requestType, true);
+            }
 
-		internal static Failure FromXml(Repository repository, XmlReader reader)
-		{
-			Failure failure = new Failure();
-			string requestType = reader.GetAttribute("req");
-			if (!String.IsNullOrEmpty(requestType))
-				{
-					failure.requestType = (RequestType) Enum.Parse(typeof(RequestType), requestType, true);
-				}
+            failure.code = element.Attribute("code").Value;
+            failure.localItem = TfsPath.ToPlatformPath(element.Attribute("local").Value);
+            failure.message = element.Element(nameSpace + "Message").Value;
+            return failure;
+        }
 
-			failure.code = reader.GetAttribute("code");
-			failure.localItem = TfsPath.ToPlatformPath(reader.GetAttribute("local"));
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			string elementName = reader.Name;
+            sb.Append("Failure instance ");
+            sb.Append(GetHashCode());
 
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+            sb.Append("\n	 Message: ");
+            sb.Append(Message);
 
-					if (reader.NodeType == XmlNodeType.Element && reader.Name == "Message")
-							failure.message = reader.ReadString();
-				}
+            sb.Append("\n	 Local Item: ");
+            sb.Append(LocalItem);
 
-			return failure;
-		}
+            sb.Append("\n	 Request Type: ");
+            sb.Append(RequestType);
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+            return sb.ToString();
+        }
 
-			sb.Append("Failure instance ");
-			sb.Append(GetHashCode());
+        public RequestType RequestType
+        {
+            get { return requestType; }
+        }
 
-			sb.Append("\n	 Message: ");
-			sb.Append(Message);
+        public string Code
+        {
+            get { return code; }
+        }
 
-			sb.Append("\n	 Local Item: ");
-			sb.Append(LocalItem);
+        public string ComputerName
+        {
+            get { return computerName; }
+        }
 
-			sb.Append("\n	 Request Type: ");
-			sb.Append(RequestType);
+        public string IdentityName
+        {
+            get { return identityName; }
+        }
 
-			return sb.ToString();
-		}
+        public string LocalItem
+        {
+            get { return localItem; }
+        }
 
-		public RequestType RequestType
-		{
-			get { return requestType; }
-		}
+        public string Message
+        {
+            get { return message; }
+        }
 
-		public string Code
-		{
-			get { return code; }
-		}
+        public string ServerItem
+        {
+            get { return serverItem; }
+        }
 
-		public string ComputerName
-		{
-			get { return computerName; }
-		}
+        public string ResourceName
+        {
+            get { return resourceName; }
+        }
 
-		public string IdentityName
-		{
-			get { return identityName; }
-		}
+        public string WorkspaceOwner
+        {
+            get { return workspaceOwner; }
+        }
 
-		public string LocalItem
-		{
-			get { return localItem; }
-		}
-
-		public string Message
-		{
-			get { return message; }
-		}
-
-		public string ServerItem
-		{
-			get { return serverItem; }
-		}
-
-		public string ResourceName
-		{
-			get { return resourceName; }
-		}
-
-		public string WorkspaceOwner
-		{
-			get { return workspaceOwner; }
-		}
-
-		public string WorkspaceName
-		{
-			get { return workspaceName; }
-		}
-
-	}
+        public string WorkspaceName
+        {
+            get { return workspaceName; }
+        }
+    }
 }
 

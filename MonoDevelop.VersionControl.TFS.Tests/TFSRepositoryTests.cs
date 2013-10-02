@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System;
 using MonoDevelop.VersionControl.TFS;
+using System.Xml.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {

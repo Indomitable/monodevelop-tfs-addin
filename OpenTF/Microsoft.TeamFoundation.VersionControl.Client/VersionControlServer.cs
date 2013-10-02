@@ -436,10 +436,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return repository.QueryShelvesets(shelvesetName, shelvesetOwner);
         }
 
-        public List<Workspace> QueryWorkspaces(string workspaceName, string ownerName,
-                                               string computer)
+        public List<Workspace> QueryWorkspaces(string ownerName, string computer)
         {
-            return repository.QueryWorkspaces(workspaceName, ownerName, computer);
+            return repository.QueryWorkspaces(ownerName, computer);
         }
 
         internal void OnDownloading(GettingEventArgs args)

@@ -72,7 +72,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                     string trimmedPath = mPath.TrimEnd(charsToTrim);
 
                     if (path.StartsWith(trimmedPath, TfsPath.PlatformComparison)
-                    && trimmedPath.Length > maxPath)
+                        && trimmedPath.Length > maxPath)
                     {
                         returnedInfo = wInfo;
                         maxPath = trimmedPath.Length;
@@ -84,8 +84,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public WorkspaceInfo GetLocalWorkspaceInfo(VersionControlServer versionControl, 
-                                             string workspaceName,
-                                             string workspaceOwner)
+                                                   string workspaceName,
+                                                   string workspaceOwner)
         {
             InternalServerInfo[] servers = ReadCachedWorkspaceInfo();
             foreach (InternalServerInfo sInfo in servers)
@@ -122,7 +122,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         internal void AddCachedWorkspaceInfo(Guid serverGuid,
-                                       Uri serverUri, Workspace workspace)
+                                             Uri serverUri, Workspace workspace)
         {
             InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
             XmlElement servers = InitWorkspaceInfoCache();
@@ -190,12 +190,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public void UpdateWorkspaceInfoCache(VersionControlServer versionControl,
-                                       string ownerName)
+                                             string ownerName)
         {
             InternalServerInfo[] serverInfos = ReadCachedWorkspaceInfo();
             XmlElement servers = InitWorkspaceInfoCache();
 
-            var workspaces = versionControl.QueryWorkspaces(null, ownerName, Name);
+            var workspaces = versionControl.QueryWorkspaces(ownerName, Name);
             InternalServerInfo newServerInfo = new InternalServerInfo(versionControl.Uri.ToString(), versionControl.ServerGuid, workspaces);
 
             bool found = false;

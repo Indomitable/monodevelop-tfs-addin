@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,46 +28,40 @@
 //
 
 using System;
-using System.Text;
-using System.Xml;
+using System.Xml.Linq;
+using System.Xml.Schema;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public abstract class VersionSpec 
-	{
-		static LatestVersionSpec latest = new LatestVersionSpec();
+    public abstract class VersionSpec
+    {
+        protected static readonly XNamespace XsiNs = XmlSchema.InstanceNamespace;
+        static readonly LatestVersionSpec latest = new LatestVersionSpec();
 
-		internal abstract void ToXml(XmlWriter writer, string element);
+        internal abstract XElement ToXml(XName element);
 
-		public static VersionSpec ParseSingleSpec(string versionSpec, string user)
-		{
-			if (String.IsNullOrEmpty(versionSpec)) 
-				throw new VersionControlException("Invalid version specification");
+        public static VersionSpec ParseSingleSpec(string versionSpec, string user)
+        {
+            if (string.IsNullOrEmpty(versionSpec))
+                throw new VersionControlException("Invalid version specification");
 
-			char prefix = Char.ToUpper(versionSpec[0]);
-			if (prefix == 'T') return Latest;
-			else if (prefix == 'C') 
-				return new ChangesetVersionSpec(versionSpec.Substring(1));
-			else if (prefix == 'D') 
-				return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
-			else if (prefix == 'L') 
-				return new LabelVersionSpec(versionSpec.Substring(1));
-			else if (prefix == 'W') 
-				return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
+            char prefix = Char.ToUpper(versionSpec[0]);
+            if (prefix == 'T')
+                return Latest;
+            else if (prefix == 'C')
+                return new ChangesetVersionSpec(versionSpec.Substring(1));
+            else if (prefix == 'D')
+                return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
+            else if (prefix == 'L')
+                return new LabelVersionSpec(versionSpec.Substring(1));
+            else if (prefix == 'W')
+                return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
 
-			return null;
-		} 
+            return null;
+        }
 
-		public abstract string DisplayString
-		{
-			get;
-		}
+        public abstract string DisplayString { get; }
 
-		public static VersionSpec Latest 
-		{
-			get { 
-				return latest; 
-			}
-		}
-	}
+        public static VersionSpec Latest { get { return latest; } }
+    }
 }

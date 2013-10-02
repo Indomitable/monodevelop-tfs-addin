@@ -47,6 +47,7 @@
     <Compile Include="ItemSetToHierarchItemConverterTests.cs" />
     <Compile Include="BaseTFSConnectTest.cs" />
     <Compile Include="OpenTF\WorkspaceTests.cs" />
+    <Compile Include="OpenTF\MessageTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

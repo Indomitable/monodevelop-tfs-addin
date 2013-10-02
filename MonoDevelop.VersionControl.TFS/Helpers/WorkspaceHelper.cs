@@ -16,7 +16,7 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
                 tfsServer.Authenticate();
                 var versionControl = tfsServer.GetService<VersionControlServer>();
 
-                return  versionControl.QueryWorkspaces(string.Empty, credentials.UserName, Environment.MachineName);
+                return  versionControl.QueryWorkspaces(credentials.UserName, Environment.MachineName);
             }
         }
 
@@ -28,7 +28,7 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
                 tfsServer.Authenticate();
                 var versionControl = tfsServer.GetService<VersionControlServer>();
 
-                return  versionControl.QueryWorkspaces(string.Empty, credentials.UserName, string.Empty);
+                return  versionControl.QueryWorkspaces(credentials.UserName, string.Empty);
             }
         }
 

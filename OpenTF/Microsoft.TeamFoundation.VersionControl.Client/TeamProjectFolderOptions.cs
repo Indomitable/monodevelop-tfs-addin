@@ -31,54 +31,54 @@ using System.Xml;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class TeamProjectFolderOptions
-	{
-		private string comment = "";
-		private bool exclusiveCheckout = false; 
-		private string sourceProject; 
-		private string teamProject;
+    public class TeamProjectFolderOptions
+    {
+        private string comment = "";
+        private bool exclusiveCheckout = false;
+        private string sourceProject;
+        private string teamProject;
 
-		public TeamProjectFolderOptions(string teamProject)
-		{
-			this.teamProject = teamProject;
-			this.sourceProject = teamProject;
-		}
-		
-		public TeamProjectFolderOptions(string teamProject, string sourceProject)
-		{
-			this.teamProject = teamProject;
-			this.sourceProject = sourceProject;
-		}
+        public TeamProjectFolderOptions(string teamProject)
+        {
+            this.teamProject = teamProject;
+            this.sourceProject = teamProject;
+        }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement("teamProjectOptions");
-			writer.WriteAttributeString("exc", ExclusiveCheckout.ToString().ToLower());
-			writer.WriteElementString("TeamProject", TeamProject);
-			writer.WriteElementString("SourceProject", SourceProject);
-			writer.WriteElementString("Comment", Comment);
-			writer.WriteEndElement();
-		}
+        public TeamProjectFolderOptions(string teamProject, string sourceProject)
+        {
+            this.teamProject = teamProject;
+            this.sourceProject = sourceProject;
+        }
 
-		public string Comment 
-		{
-			get { return comment; }
-		}
+        internal void ToXml(XmlWriter writer, string element)
+        {
+            writer.WriteStartElement("teamProjectOptions");
+            writer.WriteAttributeString("exc", ExclusiveCheckout.ToString().ToLower());
+            writer.WriteElementString("TeamProject", TeamProject);
+            writer.WriteElementString("SourceProject", SourceProject);
+            writer.WriteElementString("Comment", Comment);
+            writer.WriteEndElement();
+        }
 
-		public bool ExclusiveCheckout
-		{
-			get { return exclusiveCheckout; }
-		}
+        public string Comment
+        {
+            get { return comment; }
+        }
 
-		public string SourceProject
-		{
-			get { return sourceProject; }
-		}
+        public bool ExclusiveCheckout
+        {
+            get { return exclusiveCheckout; }
+        }
 
-		public string TeamProject
-		{
-			get { return teamProject; }
-		}
-	}
+        public string SourceProject
+        {
+            get { return sourceProject; }
+        }
+
+        public string TeamProject
+        {
+            get { return teamProject; }
+        }
+    }
 }
 

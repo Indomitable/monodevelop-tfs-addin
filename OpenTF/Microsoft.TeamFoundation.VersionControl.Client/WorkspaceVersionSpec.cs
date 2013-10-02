@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,58 +27,44 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Text;
-using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class WorkspaceVersionSpec : VersionSpec
-	{
-		private string name;
-		private string ownerName;
+    public class WorkspaceVersionSpec : VersionSpec
+    {
+        private readonly string ownerName;
 
-		public WorkspaceVersionSpec(string name, string ownerName)
-		{
-			this.name = name;
-			this.ownerName = ownerName;
-		}
+        public WorkspaceVersionSpec(string name, string ownerName)
+        {
+            this.Name = name;
+            this.ownerName = ownerName;
+        }
 
-		public WorkspaceVersionSpec(Workspace workspace)
-		{
-			this.name = workspace.Name;
-			this.ownerName = workspace.OwnerName;
-		}
+        public WorkspaceVersionSpec(Workspace workspace)
+        {
+            this.Name = workspace.Name;
+            this.ownerName = workspace.OwnerName;
+        }
 
-		public WorkspaceVersionSpec(WorkspaceInfo workspaceInfo)
-		{
-			this.name = workspaceInfo.Name;
-			this.ownerName = workspaceInfo.OwnerName;
-		}
+        public WorkspaceVersionSpec(WorkspaceInfo workspaceInfo)
+        {
+            this.Name = workspaceInfo.Name;
+            this.ownerName = workspaceInfo.OwnerName;
+        }
 
-		internal override void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("xsi:type", "WorkspaceVersionSpec");
-			writer.WriteAttributeString("name", Name);
-			writer.WriteAttributeString("owner", OwnerName);
-			writer.WriteEndElement();
-		}
+        internal override XElement ToXml(XName element)
+        {
+            return new XElement(element,
+                new XAttribute(XsiNs + "type", "WorkspaceVersionSpec"),
+                new XAttribute("name", Name),
+                new XAttribute("owner", OwnerName));
+        }
 
-		public string Name
-		{
-			get { return name; }
-			set { name = value; }
-		}
+        public string Name { get; set; }
 
-		public string OwnerName
-		{
-			get { return ownerName; }
-		}
+        public string OwnerName { get { return ownerName; } }
 
-		public override string DisplayString
-		{
-			get { return String.Format("W{0};{1}", Name, OwnerName); }
-		}
-	}
+        public override string DisplayString { get { return string.Format("W{0};{1}", Name, OwnerName); } }
+    }
 }

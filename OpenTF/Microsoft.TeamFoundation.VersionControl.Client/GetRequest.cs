@@ -28,54 +28,49 @@
 
 using System;
 using System.Xml;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class GetRequest {
-		
-		private ItemSpec itemSpec;
-		private VersionSpec versionSpec;
+    public class GetRequest
+    {
+        private ItemSpec itemSpec;
+        private VersionSpec versionSpec;
 
-		public GetRequest(string item, RecursionType recursionType, VersionSpec versionSpec)
-		{
-			this.itemSpec = new ItemSpec(item, recursionType);
-			this.versionSpec = versionSpec;
-		}
+        public GetRequest(string item, RecursionType recursionType, VersionSpec versionSpec)
+        {
+            this.itemSpec = new ItemSpec(item, recursionType);
+            this.versionSpec = versionSpec;
+        }
 
-		public GetRequest(ItemSpec itemSpec, VersionSpec versionSpec)
-		{
-			this.itemSpec = itemSpec;
-			this.versionSpec = versionSpec;
-		}
+        public GetRequest(ItemSpec itemSpec, VersionSpec versionSpec)
+        {
+            this.itemSpec = itemSpec;
+            this.versionSpec = versionSpec;
+        }
 
-		public GetRequest (ItemSpec itemSpec, int changesetId)
-		{
-			this.itemSpec = itemSpec;
-			this.versionSpec = new ChangesetVersionSpec(changesetId);
-		}
+        public GetRequest(ItemSpec itemSpec, int changesetId)
+        {
+            this.itemSpec = itemSpec;
+            this.versionSpec = new ChangesetVersionSpec(changesetId);
+        }
 
-		internal GetRequest(VersionSpec versionSpec)
-		{
-			this.versionSpec = versionSpec;
-		}
+        internal GetRequest(VersionSpec versionSpec)
+        {
+            this.versionSpec = versionSpec;
+        }
 
-		public ItemSpec ItemSpec 
-		{
-			get { return itemSpec; }
-		}
-		
-		public VersionSpec VersionSpec
-		{
-			get { return versionSpec; }
-		}
+        public ItemSpec ItemSpec { get { return itemSpec; } }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement("GetRequest");
-			if (itemSpec != null) itemSpec.ToXml(writer, "ItemSpec");
-			versionSpec.ToXml(writer, "VersionSpec");
-			writer.WriteEndElement();
-		}
+        public VersionSpec VersionSpec { get { return versionSpec; } }
 
-	}
+        internal XElement ToXml()
+        {
+            XElement result = new XElement(XmlNamespaces.MessageNs + "GetRequest");
+            if (itemSpec != null)
+                result.Add(itemSpec.ToXml());
+            result.Add(versionSpec.ToXml(XmlNamespaces.MessageNs + "VersionSpec"));
+            return result;
+        }
+    }
 }

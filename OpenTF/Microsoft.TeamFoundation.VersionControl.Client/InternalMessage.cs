@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,59 +27,29 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.IO;
-using System.Collections.Generic;
 using System.Net;
-using System.Reflection;
-using System.Text;
-using System.Xml;
 using System.Xml.Schema;
-using System.Web.Services;
-using System.Web.Services.Description;
-using System.Web.Services.Discovery;
-using System.Web.Services.Protocols;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     internal class Message
     {
-        private const string SoapEnvelopeNamespace = "http://schemas.xmlsoap.org/soap/envelope/";
-        private const string MessageNamespace =	"http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
-        private WebRequest request;
-        private XmlTextWriter xtw;
-        private string methodName;
+        private static readonly XNamespace SoapNs = "http://schemas.xmlsoap.org/soap/envelope/";
+        private readonly WebRequest request;
+        private readonly XDocument document;
+        private readonly XElement messageElement;
+        private readonly string methodName;
 
-        public XmlTextWriter Body
+        public WebRequest Request { get { return request; } }
+
+        public string MethodName { get { return methodName; } }
+
+        public XElement ResponseReader(HttpWebResponse response)
         {
-            get { return xtw; }
-        }
+            XDocument doc = XDocument.Load(response.GetResponseStream());
 
-        public WebRequest Request
-        {
-            get { return request; }
-        }
-
-        public string MethodName
-        {
-            get { return methodName; }
-        }
-
-        public XmlReader ResponseReader(HttpWebResponse response)
-        {
-            //Console.WriteLine(new StreamReader(response.GetResponseStream()).ReadToEnd());
-            StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding(false), false);
-            XmlReader reader = new XmlTextReader(sr);
-
-            string resultName = MethodName + "Result";
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == resultName)
-                    break;
-            }
-            return reader;
+            return doc.Root.Element(SoapNs + "Body").Element(XmlNamespaces.MessageNs + MethodName + "Response").Element(XmlNamespaces.MessageNs + MethodName + "Result");
         }
 
         public Message(WebRequest request, string methodName)
@@ -103,25 +74,33 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.request.Headers.Add("accept-language", "en-US");
             this.request.Headers.Add("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886");
 
-            xtw = new XmlTextWriter(request.GetRequestStream(), new UTF8Encoding(false));
-            //xtw.Formatting = Formatting.Indented;
-			
-            xtw.WriteStartDocument();
-            xtw.WriteStartElement("soap", "Envelope", SoapEnvelopeNamespace);
-            xtw.WriteAttributeString("xmlns", "xsi", null, XmlSchema.InstanceNamespace);
-            xtw.WriteAttributeString("xmlns", "xsd", null, XmlSchema.Namespace);
+            XNamespace xsiNs = XmlSchema.InstanceNamespace;
+            XNamespace xsdNs = XmlSchema.Namespace;
 
-            xtw.WriteStartElement("soap", "Body", SoapEnvelopeNamespace);
-            xtw.WriteStartElement("", methodName, MessageNamespace);
+            this.document = new XDocument(new XDeclaration("1.0", "utf-8", "no"));
+            this.messageElement = new XElement(XmlNamespaces.MessageNs + methodName);
+            XElement messageEl = new XElement(SoapNs + "Envelope", 
+                                     new XAttribute(XNamespace.Xmlns + "xsi", xsiNs),
+                                     new XAttribute(XNamespace.Xmlns + "xsd", xsdNs),
+                                     new XAttribute(XNamespace.Xmlns + "soap", SoapNs),
+                                     new XElement(SoapNs + "Body", this.messageElement));
+
+            this.document.Add(messageEl);
         }
 
-        public void End()
+        public void AddParam(string name, params object[] content)
         {
-            xtw.WriteEndElement(); // methodName
-            xtw.WriteEndElement(); // soap:body
-            xtw.WriteEndElement(); // soap:Envelope
-            xtw.Flush();
-            xtw.Close();
+            this.messageElement.Add(new XElement(XmlNamespaces.MessageNs + name, content));
+        }
+
+        public void AddParam(XElement param)
+        {
+            this.messageElement.Add(param);
+        }
+
+        public void Save()
+        {
+            document.Save(this.request.GetRequestStream());
         }
     }
 }

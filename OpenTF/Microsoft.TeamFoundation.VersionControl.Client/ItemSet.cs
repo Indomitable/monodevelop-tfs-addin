@@ -32,62 +32,63 @@ using System.Net;
 using System.Text;
 using System.Xml;
 using System.Web.Services;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class ItemSet
-	{
-		private Item[] items;
-		private string pattern;
-		private string queryPath;
+    public sealed class ItemSet
+    {
+        private Item[] items;
+        private string pattern;
+        private string queryPath;
 
-		internal static ItemSet FromXml(Repository repository, XmlReader reader)
-		{
-			string elementName = reader.Name;
-			ItemSet itemSet = new ItemSet();
- 			List<Item> items = new List<Item>();
+        internal static ItemSet FromXml(Repository repository, XElement element)
+        {
+            ItemSet itemSet = new ItemSet();
+            List<Item> items = new List<Item>();
 
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+            var patternElement = element.Element(XmlNamespaces.MessageNs + "Pattern");
+            itemSet.pattern = patternElement != null ? patternElement.Value : string.Empty;
 
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "Item":
-									items.Add(Item.FromXml(repository, reader));
-									break;
-								case "Pattern":
-									itemSet.pattern = reader.ReadElementContentAsString();
-									break;
-								case "QueryPath":
-									itemSet.queryPath = reader.ReadElementContentAsString();
-									break;
-								}
-						}
-				}
+            var queryPathElement = element.Element(XmlNamespaces.MessageNs + "QueryPath");
+            itemSet.queryPath = queryPathElement != null ? queryPathElement.Value : string.Empty;
 
-			items.Sort(Item.GenericComparer);
-			itemSet.items = items.ToArray();
-			return itemSet;
-		}
+            var itemElements = element.Element(XmlNamespaces.MessageNs + "ItemSet").Elements(XmlNamespaces.MessageNs + "Item");
+            items.AddRange(itemElements.Select(it => Item.FromXml(repository, it)));
 
-		public Item[] Items
-		{
-			get { return items; }
-		}
+//            while (reader.Read())
+//            {
+//                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
+//                    break;
+//
+//                if (reader.NodeType == XmlNodeType.Element)
+//                {
+//                    switch (reader.Name)
+//                    {
+//                        case "Item":
+//                            items.Add(Item.FromXml(repository, reader));
+//                            break;
+//                        case "Pattern":
+//                            itemSet.pattern = reader.ReadElementContentAsString();
+//                            break;
+//                        case "QueryPath":
+//                            itemSet.queryPath = reader.ReadElementContentAsString();
+//                            break;
+//                    }
+//                }
+//            }
+//
+            items.Sort(Item.GenericComparer);
+            itemSet.items = items.ToArray();
+            return itemSet;
+        }
 
-    public string Pattern
-		{
-			get { return pattern; }
-		}
+        public Item[] Items { get { return items; } }
 
-		public string QueryPath
-		{
-			get { return queryPath; }
-		}
-	}
+        public string Pattern { get { return pattern; } }
+
+        public string QueryPath { get { return queryPath; } }
+    }
 }
 

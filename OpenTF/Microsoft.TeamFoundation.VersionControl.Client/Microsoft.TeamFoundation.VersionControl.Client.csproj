@@ -117,6 +117,8 @@
     <Compile Include="Workstation.cs" />
     <Compile Include="WorkstationSettings.cs" />
     <Compile Include="WorkspaceData.cs" />
+    <Compile Include="TfsPath.cs" />
+    <Compile Include="XmlNamespaces.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

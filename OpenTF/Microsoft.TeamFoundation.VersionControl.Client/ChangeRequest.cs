@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,130 +27,82 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.IO;
-using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal class ChangeRequest
-	{
-		private RequestType requestType = RequestType.None;
-		private int deletionId = 0;
-		private int encoding = 65001; // used to be -2
-		private ItemType itemType = ItemType.Any;
-		private LockLevel @lockLevel = LockLevel.None;
-		private string target;
-		private ItemType targetType = ItemType.Any;
-		private ItemSpec item;
-		private VersionSpec versionSpec = VersionSpec.Latest;
+    internal class ChangeRequest
+    {
+        // used to be -2
+        private readonly LockLevel lockLevel = LockLevel.None;
+        private readonly ItemSpec item;
+        private readonly VersionSpec versionSpec = VersionSpec.Latest;
 
-		public ChangeRequest(string path, RequestType requestType, ItemType itemType)
-		{
-			this.item = new ItemSpec(path, RecursionType.None);
-			this.requestType = requestType;
-			this.itemType = itemType;
-		}
+        public ChangeRequest(string path, RequestType requestType, ItemType itemType)
+        {
+            this.item = new ItemSpec(path, RecursionType.None);
+            this.RequestType = requestType;
+            this.ItemType = itemType;
+        }
 
-		public ChangeRequest(string path, RequestType requestType, ItemType itemType,
-												 RecursionType recursion, LockLevel lockLevel)
-		{
-			this.item = new ItemSpec(path, recursion);
-			this.requestType = requestType;
-			this.itemType = itemType;
-			this.lockLevel = lockLevel;
-		}
+        public ChangeRequest(string path, RequestType requestType, ItemType itemType,
+                             RecursionType recursion, LockLevel lockLevel)
+        {
+            this.item = new ItemSpec(path, recursion);
+            this.RequestType = requestType;
+            this.ItemType = itemType;
+            this.lockLevel = lockLevel;
+        }
 
-		public ChangeRequest(string path, string target, RequestType requestType, ItemType itemType)
-		{
-			this.item = new ItemSpec(path, RecursionType.None);
-			this.target = target;
-			this.requestType = requestType;
-			this.itemType = itemType;
-		}
+        public ChangeRequest(string path, string target, RequestType requestType, ItemType itemType)
+        {
+            this.item = new ItemSpec(path, RecursionType.None);
+            this.Target = target;
+            this.RequestType = requestType;
+            this.ItemType = itemType;
+        }
 
-		public LockLevel LockLevel
-		{
-			get { return lockLevel; }
-		}
+        public LockLevel LockLevel { get { return lockLevel; } }
 
-		public ItemSpec Item
-		{
-			get { return item; }
-		}
+        public ItemSpec Item { get { return item; } }
 
-		public VersionSpec VersionSpec
-		{
-			get { return versionSpec; }
-		}
+        public VersionSpec VersionSpec { get { return versionSpec; } }
 
-		public ItemType ItemType
-		{
-			get { return itemType; }
-			set { itemType = value; }
-		}
+        public ItemType ItemType { get; set; }
 
-		public ItemType TargetType
-		{
-			get { return targetType; }
-			set { targetType = value; }
-		}
+        public ItemType TargetType { get; set; }
 
-		public RequestType RequestType
-		{
-			get { return requestType; }
-			set { requestType = value; }
-		}
+        public RequestType RequestType { get; set; }
 
-		public int DeletionId
-		{
-			get { return deletionId; }
-			set { deletionId = value; }
-		}
+        public int DeletionId { get; set; }
 
-		public int Encoding 
-		{
-			get { return encoding; }
-			set { encoding = value; }
-		}
+        public int Encoding { get; set; }
 
-		public string Target
-		{
-			get { return target; }
-			set { target = value; }
-		}
+        public string Target { get; set; }
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement("ChangeRequest");
-			writer.WriteAttributeString("req", RequestType.ToString());
+        internal XElement ToXml()
+        {
+            var result = new XElement("ChangeRequest", 
+                             new XAttribute("req", RequestType),
+                             new XAttribute("type", ItemType));
 
-			if (RequestType == RequestType.Lock || LockLevel != LockLevel.None)
-				writer.WriteAttributeString("lock", LockLevel.ToString());
+            if (RequestType == RequestType.Lock || LockLevel != LockLevel.None)
+                result.Add(new XAttribute("lock", LockLevel));
 
-			if (RequestType == RequestType.Add)
-				writer.WriteAttributeString("enc", Encoding.ToString());
+            if (RequestType == RequestType.Add)
+                result.Add("enc", Encoding);
 
-			writer.WriteAttributeString("type", ItemType.ToString());
-			//writer.WriteAttributeString("did", DeletionId.ToString());
-			//writer.WriteAttributeString("targettype", TargetType.ToString());
+            if (!string.IsNullOrEmpty(Target))
+            {
+                // convert local path specs from platform paths to tfs paths as needed
+                string fxdTarget = VersionControlPath.IsServerItem(Target) ? Target : TfsPath.FromPlatformPath(Target);
+                result.Add(new XAttribute("target", fxdTarget));
+            }
 
-			if (!String.IsNullOrEmpty(Target))
-				{
-					// convert local path specs from platform paths to tfs paths as needed
-					string fxdTarget;
-					if (VersionControlPath.IsServerItem(Target)) fxdTarget = Target;
-					else fxdTarget = TfsPath.FromPlatformPath(Target);
-					writer.WriteAttributeString("target", fxdTarget);
-				}
-
-			this.Item.ToXml(writer, "item");
-			//this.VersionSpec.ToXml(writer, "vspec");
-
-			writer.WriteEndElement();
-		}
-
-	}
+            result.Add(this.Item.ToXml("item"));
+            return result;
+        }
+    }
 }
 

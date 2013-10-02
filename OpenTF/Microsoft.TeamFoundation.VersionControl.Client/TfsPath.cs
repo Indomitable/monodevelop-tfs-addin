@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.VersionControl.Client.DateVersionSpec
+// Microsoft.TeamFoundation.VersionControl.Client.Repository
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -28,26 +28,44 @@
 //
 
 using System;
-using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class DateVersionSpec : VersionSpec
+    static class TfsPath
     {
-        public DateVersionSpec(DateTime date)
+        private static bool runningOnUnix = true;
+        public static StringComparison PlatformComparison = StringComparison.InvariantCulture;
+
+        static TfsPath()
         {
-            this.Date = date;
+            int p = (int)Environment.OSVersion.Platform;
+            if (!((p == 4) || (p == 128)))
+                runningOnUnix = false;
+
+            if (!runningOnUnix)
+                PlatformComparison = StringComparison.InvariantCultureIgnoreCase;
         }
 
-        internal override XElement ToXml(XName element)
+        public static string ToPlatformPath(string path)
         {
-            return new XElement(element,
-                new XAttribute(XsiNs + "type", "DateVersionSpec"),
-                new XAttribute("date", Date.ToString("s")));
+            if (String.IsNullOrEmpty(path))
+                return path;
+
+            // TFS servers corrupt *nix type paths
+            if (!runningOnUnix)
+                return path;
+            return path.Remove(0, 2).Replace('\\', '/');
         }
 
-        public DateTime Date { get; set; }
+        public static string FromPlatformPath(string path)
+        {
+            if (String.IsNullOrEmpty(path))
+                return path;
 
-        public override string DisplayString { get { return "D" + Date.ToString("s"); } }
+            // TFS servers corrupt *nix type paths
+            if (!runningOnUnix)
+                return path;
+            return "U:" + path.Replace('/', '\\'); //Use U: like git-tf
+        }
     }
 }
