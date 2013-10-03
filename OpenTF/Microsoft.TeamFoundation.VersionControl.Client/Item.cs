@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -29,13 +30,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Text;
-using System.Xml;
-using System.Web.Services;
-using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
@@ -68,10 +63,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Client.DownloadFile.WriteTo(localFileName, VersionControlServer.Repository,
                 ArtifactUri);
         }
-        //		<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"><soap:Body><QueryItemsResponse xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03"><QueryItemsResult><ItemSet><QueryPath>$/LSG-1.0</QueryPath><Pattern>*</Pattern><Item cs="7550" date="2006-07-31T18:28:33.933Z" enc="1252" type="File" itemid="41475" item="$/LSG-1.0/configure" hash="KW/KR55BW9qI4Fcg0cEVJQ==" len="146815" durl="sfid=62793,109833,108681,62795,72164,108744,72943,87351,72163,21458&amp;ts=633006048546770184&amp;s=ZNoNAgB8PlCgbs2Lqc4
-        //zH21A4SRFW3edqRcbnRKOeC%2F1IZ02f%2FHe8EdYvcU8PNwnBPhBGSGgaKcQWNjPussH3LgjhxQLzxZsfXQWDAllOnbf%2BrOMQYY30SF9e4R4eUjg1wccIkUpkEMOv1edrteyDu5H5ZjISxHQWhLTJ4OyJQ%3D&amp;fid=72164" /><Item cs="7043" date="2006-06-14T20:33:16.16Z" enc="-3" type="Folder" itemid="41609" item="$/LSG-1.0/db" hash="" />
+        //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         internal static Item FromXml(Repository repository, XElement element)
         {
+            if (element == null)
+                return null;
             string serverItem = element.Attribute("item").Value;
             Item item = new Item(repository.VersionControlServer, serverItem);
 

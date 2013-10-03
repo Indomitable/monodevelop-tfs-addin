@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,169 +28,127 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.Net;
 using System.Text;
 using System.Xml;
-using System.Web.Services;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class VersionControlLabel
-	{
-    private string comment;
-    private Item[] items;
-    private int labelId;
-    private System.DateTime lastModifiedDate;
-    private string name;
-    private string scope;
-    private string ownerName;
-    private VersionControlServer versionControlServer;
+    public sealed class VersionControlLabel
+    {
+        private string comment;
+        private Item[] items;
+        private int labelId;
+        private System.DateTime lastModifiedDate;
+        private string name;
+        private string scope;
+        private string ownerName;
+        private VersionControlServer versionControlServer;
 
-		internal VersionControlLabel() 
-		{
-		}
+        internal VersionControlLabel()
+        {
+        }
 
-		public VersionControlLabel (VersionControlServer versionControlServer, 
-																string name, string ownerName, string scope, 
-																string comment)
-		{
-			this.versionControlServer = versionControlServer;
-			this.name = name;
-			this.ownerName = ownerName;
-			this.scope = scope;
-			this.comment = comment;
-			this.lastModifiedDate = new DateTime(1);
-		}
+        public VersionControlLabel(VersionControlServer versionControlServer, 
+                                   string name, string ownerName, string scope, 
+                                   string comment)
+        {
+            this.versionControlServer = versionControlServer;
+            this.name = name;
+            this.ownerName = ownerName;
+            this.scope = scope;
+            this.comment = comment;
+            this.lastModifiedDate = new DateTime(1);
+        }
+        //        <VersionControlLabel date="dateTime" name="string" owner="string" ownerdisp="string" owneruniq="string" scope="string" lid="int">
+        //          <Comment>string</Comment>
+        //          <Items>
+        //            <Item xsi:nil="true" />
+        //            <Item xsi:nil="true" />
+        //          </Items>
+        //        </VersionControlLabel>
+        internal static VersionControlLabel FromXml(Repository repository, XElement element)
+        {
+            VersionControlLabel label = new VersionControlLabel();
+            label.lastModifiedDate = DateTime.Parse(element.Attribute("date").Value);
+            label.name = element.Attribute("name").Value;
+            label.ownerName = element.Attribute("owner").Value;
+            label.scope = element.Attribute("scope").Value;
+            label.labelId = Convert.ToInt32(element.Attribute("lid").Value);
+            label.comment = element.Element(XmlNamespaces.GetMessageElementName("Comment")).Value;
+            label.items = element.Element(XmlNamespaces.GetMessageElementName("Items"))
+                .Elements(XmlNamespaces.GetMessageElementName("Item"))
+                .Select(el => Item.FromXml(repository, el)).ToArray();
+            return label;
+        }
 
-		internal static VersionControlLabel FromXml(Repository repository, XmlReader reader)
-		{
-			VersionControlLabel label = new VersionControlLabel();
-			string elementName = reader.Name;
+        internal void ToXml(XmlWriter writer, string element)
+        {
+            writer.WriteStartElement(element);
+            writer.WriteAttributeString("date", LastModifiedDate.ToString("s"));
+            writer.WriteAttributeString("name", Name);
 
-			label.lastModifiedDate = DateTime.Parse(reader.GetAttribute("date"));
-			label.name = reader.GetAttribute("name");
-			label.ownerName = reader.GetAttribute("owner");
-			label.scope = reader.GetAttribute("scope");
-			label.labelId = Convert.ToInt32(reader.GetAttribute("lid"));
+            if (!String.IsNullOrEmpty(OwnerName))
+                writer.WriteAttributeString("owner", OwnerName);
+            if (!String.IsNullOrEmpty(Scope))
+                writer.WriteAttributeString("scope", Scope);
 
- 			List<Item> items = new List<Item>();
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+            writer.WriteAttributeString("lid", LabelId.ToString());
+            writer.WriteEndElement();
+        }
 
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "Item":
-									items.Add(Item.FromXml(repository, reader));
-									break;
-								case "Comment":
-									label.comment = reader.ReadString();
-									break;
-								}
-						}
-				}
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			label.items = items.ToArray();
-			return label;
-		}
+            sb.Append("VersionControlLabel instance ");
+            sb.Append(GetHashCode());
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("date", LastModifiedDate.ToString("s"));
-			writer.WriteAttributeString("name", Name);
+            sb.Append("\n	 Comment: ");
+            sb.Append(Comment);
 
-			if (!String.IsNullOrEmpty(OwnerName)) writer.WriteAttributeString("owner", OwnerName);
-			if (!String.IsNullOrEmpty(Scope)) writer.WriteAttributeString("scope", Scope);
+            sb.Append("\n	 LastModifiedDate: ");
+            sb.Append(LastModifiedDate);
 
-			writer.WriteAttributeString("lid", LabelId.ToString());
-			writer.WriteEndElement();
-		}
+            foreach (Item item in items)
+            {
+                sb.Append("\n  Item: ");
+                sb.Append(item.ToString());
+            }
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+            sb.Append("\n	 Name: ");
+            sb.Append(Name);
 
-			sb.Append("VersionControlLabel instance ");
-			sb.Append(GetHashCode());
+            sb.Append("\n	 OwnerName: ");
+            sb.Append(OwnerName);
 
-			sb.Append("\n	 Comment: ");
-			sb.Append(Comment);
+            sb.Append("\n	 Scope: ");
+            sb.Append(Scope);
 
-			sb.Append("\n	 LastModifiedDate: ");
-			sb.Append(LastModifiedDate);
+            sb.Append("\n	 LabelId: ");
+            sb.Append(LabelId);
 
-			foreach (Item item in items)
-				{
-					sb.Append("\n  Item: ");
-					sb.Append(item.ToString());
-				}
+            return sb.ToString();
+        }
 
-			sb.Append("\n	 Name: ");
-			sb.Append(Name);
+        public Uri ArtifactUri { get { return new Uri("vstfs:///VersionControl/Label/" + LabelId); } }
 
-			sb.Append("\n	 OwnerName: ");
-			sb.Append(OwnerName);
+        public string Comment { get { return comment; } }
 
-			sb.Append("\n	 Scope: ");
-			sb.Append(Scope);
+        public Item[] Items { get { return items; } }
 
-			sb.Append("\n	 LabelId: ");
-			sb.Append(LabelId);
+        public int LabelId { get { return labelId; } }
 
-			return sb.ToString();
-		}
+        public DateTime LastModifiedDate { get { return lastModifiedDate; } }
 
-		public Uri ArtifactUri 
-		{
-			get {
-				return new Uri("vstfs:///VersionControl/Label/" + LabelId);
-			}
-		}
+        public string Name { get { return name; } }
 
-		public string Comment 
-		{
-			get { return comment; }
-		}
+        public string OwnerName { get { return ownerName; } }
 
-		public Item[] Items
-		{
-			get { return items; }
-		}
+        public string Scope { get { return scope; } }
 
-		public int LabelId
-		{
-			get { return labelId; }
-		}
-
-		public DateTime LastModifiedDate
-		{
-			get { return lastModifiedDate; }
-		}
-
-		public string Name 
-		{
-			get { return name; }
-		}
-
-		public string OwnerName 
-		{
-			get { return ownerName; }
-		}
-
-		public string Scope
-		{
-			get { return scope; }
-		}
-
-		public VersionControlServer VersionControlServer
-		{
-			get { return versionControlServer; }
-		}
-	}
+        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
+    }
 }
 

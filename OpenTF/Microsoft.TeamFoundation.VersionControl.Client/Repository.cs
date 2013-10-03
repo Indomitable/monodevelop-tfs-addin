@@ -742,7 +742,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             using (HttpWebResponse response = Invoke(msg))
             {
                 XElement result = msg.ResponseReader(response);
-                itemSet.AddRange(result.Elements(XmlNamespaces.MessageNs + "ItemSet").Select(el => ItemSet.FromXml(this, el)));
+                itemSet.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("ItemSet")).Select(el => ItemSet.FromXml(this, el)));
             }
         
             return itemSet.ToArray();

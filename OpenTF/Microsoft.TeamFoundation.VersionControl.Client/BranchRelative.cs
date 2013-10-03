@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,105 +28,71 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
 using System.Text;
-using System.Xml;
-using System.Web.Services;
-using Microsoft.TeamFoundation.VersionControl.Common;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class BranchRelative
-	{
-		private Item branchFromItem;
+    public sealed class BranchRelative
+    {
+        private Item branchFromItem;
 
-		public Item BranchFromItem
-		{
-			get { return branchFromItem; }
-		}
+        public Item BranchFromItem { get { return branchFromItem; } }
 
-		private Item branchToItem;
-		public Item BranchToItem
-		{
-			get { return branchToItem; }
-		}
+        private Item branchToItem;
 
-		private bool isRequestedItem;
-		public bool IsRequestedItem
-		{
-			get { return isRequestedItem; }
-		}
+        public Item BranchToItem { get { return branchToItem; } }
 
-		private int relativeFromItemId;
-		public int RelativeFromItemId
-		{
-			get { return relativeFromItemId; }
-			set { relativeFromItemId = value; }
-		}
+        private bool isRequestedItem;
 
-		private int relativeToItemId;
-		public int RelativeToItemId
-		{
-			get { return relativeToItemId; }
-			set { relativeToItemId = value; }
-		}
+        public bool IsRequestedItem { get { return isRequestedItem; } }
 
-		internal static BranchRelative FromXml(Repository repository, XmlReader reader)
-		{
-			string elementName = reader.Name;
-			BranchRelative branch = new BranchRelative();
+        private int relativeFromItemId;
 
-			branch.relativeToItemId = Convert.ToInt32(reader.GetAttribute("reltoid"));
-			branch.relativeFromItemId = Convert.ToInt32(reader.GetAttribute("relfromid"));
-			branch.isRequestedItem = Convert.ToBoolean(reader.GetAttribute("reqstd"));
+        public int RelativeFromItemId { get { return relativeFromItemId; } set { relativeFromItemId = value; } }
 
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+        private int relativeToItemId;
 
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "BranchFromItem":
-									branch.branchFromItem = Item.FromXml(repository, reader);
-									break;
-								case "BranchToItem":
-									branch.branchToItem = Item.FromXml(repository, reader);
-									break;
-								}
-						}
-				}
+        public int RelativeToItemId { get { return relativeToItemId; } set { relativeToItemId = value; } }
 
-			return branch;
-		}
+        internal static BranchRelative FromXml(Repository repository, XElement element)
+        {
+            //string elementName = element.Name;
+            BranchRelative branch = new BranchRelative();
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+            branch.relativeToItemId = Convert.ToInt32(element.Attribute("reltoid").Value);
+            branch.relativeFromItemId = Convert.ToInt32(element.Attribute("relfromid").Value);
+            branch.isRequestedItem = Convert.ToBoolean(element.Attribute("reqstd").Value);
 
-			sb.Append("BranchRelative instance ");
-			sb.Append(GetHashCode());
+            branch.branchFromItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchFromItem")));
+            branch.branchToItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchToItem")));
+            return branch;
+        }
 
-			sb.Append("\n	 BranchFromItem: ");
-			sb.Append(BranchFromItem);
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			sb.Append("\n	 BranchToItem: ");
-			sb.Append(BranchToItem);
+            sb.Append("BranchRelative instance ");
+            sb.Append(GetHashCode());
 
-			sb.Append("\n	 RelativeFromItemId: ");
-			sb.Append(RelativeFromItemId);
+            sb.Append("\n	 BranchFromItem: ");
+            sb.Append(BranchFromItem);
 
-			sb.Append("\n	 RelativeToItemId: ");
-			sb.Append(RelativeToItemId);
+            sb.Append("\n	 BranchToItem: ");
+            sb.Append(BranchToItem);
 
-			sb.Append("\n	 IsRequestedItem: ");
-			sb.Append(IsRequestedItem);
+            sb.Append("\n	 RelativeFromItemId: ");
+            sb.Append(RelativeFromItemId);
 
-			return sb.ToString();
-		}
-	}
+            sb.Append("\n	 RelativeToItemId: ");
+            sb.Append(RelativeToItemId);
+
+            sb.Append("\n	 IsRequestedItem: ");
+            sb.Append(IsRequestedItem);
+
+            return sb.ToString();
+        }
+    }
 }

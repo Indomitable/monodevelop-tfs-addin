@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -31,152 +32,143 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Xml;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class Changeset
-	{
-		private static readonly string[] DateTimeFormats = { "yyyy-MM-ddTHH:mm:ss.fZ", "yyyy-MM-ddTHH:mm:ss.ffZ", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ss.ffffZ", "yyyy-MM-ddTHH:mm:ss.fffffZ", "yyyy-MM-ddTHH:mm:ss.ffffffZ", "yyyy-MM-ddTHH:mm:ssZ" };
-		private Uri artifactUri;
-		private Change[] changes;
-		private int changesetId;
-		private string comment;
-		private string committer;
-		private string owner;
-		private DateTime creationDate;
-		private VersionControlServer versionControlServer;
+    public sealed class Changeset
+    {
+        private static readonly string[] DateTimeFormats = { "yyyy-MM-ddTHH:mm:ss.fZ", "yyyy-MM-ddTHH:mm:ss.ffZ", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ss.ffffZ", "yyyy-MM-ddTHH:mm:ss.fffffZ", "yyyy-MM-ddTHH:mm:ss.ffffffZ", "yyyy-MM-ddTHH:mm:ssZ" };
+        private Uri artifactUri;
+        private Change[] changes;
+        private int changesetId;
+        private string comment;
+        private string committer;
+        private string owner;
+        private DateTime creationDate;
+        private VersionControlServer versionControlServer;
+        //      <QueryChangesetResult cmtr="string" cmtrdisp="string" date="dateTime" cset="int" owner="string" ownerdisp="string">
+        //        <Comment>string</Comment>
+        //        <CheckinNote>
+        //          <Values>
+        //            <CheckinNoteFieldValue xsi:nil="true" />
+        //            <CheckinNoteFieldValue xsi:nil="true" />
+        //          </Values>
+        //        </CheckinNote>
+        //        <PolicyOverride>
+        //          <Comment>string</Comment>
+        //          <PolicyFailures>
+        //            <PolicyFailureInfo xsi:nil="true" />
+        //            <PolicyFailureInfo xsi:nil="true" />
+        //          </PolicyFailures>
+        //        </PolicyOverride>
+        //        <Properties>
+        //          <PropertyValue pname="string">
+        //            <val />
+        //          </PropertyValue>
+        //          <PropertyValue pname="string">
+        //            <val />
+        //          </PropertyValue>
+        //        </Properties>
+        //        <Changes>
+        //          <Change type="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" typeEx="int">
+        //            <Item xsi:nil="true" />
+        //            <MergeSources xsi:nil="true" />
+        //          </Change>
+        //          <Change type="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" typeEx="int">
+        //            <Item xsi:nil="true" />
+        //            <MergeSources xsi:nil="true" />
+        //          </Change>
+        //        </Changes>
+        //      </QueryChangesetResult>
+        internal static Changeset FromXml(Repository repository, XElement element)
+        {
+            Changeset changeset = new Changeset();
+            changeset.versionControlServer = repository.VersionControlServer;
 
-		internal static Changeset FromXml(Repository repository, XmlReader reader)
-		{
-			string elementName = reader.Name;
+            changeset.committer = element.Attribute("cmtr").Value;
+            changeset.changesetId = Convert.ToInt32(element.Attribute("cset").Value);
+            string date = element.Attribute("date").Value;
+            changeset.creationDate = DateTime.ParseExact(date, DateTimeFormats, null, DateTimeStyles.None);
+            changeset.owner = element.Attribute("owner").Value;
 
-			Changeset changeset = new Changeset();
-			changeset.versionControlServer = repository.VersionControlServer;
+            changeset.comment = element.Element(XmlNamespaces.GetMessageElementName("Comment")).Value;
 
-			changeset.committer = reader.GetAttribute("cmtr");
-			changeset.changesetId = Convert.ToInt32(reader.GetAttribute("cset"));
-			string date = reader.GetAttribute("date");
-			changeset.creationDate = DateTime.ParseExact(date, DateTimeFormats, null, DateTimeStyles.None);
-			changeset.owner = reader.GetAttribute("owner");
+            changeset.changes = element.Element(XmlNamespaces.GetMessageElementName("Changes"))
+                .Elements(XmlNamespaces.GetMessageElementName("Change"))
+                .Select(el => Change.FromXml(repository, el)).ToArray();
+            return changeset;
+        }
 
- 			List<Change> changes = new List<Change>();
+        internal void ToXml(XmlWriter writer, string element)
+        {
+            writer.WriteStartElement(element);
+            writer.WriteAttributeString("cmtr", Committer);
+            writer.WriteAttributeString("date", CreationDate.ToString());
+            writer.WriteAttributeString("cset", ChangesetId.ToString());
+            writer.WriteElementString("owner", Owner);
 
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+            if (changes != null)
+            {
+                writer.WriteStartElement("Changes");
 
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "Change":
-									changes.Add(Change.FromXml(repository, reader));
-									break;
-								case "Comment":
-									changeset.comment = reader.ReadString();
-									break;
-								}
-						}
-				}
-
-			changeset.changes = changes.ToArray();
-			return changeset;
-		}
-
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("cmtr", Committer);
-			writer.WriteAttributeString("date", CreationDate.ToString());
-			writer.WriteAttributeString("cset", ChangesetId.ToString());
-			writer.WriteElementString("owner", Owner);
-
-			if (changes != null)
-				{
-					writer.WriteStartElement("Changes");
-
-					foreach (Change change in changes)
-						{
-							change.ToXml(writer, "Change");
-						}
+                foreach (Change change in changes)
+                {
+                    change.ToXml(writer, "Change");
+                }
 					
-					writer.WriteEndElement();
-				}
+                writer.WriteEndElement();
+            }
 
-			writer.WriteEndElement();
-		}
+            writer.WriteEndElement();
+        }
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			sb.Append("Changeset instance ");
-			sb.Append(GetHashCode());
+            sb.Append("Changeset instance ");
+            sb.Append(GetHashCode());
 
-			sb.Append("\n	 ChangesetId: ");
-			sb.Append(ChangesetId);
+            sb.Append("\n	 ChangesetId: ");
+            sb.Append(ChangesetId);
 
-			sb.Append("\n	 ArtifactUri: ");
-			sb.Append(ArtifactUri);
+            sb.Append("\n	 ArtifactUri: ");
+            sb.Append(ArtifactUri);
 
-			sb.Append("\n	 Comment: ");
-			sb.Append(Comment);
+            sb.Append("\n	 Comment: ");
+            sb.Append(Comment);
 
-			sb.Append("\n	 Committer: ");
-			sb.Append(Committer);
+            sb.Append("\n	 Committer: ");
+            sb.Append(Committer);
 
-			sb.Append("\n	 Owner: ");
-			sb.Append(Owner);
+            sb.Append("\n	 Owner: ");
+            sb.Append(Owner);
 
-			foreach (Change change in Changes)
-				{
-					sb.Append("\n	 Change: ");
-					sb.Append(change.ToString());
-				}
+            foreach (Change change in Changes)
+            {
+                sb.Append("\n	 Change: ");
+                sb.Append(change.ToString());
+            }
 
-			return sb.ToString();
-		}
+            return sb.ToString();
+        }
 
-		public Uri ArtifactUri
-		{
-			get { return artifactUri; }
-		}
+        public Uri ArtifactUri { get { return artifactUri; } }
 
-		public Change[] Changes
-		{
-			get { return changes; }
-		}
+        public Change[] Changes { get { return changes; } }
 
-		public int ChangesetId
-		{
-			get { return changesetId; }
-		}
+        public int ChangesetId { get { return changesetId; } }
 
-		public string Comment
-		{
-			get { return comment; }
-		}
+        public string Comment { get { return comment; } }
 
-		public string Committer
-		{
-			get { return committer; }
-		}
+        public string Committer { get { return committer; } }
 
-		public string Owner
-		{
-			get { return owner; }
-		}
+        public string Owner { get { return owner; } }
 
-		public DateTime CreationDate
-		{
-			get { return creationDate; }
-		}
+        public DateTime CreationDate { get { return creationDate; } }
 
-		public VersionControlServer VersionControlServer
-		{
-			get { return versionControlServer; }
-		}
-
-	}
+        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
+    }
 }

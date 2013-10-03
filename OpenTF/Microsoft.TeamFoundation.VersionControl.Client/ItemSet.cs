@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -42,43 +43,25 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         private Item[] items;
         private string pattern;
         private string queryPath;
-
+        //<QueryItemsResult xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03">
+        //  <ItemSet>
+        //    <QueryPath>$/</QueryPath>
+        //    <Items>
+        //      <Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         internal static ItemSet FromXml(Repository repository, XElement element)
         {
             ItemSet itemSet = new ItemSet();
             List<Item> items = new List<Item>();
 
-            var patternElement = element.Element(XmlNamespaces.MessageNs + "Pattern");
+            var patternElement = element.Element(XmlNamespaces.GetMessageElementName("Pattern"));
             itemSet.pattern = patternElement != null ? patternElement.Value : string.Empty;
 
-            var queryPathElement = element.Element(XmlNamespaces.MessageNs + "QueryPath");
+            var queryPathElement = element.Element(XmlNamespaces.GetMessageElementName("QueryPath"));
             itemSet.queryPath = queryPathElement != null ? queryPathElement.Value : string.Empty;
 
-            var itemElements = element.Element(XmlNamespaces.MessageNs + "ItemSet").Elements(XmlNamespaces.MessageNs + "Item");
+            var itemElements = element.Element(XmlNamespaces.GetMessageElementName("Items")).Elements(XmlNamespaces.GetMessageElementName("Item"));
             items.AddRange(itemElements.Select(it => Item.FromXml(repository, it)));
 
-//            while (reader.Read())
-//            {
-//                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-//                    break;
-//
-//                if (reader.NodeType == XmlNodeType.Element)
-//                {
-//                    switch (reader.Name)
-//                    {
-//                        case "Item":
-//                            items.Add(Item.FromXml(repository, reader));
-//                            break;
-//                        case "Pattern":
-//                            itemSet.pattern = reader.ReadElementContentAsString();
-//                            break;
-//                        case "QueryPath":
-//                            itemSet.queryPath = reader.ReadElementContentAsString();
-//                            break;
-//                    }
-//                }
-//            }
-//
             items.Sort(Item.GenericComparer);
             itemSet.items = items.ToArray();
             return itemSet;
