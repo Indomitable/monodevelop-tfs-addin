@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -327,9 +328,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return new GetStatus(getOperations.Length);
         }
 
-        public ExtendedItem[][] GetExtendedItems(ItemSpec[] itemSpecs,
-                                                 DeletedState deletedState,
-                                                 ItemType itemType)
+        public List<List<ExtendedItem>> GetExtendedItems(ItemSpec[] itemSpecs,
+                                                         DeletedState deletedState,
+                                                         ItemType itemType)
         {
             return Repository.QueryItemsExtended(Name, OwnerName,
                 itemSpecs, deletedState, itemType);
@@ -614,17 +615,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         internal static Workspace FromXml(Repository repository, XElement element)
         {
-            XNamespace nameSpace = element.Name.Namespace;
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
             string owner = element.Attribute("owner").Value;
             //bool isLocal = Convert.ToBoolean(element.Attribute("islocal").Value);
 
-            string comment = element.Element(nameSpace + "Comment").Value;
-            DateTime lastAccessDate = DateTime.Parse(element.Element(nameSpace + "LastAccessDate").Value);
-            var folders = new List<WorkingFolder>(element.Element(nameSpace + "Folders")
-                                                         .Elements(nameSpace + "WorkingFolder")
-                                                         .Select(el => WorkingFolder.FromXml(repository, el)));
+            string comment = element.Element(XmlNamespaces.GetMessageElementName("Comment")).Value;
+            DateTime lastAccessDate = DateTime.Parse(element.Element(XmlNamespaces.GetMessageElementName("LastAccessDate")).Value);
+            var folders = new List<WorkingFolder>(element.Element(XmlNamespaces.GetMessageElementName("Folders"))
+                                                         .Elements(XmlNamespaces.GetMessageElementName("WorkingFolder"))
+                                                         .Select(el => WorkingFolder.FromXml(el)));
 
             return new Workspace(repository.VersionControlServer, name, owner, comment, folders.ToArray(), computer)
             { 
@@ -634,16 +634,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         internal XElement ToXml(string elementName)
         {
-            XElement element = new XElement(elementName, 
+            XElement element = new XElement(XmlNamespaces.GetMessageElementName(elementName), 
                                    new XAttribute("computer", Computer), 
                                    new XAttribute("name", Name),
                                    new XAttribute("owner", OwnerName), 
-                                   new XElement("Comment", Comment));
+                                   new XElement(XmlNamespaces.GetMessageElementName("Comment"), Comment));
 
             if (folders != null)
             {
-                element.Add(new XElement("Folders", from f in folders
-                                                                select f.ToXml()));
+                element.Add(new XElement(XmlNamespaces.GetMessageElementName("Folders"), folders.Select(f => f.ToXml())));
             }
             return element;
             //workspaceElm.WriteTo(writer);
@@ -836,45 +835,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.folders = w.folders;
         }
 
-        public string Comment
-        {
-            get { return comment; }
-        }
+        public string Comment { get { return comment; } }
 
-        public string Computer
-        {
-            get { return computer; }
-        }
+        public string Computer { get { return computer; } }
 
-        public WorkingFolder[] Folders
-        {
-            get { return folders; }
-        }
+        public WorkingFolder[] Folders { get { return folders; } }
 
-        public string Name
-        {
-            get { return name; }
-        }
+        public string Name { get { return name; } }
 
-        public DateTime LastAccessDate
-        {
-            get { return lastAccessDate; }
-        }
+        public DateTime LastAccessDate { get { return lastAccessDate; } }
 
-        public string OwnerName
-        {
-            get { return ownerName; }
-        }
+        public string OwnerName { get { return ownerName; } }
 
-        public VersionControlServer VersionControlServer
-        {
-            get { return versionControlServer; }
-        }
+        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
 
-        internal Repository Repository
-        {
-            get { return versionControlServer.Repository; }
-        }
+        internal Repository Repository { get { return versionControlServer.Repository; } }
 
         internal void SetFileAttributes(string path)
         {

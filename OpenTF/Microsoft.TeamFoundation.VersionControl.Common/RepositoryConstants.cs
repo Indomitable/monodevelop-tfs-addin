@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,27 +27,23 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-
 namespace Microsoft.TeamFoundation.VersionControl.Common
 {
-	public class RepositoryConstants
-	{
-		public const string AuthenticatedUser =".";
-		public const string Upload="Upload";
-		public const string Download="Download";
-		public const int EncodingBinary=-1;
-		public const string WorkspaceNameField="wsname";
-		public const string WorkspaceOwnerField="wsowner";
-		public const string HashField = "hash";		
-		public const string ServerItemField = "item";
-		public const string RangeField = "range";
-		public const string LengthField = "filelength";
-		public const string ContentField = "content";
-
-		// these are supposed to be internal, but i'm not sure yet how these values
-		// are exposed to Microsoft.TeamFoundation.VersionControl.Client classes
-		public const string UploadUrlSuffix = "VersionControl/v1.0/upload.asmx";
-		public const string DownloadUrlSuffix = "VersionControl/v1.0/item.asmx";
-	}
+    public static class RepositoryConstants
+    {
+        public const string AuthenticatedUser = ".";
+        public const string Upload = "Upload";
+        public const string Download = "Download";
+        public const int EncodingBinary = -1;
+        public const string WorkspaceNameField = "wsname";
+        public const string WorkspaceOwnerField = "wsowner";
+        public const string HashField = "hash";
+        public const string ServerItemField = "item";
+        public const string RangeField = "range";
+        public const string LengthField = "filelength";
+        public const string ContentField = "content";
+        public const string ServiceUrl = "VersionControl/v1.0/Repository.asmx";
+        public const string UploadUrlSuffix = "VersionControl/v1.0/upload.asmx";
+        public const string DownloadUrlSuffix = "VersionControl/v1.0/item.asmx";
+    }
 }

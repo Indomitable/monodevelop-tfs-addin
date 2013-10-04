@@ -27,190 +27,178 @@
 //
 
 using System;
-using System.Collections;
-using System.IO;
-using System.Net;
 using System.Text;
 using System.Xml;
-using System.Web.Services;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class ExtendedItem
-	{
-		private ChangeType changeType = ChangeType.None;
-		private int deletionId;
-		private int encoding;
-		private int itemId;
-		private string localItem;
-		private string sourceServerItem;
-		private string targetServerItem;
-		private string lockOwner;
-		private bool hasOtherPendingChange;
-		private ItemType itemType;
-		private LockLevel lockStatus;
-		private int versionLatest;
-		private int versionLocal;
+    public sealed class ExtendedItem
+    {
+        //          <ExtendedItem lver="int" did="int" latest="int" type="Any or Folder or File" enc="int" itemid="int" local="string" titem="string" sitem="string" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" chgEx="int" ochg="boolean" lock="None or Checkin or CheckOut or Unchanged" lowner="string" lownerdisp="string" date="dateTime">
+        //            <IsBranch>boolean</IsBranch>
+        //            <PropertyValues xsi:nil="true" />
+        //          </ExtendedItem>
+        //        <s:complexType name="ExtendedItem">
+        //            <s:sequence>
+        //                <s:element minOccurs="0" maxOccurs="1" default="false" name="IsBranch" type="s:boolean"/>
+        //                <s:element minOccurs="0" maxOccurs="1" name="PropertyValues" type="tns:ArrayOfPropertyValue"/>
+        //            </s:sequence>
+        //            <s:attribute default="0" name="lver" type="s:int"/>
+        //            <s:attribute default="0" name="did" type="s:int"/>
+        //            <s:attribute default="0" name="latest" type="s:int"/>
+        //            <s:attribute default="Any" name="type" type="tns:ItemType"/>
+        //            <s:attribute default="-3" name="enc" type="s:int"/>
+        //            <s:attribute default="0" name="itemid" type="s:int"/>
+        //            <s:attribute name="local" type="s:string"/>
+        //            <s:attribute name="titem" type="s:string"/>
+        //            <s:attribute name="sitem" type="s:string"/>
+        //            <s:attribute default="None" name="chg" type="tns:ChangeType"/>
+        //            <s:attribute default="0" name="chgEx" type="s:int"/>
+        //            <s:attribute default="false" name="ochg" type="s:boolean"/>
+        //            <s:attribute default="None" name="lock" type="tns:LockLevel"/>
+        //            <s:attribute name="lowner" type="s:string"/>
+        //            <s:attribute name="lownerdisp" type="s:string"/>
+        //            <s:attribute name="date" type="s:dateTime" use="required"/>
+        //        </s:complexType>
+        internal static ExtendedItem FromXml(XElement element)
+        {
+            ExtendedItem item = new ExtendedItem
+            {
+                ChangeType = ChangeType.None,
+                VersionLocal = 0,
+                DeletionId = 0,
+                VersionLatest = 0,
+                ItemType = ItemType.Any,
+                Encoding = -3,
+                ItemId = 0,
+                HasOtherPendingChange = false,
+                LockStatus = LockLevel.None
+            };
 
-		//<ExtendedItem lver="int" did="int" latest="int" 
-		//type="Any or Folder or File" enc="int" itemid="int" 
-		//local="string" titem="string" sitem="string" 
-		//chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock" 
-		//ochg="boolean" lock="None or Checkin or CheckOut or Unchanged" 
-		//lowner="string" />
+            if (element.Attribute("chg") != null && !string.IsNullOrEmpty(element.Attribute("chg").Value))
+                item.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value, true);
 
-		internal static ExtendedItem FromXml(Repository repository, XmlReader reader)
-		{
-			ExtendedItem item = new ExtendedItem();
+            if (element.Attribute("ochg") != null && !string.IsNullOrEmpty(element.Attribute("ochg").Value))
+                item.HasOtherPendingChange = bool.Parse(element.Attribute("ochg").Value);
 
-			string chg = reader.GetAttribute("chg");
-			if (!String.IsNullOrEmpty(chg)) item.changeType = (ChangeType) Enum.Parse(typeof(ChangeType), chg, true);
+            if (element.Attribute("lock") != null && !string.IsNullOrEmpty(element.Attribute("lock").Value))
+                item.LockStatus = (LockLevel)Enum.Parse(typeof(LockLevel), element.Attribute("lock").Value, true);
 
-			string ochg = reader.GetAttribute("ochg");
-			if (!String.IsNullOrEmpty(ochg)) item.hasOtherPendingChange = bool.Parse(ochg);
+            if (element.Attribute("lowner") != null && !string.IsNullOrEmpty(element.Attribute("lowner").Value))
+                item.LockOwner = element.Attribute("lowner").Value;
 
-			string xlock = reader.GetAttribute("lock");
-			if (!String.IsNullOrEmpty(xlock)) item.lockStatus = (LockLevel) Enum.Parse(typeof(LockLevel), xlock, true);
+            if (element.Attribute("local") != null && !string.IsNullOrEmpty(element.Attribute("local").Value))
+                item.LocalItem = TfsPath.ToPlatformPath(element.Attribute("local").Value);
 
-			item.lockOwner = reader.GetAttribute("lowner");
-			item.localItem = TfsPath.ToPlatformPath(reader.GetAttribute("local"));
-			item.targetServerItem = reader.GetAttribute("titem");
-			item.sourceServerItem = reader.GetAttribute("sitem");
+            if (element.Attribute("titem") != null && !string.IsNullOrEmpty(element.Attribute("titem").Value))
+                item.TargetServerItem = element.Attribute("titem").Value;
 
-			item.itemType = (ItemType) Enum.Parse(typeof(ItemType), reader.GetAttribute("type"), true);
-			item.itemId = Convert.ToInt32(reader.GetAttribute("itemid"));
-			item.encoding = Convert.ToInt32(reader.GetAttribute("enc"));
-			item.versionLocal = Convert.ToInt32(reader.GetAttribute("lver"));
-			item.versionLatest = Convert.ToInt32(reader.GetAttribute("latest"));
-			item.deletionId = Convert.ToInt32(reader.GetAttribute("did"));
+            if (element.Attribute("sitem") != null && !string.IsNullOrEmpty(element.Attribute("sitem").Value))
+                item.SourceServerItem = element.Attribute("sitem").Value;
 
-			return item;
-		}
+            if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
+                item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+            if (element.Attribute("itemid") != null && !string.IsNullOrEmpty(element.Attribute("itemid").Value))
+                item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
 
-			sb.Append("ExtendedItem instance ");
-			sb.Append(GetHashCode());
+            if (element.Attribute("enc") != null && !string.IsNullOrEmpty(element.Attribute("enc").Value))
+                item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
 
-			sb.Append("\n	 LockOwner: ");
-			sb.Append(LockOwner);
+            if (element.Attribute("lver") != null && !string.IsNullOrEmpty(element.Attribute("lver").Value))
+                item.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
 
-			sb.Append("\n	 HasOtherPendingChange: ");
-			sb.Append(HasOtherPendingChange);
+            if (element.Attribute("latest") != null && !string.IsNullOrEmpty(element.Attribute("latest").Value))
+                item.VersionLatest = Convert.ToInt32(element.Attribute("latest").Value);
 
-			sb.Append("\n	 ChangeType: ");
-			sb.Append(ChangeType);
+            if (element.Attribute("did") != null && !string.IsNullOrEmpty(element.Attribute("did").Value))
+                item.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
 
-			sb.Append("\n	 LockStatus: ");
-			sb.Append(LockStatus.ToString());
+            item.CheckinDate = DateTime.Parse(element.Attribute("date").Value);
+            return item;
+        }
 
-			sb.Append("\n	 VersionLocal: ");
-			sb.Append(VersionLocal);
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			sb.Append("\n	 VersionLatest: ");
-			sb.Append(VersionLatest);
+            sb.Append("ExtendedItem instance ");
+            sb.Append(GetHashCode());
 
-			sb.Append("\n	 Encoding: ");
-			sb.Append(Encoding);
+            sb.Append("\n	 LockOwner: ");
+            sb.Append(LockOwner);
 
-			sb.Append("\n	 LocalItem: ");
-			sb.Append(LocalItem);
+            sb.Append("\n	 HasOtherPendingChange: ");
+            sb.Append(HasOtherPendingChange);
 
-			sb.Append("\n	 TargetServerItem: ");
-			sb.Append(TargetServerItem);
+            sb.Append("\n	 ChangeType: ");
+            sb.Append(ChangeType);
 
-			sb.Append("\n	 SourceServerItem: ");
-			sb.Append(SourceServerItem);
+            sb.Append("\n	 LockStatus: ");
+            sb.Append(LockStatus.ToString());
 
-			sb.Append("\n	 ItemId: ");
-			sb.Append(ItemId);
+            sb.Append("\n	 VersionLocal: ");
+            sb.Append(VersionLocal);
 
-			sb.Append("\n	 ItemType: ");
-			sb.Append(ItemType);
+            sb.Append("\n	 VersionLatest: ");
+            sb.Append(VersionLatest);
 
-			sb.Append("\n	 DeletionId: ");
-			sb.Append(DeletionId);
+            sb.Append("\n	 Encoding: ");
+            sb.Append(Encoding);
 
-			return sb.ToString();
-		}
+            sb.Append("\n	 LocalItem: ");
+            sb.Append(LocalItem);
 
-		public int VersionLatest
-		{
-			get { return versionLatest; }
-		}
+            sb.Append("\n	 TargetServerItem: ");
+            sb.Append(TargetServerItem);
 
-		public int VersionLocal
-		{
-			get { return versionLocal; }
-		}
+            sb.Append("\n	 SourceServerItem: ");
+            sb.Append(SourceServerItem);
 
-		public LockLevel LockStatus
-		{
-			get { return lockStatus; }
-		}
+            sb.Append("\n	 ItemId: ");
+            sb.Append(ItemId);
 
-		public ItemType ItemType
-		{
-			get { return itemType; }
-		}
+            sb.Append("\n	 ItemType: ");
+            sb.Append(ItemType);
 
-		public ChangeType ChangeType
-		{
-			get { return changeType; }
-		}
+            sb.Append("\n	 DeletionId: ");
+            sb.Append(DeletionId);
 
-		public int DeletionId
-		{
-			get { return deletionId; }
-		}
+            return sb.ToString();
+        }
 
-		public bool HasOtherPendingChange
-		{
-			get { return hasOtherPendingChange; }
-		}
+        public int VersionLatest { get; private set; }
 
-		public bool IsInWorkspace
-		{
-			get { return (!String.IsNullOrEmpty(LocalItem)); }
-		}
+        public int VersionLocal { get; private set; }
 
-		public bool IsLatest
-		{
-			get { return versionLatest == versionLocal; }
-		}
+        public LockLevel LockStatus { get; private set; }
 
-		public int ItemId
-		{
-			get { return itemId; }
-		}
+        public ItemType ItemType { get; private set; }
 
-		public int Encoding
-		{
-			get { return encoding; }
-		}
+        public ChangeType ChangeType { get; private set; }
 
-		public string LocalItem
-		{
-			get { return localItem; }
-		}
+        public int DeletionId { get; private set; }
 
-		public string LockOwner
-		{
-			get { return lockOwner; }
-		}
+        public bool HasOtherPendingChange { get; private set; }
 
-		public string SourceServerItem
-		{
-			get { return sourceServerItem; }
-		}
+        public bool IsInWorkspace { get { return (!string.IsNullOrEmpty(LocalItem)); } }
 
-		public string TargetServerItem
-		{
-			get { return targetServerItem; }
-		}
+        public bool IsLatest { get { return VersionLatest == VersionLocal; } }
 
-	}
+        public int ItemId { get; private set; }
+
+        public int Encoding { get; private set; }
+
+        public string LocalItem { get; private set; }
+
+        public string LockOwner { get; private set; }
+
+        public string SourceServerItem { get; private set; }
+
+        public string TargetServerItem { get; private set; }
+
+        public DateTime CheckinDate { get; private set; }
+    }
 }
 

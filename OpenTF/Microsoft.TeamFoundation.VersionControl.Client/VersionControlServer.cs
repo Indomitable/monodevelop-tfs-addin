@@ -257,22 +257,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 itemType, includeDownloadInfo);
         }
 
-        public ExtendedItem[] GetExtendedItems(string path,
-                                               DeletedState deletedState,
-                                               ItemType itemType)
+        public List<ExtendedItem> GetExtendedItems(string path,
+                                                   DeletedState deletedState,
+                                                   ItemType itemType)
         {
             List<ItemSpec> itemSpecs = new List<ItemSpec>();
             itemSpecs.Add(new ItemSpec(path, RecursionType.OneLevel));
-            ExtendedItem[][] items = GetExtendedItems(itemSpecs.ToArray(), deletedState, itemType);
+            var items = GetExtendedItems(itemSpecs.ToArray(), deletedState, itemType);
 			
-            if (items.Length == 0)
+            if (items.Count == 0)
                 return null;
             return items[0];
         }
 
-        public ExtendedItem[][] GetExtendedItems(ItemSpec[] itemSpecs,
-                                                 DeletedState deletedState,
-                                                 ItemType itemType)
+        public List<List<ExtendedItem>> GetExtendedItems(ItemSpec[] itemSpecs,
+                                                         DeletedState deletedState,
+                                                         ItemType itemType)
         {
             return Repository.QueryItemsExtended(null, null,
                 itemSpecs, deletedState, itemType);
@@ -464,29 +464,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             //if (null != Uploading) Uploading(null, null);
         }
 
-        public string AuthenticatedUser
-        {
-            get { return authenticatedUser; }
-        }
+        public string AuthenticatedUser { get { return authenticatedUser; } }
 
-        public Guid ServerGuid
-        {
-            get { return new Guid(); }
-        }
+        public Guid ServerGuid { get { return new Guid(); } }
 
-        public TeamFoundationServer TeamFoundationServer
-        {
-            get { return teamFoundationServer; }
-        }
+        public TeamFoundationServer TeamFoundationServer { get { return teamFoundationServer; } }
 
-        internal Repository Repository
-        {
-            get { return repository; }
-        }
+        internal Repository Repository { get { return repository; } }
 
-        internal Uri Uri
-        {
-            get { return uri; }
-        }
+        internal Uri Uri { get { return uri; } }
     }
 }

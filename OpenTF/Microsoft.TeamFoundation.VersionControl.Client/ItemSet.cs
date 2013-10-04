@@ -62,7 +62,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             var itemElements = element.Element(XmlNamespaces.GetMessageElementName("Items")).Elements(XmlNamespaces.GetMessageElementName("Item"));
             items.AddRange(itemElements.Select(it => Item.FromXml(repository, it)));
 
-            items.Sort(Item.GenericComparer);
+            items.Sort();
             itemSet.items = items.ToArray();
             return itemSet;
         }

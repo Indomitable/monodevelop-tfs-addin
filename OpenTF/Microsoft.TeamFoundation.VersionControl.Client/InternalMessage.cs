@@ -90,7 +90,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public void AddParam(string name, params object[] content)
         {
-            this.messageElement.Add(new XElement(XmlNamespaces.MessageNs + name, content));
+            this.messageElement.Add(new XElement(XmlNamespaces.GetMessageElementName(name), content));
         }
 
         public void AddParam(XElement param)

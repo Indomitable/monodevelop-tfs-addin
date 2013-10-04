@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -29,7 +30,6 @@
 using System;
 using System.IO;
 using System.Text;
-using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 
@@ -38,37 +38,30 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
     public sealed class WorkingFolder
     {
-        private bool isCloaked;
-        private string localItem;
-        private string serverItem;
-        private WorkingFolderType type = WorkingFolderType.Map;
-
         public WorkingFolder(string serverItem, string localItem)
         {
             CheckServerPathStartsWithDollarSlash(serverItem);
-            this.serverItem = serverItem;
-            this.localItem = Path.GetFullPath(localItem);
+            ServerItem = serverItem;
+            LocalItem = Path.GetFullPath(localItem);
+            Type = WorkingFolderType.Map;
         }
 
-        internal static WorkingFolder FromXml(Repository repository, XmlReader reader)
-        {
-            string local = TfsPath.ToPlatformPath(reader.GetAttribute("local"));
-            string serverItem = reader.GetAttribute("item");
-            return new WorkingFolder(serverItem, local);
-        }
-
-        internal static WorkingFolder FromXml(Repository repository, XElement element)
+        internal static WorkingFolder FromXml(XElement element)
         {
             string local = TfsPath.ToPlatformPath(element.Attribute("local").Value);
             string serverItem = element.Attribute("item").Value;
-            return new WorkingFolder(serverItem, local);
+            var workFolder = new WorkingFolder(serverItem, local);
+            if (element.Attribute("type") != null)
+                workFolder.Type = (WorkingFolderType)Enum.Parse(typeof(WorkingFolderType), element.Attribute("type").Value);
+            return workFolder;
         }
 
         internal XElement ToXml()
         {
-            return new XElement("WorkingFolder", 
+            return new XElement(XmlNamespaces.GetMessageElementName("WorkingFolder"), 
                 new XAttribute("local", TfsPath.FromPlatformPath(LocalItem)), 
-                new XAttribute("item", ServerItem));
+                new XAttribute("item", ServerItem),
+                new XAttribute("type", this.Type.ToString()));
         }
 
         public override string ToString()
@@ -95,24 +88,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             throw new InvalidPathException(msg);
         }
 
-        public bool IsCloaked
-        {
-            get { return isCloaked; }
-        }
+        public bool IsCloaked { get { return this.Type == WorkingFolderType.Cloak; } }
 
-        public string LocalItem
-        {
-            get { return localItem; }
-        }
+        public string LocalItem { get; private set; }
 
-        public WorkingFolderType Type
-        {
-            get { return type; }
-        }
+        public WorkingFolderType Type { get; private set; }
 
-        public string ServerItem
-        {
-            get { return serverItem; }
-        }
+        public string ServerItem { get; private set; }
     }
 }

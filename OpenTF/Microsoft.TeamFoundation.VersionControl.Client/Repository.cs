@@ -53,7 +53,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                           Uri url, ICredentials credentials)
         {
             this.versionControlServer = versionControlServer;
-            this.Url = String.Format("{0}/{1}", url, "VersionControl/v1.0/Repository.asmx");
+            this.Url = String.Format("{0}/{1}", url, RepositoryConstants.ServiceUrl);
             this.itemUrl = String.Format("{0}/{1}", url, RepositoryConstants.DownloadUrlSuffix);
             this.uploadUrl = String.Format("{0}/{1}", url, RepositoryConstants.UploadUrlSuffix);
             this.Credentials = credentials;
@@ -86,7 +86,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             using (HttpWebResponse response = Invoke(msg))
             {
                 XElement result = msg.ResponseReader(response);
-                workspaces.AddRange(result.Elements(XmlNamespaces.MessageNs + "Workspace").Select(el => Workspace.FromXml(this, el)));
+                workspaces.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("Workspace")).Select(el => Workspace.FromXml(this, el)));
             }
             workspaces.Sort();
             return workspaces;
@@ -108,6 +108,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         
             return workspace;
+        }
+
+        public Workspace CreateWorkspace(Workspace workspace)
+        {
+            Message msg = new Message(GetWebRequest(new Uri(Url)), "CreateWorkspace");
+            msg.AddParam(workspace.ToXml("workspace"));
+            Workspace newWorkspace;
+            using (HttpWebResponse response = Invoke(msg))
+            {
+                XElement result = msg.ResponseReader(response);
+                newWorkspace = Workspace.FromXml(this, result);
+            }
+
+            return newWorkspace;
         }
 
         #endregion
@@ -321,20 +335,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            teamProjectOptions.ToXml(msg.Body, "");
 //            HttpWebResponse response = Invoke(msg);
 //            response.Close();
-        }
-
-        public Workspace CreateWorkspace(Workspace workspace)
-        {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "CreateWorkspace");
-            msg.AddParam(workspace.ToXml("workspace"));
-            Workspace newWorkspace;
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                newWorkspace = Workspace.FromXml(this, result);
-            }
-
-            return newWorkspace;
         }
 
         [System.Web.Services.Protocols.SoapDocumentMethodAttribute("http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03/DeleteShelveset", RequestNamespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03", ResponseNamespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03", ParameterStyle = System.Web.Services.Protocols.SoapParameterStyle.Wrapped, Use = System.Web.Services.Description.SoapBindingUse.Literal)]
@@ -748,56 +748,29 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return itemSet.ToArray();
         }
 
-        public ExtendedItem[][] QueryItemsExtended(string workspaceName, string workspaceOwner,
-                                                   ItemSpec[] itemSpecs,
-                                                   DeletedState deletedState, ItemType itemType)
+        public List<List<ExtendedItem>> QueryItemsExtended(string workspaceName, string workspaceOwner,
+                                                           ItemSpec[] itemSpecs,
+                                                           DeletedState deletedState, ItemType itemType)
         {
-            throw new NotImplementedException();
-//            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItemsExtended");
-//        
-//            if (!String.IsNullOrEmpty(workspaceName))
-//                msg.Body.WriteElementString("workspaceName", workspaceName);
-//            if (!String.IsNullOrEmpty(workspaceOwner))
-//                msg.Body.WriteElementString("workspaceOwner", workspaceOwner);
-//        
-//            msg.Body.WriteStartElement("items");
-//            foreach (ItemSpec itemSpec in itemSpecs)
-//            {
-//                itemSpec.ToXml(msg.Body, "ItemSpec");
-//            }
-//            msg.Body.WriteEndElement();
-//        
-//            msg.Body.WriteElementString("deletedState",
-//                deletedState.ToString());
-//            msg.Body.WriteElementString("itemType",
-//                itemType.ToString());
-//        
-//            List< ExtendedItem[] > listOfItemArrays = new List<ExtendedItem[] >();
-//            using (HttpWebResponse response = Invoke(msg))
-//            {
-//                XmlReader results = msg.ResponseReader(response);
-//                while (results.Read())
-//                {
-//                    if (results.NodeType == XmlNodeType.Element &&
-//                        results.Name == "ArrayOfExtendedItem")
-//                    {
-//                        List<ExtendedItem> items = new List<ExtendedItem>();
-//                        while (results.Read())
-//                        {
-//                            //Console.WriteLine("	 " + results.Name + ":" + results.NodeType);
-//                            if (results.NodeType == XmlNodeType.EndElement &&
-//                                results.Name == "ArrayOfExtendedItem")
-//                                break;
-//                            if (results.NodeType == XmlNodeType.Element &&
-//                                results.Name == "ExtendedItem")
-//                                items.Add(ExtendedItem.FromXml(this, results));
-//                        }
-//                        listOfItemArrays.Add(items.ToArray());
-//                    }
-//                }
-//            }
-//        
-//            return listOfItemArrays.ToArray();
+            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItemsExtended");
+            if (!string.IsNullOrEmpty(workspaceName))
+                msg.AddParam("workspaceName", workspaceName);
+            if (!string.IsNullOrEmpty(workspaceOwner))
+                msg.AddParam("workspaceOwner", workspaceOwner);
+            msg.AddParam("items", itemSpecs.Select(its => its.ToXml()));
+            msg.AddParam("deletedState", deletedState.ToString());
+            msg.AddParam("itemType", itemType.ToString());
+        
+            List<List<ExtendedItem>> listOfItemArrays = new List<List<ExtendedItem>>();
+            using (HttpWebResponse response = Invoke(msg))
+            {
+                XElement result = msg.ResponseReader(response);
+                foreach (var item in result.Elements(XmlNamespaces.GetMessageElementName("ArrayOfExtendedItem")))
+                {
+                    listOfItemArrays.Add(new List<ExtendedItem>(item.Elements(XmlNamespaces.GetMessageElementName("ExtendedItem")).Select(el => ExtendedItem.FromXml(el))));
+                }
+            }
+            return listOfItemArrays;
         }
 
         public VersionControlLabel[] QueryLabels(string workspaceName, string workspaceOwner,

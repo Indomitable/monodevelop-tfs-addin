@@ -28,42 +28,32 @@
 //
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Text;
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class Item
+    public sealed class Item: IEquatable<Item>, IComparable<Item>
     {
         private string downloadUrl;
-        private int contentLength;
-        private int changesetId;
-        private int deletionId;
-        private int encoding;
-        private byte[] hashValue;
-        private int itemId;
-        private DateTime checkinDate;
-        private ItemType itemType = ItemType.File;
-        private string serverItem;
-        private VersionControlServer versionControlServer;
 
         internal Item(VersionControlServer versionControlServer, string serverItem)
         {
-            this.versionControlServer = versionControlServer;
-            this.serverItem = serverItem;
+            this.VersionControlServer = versionControlServer;
+            this.ServerItem = serverItem;
         }
 
         public void DownloadFile(string localFileName)
         {
-            if (itemType == ItemType.Folder)
+            if (ItemType == ItemType.Folder)
                 return;
 
             Client.DownloadFile.WriteTo(localFileName, VersionControlServer.Repository,
                 ArtifactUri);
         }
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
+        //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
         internal static Item FromXml(Repository repository, XElement element)
         {
             if (element == null)
@@ -72,22 +62,25 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Item item = new Item(repository.VersionControlServer, serverItem);
 
             if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
-                item.itemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
+                item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
 
-            if (element.Attribute("date") != null && !string.IsNullOrEmpty(element.Attribute("date").Value))
-                item.checkinDate = DateTime.Parse(element.Attribute("date").Value);
+            if (element.Attribute("did") != null && !string.IsNullOrEmpty(element.Attribute("did").Value))
+                item.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
 
-            item.changesetId = Convert.ToInt32(element.Attribute("cs").Value);
-            item.itemId = Convert.ToInt32(element.Attribute("itemid").Value);
-            item.encoding = Convert.ToInt32(element.Attribute("enc").Value);
+
+            item.CheckinDate = DateTime.Parse(element.Attribute("date").Value);
+            item.ChangesetId = Convert.ToInt32(element.Attribute("cs").Value);
+            item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
+            item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
 
             if (item.ItemType == ItemType.File)
             {
-                item.contentLength = Convert.ToInt32(element.Attribute("len").Value);
-                item.downloadUrl = element.Attribute("durl").Value;
+                item.ContentLength = Convert.ToInt32(element.Attribute("len").Value);
+                if (element.Attribute("durl") != null)
+                    item.downloadUrl = element.Attribute("durl").Value;
 
                 if (element.Attribute("hash") != null && !string.IsNullOrEmpty(element.Attribute("hash").Value))
-                    item.hashValue = Convert.FromBase64String(element.Attribute("hash").Value);
+                    item.HashValue = Convert.FromBase64String(element.Attribute("hash").Value);
             }
             return item;
         }
@@ -132,27 +125,27 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return sb.ToString();
         }
 
-        public int ContentLength { get { return contentLength; } }
+        public int ContentLength { get; private set; }
 
-        public ItemType ItemType { get { return itemType; } }
+        public ItemType ItemType { get; private set; }
 
-        public DateTime CheckinDate { get { return checkinDate; } }
+        public DateTime CheckinDate { get; private set; }
 
-        public int ChangesetId { get { return changesetId; } }
+        public int ChangesetId { get; private set; }
 
-        public int DeletionId { get { return deletionId; } }
+        public int DeletionId { get; private set; }
 
-        public int Encoding { get { return encoding; } }
+        public int Encoding { get; private set; }
 
-        public int ItemId { get { return itemId; } }
+        public int ItemId { get; private set; }
 
-        public byte[] HashValue { get { return hashValue; } }
+        public byte[] HashValue { get; private set; }
 
         public Uri ArtifactUri
         {
             get
             {
-                if (String.IsNullOrEmpty(downloadUrl))
+                if (string.IsNullOrEmpty(downloadUrl))
                 {
                     Item item = VersionControlServer.GetItem(ItemId, ChangesetId, true);
                     downloadUrl = item.downloadUrl;
@@ -162,35 +155,73 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public string ServerItem { get { return serverItem; } }
+        public string ServerItem { get; private set; }
 
-        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
-
-        internal class ItemGenericComparer : IComparer<Item>
+        public string ShortName
         {
-            public static ItemGenericComparer Instance = new ItemGenericComparer();
-
-            public int Compare(Item x, Item y)
+            get
             {
-                return x.ServerItem.CompareTo(y.ServerItem);
+                if (string.Equals(ServerItem, VersionControlPath.RootFolder))
+                    return VersionControlPath.RootFolder;
+                return ServerItem.Substring(ServerItem.LastIndexOf(VersionControlPath.Separator) + 1);
             }
         }
 
-        internal static IComparer<Item> GenericComparer { get { return ItemGenericComparer.Instance; } }
+        public VersionControlServer VersionControlServer { get; private set; }
 
-        internal class ItemComparer : IComparer
+        #region Equal
+
+        #region IComparable<Item> Members
+
+        public int CompareTo(Item other)
         {
-            public static ItemComparer Instance = new ItemComparer();
-
-            public int Compare(object x, object y)
-            {
-                Item itemX = (Item)x;
-                Item itemY = (Item)y;
-                return itemX.ServerItem.CompareTo(itemY.ServerItem);
-            }
+            return string.Compare(ServerItem, other.ServerItem, StringComparison.Ordinal);
         }
 
-        public static IComparer Comparer { get { return ItemComparer.Instance; } }
+        #endregion
+
+        #region IEquatable<Item> Members
+
+        public bool Equals(Item other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return other.ServerItem == ServerItem;
+        }
+
+        #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            Item cast = obj as Item;
+            if (cast == null)
+                return false;
+            return Equals(cast);
+        }
+
+        public override int GetHashCode()
+        {
+            return ServerItem.GetHashCode();
+        }
+
+        public static bool operator ==(Item left, Item right)
+        {
+            return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
+        }
+
+        public static bool operator !=(Item left, Item right)
+        {
+            return !(left == right);
+        }
+
+        #endregion Equal
+
     }
 }
 
