@@ -35,12 +35,14 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using System.Linq;
 using System.IO;
+using System.Net.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public class SourceControlExplorerView : AbstractXwtViewContent
     {
         private readonly VBox _view = new VBox();
+        //private readonly Menu _menu = new Menu();
 
         #region File/Folders ListView
 
@@ -49,6 +51,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<ExtendedItem> _itemList = new DataField<ExtendedItem>();
         private readonly DataField<string> _nameList = new DataField<string>();
         private readonly DataField<string> _typeList = new DataField<string>();
+        private readonly DataField<string> _latestList = new DataField<string>();
         private readonly DataField<DateTime> _lastCheckinList = new DataField<DateTime>();
         private readonly ListStore _listStore;
 
@@ -79,7 +82,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
             _workspaceStore = new ListStore(_workspaceName);
-            _listStore = new ListStore(_itemList, _typeList, _nameList, _lastCheckinList);
+            _listStore = new ListStore(_itemList, _typeList, _nameList, _latestList, _lastCheckinList);
             _treeStore = new TreeStore(_itemTree, _nameTree);
             BuildContent();
         }
@@ -144,9 +147,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             HPaned mainBox = new HPaned();
 
             VBox treeViewBox = new VBox();
+
             _treeView.Columns.Add(new ListViewColumn("Folders", new TextCellView(_nameTree)));
             _treeView.DataSource = _treeStore;
             _treeView.SelectionChanged += OnFolderChanged;
+            _treeView.ButtonPressed += (sender, e) =>
+            {
+                if (_treeView.SelectedRow != null && e.Button == PointerButton.Right)
+                {
+                    BuildPopupMenu(MenuInvoker.TreeView).Popup();
+                }
+            };
             treeViewBox.WidthRequest = 50;
             treeViewBox.PackStart(_treeView, true, true);
             mainBox.Panel1.Content = treeViewBox;
@@ -159,9 +170,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             rightBox.PackStart(headerRightBox);
             _listView.Columns.Add(new ListViewColumn("Type", new TextCellView(_typeList)));
             _listView.Columns.Add(new ListViewColumn("Name", new TextCellView(_nameList)));
+            _listView.Columns.Add(new ListViewColumn("Latest", new TextCellView(_latestList)));
             _listView.Columns.Add(new ListViewColumn("Last Check-in", new TextCellView(_lastCheckinList)));
             _listView.RowActivated += OnListItemClicked;
             _listView.DataSource = _listStore;
+
+            _listView.ButtonPressed += (sender, e) =>
+            {
+                if (e.Button == PointerButton.Right && _listView.SelectedRow >= 0)
+                {
+                    BuildPopupMenu(MenuInvoker.ListView).Popup();
+                }
+            };
             rightBox.PackStart(_listView, true, true);
             mainBox.Panel2.Content = rightBox;
 
@@ -219,12 +239,28 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 tfsServer.Authenticate();
                 var versionControl = tfsServer.GetService<VersionControlServer>();
                 var itemSet = versionControl.GetExtendedItems(serverPath, DeletedState.NonDeleted, ItemType.Any);
-                foreach (var item in itemSet.OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
+                var itemSet1 = versionControl.GetItems(serverPath, RecursionType.OneLevel);
+                foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
                 {
                     var row = _listStore.AddRow();
                     _listStore.SetValue(row, _itemList, item);
                     _listStore.SetValue(row, _typeList, item.ItemType.ToString());
                     _listStore.SetValue(row, _nameList, item.TargetServerItem);
+                    if (!IsMapped(serverPath))
+                    {
+                        _listStore.SetValue(row, _latestList, "Not mapped");
+                    }
+                    else
+                    {
+                        if (!item.IsInWorkspace)
+                        {
+                            _listStore.SetValue(row, _latestList, "Not downloaded");
+                        }
+                        else
+                        {
+                            _listStore.SetValue(row, _latestList, item.IsLatest ? "Yes" : "No");
+                        }
+                    }
                     _listStore.SetValue(row, _lastCheckinList, item.CheckinDate);
                 }
             }
@@ -237,6 +273,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 var name = _workspaceStore.GetValue(_workspaceComboBox.SelectedIndex, _workspaceName);
                 _currentWorkspace = _workspaces.Single(ws => string.Equals(ws.Name, name, StringComparison.Ordinal));
                 TFSVersionControlService.Instance.SetActiveWorkspace(_server, name);
+                if (_treeView.SelectedRow != null)
+                    ShowMappingPath(_treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree).ServerItem);
             }
             else
             {
@@ -293,32 +331,27 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
-        private void ShowMappingPath(string serverPath)
+        private bool IsMapped(string serverPath)
         {
             if (_currentWorkspace == null)
+                return false;
+            return _currentWorkspace.Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.Ordinal));
+        }
+
+        private void ShowMappingPath(string serverPath)
+        {
+            if (!IsMapped(serverPath))
+            {
                 _localFolder.Text = GettextCatalog.GetString("Not Mapped");
+                return;
+            }
+            var mappedFolder = _currentWorkspace.Folders.First(f => serverPath.StartsWith(f.ServerItem, StringComparison.Ordinal));
+            if (string.Equals(serverPath, mappedFolder.ServerItem, StringComparison.Ordinal))
+                _localFolder.Text = mappedFolder.LocalItem;
             else
             {
-                bool foundMap = false;
-                foreach (var mappedFolder in _currentWorkspace.Folders)
-                {
-                    if (serverPath.StartsWith(mappedFolder.ServerItem, StringComparison.Ordinal))
-                    {
-                        if (string.Equals(serverPath, mappedFolder.ServerItem))
-                            _localFolder.Text = mappedFolder.LocalItem;
-                        else
-                        {
-                            string rest = serverPath.Substring(mappedFolder.ServerItem.Length + 1);
-                            _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
-                        }
-                        foundMap = true;
-                        break;
-                    }
-                }
-                if (!foundMap)
-                {
-                    _localFolder.Text = GettextCatalog.GetString("Not Mapped");
-                }
+                string rest = serverPath.Substring(mappedFolder.ServerItem.Length + 1);
+                _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
 
@@ -353,6 +386,48 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var item = _listStore.GetValue(e.RowIndex, _itemList);
             if (item.ItemType == ItemType.Folder)
                 ExpandPath(item.TargetServerItem);
+        }
+
+        #endregion
+
+        #region Popup Menu
+
+        enum MenuInvoker
+        {
+            TreeView,
+            ListView
+        }
+
+        private Menu BuildPopupMenu(MenuInvoker invoker)
+        {
+            Menu menu = new Menu();
+            IItem item = invoker == MenuInvoker.ListView ?
+                         (IItem)_listStore.GetValue(_listView.SelectedRow, _itemList) :
+                         (IItem)_treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree);
+
+            if (IsMapped(item.ServerPath))
+            {
+                MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
+                getLatestVersionItem.Clicked += (sender, e) => GetLatestVersion(item, invoker);
+                menu.Items.Add(getLatestVersionItem);
+            }
+            return menu;
+        }
+
+        private void GetLatestVersion(IItem item, MenuInvoker invoker)
+        {
+            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
+            GetRequest request = new GetRequest(item.ServerPath, recursion, VersionSpec.Latest);
+            _currentWorkspace.Get(request, GetOptions.None);
+            //Refresh List
+            if (invoker == MenuInvoker.TreeView)
+            {
+                FillListView(item.ServerPath);
+            }
+            else
+            {
+                FillListView(item.ServerPath.ParentPath);
+            }
         }
 
         #endregion

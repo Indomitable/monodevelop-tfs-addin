@@ -119,6 +119,7 @@
     <Compile Include="WorkspaceData.cs" />
     <Compile Include="TfsPath.cs" />
     <Compile Include="XmlNamespaces.cs" />
+    <Compile Include="IItem.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

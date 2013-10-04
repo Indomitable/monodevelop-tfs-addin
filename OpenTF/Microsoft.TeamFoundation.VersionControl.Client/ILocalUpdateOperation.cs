@@ -32,52 +32,24 @@ using System.Xml;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public interface ILocalUpdateOperation 
-	{
-		ChangeType ChangeType	
-		{	
-			get;
-		}
+    public interface ILocalUpdateOperation
+    {
+        ChangeType ChangeType { get; }
 
-		int DeletionId 
-		{
-			get;
-		}
+        int DeletionId { get; }
 
-		int ItemId
-		{
-			get;
-		}
+        int ItemId { get; }
 
-		ItemType ItemType
-		{
-			get;
-		}
+        ItemType ItemType { get; }
 
-		string TargetLocalItem
-		{
-			get;
-		}
+        string TargetLocalItem { get; }
 
-		string SourceLocalItem
-		{
-			get;
-		}
+        string SourceLocalItem { get; }
 
-		string TargetServerItem
-		{
-			get;
-		}
+        string TargetServerItem { get; }
 
-		int VersionLocal
-		{
-			get;
-		}
+        int VersionLocal { get; }
 
-		int VersionServer
-		{
-			get;
-		}
-
-	}
+        int VersionServer { get; }
+    }
 }

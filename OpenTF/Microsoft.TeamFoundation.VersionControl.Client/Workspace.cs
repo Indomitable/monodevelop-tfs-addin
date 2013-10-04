@@ -139,6 +139,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return r2;
         }
 
+        #region Get Pending Changes
+
         public PendingChange[] GetPendingChanges()
         {
             return GetPendingChanges(VersionControlPath.RootFolder, RecursionType.Full);
@@ -188,11 +190,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return changes;
         }
 
+        #endregion
+
         public void Delete()
         {
             Repository.DeleteWorkspace(Name, OwnerName);
             Workstation.Current.RemoveCachedWorkspaceInfo(VersionControlServer.Uri, Name);
         }
+
+        #region Get
 
         public GetStatus Get()
         {
@@ -202,25 +208,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public GetStatus Get(VersionSpec versionSpec, GetOptions options)
         {
             GetRequest request = new GetRequest(versionSpec);
-            return Get(request, GetOptions.None, null, null);
+            return Get(request, options);
         }
 
         public GetStatus Get(GetRequest request, GetOptions options)
         {
-            return Get(request, options, null, null);
-        }
-
-        public GetStatus Get(GetRequest[] requests, GetOptions options)
-        {
-            return Get(requests, options, null, null);
-        }
-
-        public GetStatus Get(GetRequest request, GetOptions options, 
-                             GetFilterCallback filterCallback, object userData)
-        {
             GetRequest[] requests = new GetRequest[1];
             requests[0] = request;
-            return Get(requests, options, filterCallback, userData);
+            return Get(requests, options);
         }
 
         public GetStatus Get(string[] items, VersionSpec version,
@@ -232,27 +227,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 requests.Add(new GetRequest(item, recursion, version));
             }
 						
-            return Get(requests.ToArray(), options, null, null); 
+            return Get(requests.ToArray(), options); 
         }
 
-        public GetStatus Get(GetRequest[] requests, GetOptions options, 
-                             GetFilterCallback filterCallback, object userData)
+        public GetStatus Get(GetRequest[] requests, GetOptions options)
         {
             bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
             bool noGet = false; // not implemented below: ((GetOptions.Preview & options) == GetOptions.Preview);
 
             SortedList<int, DateTime> changesetDates = new SortedList<int, DateTime>();
-            GetOperation[] getOperations = Repository.Get(Name, OwnerName, requests, force, noGet);
-            if (null != filterCallback)
-                filterCallback(this, getOperations, userData);
+            var getOperations = Repository.Get(Name, OwnerName, requests, force, noGet);
 
             UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
             foreach (GetOperation getOperation in getOperations)
             {
-                string uPath = null;
                 GettingEventArgs args = new GettingEventArgs(this, getOperation);
-
-                // Console.WriteLine(getOperation.ToString());
 
                 if (getOperation.DeletionId != 0)
                 {
@@ -268,12 +257,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         UnsetFileAttributes(getOperation.SourceLocalItem);
                         File.Delete(getOperation.SourceLocalItem);
                     }
+                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
                 }
-                else if ((!String.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
-                         (!String.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
+                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
+                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
                          (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
                 {
-                    uPath = getOperation.TargetLocalItem;
                     try
                     {
                         File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
@@ -282,22 +271,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                     {
                         args.Status = OperationStatus.TargetIsDirectory;
                     }
+                    updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
                 }
                 else if (getOperation.ChangeType == ChangeType.None &&
                          getOperation.VersionServer != 0)
                 {
-                    uPath = getOperation.TargetLocalItem;
-                    string directory = uPath;
+                    string path = getOperation.TargetLocalItem;
+                    string directory = path;
 
                     if (getOperation.ItemType == ItemType.File)
-                        directory = Path.GetDirectoryName(uPath);
+                        directory = Path.GetDirectoryName(path);
 
                     if (!Directory.Exists(directory))
                         Directory.CreateDirectory(directory);
 
                     if (getOperation.ItemType == ItemType.File)
                     {
-                        DownloadFile.WriteTo(uPath, Repository, getOperation.ArtifactUri);
+                        DownloadFile.WriteTo(path, Repository, getOperation.ArtifactUri);
 
                         // ChangesetMtimes functionality : none standard!
                         if (mTimeSetting)
@@ -312,21 +302,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                 changesetDates.Add(cid, modDate);
                             }
 
-                            File.SetLastWriteTime(uPath, modDate);
+                            File.SetLastWriteTime(path, modDate);
                         }
 
                         // do this after setting the last write time!
-                        SetFileAttributes(uPath);
+                        SetFileAttributes(path);
                     }
+                    updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
                 }
-
                 versionControlServer.OnDownloading(args);
-                updates.QueueUpdate(getOperation.ItemId, uPath, getOperation.VersionServer);
             }
 
             updates.Flush();
-            return new GetStatus(getOperations.Length);
+            return new GetStatus(getOperations.Count);
         }
+
+        #endregion
 
         public List<List<ExtendedItem>> GetExtendedItems(ItemSpec[] itemSpecs,
                                                          DeletedState deletedState,

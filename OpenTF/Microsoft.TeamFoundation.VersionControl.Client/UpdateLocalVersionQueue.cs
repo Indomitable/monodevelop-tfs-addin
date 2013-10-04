@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,106 +27,79 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Text;
-using System.Xml;
-using System.Web.Services;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal class Update
-	{
-		private int itemId;
-		private string targetLocalItem;
-		private int localVersion;
+    class Update
+    {
+        public Update(int itemId, string targetLocalItem, int localVersion)
+        {
+            this.ItemId = itemId;
+            this.TargetLocalItem = targetLocalItem;
+            this.LocalVersion = localVersion;
+        }
 
-		public Update(int itemId, string targetLocalItem, int localVersion)
-		{
-			this.itemId = itemId;
-			this.targetLocalItem = targetLocalItem;
-			this.localVersion = localVersion;
-		}
+        public int ItemId { get; private set; }
 
-		public int ItemId 
-		{
-			get { return itemId; }
-		}
+        public string TargetLocalItem { get; private set; }
 
-		public string TargetLocalItem
-		{
-			get { return targetLocalItem; }
-		}
+        public int LocalVersion { get; private set; }
 
-		public int LocalVersion
-		{
-			get { return localVersion; }
-		}
+        public XElement ToXml()
+        {
+            var el = new XElement(XmlNamespaces.GetMessageElementName("LocalVersionUpdate"),
+                         new XAttribute("itemid", ItemId),
+                         new XAttribute("lver", LocalVersion));
+            if (!string.IsNullOrEmpty(TargetLocalItem))
+                el.Add(new XAttribute("tlocal", TfsPath.FromPlatformPath(TargetLocalItem)));
+            return el;
+        }
+    }
 
-		public void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement("LocalVersionUpdate");
+    public sealed class UpdateLocalVersionQueue
+    {
+        private readonly List<Update> updates;
+        private readonly Workspace workspace;
 
-			writer.WriteAttributeString("itemid", Convert.ToString(itemId));
-			if (!String.IsNullOrEmpty(targetLocalItem))
-				writer.WriteAttributeString("tlocal", TfsPath.FromPlatformPath(targetLocalItem));
-			writer.WriteAttributeString("lver", Convert.ToString(localVersion));
+        public UpdateLocalVersionQueue(Workspace workspace)
+        {
+            this.workspace = workspace;
+            updates = new List<Update>();
+        }
 
-			writer.WriteEndElement();
-		}
-	}
+        public int Count { get { return updates.Count; } }
 
-	public sealed class UpdateLocalVersionQueue
-	{
-		private List<Update> updates;
-		private Workspace workspace;
+        public void Flush()
+        {
+            if (updates.Count > 0)
+                workspace.Repository.UpdateLocalVersion(this);
+            updates.Clear();
+        }
 
-		public UpdateLocalVersionQueue(Workspace workspace)
-		{
-			this.workspace = workspace;
-			updates = new List<Update>();
-		}
+        public void QueueUpdate(int itemId, string targetLocalItem, int localVersion)
+        {
+            updates.Add(new Update(itemId, targetLocalItem, localVersion));
+        }
 
-		public int Count 
-		{ 
-			get { return updates.Count; }
-		}
+        internal IEnumerable<XElement> ToXml()
+        {
+            yield return new XElement(XmlNamespaces.GetMessageElementName("workspaceName"), workspace.Name);
+            yield return new XElement(XmlNamespaces.GetMessageElementName("ownerName"), workspace.OwnerName);
+            yield return new XElement(XmlNamespaces.GetMessageElementName("updates"), updates.Select(u => u.ToXml()));
+        }
 
-		public void Flush()
-		{
-			if (updates.Count > 0)
-				workspace.Repository.UpdateLocalVersion(this);
-			updates.Clear();
-		}
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-		public void QueueUpdate(int itemId, string targetLocalItem, int localVersion)
-		{
-			updates.Add(new Update(itemId, targetLocalItem, localVersion));
-		}
+            sb.Append("UpdateLocalVersionQueue instance ");
+            sb.Append(GetHashCode());
 
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteElementString("workspaceName", workspace.Name);
-			writer.WriteElementString("ownerName", workspace.OwnerName);
-
-			writer.WriteStartElement("updates");
-			foreach (Update update in updates)
-				{
-					update.ToXml(writer, "LocalVersionUpdate");
-				}
-
-			writer.WriteEndElement();
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append("UpdateLocalVersionQueue instance ");
-			sb.Append(GetHashCode());
-
-			return sb.ToString();
-		}
-	}
+            return sb.ToString();
+        }
+    }
 }

@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,17 +28,47 @@
 //
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Common
 {
-    public static class VersionControlPath
+    public sealed class VersionControlPath
     {
         public const string RootFolder = "$/";
         public const char Separator = '/';
+        private readonly List<string> pathParts = new List<string>();
+
+        private string Path { get { return RootFolder + string.Join(Separator.ToString(), pathParts); } }
+
+        public VersionControlPath ParentPath
+        { 
+            get
+            { 
+                return RootFolder + string.Join(Separator.ToString(), pathParts.TakeWhile((item, index) => index < pathParts.Count - 1)); 
+            } 
+        }
+
+        public VersionControlPath(string path)
+        {
+            if (!IsServerItem(path))
+                throw new Exception("Not a server path");
+            this.pathParts = path.Split(Separator).Skip(1).ToList();
+        }
 
         public static bool IsServerItem(string path)
         {
             return path.StartsWith(RootFolder, StringComparison.Ordinal);
+        }
+
+        public static implicit operator VersionControlPath(string path)
+        {
+            return new VersionControlPath(path);
+        }
+
+        public static implicit operator string(VersionControlPath path)
+        {
+            return path.Path;
         }
     }
 }

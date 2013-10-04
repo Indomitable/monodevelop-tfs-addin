@@ -43,7 +43,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Common
         public const string LengthField = "filelength";
         public const string ContentField = "content";
         public const string ServiceUrl = "VersionControl/v1.0/Repository.asmx";
-        public const string UploadUrlSuffix = "VersionControl/v1.0/upload.asmx";
-        public const string DownloadUrlSuffix = "VersionControl/v1.0/item.asmx";
+        public const string UploadUrlSuffix = "VersionControl/v1.0/upload.ashx";
+        public const string DownloadUrlSuffix = "VersionControl/v1.0/item.ashx";
     }
 }

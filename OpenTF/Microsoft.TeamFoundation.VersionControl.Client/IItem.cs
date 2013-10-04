@@ -1,5 +1,5 @@
 //
-// XmlNamespaces.cs
+// IItem.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,30 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System.Xml.Linq;
-using System.Xml;
+using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public static class XmlNamespaces
+    public interface IItem
     {
-        private const string MessageNsUrl = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
-        public static readonly XNamespace MessageNs = MessageNsUrl;
+        VersionControlPath ServerPath { get; }
 
-        public static XName GetMessageElementName(string elementName)
-        {
-            return MessageNs + elementName;
-        }
-
-        public static IXmlNamespaceResolver NsResolver
-        {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", XmlNamespaces.MessageNs.ToString());
-                return manager;
-            }
-        }
+        ItemType ItemType { get; }
     }
 }
 

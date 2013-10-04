@@ -41,6 +41,7 @@
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Web.Services" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TFSRepositoryTests.cs" />
@@ -48,6 +49,8 @@
     <Compile Include="BaseTFSConnectTest.cs" />
     <Compile Include="OpenTF\WorkspaceTests.cs" />
     <Compile Include="OpenTF\MessageTests.cs" />
+    <Compile Include="ServiceChecker.cs" />
+    <Compile Include="LocationServiceChecker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

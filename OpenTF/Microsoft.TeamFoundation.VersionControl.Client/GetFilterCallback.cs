@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,17 +27,10 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Xml;
-using System.Web.Services;
+using System.Collections;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public delegate void GetFilterCallback(Workspace workspace, 
-																				 ILocalUpdateOperation[] operations,
-																				 object userData);
+    public delegate void GetFilterCallback(Workspace workspace,IEnumerable<ILocalUpdateOperation> operations,object userData);
 }

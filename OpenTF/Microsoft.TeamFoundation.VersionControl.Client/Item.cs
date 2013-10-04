@@ -34,7 +34,7 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class Item: IEquatable<Item>, IComparable<Item>
+    public sealed class Item: IEquatable<Item>, IComparable<Item>, IItem
     {
         private string downloadUrl;
 
@@ -156,6 +156,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public string ServerItem { get; private set; }
+
+        public VersionControlPath ServerPath { get { return ServerItem; } }
 
         public string ShortName
         {

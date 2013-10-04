@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -26,50 +27,45 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Xml;
 using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public class GetRequest
     {
-        private ItemSpec itemSpec;
-        private VersionSpec versionSpec;
-
         public GetRequest(string item, RecursionType recursionType, VersionSpec versionSpec)
         {
-            this.itemSpec = new ItemSpec(item, recursionType);
-            this.versionSpec = versionSpec;
+            this.ItemSpec = new ItemSpec(item, recursionType);
+            this.VersionSpec = versionSpec;
         }
 
         public GetRequest(ItemSpec itemSpec, VersionSpec versionSpec)
         {
-            this.itemSpec = itemSpec;
-            this.versionSpec = versionSpec;
+            this.ItemSpec = itemSpec;
+            this.VersionSpec = versionSpec;
         }
 
         public GetRequest(ItemSpec itemSpec, int changesetId)
         {
-            this.itemSpec = itemSpec;
-            this.versionSpec = new ChangesetVersionSpec(changesetId);
+            this.ItemSpec = itemSpec;
+            this.VersionSpec = new ChangesetVersionSpec(changesetId);
         }
 
         internal GetRequest(VersionSpec versionSpec)
         {
-            this.versionSpec = versionSpec;
+            this.VersionSpec = versionSpec;
         }
 
-        public ItemSpec ItemSpec { get { return itemSpec; } }
+        public ItemSpec ItemSpec { get; private set; }
 
-        public VersionSpec VersionSpec { get { return versionSpec; } }
+        public VersionSpec VersionSpec { get; private set; }
 
         internal XElement ToXml()
         {
-            XElement result = new XElement(XmlNamespaces.MessageNs + "GetRequest");
-            if (itemSpec != null)
-                result.Add(itemSpec.ToXml());
-            result.Add(versionSpec.ToXml(XmlNamespaces.MessageNs + "VersionSpec"));
+            XElement result = new XElement(XmlNamespaces.GetMessageElementName("GetRequest"));
+            if (ItemSpec != null)
+                result.Add(ItemSpec.ToXml());
+            result.Add(VersionSpec.ToXml(XmlNamespaces.GetMessageElementName("VersionSpec")));
             return result;
         }
     }

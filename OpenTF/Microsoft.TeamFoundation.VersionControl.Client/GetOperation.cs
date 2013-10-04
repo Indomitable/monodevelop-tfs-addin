@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,177 +28,158 @@
 //
 
 using System;
-using System.IO;
-using System.Net;
 using System.Text;
-using System.Xml;
+using System.Xml.Linq;
+using Microsoft.TeamFoundation.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal class GetOperation : ILocalUpdateOperation
-	{
-		public ChangeType ChangeType
-		{
-			get { return chg; }
-		}
+    internal class GetOperation : ILocalUpdateOperation
+    {
+        public ChangeType ChangeType { get; private set; }
 
-		public int DeletionId 
-		{
-			get { return did; }
-		}
+        public int DeletionId { get; private set; }
 
-		public int ItemId
-		{
-			get { return itemId; }
-		}
+        public int ItemId { get; private set; }
 
-		public ItemType ItemType
-		{
-			get { return itemType; }
-		}
+        public ItemType ItemType { get; private set; }
 
-		public string TargetLocalItem
-		{
-			get { return tlocal; }
-		}
+        public string TargetLocalItem { get; private set; }
 
-		public string SourceLocalItem
-		{
-			get { return slocal; }
-		}
+        public string SourceLocalItem { get; private set; }
 
-		public string TargetServerItem
-		{
-			get { return titem; }
-		}
+        public string SourceServerItem { get; private set; }
 
-		public int VersionLocal
-		{
-			get { return lver; }
-		}
+        public string TargetServerItem { get; private set; }
 
-		public int VersionServer
-		{
-			get { return sver; }
-		}
+        public int VersionLocal { get; private set; }
 
-		public Uri ArtifactUri
-		{
-			get { return artifactUri; }
-		}
+        public int VersionServer { get; private set; }
 
-		private ItemType itemType = ItemType.File;
-		private int itemId = 0;
-		private int did = 0;
+        public Uri ArtifactUri { get; private set; }
 
-		private string slocal;
-		private string tlocal;
-		private string titem;
-		private int sver = 0;
-		private int lver = 0;
-		private ChangeType chg = ChangeType.None;
-		//private LockLevel @lock = LockLevel.None;
-		//private bool il = true;
-		//private int pcid = 0;
-		//private bool cnflct = false;
-		//private int cnflctitemid = 0;
-		private Uri artifactUri;
-		//private System.Byte[] hashValue;
+        public LockLevel LockLevel { get; private set; }
+        //<s:complexType name="GetOperation">
+        //    <s:sequence>
+        //        <s:element minOccurs="0" maxOccurs="1" name="HashValue" type="s:base64Binary"/>
+        //        <s:element minOccurs="0" maxOccurs="1" name="Properties" type="tns:ArrayOfPropertyValue"/>
+        //        <s:element minOccurs="0" maxOccurs="1" name="PropertyValues" type="tns:ArrayOfPropertyValue"/>
+        //    </s:sequence>
+        //    <s:attribute default="Any" name="type" type="tns:ItemType"/>
+        //    <s:attribute default="0" name="itemid" type="s:int"/>
+        //    <s:attribute name="slocal" type="s:string"/>
+        //    <s:attribute name="tlocal" type="s:string"/>
+        //    <s:attribute name="titem" type="s:string"/>
+        //    <s:attribute name="sitem" type="s:string"/>
+        //    <s:attribute default="0" name="sver" type="s:int"/>
+        //    <s:attribute default="-2" name="vrevto" type="s:int"/>
+        //    <s:attribute default="0" name="lver" type="s:int"/>
+        //    <s:attribute default="0" name="did" type="s:int"/>
+        //    <s:attribute default="0" name="chgEx" type="s:int"/>
+        //    <s:attribute default="None" name="chg" type="tns:ChangeType"/>
+        //    <s:attribute default="None" name="lock" type="tns:LockLevel"/>
+        //    <s:attribute default="true" name="il" type="s:boolean"/>
+        //    <s:attribute default="0" name="pcid" type="s:int"/>
+        //    <s:attribute default="false" name="cnflct" type="s:boolean"/>
+        //    <s:attribute default="None" name="cnflctchg" type="tns:ChangeType"/>
+        //    <s:attribute default="0" name="cnflctchgEx" type="s:int"/>
+        //    <s:attribute default="0" name="cnflctitemid" type="s:int"/>
+        //    <s:attribute name="nmscnflct" type="s:unsignedByte" use="required"/>
+        //    <s:attribute name="durl" type="s:string"/>
+        //    <s:attribute default="-2" name="enc" type="s:int"/>
+        //    <s:attribute default="0001-01-01T00:00:00" name="vsd" type="s:dateTime"/>
+        //</s:complexType>
+        internal static GetOperation FromXml(string itemUrl, XElement element)
+        {
+            GetOperation getOperation = new GetOperation
+            {
+                ChangeType = ChangeType.None,
+                ItemType = ItemType.Any,
+                LockLevel = LockLevel.None,
+                VersionServer = 0,
+                VersionLocal = 0,
+            };
 
-		internal static GetOperation FromXml(string itemUrl, XmlReader reader)
-		{
-			GetOperation getOperation = new GetOperation();
-			string elementName = reader.Name;
+            if (!string.IsNullOrEmpty(element.GetAttribute("type")))
+                getOperation.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
 
-			string stype = reader.GetAttribute("type");
-			if (!String.IsNullOrEmpty(stype))
-				getOperation.itemType = (ItemType) Enum.Parse(typeof(ItemType), stype, true);
+            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
+                getOperation.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
 
-			getOperation.itemId = Convert.ToInt32(reader.GetAttribute("itemid"));
-			getOperation.slocal = TfsPath.ToPlatformPath(reader.GetAttribute("slocal"));
-			getOperation.tlocal = TfsPath.ToPlatformPath(reader.GetAttribute("tlocal"));
+            if (!string.IsNullOrEmpty(element.GetAttribute("slocal")))
+                getOperation.SourceLocalItem = TfsPath.ToPlatformPath(element.Attribute("slocal").Value);
+            if (!string.IsNullOrEmpty(element.GetAttribute("tlocal")))
+                getOperation.TargetLocalItem = TfsPath.ToPlatformPath(element.Attribute("tlocal").Value);
 
-			getOperation.titem = reader.GetAttribute("titem");
-			getOperation.sver = Convert.ToInt32(reader.GetAttribute("sver"));
-			getOperation.lver = Convert.ToInt32(reader.GetAttribute("lver"));
+            getOperation.SourceServerItem = element.GetAttribute("sitem");
+            getOperation.TargetServerItem = element.GetAttribute("titem");
 
-			string chgAttr = reader.GetAttribute("chg");
-			if (!String.IsNullOrEmpty(chgAttr))
-				getOperation.chg = (ChangeType) Enum.Parse(typeof(ChangeType), chgAttr.Replace(" ", ","), true);
+            if (!string.IsNullOrEmpty(element.GetAttribute("sver")))
+                getOperation.VersionServer = Convert.ToInt32(element.Attribute("sver").Value);
 
-			// setup download url if found
-			string durl = reader.GetAttribute("durl");
-			if (!String.IsNullOrEmpty(durl))
-				getOperation.artifactUri = new Uri(String.Format("{0}?{1}", itemUrl, durl));
+            if (!string.IsNullOrEmpty(element.GetAttribute("lver")))
+                getOperation.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
 
-			// here's what you get if you remap a working folder from one
-			// team project to another team project with the same file
-			// first you get the update getOperation, then you get this later on
-			// <GetOperation type="File" itemid="159025" slocal="foo.xml" titem="$/bar/foo.xml" lver="12002"><HashValue /></GetOperation>
+            if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
+                getOperation.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value.Replace(" ", ","), true);
 
-			// look for a deletion id
-			getOperation.did = Convert.ToInt32(reader.GetAttribute("did"));
+            // setup download url if found
+            if (!string.IsNullOrEmpty(element.GetAttribute("durl")))
+                getOperation.ArtifactUri = new Uri(String.Format("{0}?{1}", itemUrl, element.Attribute("durl").Value));
 
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
+            // here's what you get if you remap a working folder from one
+            // team project to another team project with the same file
+            // first you get the update getOperation, then you get this later on
+            // <GetOperation type="File" itemid="159025" slocal="foo.xml" titem="$/bar/foo.xml" lver="12002"><HashValue /></GetOperation>
 
-					if (reader.NodeType == XmlNodeType.Element && (!reader.IsEmptyElement))
-						{
-							switch (reader.Name)
-								{
-								case "HashValue":
-									break;
-								}
-						}
-				}
+            // look for a deletion id
+            if (!string.IsNullOrEmpty(element.GetAttribute("did")))
+                getOperation.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
 
-			return getOperation;
-		}
+            return getOperation;
+        }
 
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
 
-			sb.Append("GetOperation instance ");
-			sb.Append(GetHashCode());
+            sb.Append("GetOperation instance ");
+            sb.Append(GetHashCode());
 
-			sb.Append("\n	 type: ");
-			sb.Append(ItemType.ToString());
+            sb.Append("\n	 type: ");
+            sb.Append(ItemType.ToString());
 
-			sb.Append("\n	 itemid: ");
-			sb.Append(ItemId);
+            sb.Append("\n	 itemid: ");
+            sb.Append(ItemId);
 
-			sb.Append("\n	 slocal: ");
-			sb.Append(slocal);
+            sb.Append("\n	 slocal: ");
+            sb.Append(this.SourceLocalItem);
 
-			sb.Append("\n	 tlocal: ");
-			sb.Append(tlocal);
+            sb.Append("\n	 tlocal: ");
+            sb.Append(this.TargetLocalItem);
 
-			sb.Append("\n	 titem: ");
-			sb.Append(titem);
+            sb.Append("\n	 titem: ");
+            sb.Append(this.TargetServerItem);
 
-			sb.Append("\n	 sver: ");
-			sb.Append(sver);
+            sb.Append("\n	 sver: ");
+            sb.Append(this.VersionServer);
 
-			sb.Append("\n	 lver: ");
-			sb.Append(lver);
+            sb.Append("\n	 lver: ");
+            sb.Append(this.VersionLocal);
 
-			sb.Append("\n	 did: ");
-			sb.Append(DeletionId);
+            sb.Append("\n	 did: ");
+            sb.Append(this.DeletionId);
 
-			sb.Append("\n	 ArtifactUri: ");
-			sb.Append(artifactUri);
+            sb.Append("\n	 ArtifactUri: ");
+            sb.Append(this.ArtifactUri);
 
-			sb.Append("\n	 ChangeType: ");
-			sb.Append(ChangeType.ToString());
+            sb.Append("\n	 ChangeType: ");
+            sb.Append(ChangeType.ToString());
 
-			return sb.ToString();
-		}
-	}
+            return sb.ToString();
+        }
+    }
 }
-
 // 			if (getOperation.did != 0) getOperation.chg = ChangeType.Delete;
 // 			//else if (getOperation.sver == 0) getOperation.chg = ChangeType.None;
 // 			else

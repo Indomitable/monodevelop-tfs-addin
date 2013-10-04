@@ -28,6 +28,7 @@
 //
 
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -43,9 +44,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         internal XElement ToXml(XName element)
         {
             return new XElement(element, 
-                new XAttribute("ex", Exclude ? "true" : "false"),
+                new XAttribute("ex", Exclude.ToLowString()),
                 ItemSpec.ToXml(),
-                Version.ToXml(XmlNamespaces.MessageNs + "Version"));
+                Version.ToXml(XmlNamespaces.GetMessageElementName("Version")));
         }
 
         public bool Exclude { get; set; }

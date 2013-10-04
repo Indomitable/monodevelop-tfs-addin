@@ -49,7 +49,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             XDocument doc = XDocument.Load(response.GetResponseStream());
 
-            return doc.Root.Element(SoapNs + "Body").Element(XmlNamespaces.MessageNs + MethodName + "Response").Element(XmlNamespaces.MessageNs + MethodName + "Result");
+            return doc.Root.Element(SoapNs + "Body").Element(XmlNamespaces.GetMessageElementName(MethodName + "Response")).Element(XmlNamespaces.GetMessageElementName(MethodName + "Result"));
         }
 
         public Message(WebRequest request, string methodName)
@@ -62,7 +62,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             //this.request.PreAuthenticate=true;
 
             // must allow buffering for NTLM authentication
-            HttpWebRequest req = request as HttpWebRequest;
+            HttpWebRequest req = (HttpWebRequest)request;
             req.AllowWriteStreamBuffering = true;
 
             //http://blogs.x2line.com/al/archive/2005/01/04/759.aspx#780
@@ -78,7 +78,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             XNamespace xsdNs = XmlSchema.Namespace;
 
             this.document = new XDocument(new XDeclaration("1.0", "utf-8", "no"));
-            this.messageElement = new XElement(XmlNamespaces.MessageNs + methodName);
+            this.messageElement = new XElement(XmlNamespaces.GetMessageElementName(methodName));
             XElement messageEl = new XElement(SoapNs + "Envelope", 
                                      new XAttribute(XNamespace.Xmlns + "xsi", xsiNs),
                                      new XAttribute(XNamespace.Xmlns + "xsd", xsdNs),

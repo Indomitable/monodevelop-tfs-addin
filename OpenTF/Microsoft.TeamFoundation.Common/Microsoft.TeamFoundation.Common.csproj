@@ -31,6 +31,7 @@
     <Reference Include="System" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Artifact.cs" />
@@ -42,6 +43,7 @@
     <Compile Include="LinkingUtilities.cs" />
     <Compile Include="ServiceInterfaces.cs" />
     <Compile Include="TeamFoundationServerException.cs" />
+    <Compile Include="Extender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

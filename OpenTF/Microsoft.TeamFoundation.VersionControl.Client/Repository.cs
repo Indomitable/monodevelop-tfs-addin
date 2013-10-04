@@ -36,6 +36,8 @@ using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
+using Microsoft.TeamFoundation.Common;
+using System.Xml.XPath;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -481,38 +483,26 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            return labelResults.ToArray();
         }
 
-        public GetOperation[] Get(string workspaceName, string ownerName,
-                                  GetRequest[] requests, bool force, bool noGet)
+        public List<GetOperation> Get(string workspaceName, string ownerName,
+                                      GetRequest[] requests, bool force, bool noGet)
         {
-            throw new NotImplementedException();    
-//            Message msg = new Message(GetWebRequest(new Uri(Url)), "Get");
-//            msg.Body.WriteElementString("workspaceName", workspaceName);
-//            msg.Body.WriteElementString("ownerName", ownerName);
-//        
-//            msg.Body.WriteStartElement("requests");
-//            foreach (GetRequest request in requests)
-//            {
-//                request.ToXml(msg.Body, "");
-//            }
-//            msg.Body.WriteEndElement();
-//        
-//            msg.Body.WriteElementString("force", force.ToString().ToLower());
-//            msg.Body.WriteElementString("noGet", noGet.ToString().ToLower());
-//        
-//            List<GetOperation> operations = new List<GetOperation>();
-//            using (HttpWebResponse response = Invoke(msg))
-//            {
-//                XmlReader results = msg.ResponseReader(response);
-//        
-//                while (results.Read())
-//                {
-//                    if (results.NodeType == XmlNodeType.Element &&
-//                        results.Name == "GetOperation")
-//                        operations.Add(GetOperation.FromXml(ItemUrl, results));
-//                }
-//            }
-//        
-//            return operations.ToArray();
+            Message msg = new Message(GetWebRequest(new Uri(Url)), "Get");
+            msg.AddParam("workspaceName", workspaceName);
+            msg.AddParam("ownerName", ownerName);
+            msg.AddParam(new XElement(XmlNamespaces.GetMessageElementName("requests"), requests.Select(r => r.ToXml())));
+            msg.AddParam("force", force.ToLowString());
+            msg.AddParam("noGet", noGet.ToLowString());
+
+            List<GetOperation> operations = new List<GetOperation>();
+            using (HttpWebResponse response = Invoke(msg))
+            {
+                var result = msg.ResponseReader(response);
+                foreach (var operation in result.XPathSelectElements("msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver))
+                {
+                    operations.Add(GetOperation.FromXml(ItemUrl, operation));
+                }
+            }
+            return operations;
         }
 
         public RepositoryProperties GetRepositoryProperties()
@@ -733,10 +723,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             msg.AddParam("items", itemSpecs.Select(itemSpec => itemSpec.ToXml()));
         
-            msg.AddParam(versionSpec.ToXml(XmlNamespaces.MessageNs + "version"));
+            msg.AddParam(versionSpec.ToXml(XmlNamespaces.GetMessageElementName("version")));
             msg.AddParam("deletedState", deletedState);
             msg.AddParam("itemType", itemType);
-            msg.AddParam("generateDownloadUrls", generateDownloadUrls ? "true" : "false");
+            msg.AddParam("generateDownloadUrls", generateDownloadUrls.ToLowString());
         
             List<ItemSet> itemSet = new List<ItemSet>();
             using (HttpWebResponse response = Invoke(msg))
@@ -1049,12 +1039,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public void UpdateLocalVersion(UpdateLocalVersionQueue queue)
         {
-            throw new NotImplementedException();
-//            Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateLocalVersion");
-//            queue.ToXml(msg.Body, "UpdateLocalVersion");
-//        
-//            HttpWebResponse response = Invoke(msg);
-//            response.Close();
+            Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateLocalVersion");
+            foreach (var el in queue.ToXml())
+            {
+                msg.AddParam(el);
+            }
+            using (HttpWebResponse response = Invoke(msg))
+            {
+                response.Close();
+            }
         }
 
         public VersionControlServer VersionControlServer { get { return versionControlServer; } }

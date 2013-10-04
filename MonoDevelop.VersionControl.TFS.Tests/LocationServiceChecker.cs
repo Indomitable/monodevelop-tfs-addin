@@ -1,0 +1,154 @@
+//
+// LocationServiceChecker.cs
+//
+// Author:
+//       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
+//
+// Copyright (c) 2013 Ventsislav Mladenov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+using System;
+using NUnit.Framework;
+using System.Runtime.InteropServices;
+using System.Xml.Linq;
+using System.Net;
+
+namespace MonoDevelop.VersionControl.TFS.Tests
+{
+    [TestFixture]
+    public class LocationServiceChecker
+    {
+        private static XNamespace ns = "http://microsoft.com/webservices/";
+
+        [Test]
+        public void GetLocationServises()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/LocationService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryServices", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void GetProjectLocationServises()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TFS19/Services/v3.0/LocationService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryServices", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void Connect()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/LocationService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("Connect", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void GetDefaultCollectionId()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/TeamProjectCollectionService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("GetDefaultCollectionId", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void GetCollectionProperties()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/TeamProjectCollectionService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("GetCollectionProperties", ns, out message);
+            message.Add(new XElement(ns + "ids", new XElement(ns + "guid", Guid.Empty)));
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void QueryNodes()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/CatalogService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryNodes", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void QueryResources()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/CatalogService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryResources", ns, out message);
+            message.Add(new XElement(ns + "resourceIdentifiers", new XElement(ns + "guid", "37308e9d-ab76-48fb-8b0d-99fc395a6d69")));
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+    }
+}
+

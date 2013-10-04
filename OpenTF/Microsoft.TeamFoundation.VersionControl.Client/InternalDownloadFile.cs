@@ -36,64 +36,67 @@ using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal static class DownloadFile
-	{
-		public static void WriteTo(string fileName, Repository repository,
-															 Uri artifactUri)
-		{
-			int n; 
-			byte[] bytes = new byte[4096];
+    internal static class DownloadFile
+    {
+        public static void WriteTo(string fileName, Repository repository,
+                                   Uri artifactUri)
+        {
+            int n; 
+            byte[] bytes = new byte[4096];
 
-			// setup request
-			HttpWebRequest request = (HttpWebRequest) WebRequest.Create(artifactUri);
-			request.Credentials = repository.Credentials;
-			request.Timeout = 90000;
-			//request.KeepAlive = false;
-			//request.ProtocolVersion = HttpVersion.Version10;
+            // setup request
+            HttpWebRequest request = (HttpWebRequest)WebRequest.Create(artifactUri);
+            request.Credentials = repository.Credentials;
+            request.Timeout = 90000;
+            //request.KeepAlive = false;
+            //request.ProtocolVersion = HttpVersion.Version10;
 
-			// write output to file
-			string tempFileName = Path.GetTempFileName();
-			string contentType;
-			using (WebResponse response = request.GetResponse())
-				{
-					contentType = response.ContentType;
-					using (Stream stream = response.GetResponseStream())
-						{
-							using (BinaryWriter writer = new BinaryWriter(File.Create(tempFileName)))
-								{
-									while ((n = stream.Read(bytes, 0, bytes.Length)) != 0) {
-										writer.Write(bytes, 0, n);
-									}
-								}
-						}
-				}
+            // write output to file
+            string tempFileName = Path.GetTempFileName();
+            string contentType;
+            using (WebResponse response = request.GetResponse())
+            {
+                contentType = response.ContentType;
+                using (Stream stream = response.GetResponseStream())
+                {
+                    using (BinaryWriter writer = new BinaryWriter(File.Create(tempFileName)))
+                    {
+                        while ((n = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        {
+                            writer.Write(bytes, 0, n);
+                        }
+                    }
+                }
+            }
 
-			// clear out old file as needed
-			if (File.Exists(fileName))
-			{
-				File.SetAttributes(fileName, FileAttributes.Normal);
-				File.Delete(fileName);
-			}
+            // clear out old file as needed
+            if (File.Exists(fileName))
+            {
+                File.SetAttributes(fileName, FileAttributes.Normal);
+                File.Delete(fileName);
+            }
 
-			// do we need to decompress the data?
-			if (contentType != "application/gzip") File.Move(tempFileName, fileName);
-			else
-				{
-					// note: mono stackdumped when i tried to do GZipStream over response.GetResponseStream
-					// with thousands of files (see: http://lists.ximian.com/pipermail/mono-devel-list/2007-March/022712.html)
-					// so this may not be as fast, but it works
-					using (GZipStream stream = new GZipStream(File.OpenRead(tempFileName), CompressionMode.Decompress))
-						{
-							using (BinaryWriter writer = new BinaryWriter(File.Create(fileName)))
-								{
-									while ((n = stream.Read(bytes, 0, bytes.Length)) != 0) {
-										writer.Write(bytes, 0, n);
-									}										
-								}
-						}
+            // do we need to decompress the data?
+            if (contentType != "application/gzip")
+                File.Move(tempFileName, fileName);
+            else
+            {
+                // note: mono stackdumped when i tried to do GZipStream over response.GetResponseStream
+                // with thousands of files (see: http://lists.ximian.com/pipermail/mono-devel-list/2007-March/022712.html)
+                // so this may not be as fast, but it works
+                using (GZipStream stream = new GZipStream(File.OpenRead(tempFileName), CompressionMode.Decompress))
+                {
+                    using (BinaryWriter writer = new BinaryWriter(File.Create(fileName)))
+                    {
+                        while ((n = stream.Read(bytes, 0, bytes.Length)) != 0)
+                        {
+                            writer.Write(bytes, 0, n);
+                        }										
+                    }
+                }
 
-					File.Delete(tempFileName);
-				}
-		}
-	}
+                File.Delete(tempFileName);
+            }
+        }
+    }
 }

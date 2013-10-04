@@ -1,5 +1,5 @@
 //
-// XmlNamespaces.cs
+// Extender.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,28 +24,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System.Xml.Linq;
-using System.Xml;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.Common
 {
-    public static class XmlNamespaces
+    public static class Extender
     {
-        private const string MessageNsUrl = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
-        public static readonly XNamespace MessageNs = MessageNsUrl;
-
-        public static XName GetMessageElementName(string elementName)
+        public static string ToLowString(this bool boolVal)
         {
-            return MessageNs + elementName;
+            return boolVal ? "true" : "false";
         }
 
-        public static IXmlNamespaceResolver NsResolver
+        public static string GetAttribute(this XElement element, string attributeName)
         {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", XmlNamespaces.MessageNs.ToString());
-                return manager;
-            }
+            if (!element.HasAttributes ||
+                element.Attribute(attributeName) == null ||
+                string.IsNullOrEmpty(element.Attribute(attributeName).Value))
+                return string.Empty;
+            return element.Attribute(attributeName).Value;
         }
     }
 }

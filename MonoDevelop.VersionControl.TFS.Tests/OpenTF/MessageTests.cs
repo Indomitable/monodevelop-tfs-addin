@@ -1,10 +1,13 @@
 using System;
 using System.Xml.Schema;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using NUnit.Framework;
 using System.Xml.Linq;
 using System.IO;
 using System.Xml;
 using System.Text;
+using System.Xml.XPath;
+using System.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
 {
@@ -51,6 +54,21 @@ namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
             document.Add(messageEl);
             document.Save(Console.Out);
 
+        }
+
+        [Test]
+        public void ReadResult()
+        {
+            XElement el = XElement.Parse(@"<GetResult xmlns=""http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03"">
+  <ArrayOfGetOperation>
+    <GetOperation type=""Folder"" itemid=""43082"" tlocal=""U:\home\vmladenov\Projects\work\AT\Admintool\App_Themes"" titem=""$/Phoenix Admintool/Admintool/App_Themes"" sitem=""/"" sver=""13036"" vrevto=""13036"" nmscnflct=""2"" enc=""-3"" />
+    <GetOperation type=""Folder"" itemid=""43080"" tlocal=""U:\home\vmladenov\Projects\work\AT\Admintool\App_Themes\MainTheme"" titem=""$/Phoenix Admintool/Admintool/App_Themes/MainTheme"" sitem=""/"" sver=""13036"" vrevto=""13036"" nmscnflct=""2"" enc=""-3"" />
+    <GetOperation type=""File"" itemid=""42360"" tlocal=""U:\home\vmladenov\Projects\work\AT\Admintool\App_Themes\MainTheme\MainSkin.skin"" titem=""$/Phoenix Admintool/Admintool/App_Themes/MainTheme/MainSkin.skin"" sitem=""/"" sver=""20429"" vrevto=""20429"" nmscnflct=""2"" durl=""type=rsa&amp;sfid=167041,0,0,0,0,0,0,0,0,0,0,0,0,0,0&amp;ts=635165749160645552&amp;s=NBccSDtoWnXYm8piUNlUTg4n9yw3ey4406dMhnQUq3bd5mtZGo6Zw%2BO4i7MdQQ71%2BhWDEPf6lpmDQJ5myP63mY0L7w2yySyMtmT%2BLNoLevPotzqbfB4qCXAPvwZSfnrez454%2FoqebSR%2BLDEGXmS4lv4My8qMnDimO0MhbnMHuhZP0KgSs%2FFBFsQtmUmz1sMYxTxtiyLMTwBio487rLA7W6doiFmSDOFhVifn%2BfSylxcINlmavg6LYHLUz1WExwmejIT6rVXNhKxChJ%2FDz0m0zP7eDLX5juqRNw8D%2B0J3ud2JOc480aWHeV5qyBE6GR9B%2Fx%2FTsEDnUt9P8Z%2FLm2UhJQ%3D%3D&amp;fid=167041&amp;iid=ab308402-c25c-4b96-843c-bd0a3801ce1f&amp;cp=/tfs/DefaultCollection/"" enc=""65001"">
+      <HashValue>f8goKztyCFn79jd3lxiaPg==</HashValue>
+    </GetOperation>
+  </ArrayOfGetOperation>
+</GetResult>");
+            Assert.AreEqual(3, el.XPathSelectElements("//msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver).Count());
         }
     }
 }
