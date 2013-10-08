@@ -28,6 +28,7 @@ using NUnit.Framework;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Net;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
@@ -50,6 +51,15 @@ namespace MonoDevelop.VersionControl.TFS.Tests
                 var responseDoc = XDocument.Load(response.GetResponseStream());
                 Console.WriteLine(responseDoc);
             }
+        }
+
+        [Test]
+        public void GetLocationServisesInvoker()
+        {
+            var credentials = new NetworkCredential { Domain = "snd", UserName = "mono_tfs_plugin_cp", Password = "mono_tfs_plugin" };
+            var soapInvoker = new SoapInvoker("https://tfs.codeplex.com/tfs/", "/TeamFoundation/Administration/v3.0/LocationService.asmx", credentials);
+            soapInvoker.CreateEnvelope("QueryServices", ns);
+            Console.WriteLine(soapInvoker.Invoke());
         }
 
         [Test]
@@ -134,13 +144,29 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         }
 
         [Test]
-        public void QueryResources()
+        public void QueryResourceTypes()
         {
             var service = new ServiceChecker();
             var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/CatalogService.asmx");
             XElement message;
-            var requestDoc = service.CreateEnvelope("QueryResources", ns, out message);
-            message.Add(new XElement(ns + "resourceIdentifiers", new XElement(ns + "guid", "37308e9d-ab76-48fb-8b0d-99fc395a6d69")));
+            var requestDoc = service.CreateEnvelope("QueryResourceTypes", ns, out message);
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
+
+        [Test]
+        public void QueryResourcesByType()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/CatalogService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryResourcesByType", ns, out message);
+            message.Add(new XElement(ns + "resourceTypes", new XElement(ns + "guid", "26338d9e-d437-44aa-91f2-55880a328b54")));
             requestDoc.Save(request.GetRequestStream());
             Console.WriteLine(requestDoc);
             using (var response = service.GetResponse(request))

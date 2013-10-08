@@ -32,6 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.Collections.Generic;
 using MonoDevelop.Ide;
+using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -43,19 +44,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<string> _owner = new DataField<string>();
         private readonly DataField<string> _comment = new DataField<string>();
         private readonly ListStore _listStore;
-        private readonly ServerEntry _server;
+        private readonly ProjectCollection projectCollection;
         private readonly CheckBox _showRemoteCheck = new CheckBox();
 
-        public WorkspacesDialog(ServerEntry server)
+        public WorkspacesDialog(ProjectCollection projectCollection)
         {
-            this._server = server;
+            this.projectCollection = projectCollection;
             _listStore = new ListStore(_name, _computer, _owner, _comment);
             BuildGui();
         }
 
         private void BuildGui()
         {
-            this.Title = GettextCatalog.GetString("Manage Workspaces" + " - " + _server.Name);
+            this.Title = GettextCatalog.GetString("Manage Workspaces" + " - " + projectCollection.Server.Name + " - " + projectCollection.Name);
             this.Resizable = false;
             VBox content = new VBox();
             content.PackStart(new Label(GettextCatalog.GetString("Showing all local workspaces to which you have access, and all remote workspaces which you own.")));
@@ -102,7 +103,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillWorkspaces()
         {
             _listStore.Clear();
-            var workspaces = _showRemoteCheck.State == CheckBoxState.On ? WorkspaceHelper.GetRemoteWorkspaces(_server) : WorkspaceHelper.GetLocalWorkspaces(_server);
+            var workspaces = _showRemoteCheck.State == CheckBoxState.On ? WorkspaceHelper.GetRemoteWorkspaces(this.projectCollection) : 
+                                                                          WorkspaceHelper.GetLocalWorkspaces(this.projectCollection);
             foreach (var workspace in workspaces)
             {
                 var row = _listStore.AddRow();
@@ -129,15 +131,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             if (_listView.SelectedRow > -1 &&
                 MessageService.Confirm(GettextCatalog.GetString("Are you sure you want to delete selected workspace?"), AlertButton.Yes))
             {
-                using (var tfsServer = TeamFoundationServerHelper.GetServer(_server))
-                {
-                    tfsServer.Authenticate();
-                    var versionControl = tfsServer.GetService<VersionControlServer>();
-                    var name = _listStore.GetValue(_listView.SelectedRow, _name);
-                    var owner = _listStore.GetValue(_listView.SelectedRow, _owner);
-                    versionControl.DeleteWorkspace(name, owner);
-                    FillWorkspaces();
-                }
+                var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+                var name = _listStore.GetValue(_listView.SelectedRow, _name);
+                var owner = _listStore.GetValue(_listView.SelectedRow, _owner);
+                versionControl.DeleteWorkspace(name, owner);
+                FillWorkspaces();
             }
         }
 
@@ -147,9 +145,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             if (action == DialogAction.Edit)
             {
                 string workspaceName = _listStore.GetValue(_listView.SelectedRow, _name);
-                workspace = WorkspaceHelper.GetWorkspace(_server, workspaceName);
+                workspace = WorkspaceHelper.GetWorkspace(this.projectCollection, workspaceName);
             }
-            using (var dialog = new WorkspaceAddEditDialog(workspace, _server))
+            using (var dialog = new WorkspaceAddEditDialog(workspace, this.projectCollection))
             {
                 if (dialog.Run(this) == Command.Ok)
                 {
@@ -172,11 +170,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<string> _tfsFolder = new DataField<string>();
         private readonly DataField<string> _localFolder = new DataField<string>();
         private readonly ListStore _workingFoldersStore;
-        private readonly ServerEntry _server;
+        private readonly ProjectCollection projectCollection;
 
-        public WorkspaceAddEditDialog(Workspace workspace, ServerEntry server)
+        public WorkspaceAddEditDialog(Workspace workspace, ProjectCollection projectCollection)
         {
-            _server = server;
+            this.projectCollection = projectCollection;
             if (workspace == null)
             {
                 _action = DialogAction.Create;
@@ -262,12 +260,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             if (_action == DialogAction.Create)
             {
-                this.Title = "Add Workspace" + " - " + _server.Name;
+                this.Title = "Add Workspace" + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
                 FillFieldsDefault();
             }
             else
             {
-                this.Title = "Edit Workspace " + _workspace.Name + " - " + _server.Name;
+                this.Title = "Edit Workspace " + _workspace.Name + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
                 FillFields();
                 FillWorkingFolders();
             }
@@ -275,9 +273,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void OnAddWorkingFolder(object sender, EventArgs e)
         {
-            using (var projectSelect = new ProjectSelectDialog(_server))
+            using (var projectSelect = new ProjectSelectDialog(this.projectCollection))
             {
-                if (projectSelect.Run(this) == Command.Ok && !string.IsNullOrEmpty(projectSelect.FolderPath))
+                if (projectSelect.Run(this) == Command.Ok && !string.IsNullOrEmpty(projectSelect.SelectedPath))
                 {
                     using (SelectFolderDialog folderSelect = new SelectFolderDialog("Browse For Folder"))
                     {
@@ -286,7 +284,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         if (folderSelect.Run(this))
                         {
                             var row = _workingFoldersStore.AddRow();
-                            _workingFoldersStore.SetValue(row, _tfsFolder, projectSelect.FolderPath);
+                            _workingFoldersStore.SetValue(row, _tfsFolder, projectSelect.SelectedPath);
                             _workingFoldersStore.SetValue(row, _localFolder, folderSelect.Folder);
                         }
                     }
@@ -304,7 +302,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillFieldsDefault()
         {
             _nameEntry.Text = _computerEntry.Text = Environment.MachineName;
-            var credentials = CredentialsManager.LoadCredential(_server.Url);
+            var credentials = CredentialsManager.LoadCredential(this.projectCollection.Server.Uri);
             _ownerEntry.Text = credentials.UserName;
         }
 
@@ -346,19 +344,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             try
             {
-                using (var tfsServer = TeamFoundationServerHelper.GetServer(_server))
+                var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+                switch (_action)
                 {
-                    tfsServer.Authenticate();
-                    var versionControl = tfsServer.GetService<VersionControlServer>();
-                    switch (_action)
-                    {
-                        case DialogAction.Create:
-                            versionControl.CreateWorkspace(BuildWorkspace());
-                            break;
-                        case DialogAction.Edit:
-                            versionControl.UpdateWorkspace(_workspace.Name, _workspace.OwnerName, BuildWorkspace());
-                            break;
-                    }
+                    case DialogAction.Create:
+                        versionControl.CreateWorkspace(new Workspace(versionControl, BuildWorkspace()));
+                        break;
+                    case DialogAction.Edit:
+                        versionControl.UpdateWorkspace(_workspace.Name, _workspace.OwnerName, new Workspace(versionControl, BuildWorkspace()));
+                        break;
                 }
             }
             catch (Exception ex)
@@ -371,15 +365,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
     public class ProjectSelectDialog : Dialog
     {
-        private readonly ServerFoldersView _foldersView;
-        private readonly ServerEntry _server;
+        private readonly DataField<string> _name = new DataField<string>();
+        private readonly DataField<string> _path = new DataField<string>();
+        private readonly TreeStore _treeStore;
+        private readonly TreeView treeView = new TreeView();
+        private readonly ProjectCollection projectCollection;
 
-        public ProjectSelectDialog(ServerEntry server)
+        public ProjectSelectDialog(ProjectCollection projectCollection)
         {
-            this._server = server;
-            _foldersView = new ServerFoldersView();
+            this.projectCollection = projectCollection;
+            _treeStore = new TreeStore(_name, _path);
+
+
             BuildGui();
-            _foldersView.FillTreeView(_server);
+            FillTreeView();
         }
 
         void BuildGui()
@@ -388,19 +387,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             //this.Resizable = false;
             VBox content = new VBox();
             content.PackStart(new Label(GettextCatalog.GetString("Team Foundation Server") + ":"));
-            content.PackStart(new TextEntry { Text = _server.Name, Sensitive = false, MinWidth = 300 });
+            content.PackStart(new TextEntry { Text = projectCollection.Server.Name + " - " + projectCollection.Name, Sensitive = false, MinWidth = 300 });
 
             content.PackStart(new Label(GettextCatalog.GetString("Folders") + ":"));
 
-            _foldersView.TreeView.MinWidth = 300;
-            _foldersView.TreeView.MinHeight = 300;
-            content.PackStart(_foldersView.TreeView, true, true);
+            treeView.Columns.Add(new ListViewColumn("Name", new TextCellView(_name) { Editable = false }));
+            treeView.DataSource = _treeStore;
+            treeView.MinWidth = 300;
+            treeView.MinHeight = 300;
+            content.PackStart(treeView, true, true);
                 
             content.PackStart(new Label(GettextCatalog.GetString("Folder path") + ":"));
 
             TextEntry folderPathEntry = new TextEntry();
             folderPathEntry.Sensitive = false;
-            _foldersView.OnChangePath += () => folderPathEntry.Text = _foldersView.SelectedPath;
+
+            treeView.SelectionChanged += (sender, e) => folderPathEntry.Text = this.SelectedPath;
             content.PackStart(folderPathEntry);
 
             HBox buttonBox = new HBox();
@@ -420,7 +422,38 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             this.Content = content;
         }
 
-        public string FolderPath { get { return _foldersView.SelectedPath; } }
+        public void FillTreeView()
+        {
+            _treeStore.Clear();
+            var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var items = versionControl.QueryItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
+            var root = ItemSetToHierarchItemConverter.Convert(items);
+            var node = _treeStore.AddNode().SetValue(_name, root.Name).SetValue(_path, root.ServerPath);
+            AddChilds(node, root.Children);
+            var topNode = _treeStore.GetFirstNode();
+            treeView.ExpandRow(topNode.CurrentPosition, false);
+        }
+
+        private void AddChilds(TreeNavigator node, List<HierarchyItem> children)
+        {
+            foreach (var child in children)
+            {
+                node.AddChild().SetValue(_name, child.Name).SetValue(_path, child.ServerPath);
+                AddChilds(node, child.Children);
+                node.MoveToParent();
+            }
+        }
+
+        public string SelectedPath
+        {
+            get
+            {
+                if (treeView.SelectedRow == null)
+                    return string.Empty;
+                var node = _treeStore.GetNavigatorAt(treeView.SelectedRow);
+                return node.GetValue(_path);
+            }
+        }
     }
 }
 

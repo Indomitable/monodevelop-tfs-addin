@@ -36,59 +36,56 @@ using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class DiffItemVersionedFile : IDiffItem
-	{
-		private VersionControlServer versionControlServer;
-		private string label;
-		private Item item;
-		private VersionSpec versionSpec;
+    public sealed class DiffItemVersionedFile : IDiffItem
+    {
+        private string label;
+        private Item item;
+        private VersionSpec versionSpec;
 
-		public DiffItemVersionedFile(Item item, VersionSpec versionSpec)
-			{
-				this.versionControlServer = item.VersionControlServer;
-				this.item = item;
-				this.versionSpec = versionSpec;
-				this.label = item.ServerItem;
-			}
+        public DiffItemVersionedFile(Item item, VersionSpec versionSpec)
+        {
+            this.item = item;
+            this.versionSpec = versionSpec;
+            this.label = item.ServerItem;
+        }
 
-		public DiffItemVersionedFile(VersionControlServer versionControl,
-																 int itemId, int changeset, string displayPath)
-			{
-				this.versionControlServer = versionControl;
-				this.item = versionControl.GetItem(itemId, changeset);
-				this.label = displayPath;
-			}
+        public DiffItemVersionedFile(int itemId, int changeset, string displayPath)
+        {
+            //this.item = versionControl.GetItem(itemId, changeset);
+            this.label = displayPath;
+        }
 
-		public string GetFile ()
-		{
-			// this is a quite inefficient implementation, FIXME 
-			string tname = Path.GetTempFileName();
-			item.DownloadFile(tname);
+        public string GetFile()
+        {
+            throw new NotImplementedException();
+            // this is a quite inefficient implementation, FIXME 
+//            string tname = Path.GetTempFileName();
+//            item.DownloadFile(tname);
+//
+//            string file;
+//            using (StreamReader sr = new StreamReader(tname))
+//            {
+//                file = sr.ReadToEnd();
+//            }
+//			
+//            File.Delete(tname);
+//            return file;
+        }
 
-			string file;
-			using (StreamReader sr = new StreamReader(tname))
-				{
-					file = sr.ReadToEnd();
-				}
-			
-			File.Delete(tname);
-			return file;
-		}
+        public bool IsTemporary
+        { 
+            get { return true; }
+        }
 
-		public bool IsTemporary 
-		{ 
-			get { return true; }
-		}
+        public string Label
+        { 
+            get { return label; }
+            set { label = value; }
+        }
 
-		public string Label 
-		{ 
-			get { return label; }
-			set { label = value; }
-		}
-
-		public int GetEncoding()
-		{
-			return item.Encoding;
-		}
-	}
+        public int GetEncoding()
+        {
+            return item.Encoding;
+        }
+    }
 }

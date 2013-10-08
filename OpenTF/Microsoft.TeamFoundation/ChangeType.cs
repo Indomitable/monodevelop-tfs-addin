@@ -28,7 +28,7 @@
 
 using System;
 
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
   public enum ChangeType {
 		Add,

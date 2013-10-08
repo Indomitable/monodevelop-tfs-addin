@@ -45,9 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TFSRepositoryTests.cs" />
-    <Compile Include="ItemSetToHierarchItemConverterTests.cs" />
     <Compile Include="BaseTFSConnectTest.cs" />
-    <Compile Include="OpenTF\WorkspaceTests.cs" />
     <Compile Include="OpenTF\MessageTests.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />

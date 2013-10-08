@@ -29,7 +29,7 @@
 using System;
 using System.Text;
 
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
 	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/Authorization/03")]
 	public class Identity

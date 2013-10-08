@@ -28,11 +28,11 @@
 
 using System;
 
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
-    public interface IGroupSecurityService : ITeamFoundationService
+    public interface IGroupSecurityService
     {
         Identity ReadIdentity(SearchFactor factor, string factorValue,
-                          QueryMembership query);
+                              QueryMembership query);
     }
 }

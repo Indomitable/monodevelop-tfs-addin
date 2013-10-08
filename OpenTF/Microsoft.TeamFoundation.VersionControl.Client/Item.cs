@@ -31,35 +31,31 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class Item: IEquatable<Item>, IComparable<Item>, IItem
     {
-        private string downloadUrl;
-
-        internal Item(VersionControlServer versionControlServer, string serverItem)
+        internal Item(string serverItem)
         {
-            this.VersionControlServer = versionControlServer;
             this.ServerItem = serverItem;
         }
-
-        public void DownloadFile(string localFileName)
-        {
-            if (ItemType == ItemType.Folder)
-                return;
-
-            Client.DownloadFile.WriteTo(localFileName, VersionControlServer.Repository,
-                ArtifactUri);
-        }
+        //        public void DownloadFile(string localFileName)
+        //        {
+        //            if (ItemType == ItemType.Folder)
+        //                return;
+        //
+        //            //Client.DownloadFile.WriteTo(localFileName, ArtifactUri);
+        //        }
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
-        internal static Item FromXml(Repository repository, XElement element)
+        internal static Item FromXml(XElement element)
         {
             if (element == null)
                 return null;
             string serverItem = element.Attribute("item").Value;
-            Item item = new Item(repository.VersionControlServer, serverItem);
+            Item item = new Item(serverItem);
 
             if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
                 item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
@@ -73,11 +69,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
             item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
 
+            if (!string.IsNullOrEmpty(element.GetAttribute("isbranch")))
+            {
+                item.IsBranch = Convert.ToBoolean(element.GetAttribute("isbranch"));
+            }
             if (item.ItemType == ItemType.File)
             {
                 item.ContentLength = Convert.ToInt32(element.Attribute("len").Value);
                 if (element.Attribute("durl") != null)
-                    item.downloadUrl = element.Attribute("durl").Value;
+                    item.ArtifactUri = element.Attribute("durl").Value;
 
                 if (element.Attribute("hash") != null && !string.IsNullOrEmpty(element.Attribute("hash").Value))
                     item.HashValue = Convert.FromBase64String(element.Attribute("hash").Value);
@@ -114,7 +114,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             sb.Append(ContentLength);
 
             sb.Append("\n	 Download URL: ");
-            sb.Append(downloadUrl);
+            sb.Append(ArtifactUri);
 
             sb.Append("\n	 Hash: ");
             string hash = String.Empty;
@@ -141,20 +141,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public byte[] HashValue { get; private set; }
 
-        public Uri ArtifactUri
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(downloadUrl))
-                {
-                    Item item = VersionControlServer.GetItem(ItemId, ChangesetId, true);
-                    downloadUrl = item.downloadUrl;
-                }
-
-                return new Uri(String.Format("{0}?{1}", VersionControlServer.Repository.ItemUrl, downloadUrl));
-            }
-        }
-
+        public string ArtifactUri { get; private set; }
+        //        {
+        //            get
+        //            {
+        //                if (string.IsNullOrEmpty(downloadUrl))
+        //                {
+        //                    Item item = VersionControlServer.GetItem(ItemId, ChangesetId, true);
+        //                    downloadUrl = item.downloadUrl;
+        //                }
+        //
+        //                return new Uri(String.Format("{0}?{1}", VersionControlServer.Repository.ItemUrl, downloadUrl));
+        //            }
+        //        }
         public string ServerItem { get; private set; }
 
         public VersionControlPath ServerPath { get { return ServerItem; } }
@@ -169,7 +168,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public VersionControlServer VersionControlServer { get; private set; }
+        public bool IsBranch { get; private set; }
 
         #region Equal
 

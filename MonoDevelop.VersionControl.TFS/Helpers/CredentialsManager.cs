@@ -55,6 +55,8 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 
             int writePassword(int handle, string folder, string key, string value, string appid);
 
+            bool hasEntry(int handle, string folder, string key, string appid);
+
             int writeMap(int handle, string folder, string key, Dictionary<string, string> value, string appid);
 
             string readPassword(int handle, string folder, string key, string appid);
@@ -93,28 +95,23 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 
         private static string LoadFromKWallet(Uri url)
         {
+            var wallet = Bus.Session.GetObject<IKWallet>("org.kde.kwalletd", new ObjectPath("/modules/kwalletd"));
+            if (wallet == null)
+                return null;
+            var walletName = wallet.networkWallet();
+
+            int handle = -1;
             try
             {
-                var wallet = Bus.Session.GetObject<IKWallet>("org.kde.kwalletd", new ObjectPath("/modules/kwalletd"));
-                if (wallet == null)
-                    return null;
-                var walletName = wallet.networkWallet();
-
-                int handle = -1;
-                try
-                {
-                    handle = wallet.open(walletName, 0, applicationId);
-                    return wallet.readPassword(handle, folderName, url.ToString(), applicationId);
-                }
-                finally
-                {
-                    if (handle != -1 && wallet.isOpen(walletName))
-                        wallet.close(handle, false, applicationId);
-                }
+                handle = wallet.open(walletName, 0, applicationId);
+                if (!wallet.hasEntry(handle, folderName, url.ToString(), applicationId))
+                    throw new Exception("No Password!\nRegister the server again.");
+                return wallet.readPassword(handle, folderName, url.ToString(), applicationId);
             }
-            catch
+            finally
             {
-                return null;
+                if (handle != -1 && wallet.isOpen(walletName))
+                    wallet.close(handle, false, applicationId);
             }
         }
 

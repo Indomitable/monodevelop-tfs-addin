@@ -30,8 +30,9 @@ using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using Microsoft.TeamFoundation.Server;
+using Microsoft.TeamFoundation.Client;
 using System.Linq;
+using System;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -40,21 +41,24 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private enum NodeType
         {
             Server,
+            ProjectCollection,
             Project,
             SourceControl,
-            WorkItems
+            WorkItems,
+            Exception
         }
 
         private readonly VBox _content = new VBox();
         private readonly TreeView _treeView = new TreeView();
         private readonly DataField<string> _name = new DataField<string>();
         private readonly DataField<NodeType> _type = new DataField<NodeType>();
+        private readonly DataField<object> _item = new DataField<object>();
         private readonly TreeStore _treeStore;
         private System.Action onServersChanged;
 
         public TeamExplorerPad()
         {
-            _treeStore = new TreeStore(_name, _type);
+            _treeStore = new TreeStore(_name, _type, _item);
         }
 
         #region IPadContent implementation
@@ -101,23 +105,31 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _treeStore.Clear();
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                var node = _treeStore.AddNode().SetValue(_name, server.Name).SetValue(_type, NodeType.Server);
-
-                var credentials = CredentialsManager.LoadCredential(server.Url);
-                using (var tfsServer = TeamFoundationServerFactory.GetServer(server.Url, credentials))
+                var node = _treeStore.AddNode().SetValue(_name, server.Name)
+                                               .SetValue(_type, NodeType.Server)
+                                               .SetValue(_item, server);
+                try
                 {
-                    if (!tfsServer.HasAuthenticated)
-                        tfsServer.Authenticate();
-                    var projectService = tfsServer.GetService<ICommonStructureService>();
-                    foreach (var projectInfo in projectService.ListProjects().OrderBy(x => x.Name))
+                    foreach (var pc in server.ProjectCollections) 
                     {
-                        node.AddChild().SetValue(_name, projectInfo.Name).SetValue(_type, NodeType.Project);
-                        node.AddChild().SetValue(_name, "Work Items").SetValue(_type, NodeType.WorkItems);
-                        node.MoveToParent();
-                        node.AddChild().SetValue(_name, "Source Control").SetValue(_type, NodeType.SourceControl);
-                        node.MoveToParent();
+                        node.AddChild().SetValue(_name, pc.Name)
+                                       .SetValue(_type, NodeType.ProjectCollection)
+                                       .SetValue(_item, pc);
+                        foreach (var projectInfo in pc.Projects.OrderBy(x => x.Name))
+                        {
+                            node.AddChild().SetValue(_name, projectInfo.Name).SetValue(_type, NodeType.Project).SetValue(_item, projectInfo);
+                            node.AddChild().SetValue(_name, "Work Items").SetValue(_type, NodeType.WorkItems);
+                            node.MoveToParent();
+                            node.AddChild().SetValue(_name, "Source Control").SetValue(_type, NodeType.SourceControl);
+                            node.MoveToParent();
+                            node.MoveToParent();
+                        }
                         node.MoveToParent();
                     }
+                }
+                catch (Exception ex)
+                {
+                    node.AddChild().SetValue(_name, ex.Message).SetValue(_type, NodeType.Exception);
                 }
             }
             ExpandServers();
@@ -126,7 +138,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void ExpandServers()
         {
             var node = _treeStore.GetFirstNode();
-            if (node == null)
+            if (node.CurrentPosition == null)
                 return;
             _treeView.ExpandRow(node.CurrentPosition, false);
             while (node.MoveNext())
@@ -146,10 +158,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 case NodeType.SourceControl:
                     node.MoveToParent();
-                    var projectName = node.GetValue(_name);
-                    node.MoveToParent();
-                    var serverName = node.GetValue(_name);
-                    SourceControlExplorerView.Open(serverName, projectName);
+                    var project = (ProjectInfo)node.GetValue(_item);
+                    SourceControlExplorerView.Open(project);
                     break;
                 default:
                     break;

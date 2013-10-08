@@ -35,83 +35,83 @@ using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    internal sealed class InternalServerInfo
-    {
-        private Uri uri;
-        private Guid repositoryGuid;
-        public WorkspaceInfo[] Workspaces;
-
-        public InternalServerInfo()
-        {
-        }
-
-        public InternalServerInfo(string uri, Guid repositoryGuid, Workspace workspace)
-        {
-            this.uri = new Uri(uri);
-            this.repositoryGuid = repositoryGuid;
-
-            List<WorkspaceInfo> infos = new List<WorkspaceInfo>();
-            infos.Add(new WorkspaceInfo(this, workspace));
-            Workspaces = infos.ToArray();
-        }
-
-        public InternalServerInfo(string uri, Guid repositoryGuid, List<Workspace> workspaces)
-        {
-            this.uri = new Uri(uri);
-            this.repositoryGuid = repositoryGuid;
-
-            List<WorkspaceInfo> infos = new List<WorkspaceInfo>();
-            foreach (Workspace workspace in workspaces)
-            {
-                infos.Add(new WorkspaceInfo(this, workspace));
-            }
-
-            Workspaces = infos.ToArray();
-        }
-
-        public XmlElement ToXml(XmlDocument doc)
-        {
-            XmlElement xmlElement = doc.CreateElement("ServerInfo");
-            xmlElement.SetAttributeNode("uri", "").Value = Uri.ToString();
-            //xmlElement.SetAttributeNode("repositoryGuid", "").Value = ServerGuid.ToString();
-
-            foreach (WorkspaceInfo workspace in Workspaces)
-            {
-                xmlElement.AppendChild(workspace.ToXml(doc));
-            }
-
-            return xmlElement;
-        }
-
-        public static InternalServerInfo FromXml(XmlReader reader)
-        {
-            string elementName = reader.Name;
-            InternalServerInfo info = new InternalServerInfo();
-
-            info.uri = new Uri(reader.GetAttribute("uri"));
-            List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
-
-            while (reader.Read())
-            {
-                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-                    break;
-
-                if (reader.NodeType == XmlNodeType.Element && reader.Name == "WorkspaceInfo")
-                    workspaces.Add(WorkspaceInfo.FromXml(info, reader));
-            }
-
-            info.Workspaces = workspaces.ToArray();
-            return info;
-        }
-
-        public Uri Uri
-        {
-            get { return uri; }
-        }
-
-        public Guid RepositoryGuid
-        {
-            get { return repositoryGuid; }
-        }
-    }
+//    internal sealed class InternalServerInfo
+//    {
+//        private Uri uri;
+//        private Guid repositoryGuid;
+//        public WorkspaceInfo[] Workspaces;
+//
+//        public InternalServerInfo()
+//        {
+//        }
+//
+//        public InternalServerInfo(string uri, Guid repositoryGuid, Workspace workspace)
+//        {
+//            this.uri = new Uri(uri);
+//            this.repositoryGuid = repositoryGuid;
+//
+//            List<WorkspaceInfo> infos = new List<WorkspaceInfo>();
+//            infos.Add(new WorkspaceInfo(this, workspace));
+//            Workspaces = infos.ToArray();
+//        }
+//
+//        public InternalServerInfo(string uri, Guid repositoryGuid, List<Workspace> workspaces)
+//        {
+//            this.uri = new Uri(uri);
+//            this.repositoryGuid = repositoryGuid;
+//
+//            List<WorkspaceInfo> infos = new List<WorkspaceInfo>();
+//            foreach (Workspace workspace in workspaces)
+//            {
+//                infos.Add(new WorkspaceInfo(this, workspace));
+//            }
+//
+//            Workspaces = infos.ToArray();
+//        }
+//
+//        public XmlElement ToXml(XmlDocument doc)
+//        {
+//            XmlElement xmlElement = doc.CreateElement("ServerInfo");
+//            xmlElement.SetAttributeNode("uri", "").Value = Uri.ToString();
+//            //xmlElement.SetAttributeNode("repositoryGuid", "").Value = ServerGuid.ToString();
+//
+//            foreach (WorkspaceInfo workspace in Workspaces)
+//            {
+//                xmlElement.AppendChild(workspace.ToXml(doc));
+//            }
+//
+//            return xmlElement;
+//        }
+//
+//        public static InternalServerInfo FromXml(XmlReader reader)
+//        {
+//            string elementName = reader.Name;
+//            InternalServerInfo info = new InternalServerInfo();
+//
+//            info.uri = new Uri(reader.GetAttribute("uri"));
+//            List<WorkspaceInfo> workspaces = new List<WorkspaceInfo>();
+//
+//            while (reader.Read())
+//            {
+//                if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
+//                    break;
+//
+//                if (reader.NodeType == XmlNodeType.Element && reader.Name == "WorkspaceInfo")
+//                    workspaces.Add(WorkspaceInfo.FromXml(info, reader));
+//            }
+//
+//            info.Workspaces = workspaces.ToArray();
+//            return info;
+//        }
+//
+//        public Uri Uri
+//        {
+//            get { return uri; }
+//        }
+//
+//        public Guid RepositoryGuid
+//        {
+//            get { return repositoryGuid; }
+//        }
+//    }
 }

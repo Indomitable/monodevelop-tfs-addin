@@ -1,11 +1,10 @@
 //
-// Microsoft.TeamFoundation.Client.TeamFoundationServer
+// Microsoft.TeamFoundation.Server.ProjectInfo
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
-//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
+// Copyright (C) 2007 Joel Reed
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,60 +27,51 @@
 //
 
 using System;
-using System.Net;
-using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.Client
 {
-    public sealed class TeamFoundationServer : IEquatable<TeamFoundationServer>, IComparable<TeamFoundationServer>
+    public sealed class ProjectInfo: IEquatable<ProjectInfo>, IComparable<ProjectInfo>
     {
-        public TeamFoundationServer(Uri uri, string name, ICredentials creds)
-        {
-            this.Uri = uri;
-            this.Name = name;
-            this.Credentials = creds;
-        }
-
-        public void LoadProjectConnections()
-        {
-            var projectCollectionsService = new ProjectCollectionService(this);
-            this.ProjectCollections = projectCollectionsService.GetProjectCollections();
-        }
-
-        public void LoadProjectConnections(List<string> projectCollectionsIds)
-        {
-            var projectCollectionsService = new ProjectCollectionService(this);
-            this.ProjectCollections = projectCollectionsService.GetProjectCollections(projectCollectionsIds);
-        }
-
-        public ICredentials Credentials { get; private set; }
-
-        public List<ProjectCollection> ProjectCollections { get; private set; }
-
         public string Name { get; private set; }
 
-        public Uri Uri { get; private set; }
+        public ProjectState Status { get; private set; }
+
+        public string Uri { get; private set; }
+
+        public ProjectCollection Collection { get; private set; }
+
+        public static ProjectInfo FromXml(ProjectCollection collection, XElement element)
+        {
+            var nameSpace = element.Name.Namespace;
+            ProjectInfo projectInfo = new ProjectInfo();
+            projectInfo.Name = element.Element(nameSpace + "Name").Value;
+            projectInfo.Uri = element.Element(nameSpace + "Uri").Value;
+            projectInfo.Status = (ProjectState)Enum.Parse(typeof(ProjectState), element.Element(nameSpace + "Status").Value);
+            projectInfo.Collection = collection;
+            return projectInfo;
+        }
 
         #region Equal
 
-        #region IComparable<TeamFoundationServer> Members
+        #region IComparable<ProjectInfo> Members
 
-        public int CompareTo(TeamFoundationServer other)
+        public int CompareTo(ProjectInfo other)
         {
-            return string.Compare(Uri.ToString(), other.Uri.ToString(), StringComparison.Ordinal);
+            return Name.CompareTo(other.Name);
         }
 
         #endregion
 
-        #region IEquatable<TeamFoundationServer> Members
+        #region IEquatable<ProjectInfo> Members
 
-        public bool Equals(TeamFoundationServer other)
+        public bool Equals(ProjectInfo other)
         {
             if (ReferenceEquals(null, other))
                 return false;
             if (ReferenceEquals(this, other))
                 return true;
-            return other.Uri == Uri;
+            return other.Name == Name;
         }
 
         #endregion
@@ -92,7 +82,7 @@ namespace Microsoft.TeamFoundation.Client
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;
-            TeamFoundationServer cast = obj as TeamFoundationServer;
+            ProjectInfo cast = obj as ProjectInfo;
             if (cast == null)
                 return false;
             return Equals(cast);
@@ -100,15 +90,15 @@ namespace Microsoft.TeamFoundation.Client
 
         public override int GetHashCode()
         {
-            return Uri.GetHashCode();
+            return Name.GetHashCode();
         }
 
-        public static bool operator ==(TeamFoundationServer left, TeamFoundationServer right)
+        public static bool operator ==(ProjectInfo left, ProjectInfo right)
         {
             return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
         }
 
-        public static bool operator !=(TeamFoundationServer left, TeamFoundationServer right)
+        public static bool operator !=(ProjectInfo left, ProjectInfo right)
         {
             return !(left == right);
         }

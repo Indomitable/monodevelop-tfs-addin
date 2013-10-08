@@ -30,7 +30,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
 	public class RegistrationEntry
 	{

@@ -30,6 +30,7 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -76,46 +77,51 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 LockStatus = LockLevel.None
             };
 
-            if (element.Attribute("chg") != null && !string.IsNullOrEmpty(element.Attribute("chg").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
                 item.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value, true);
 
-            if (element.Attribute("ochg") != null && !string.IsNullOrEmpty(element.Attribute("ochg").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("ochg")))
                 item.HasOtherPendingChange = bool.Parse(element.Attribute("ochg").Value);
 
-            if (element.Attribute("lock") != null && !string.IsNullOrEmpty(element.Attribute("lock").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("lock")))
                 item.LockStatus = (LockLevel)Enum.Parse(typeof(LockLevel), element.Attribute("lock").Value, true);
 
-            if (element.Attribute("lowner") != null && !string.IsNullOrEmpty(element.Attribute("lowner").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("lowner")))
                 item.LockOwner = element.Attribute("lowner").Value;
 
-            if (element.Attribute("local") != null && !string.IsNullOrEmpty(element.Attribute("local").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("local")))
                 item.LocalItem = TfsPath.ToPlatformPath(element.Attribute("local").Value);
 
-            if (element.Attribute("titem") != null && !string.IsNullOrEmpty(element.Attribute("titem").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("titem")))
                 item.TargetServerItem = element.Attribute("titem").Value;
 
-            if (element.Attribute("sitem") != null && !string.IsNullOrEmpty(element.Attribute("sitem").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("sitem")))
                 item.SourceServerItem = element.Attribute("sitem").Value;
 
-            if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("type")))
                 item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
 
-            if (element.Attribute("itemid") != null && !string.IsNullOrEmpty(element.Attribute("itemid").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
                 item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
 
-            if (element.Attribute("enc") != null && !string.IsNullOrEmpty(element.Attribute("enc").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("enc")))
                 item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
 
-            if (element.Attribute("lver") != null && !string.IsNullOrEmpty(element.Attribute("lver").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("lver")))
                 item.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
 
-            if (element.Attribute("latest") != null && !string.IsNullOrEmpty(element.Attribute("latest").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("latest")))
                 item.VersionLatest = Convert.ToInt32(element.Attribute("latest").Value);
 
-            if (element.Attribute("did") != null && !string.IsNullOrEmpty(element.Attribute("did").Value))
+            if (!string.IsNullOrEmpty(element.GetAttribute("did")))
                 item.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
 
             item.CheckinDate = DateTime.Parse(element.Attribute("date").Value);
+
+            if (element.Element(XmlNamespaces.GetMessageElementName("IsBranch")) != null &&
+                !string.IsNullOrEmpty(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value))
+                item.IsBranch = Convert.ToBoolean(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value);
+
             return item;
         }
 
@@ -201,6 +207,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public DateTime CheckinDate { get; private set; }
 
         public VersionControlPath ServerPath { get { return TargetServerItem; } }
+
+        public bool IsBranch { get; private set; }
     }
 }
 

@@ -48,7 +48,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //    <QueryPath>$/</QueryPath>
         //    <Items>
         //      <Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
-        internal static ItemSet FromXml(Repository repository, XElement element)
+        internal static ItemSet FromXml(XElement element)
         {
             ItemSet itemSet = new ItemSet();
             List<Item> items = new List<Item>();
@@ -60,7 +60,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             itemSet.queryPath = queryPathElement != null ? queryPathElement.Value : string.Empty;
 
             var itemElements = element.Element(XmlNamespaces.GetMessageElementName("Items")).Elements(XmlNamespaces.GetMessageElementName("Item"));
-            items.AddRange(itemElements.Select(it => Item.FromXml(repository, it)));
+            items.AddRange(itemElements.Select(it => Item.FromXml(it)));
 
             items.Sort();
             itemSet.items = items.ToArray();

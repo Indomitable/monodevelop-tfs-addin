@@ -37,106 +37,70 @@ using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class Workspace : IComparable
+    public sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
     {
-        public static readonly string XmlElementName = "Workspace";
-        private string comment;
-        private string computer;
-        private string name;
-        private string ownerName;
-        private DateTime lastAccessDate;
-        private WorkingFolder[] folders;
-        private VersionControlServer versionControlServer;
-        internal bool readWriteSetting;
-        internal bool mTimeSetting;
-
+        //        public static readonly string XmlElementName = "Workspace";
+        //        private string comment;
+        //        private string computer;
+        //        private string name;
+        //        private string ownerName;
+        //        private DateTime lastAccessDate;
+        //        private WorkingFolder[] folders;
+        //        private VersionControlService service;
         internal Workspace()
         {
-            readWriteSetting = Workstation.Settings["File.ReadWrite"];
-            mTimeSetting = Workstation.Settings["Get.ChangesetMtimes"];
         }
 
-        internal Workspace(VersionControlServer versionControlServer, string name, 
+        internal Workspace(TfsVersionControlService service, string name, 
                            string ownerName, string comment, 
                            WorkingFolder[] folders, string computer) : this()
         {
-            this.versionControlServer = versionControlServer;
-            this.name = name;
-            this.ownerName = ownerName;
-            this.comment = comment;
-            this.folders = folders;
-            this.computer = computer;
+            this.VersionControlService = service;
+            this.Name = name;
+            this.OwnerName = ownerName;
+            this.Comment = comment;
+            this.Folders = folders;
+            this.Computer = computer;
         }
 
-        internal Workspace(VersionControlServer versionControlServer, 
-                           WorkspaceInfo info) : this()
+        public Workspace(TfsVersionControlService service, WorkspaceData workspaceData) 
+            : this(service, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
         {
-            this.versionControlServer = versionControlServer;
-            this.name = info.Name;
-            this.ownerName = info.OwnerName;
-            this.comment = info.Comment;
-            this.folders = new WorkingFolder[0];
-            this.computer = info.Computer;
-        }
-
-        internal Workspace(VersionControlServer versionControlServer, WorkspaceData workspaceData) : this()
-        {
-            this.versionControlServer = versionControlServer;
-            this.name = workspaceData.Name;
-            this.ownerName = workspaceData.Owner;
-            this.computer = workspaceData.Computer;
-            this.comment = workspaceData.Comment;
-            this.folders = workspaceData.WorkingFolders.ToArray();
         }
 
         public int CheckIn(PendingChange[] changes, string comment)
         {
-            if (changes.Length == 0)
-                return 0;
-
-            List<string> serverItems = new List<string>();
-            SortedList<string, PendingChange> changesByServerPath = new SortedList<string, PendingChange>();
-
-            foreach (PendingChange change in changes)
-            {
-                // upload new or changed files only
-                if ((change.ItemType == ItemType.File) &&
-                    (change.IsAdd || change.IsEdit))
-                {
-                    Repository.CheckInFile(Name, OwnerName, change);
-                    SetFileAttributes(change.LocalItem);
-                }
-
-                serverItems.Add(change.ServerItem);
-                changesByServerPath.Add(change.ServerItem, change);
-            }
-
-            SortedList<string, bool> undoneServerItems = new SortedList<string, bool>();
-            int cset = Repository.CheckIn(this, serverItems.ToArray(), comment, ref undoneServerItems);
-			
-            foreach (string undoneItem in undoneServerItems.Keys)
-            {
-                PendingChange change = changesByServerPath[undoneItem];
-                VersionControlServer.OnUndonePendingChange(this, change);
-            }
-
-            return cset;
-        }
-
-        public int CompareTo(object o)
-        {
-            Workspace a = this, b = (Workspace)o;
-
-            int r0 = a.VersionControlServer.ServerGuid.CompareTo(b.VersionControlServer.ServerGuid);
-            if (r0 != 0)
-                return r0;
-
-            int r1 = a.Name.CompareTo(b.Name);
-            if (r1 != 0)
-                return r1;
-
-            int r2 = a.OwnerName.CompareTo(b.OwnerName);
-            return r2;
+            throw new NotImplementedException();
+//            if (changes.Length == 0)
+//                return 0;
+//
+//            List<string> serverItems = new List<string>();
+//            SortedList<string, PendingChange> changesByServerPath = new SortedList<string, PendingChange>();
+//
+//            foreach (PendingChange change in changes)
+//            {
+//                // upload new or changed files only
+//                if ((change.ItemType == ItemType.File) &&
+//                    (change.IsAdd || change.IsEdit))
+//                {
+//                    Repository.CheckInFile(Name, OwnerName, change);
+//                    SetFileAttributes(change.LocalItem);
+//                }
+//
+//                serverItems.Add(change.ServerItem);
+//                changesByServerPath.Add(change.ServerItem, change);
+//            }
+//
+//            SortedList<string, bool> undoneServerItems = new SortedList<string, bool>();
+//            int cset = Repository.CheckIn(this, serverItems.ToArray(), comment, ref undoneServerItems);
+//			
+//            foreach (string undoneItem in undoneServerItems.Keys)
+//            {
+//                PendingChange change = changesByServerPath[undoneItem];
+//                VersionControlServer.OnUndonePendingChange(this, change);
+//            }
+//
+//            return cset;
         }
 
         #region Get Pending Changes
@@ -172,30 +136,32 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public PendingChange[] GetPendingChanges(string[] items, RecursionType rtype,
                                                  bool includeDownloadInfo)
         {
-            List<ItemSpec> itemSpecs = new List<ItemSpec>();
-            foreach (string item in items)
-            {
-                itemSpecs.Add(new ItemSpec(item, rtype));
-            }
-
-            Failure[] failures = null;
-            PendingChange[] changes = Repository.QueryPendingSets(Name, OwnerName, Name, OwnerName,
-                                          itemSpecs.ToArray(), includeDownloadInfo,
-                                          out failures);
-            foreach (Failure failure in failures)
-            {
-                Console.WriteLine(failure.ToString());
-            }
-
-            return changes;
+            throw new NotImplementedException();
+//            List<ItemSpec> itemSpecs = new List<ItemSpec>();
+//            foreach (string item in items)
+//            {
+//                itemSpecs.Add(new ItemSpec(item, rtype));
+//            }
+//
+//            Failure[] failures = null;
+//            PendingChange[] changes = Repository.QueryPendingSets(Name, OwnerName, Name, OwnerName,
+//                                          itemSpecs.ToArray(), includeDownloadInfo,
+//                                          out failures);
+//            foreach (Failure failure in failures)
+//            {
+//                Console.WriteLine(failure.ToString());
+//            }
+//
+//            return changes;
         }
 
         #endregion
 
         public void Delete()
         {
-            Repository.DeleteWorkspace(Name, OwnerName);
-            Workstation.Current.RemoveCachedWorkspaceInfo(VersionControlServer.Uri, Name);
+            throw new NotImplementedException();
+//            Repository.DeleteWorkspace(Name, OwnerName);
+            //Workstation.Current.RemoveCachedWorkspaceInfo(VersionControlServer.Uri, Name);
         }
 
         #region Get
@@ -232,89 +198,90 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public GetStatus Get(GetRequest[] requests, GetOptions options)
         {
-            bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
-            bool noGet = false; // not implemented below: ((GetOptions.Preview & options) == GetOptions.Preview);
-
-            SortedList<int, DateTime> changesetDates = new SortedList<int, DateTime>();
-            var getOperations = Repository.Get(Name, OwnerName, requests, force, noGet);
-
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-            foreach (GetOperation getOperation in getOperations)
-            {
-                GettingEventArgs args = new GettingEventArgs(this, getOperation);
-
-                if (getOperation.DeletionId != 0)
-                {
-                    if ((getOperation.ItemType == ItemType.Folder) &&
-                        (Directory.Exists(getOperation.SourceLocalItem)))
-                    {
-                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
-                        Directory.Delete(getOperation.SourceLocalItem, true);
-                    }
-                    else if ((getOperation.ItemType == ItemType.File) &&
-                             (File.Exists(getOperation.SourceLocalItem)))
-                    {
-                        UnsetFileAttributes(getOperation.SourceLocalItem);
-                        File.Delete(getOperation.SourceLocalItem);
-                    }
-                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
-                }
-                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
-                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
-                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
-                {
-                    try
-                    {
-                        File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
-                    }
-                    catch (IOException)
-                    {
-                        args.Status = OperationStatus.TargetIsDirectory;
-                    }
-                    updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-                }
-                else if (getOperation.ChangeType == ChangeType.None &&
-                         getOperation.VersionServer != 0)
-                {
-                    string path = getOperation.TargetLocalItem;
-                    string directory = path;
-
-                    if (getOperation.ItemType == ItemType.File)
-                        directory = Path.GetDirectoryName(path);
-
-                    if (!Directory.Exists(directory))
-                        Directory.CreateDirectory(directory);
-
-                    if (getOperation.ItemType == ItemType.File)
-                    {
-                        DownloadFile.WriteTo(path, Repository, getOperation.ArtifactUri);
-
-                        // ChangesetMtimes functionality : none standard!
-                        if (mTimeSetting)
-                        {
-                            int cid = getOperation.VersionServer;
-                            DateTime modDate;
-
-                            if (!changesetDates.TryGetValue(cid, out modDate))
-                            {
-                                Changeset changeset = VersionControlServer.GetChangeset(cid);
-                                modDate = changeset.CreationDate;
-                                changesetDates.Add(cid, modDate);
-                            }
-
-                            File.SetLastWriteTime(path, modDate);
-                        }
-
-                        // do this after setting the last write time!
-                        SetFileAttributes(path);
-                    }
-                    updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
-                }
-                versionControlServer.OnDownloading(args);
-            }
-
-            updates.Flush();
-            return new GetStatus(getOperations.Count);
+            throw new NotImplementedException();
+//            bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
+//            bool noGet = false; // not implemented below: ((GetOptions.Preview & options) == GetOptions.Preview);
+//
+//            SortedList<int, DateTime> changesetDates = new SortedList<int, DateTime>();
+//            var getOperations = Repository.Get(Name, OwnerName, requests, force, noGet);
+//
+//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+//            foreach (GetOperation getOperation in getOperations)
+//            {
+//                GettingEventArgs args = new GettingEventArgs(this, getOperation);
+//
+//                if (getOperation.DeletionId != 0)
+//                {
+//                    if ((getOperation.ItemType == ItemType.Folder) &&
+//                        (Directory.Exists(getOperation.SourceLocalItem)))
+//                    {
+//                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
+//                        Directory.Delete(getOperation.SourceLocalItem, true);
+//                    }
+//                    else if ((getOperation.ItemType == ItemType.File) &&
+//                             (File.Exists(getOperation.SourceLocalItem)))
+//                    {
+//                        UnsetFileAttributes(getOperation.SourceLocalItem);
+//                        File.Delete(getOperation.SourceLocalItem);
+//                    }
+//                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
+//                }
+//                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
+//                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
+//                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
+//                {
+//                    try
+//                    {
+//                        File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
+//                    }
+//                    catch (IOException)
+//                    {
+//                        args.Status = OperationStatus.TargetIsDirectory;
+//                    }
+//                    updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
+//                }
+//                else if (getOperation.ChangeType == ChangeType.None &&
+//                         getOperation.VersionServer != 0)
+//                {
+//                    string path = getOperation.TargetLocalItem;
+//                    string directory = path;
+//
+//                    if (getOperation.ItemType == ItemType.File)
+//                        directory = Path.GetDirectoryName(path);
+//
+//                    if (!Directory.Exists(directory))
+//                        Directory.CreateDirectory(directory);
+//
+//                    if (getOperation.ItemType == ItemType.File)
+//                    {
+//                        DownloadFile.WriteTo(path, Repository, getOperation.ArtifactUri);
+//
+//                        // ChangesetMtimes functionality : none standard!
+//                        if (true)
+//                        {
+//                            int cid = getOperation.VersionServer;
+//                            DateTime modDate;
+//
+//                            if (!changesetDates.TryGetValue(cid, out modDate))
+//                            {
+//                                Changeset changeset = VersionControlServer.GetChangeset(cid);
+//                                modDate = changeset.CreationDate;
+//                                changesetDates.Add(cid, modDate);
+//                            }
+//
+//                            File.SetLastWriteTime(path, modDate);
+//                        }
+//
+//                        // do this after setting the last write time!
+//                        SetFileAttributes(path);
+//                    }
+//                    updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
+//                }
+//                //versionControlServer.OnDownloading(args);
+//            }
+//
+//            updates.Flush();
+//            return new GetStatus(getOperations.Count);
         }
 
         #endregion
@@ -323,157 +290,171 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                          DeletedState deletedState,
                                                          ItemType itemType)
         {
-            return Repository.QueryItemsExtended(Name, OwnerName,
-                itemSpecs, deletedState, itemType);
+            throw new NotImplementedException();
+//            return Repository.QueryItemsExtended(Name, OwnerName,
+//                itemSpecs, deletedState, itemType);
         }
 
         public string GetServerItemForLocalItem(string localItem)
         {
-            string item = TryGetServerItemForLocalItem(localItem);
-            if (item == null)
-                throw new ItemNotMappedException(localItem);
-            return item;
+            throw new NotImplementedException();
+//            string item = TryGetServerItemForLocalItem(localItem);
+//            if (item == null)
+//                throw new ItemNotMappedException(localItem);
+//            return item;
         }
 
         public string GetLocalItemForServerItem(string serverItem)
         {
-            string item = TryGetLocalItemForServerItem(serverItem);
-            if (item == null)
-                throw new ItemNotMappedException(serverItem);
-            return item;
+            throw new NotImplementedException();
+//            string item = TryGetLocalItemForServerItem(serverItem);
+//            if (item == null)
+//                throw new ItemNotMappedException(serverItem);
+//            return item;
         }
 
         public bool IsLocalPathMapped(string localPath)
         {
-            foreach (WorkingFolder workingFolder in Folders)
-            {
-                if (localPath.StartsWith(workingFolder.LocalItem))
-                    return true;
-            }
+            throw new NotImplementedException();
 
-            return false;
+//            foreach (WorkingFolder workingFolder in Folders)
+//            {
+//                if (localPath.StartsWith(workingFolder.LocalItem))
+//                    return true;
+//            }
+//
+//            return false;
         }
 
         public bool IsServerPathMapped(string serverPath)
         {
-            foreach (WorkingFolder workingFolder in Folders)
-            {
-                if (serverPath.StartsWith(workingFolder.ServerItem, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-
-            return false;
+            throw new NotImplementedException();
+            
+//            foreach (WorkingFolder workingFolder in Folders)
+//            {
+//                if (serverPath.StartsWith(workingFolder.ServerItem, StringComparison.OrdinalIgnoreCase))
+//                    return true;
+//            }
+//
+//            return false;
         }
 
         public void Map(string teamProject, string sourceProject)
         {
-            WorkingFolder[] folders = new WorkingFolder[1];
-            folders[0] = new WorkingFolder(sourceProject, teamProject);
-            Update(Name, OwnerName, folders);
+            throw new NotImplementedException();
+//            WorkingFolder[] folders = new WorkingFolder[1];
+//            folders[0] = new WorkingFolder(sourceProject, teamProject);
+//            Update(Name, OwnerName, folders);
         }
 
         public int PendAdd(string path)
         {
-            return PendAdd(path, false);
+            throw new NotImplementedException();
+            //return PendAdd(path, false);
         }
 
         public int PendAdd(string path, bool isRecursive)
         {
-            string[] paths = new string[1];
-            paths[0] = path;
-            return PendAdd(paths, isRecursive);
+            throw new NotImplementedException();
+//            string[] paths = new string[1];
+//            paths[0] = path;
+//            return PendAdd(paths, isRecursive);
         }
 
         public int PendAdd(string[] paths, bool isRecursive)
         {
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-
-            foreach (string path in paths)
-            {
-                ItemType itemType = ItemType.File;
-                if (Directory.Exists(path))
-                    itemType = ItemType.Folder;
-                changes.Add(new ChangeRequest(path, RequestType.Add, itemType));
-
-                if (!isRecursive || itemType != ItemType.Folder)
-                    continue;
-
-                DirectoryInfo dir = new DirectoryInfo(path);
-                FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
-					
-                foreach (FileInfo file in localFiles)
-                    changes.Add(new ChangeRequest(file.FullName, RequestType.Add, ItemType.File));
-            }
-
-            if (changes.Count == 0)
-                return 0;
-
-            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
-            return operations.Length;
+            throw new NotImplementedException();
+//            List<ChangeRequest> changes = new List<ChangeRequest>();
+//
+//            foreach (string path in paths)
+//            {
+//                ItemType itemType = ItemType.File;
+//                if (Directory.Exists(path))
+//                    itemType = ItemType.Folder;
+//                changes.Add(new ChangeRequest(path, RequestType.Add, itemType));
+//
+//                if (!isRecursive || itemType != ItemType.Folder)
+//                    continue;
+//
+//                DirectoryInfo dir = new DirectoryInfo(path);
+//                FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
+//					
+//                foreach (FileInfo file in localFiles)
+//                    changes.Add(new ChangeRequest(file.FullName, RequestType.Add, ItemType.File));
+//            }
+//
+//            if (changes.Count == 0)
+//                return 0;
+//
+//            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
+//            return operations.Length;
         }
 
         public int PendDelete(string path)
         {
-            return PendDelete(path, RecursionType.None);
+            throw new NotImplementedException();
+//            return PendDelete(path, RecursionType.None);
         }
 
         public int PendDelete(string path, RecursionType recursionType)
         {
-            string[] paths = new string[1];
-            paths[0] = path;
-
-            return PendDelete(paths, recursionType);
+            throw new NotImplementedException();
+//            string[] paths = new string[1];
+//            paths[0] = path;
+//
+//            return PendDelete(paths, recursionType);
         }
 
         public int PendDelete(string[] paths, RecursionType recursionType)
         {
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-            foreach (string path in paths)
-            {
-                ItemType itemType = ItemType.File;
-                if (Directory.Exists(path))
-                    itemType = ItemType.Folder;
-                changes.Add(new ChangeRequest(path, RequestType.Delete, itemType));
-            }
-
-            if (changes.Count == 0)
-                return 0;
-
-            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-
-            // first delete all files
-            foreach (GetOperation operation in operations)
-            {
-                if (operation.ItemType != ItemType.File)
-                    continue;
-                if (!File.Exists(operation.SourceLocalItem))
-                    continue;
-
-                UnsetFileAttributes(operation.SourceLocalItem);
-                File.Delete(operation.SourceLocalItem);
-                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
-            }
-
-            // then any directories
-            foreach (GetOperation operation in operations)
-            {
-                if (operation.ItemType != ItemType.Folder)
-                    continue;
-                if (!Directory.Exists(operation.SourceLocalItem))
-                    continue;
-
-                //DirectoryInfo dir = new DirectoryInfo(operation.SourceLocalItem);
-                //FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
-                //foreach (FileInfo file in localFiles)
-                //	UnsetFileAttributes(file.FullName);
-
-                Directory.Delete(operation.SourceLocalItem, true);
-                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
-            }
-
-            updates.Flush();
-            return operations.Length;
+            throw new NotImplementedException();
+//            List<ChangeRequest> changes = new List<ChangeRequest>();
+//            foreach (string path in paths)
+//            {
+//                ItemType itemType = ItemType.File;
+//                if (Directory.Exists(path))
+//                    itemType = ItemType.Folder;
+//                changes.Add(new ChangeRequest(path, RequestType.Delete, itemType));
+//            }
+//
+//            if (changes.Count == 0)
+//                return 0;
+//
+//            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
+//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+//
+//            // first delete all files
+//            foreach (GetOperation operation in operations)
+//            {
+//                if (operation.ItemType != ItemType.File)
+//                    continue;
+//                if (!File.Exists(operation.SourceLocalItem))
+//                    continue;
+//
+//                UnsetFileAttributes(operation.SourceLocalItem);
+//                File.Delete(operation.SourceLocalItem);
+//                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
+//            }
+//
+//            // then any directories
+//            foreach (GetOperation operation in operations)
+//            {
+//                if (operation.ItemType != ItemType.Folder)
+//                    continue;
+//                if (!Directory.Exists(operation.SourceLocalItem))
+//                    continue;
+//
+//                //DirectoryInfo dir = new DirectoryInfo(operation.SourceLocalItem);
+//                //FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
+//                //foreach (FileInfo file in localFiles)
+//                //	UnsetFileAttributes(file.FullName);
+//
+//                Directory.Delete(operation.SourceLocalItem, true);
+//                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
+//            }
+//
+//            updates.Flush();
+//            return operations.Length;
         }
 
         public int PendEdit(string path)
@@ -498,54 +479,56 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int PendEdit(string[] paths, RecursionType recursionType)
         {
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-            foreach (string path in paths)
-            {
-                changes.Add(new ChangeRequest(path, RequestType.Edit, ItemType.File));
-            }
-
-            if (changes.Count == 0)
-                return 0;
-
-            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
-            foreach (GetOperation getOperation in getOperations)
-            {
-                UnsetFileAttributes(getOperation.TargetLocalItem);
-            }
-
-            return getOperations.Length;
+            throw new NotImplementedException();
+//            List<ChangeRequest> changes = new List<ChangeRequest>();
+//            foreach (string path in paths)
+//            {
+//                changes.Add(new ChangeRequest(path, RequestType.Edit, ItemType.File));
+//            }
+//
+//            if (changes.Count == 0)
+//                return 0;
+//
+//            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
+//            foreach (GetOperation getOperation in getOperations)
+//            {
+//                UnsetFileAttributes(getOperation.TargetLocalItem);
+//            }
+//
+//            return getOperations.Length;
         }
 
         public int PendRename(string oldPath, string newPath)
         {
-            string newServerPath;
-            if (VersionControlPath.IsServerItem(newPath))
-                newServerPath = GetServerItemForLocalItem(newPath);
-            else
-                newServerPath = newPath;
-
-            ItemType itemType = ItemType.File;
-            if (Directory.Exists(oldPath))
-                itemType = ItemType.Folder;
-
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-            changes.Add(new ChangeRequest(oldPath, newServerPath, RequestType.Rename, itemType));
-
-            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
-			
-            if (itemType == ItemType.File)
-                File.Move(oldPath, newPath);
-            else
-                Directory.Move(oldPath, newPath);
-
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-            foreach (GetOperation getOperation in getOperations)
-            {
-                updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-            }
-
-            updates.Flush();
-            return 1;
+            throw new NotImplementedException();
+//            string newServerPath;
+//            if (VersionControlPath.IsServerItem(newPath))
+//                newServerPath = GetServerItemForLocalItem(newPath);
+//            else
+//                newServerPath = newPath;
+//
+//            ItemType itemType = ItemType.File;
+//            if (Directory.Exists(oldPath))
+//                itemType = ItemType.Folder;
+//
+//            List<ChangeRequest> changes = new List<ChangeRequest>();
+//            changes.Add(new ChangeRequest(oldPath, newServerPath, RequestType.Rename, itemType));
+//
+//            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
+//			
+//            if (itemType == ItemType.File)
+//                File.Move(oldPath, newPath);
+//            else
+//                Directory.Move(oldPath, newPath);
+//
+//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+//            foreach (GetOperation getOperation in getOperations)
+//            {
+//                updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
+//            }
+//
+//            updates.Flush();
+//            return 1;
         }
 
         public int SetLock(string path, LockLevel lockLevel)
@@ -567,44 +550,46 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int SetLock(string[] paths, LockLevel lockLevel, RecursionType recursion)
         {
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-
-            foreach (string path in paths)
-            {
-                ItemType itemType = ItemType.File;
-                if (Directory.Exists(path))
-                    itemType = ItemType.Folder;
-                changes.Add(new ChangeRequest(path, RequestType.Lock, itemType, recursion, lockLevel));
-            }
-
-            if (changes.Count == 0)
-                return 0;
-
-            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
-            return operations.Length;
+            throw new NotImplementedException();
+//            List<ChangeRequest> changes = new List<ChangeRequest>();
+//
+//            foreach (string path in paths)
+//            {
+//                ItemType itemType = ItemType.File;
+//                if (Directory.Exists(path))
+//                    itemType = ItemType.Folder;
+//                changes.Add(new ChangeRequest(path, RequestType.Lock, itemType, recursion, lockLevel));
+//            }
+//
+//            if (changes.Count == 0)
+//                return 0;
+//
+//            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
+//            return operations.Length;
         }
 
         public void Shelve(Shelveset shelveset, PendingChange[] changes,
                            ShelvingOptions options)
         {
-            List<string> serverItems = new List<string>();
-
-            foreach (PendingChange change in changes)
-            {
-                // upload new or changed files only
-                if ((change.ItemType == ItemType.File) &&
-                    (change.IsAdd || change.IsEdit))
-                {
-                    Repository.ShelveFile(Name, OwnerName, change);
-                }
-
-                serverItems.Add(change.ServerItem);
-            }
-
-            Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
+            throw new NotImplementedException();
+//            List<string> serverItems = new List<string>();
+//
+//            foreach (PendingChange change in changes)
+//            {
+//                // upload new or changed files only
+//                if ((change.ItemType == ItemType.File) &&
+//                    (change.IsAdd || change.IsEdit))
+//                {
+//                    Repository.ShelveFile(Name, OwnerName, change);
+//                }
+//
+//                serverItems.Add(change.ServerItem);
+//            }
+//
+//            Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
         }
 
-        internal static Workspace FromXml(Repository repository, XElement element)
+        internal static Workspace FromXml(TfsVersionControlService service, XElement element)
         {
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
@@ -617,9 +602,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                          .Elements(XmlNamespaces.GetMessageElementName("WorkingFolder"))
                                                          .Select(el => WorkingFolder.FromXml(el)));
 
-            return new Workspace(repository.VersionControlServer, name, owner, comment, folders.ToArray(), computer)
+            return new Workspace(service, name, owner, comment, folders.ToArray(), computer)
             { 
-                lastAccessDate = lastAccessDate 
+                LastAccessDate = lastAccessDate 
             };
         }
 
@@ -631,31 +616,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                    new XAttribute("owner", OwnerName), 
                                    new XElement(XmlNamespaces.GetMessageElementName("Comment"), Comment));
 
-            if (folders != null)
+            if (Folders != null)
             {
-                element.Add(new XElement(XmlNamespaces.GetMessageElementName("Folders"), folders.Select(f => f.ToXml())));
+                element.Add(new XElement(XmlNamespaces.GetMessageElementName("Folders"), Folders.Select(f => f.ToXml())));
             }
             return element;
-            //workspaceElm.WriteTo(writer);
-//            writer.WriteStartElement(element);
-//            writer.WriteAttributeString("computer", Computer);
-//            writer.WriteAttributeString("name", Name);
-//            writer.WriteAttributeString("owner", OwnerName);
-//            writer.WriteElementString("Comment", Comment);
-//
-//            if (folders != null)
-//            {
-//                writer.WriteStartElement("Folders");
-//
-//                foreach (WorkingFolder folder in folders)
-//                {
-//                    folder.ToXml(writer, element);
-//                }
-//					
-//                writer.WriteEndElement();
-//            }
-//
-//            writer.WriteEndElement();
         }
 
         public override string ToString()
@@ -672,9 +637,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             sb.Append(LastAccessDate);
 
             sb.Append("\n	 Folders: ");
-            if (folders != null)
+            if (Folders != null)
             {
-                foreach (WorkingFolder folder in folders)
+                foreach (WorkingFolder folder in Folders)
                 {
                     sb.Append(folder.ToString());
                 }
@@ -698,7 +663,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             int longest = 0;
 
             // find the longest matching serveritem 
-            foreach (WorkingFolder folder in folders)
+            foreach (WorkingFolder folder in Folders)
             {
                 //Console.WriteLine("item: {0} =? folder: {1}", localItem, folder.LocalItem);
                 if (!localItem.StartsWith(folder.LocalItem, StringComparison.InvariantCultureIgnoreCase))
@@ -720,7 +685,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             string localItem = null;
             int longest = 0;
 
-            foreach (WorkingFolder folder in folders)
+            foreach (WorkingFolder folder in Folders)
             {
                 if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
                     continue;
@@ -741,7 +706,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             int maxPath = 0;
             WorkingFolder workingFolder = null;
 
-            foreach (WorkingFolder folder in folders)
+            foreach (WorkingFolder folder in Folders)
             {
                 if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
                     continue;
@@ -770,99 +735,152 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int Undo(string[] paths, RecursionType recursionType)
         {
-            List<ItemSpec> specs = new List<ItemSpec>();
-
-            foreach (string path in paths)
-            {
-                specs.Add(new ItemSpec(path, recursionType));
-            }
-
-            // is this the same logic as a workspace Get? 
-            // can we make one function to handle both cases?
-
-            GetOperation[] getOperations = Repository.UndoPendingChanges(Name, OwnerName, specs.ToArray());
-            foreach (GetOperation getOperation in getOperations)
-            {
-                if (getOperation.ChangeType == ChangeType.Edit ||
-                    getOperation.ChangeType == ChangeType.Delete)
-                {
-                    string uPath = getOperation.TargetLocalItem;
-                    string directory = uPath;
-
-                    if (getOperation.ItemType == ItemType.File)
-                        directory = Path.GetDirectoryName(uPath);
-
-                    // directory is null if file is deleted on server, you haven't that
-                    // version yet, you've marked it deleted locally, then you try to 
-                    // undo because it won't you let you checkin the delete because
-                    // its already deleted on the server
-                    if (!Directory.Exists(directory) && !String.IsNullOrEmpty(directory))
-                        Directory.CreateDirectory(directory);
-
-                    if (getOperation.ItemType == ItemType.File)
-                    {
-                        DownloadFile.WriteTo(uPath, Repository, getOperation.ArtifactUri);
-                        SetFileAttributes(uPath);
-                    }
-                }
-            }
-
-            return getOperations.Length;
+            throw new NotImplementedException();
+//            List<ItemSpec> specs = new List<ItemSpec>();
+//
+//            foreach (string path in paths)
+//            {
+//                specs.Add(new ItemSpec(path, recursionType));
+//            }
+//
+//            // is this the same logic as a workspace Get? 
+//            // can we make one function to handle both cases?
+//
+//            GetOperation[] getOperations = Repository.UndoPendingChanges(Name, OwnerName, specs.ToArray());
+//            foreach (GetOperation getOperation in getOperations)
+//            {
+//                if (getOperation.ChangeType == ChangeType.Edit ||
+//                    getOperation.ChangeType == ChangeType.Delete)
+//                {
+//                    string uPath = getOperation.TargetLocalItem;
+//                    string directory = uPath;
+//
+//                    if (getOperation.ItemType == ItemType.File)
+//                        directory = Path.GetDirectoryName(uPath);
+//
+//                    // directory is null if file is deleted on server, you haven't that
+//                    // version yet, you've marked it deleted locally, then you try to 
+//                    // undo because it won't you let you checkin the delete because
+//                    // its already deleted on the server
+//                    if (!Directory.Exists(directory) && !String.IsNullOrEmpty(directory))
+//                        Directory.CreateDirectory(directory);
+//
+//                    if (getOperation.ItemType == ItemType.File)
+//                    {
+//                        DownloadFile.WriteTo(uPath, Repository, getOperation.ArtifactUri);
+//                        SetFileAttributes(uPath);
+//                    }
+//                }
+//            }
+//
+//            return getOperations.Length;
         }
 
         public void Update(string newName, string newComment, WorkingFolder[] newMappings)
         {
-            Workspace w1 = new Workspace(VersionControlServer, newName, OwnerName,
-                               newComment, newMappings, Computer);
-            Workspace w2 = Repository.UpdateWorkspace(Name, OwnerName, w1);
-
-            Workstation.Current.UpdateWorkspaceInfoCache(VersionControlServer, OwnerName);
-            folders = w2.Folders;
+            throw new NotImplementedException();
+//            Workspace w1 = new Workspace(VersionControlServer, newName, OwnerName,
+//                               newComment, newMappings, Computer);
+//            Workspace w2 = Repository.UpdateWorkspace(Name, OwnerName, w1);
+//
+//            //Workstation.Current.UpdateWorkspaceInfoCache(VersionControlServer, OwnerName);
+//            folders = w2.Folders;
         }
 
         public void RefreshMappings()
         {
-            Workspace w = Repository.QueryWorkspace(Name, OwnerName);
-            this.folders = w.folders;
+            throw new NotImplementedException();
+//            Workspace w = Repository.QueryWorkspace(Name, OwnerName);
+//            this.folders = w.folders;
         }
 
-        public string Comment { get { return comment; } }
+        public string Comment { get; private set; }
 
-        public string Computer { get { return computer; } }
+        public string Computer { get; private set; }
 
-        public WorkingFolder[] Folders { get { return folders; } }
+        public WorkingFolder[] Folders { get; private set; }
 
-        public string Name { get { return name; } }
+        public string Name { get; private set; }
 
-        public DateTime LastAccessDate { get { return lastAccessDate; } }
+        public DateTime LastAccessDate { get; private set; }
 
-        public string OwnerName { get { return ownerName; } }
+        public string OwnerName { get; private set; }
 
-        public VersionControlServer VersionControlServer { get { return versionControlServer; } }
-
-        internal Repository Repository { get { return versionControlServer.Repository; } }
+        public TfsVersionControlService VersionControlService { get; set; }
 
         internal void SetFileAttributes(string path)
         {
-            if (!readWriteSetting)
-                File.SetAttributes(path, FileAttributes.ReadOnly);
+            File.SetAttributes(path, FileAttributes.ReadOnly);
         }
 
         internal void UnsetFileAttributes(string path)
         {
-            if (!readWriteSetting)
-                File.SetAttributes(path, FileAttributes.Normal);
+            File.SetAttributes(path, FileAttributes.Normal);
         }
 
         internal void UnsetDirectoryAttributes(string path)
         {
-            if (readWriteSetting)
-                return;
-
             DirectoryInfo dir = new DirectoryInfo(path);
             FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
             foreach (FileInfo file in localFiles)
                 File.SetAttributes(file.FullName, FileAttributes.Normal);
         }
+
+        #region Equal
+
+        #region IComparable<Workspace> Members
+
+        public int CompareTo(Workspace other)
+        {
+            var nameCompare = string.Compare(Name, other.Name, StringComparison.Ordinal);
+            if (nameCompare != 0)
+                return nameCompare;
+            return string.Compare(OwnerName, other.OwnerName, StringComparison.Ordinal);
+        }
+
+        #endregion
+
+        #region IEquatable<Workspace> Members
+
+        public bool Equals(Workspace other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return string.Equals(other.Name, Name) && string.Equals(other.OwnerName, OwnerName);
+        }
+
+        #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            Workspace cast = obj as Workspace;
+            if (cast == null)
+                return false;
+            return Equals(cast);
+        }
+
+        public override int GetHashCode()
+        {
+            return Name.GetHashCode();
+        }
+
+        public static bool operator ==(Workspace left, Workspace right)
+        {
+            return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
+        }
+
+        public static bool operator !=(Workspace left, Workspace right)
+        {
+            return !(left == right);
+        }
+
+        #endregion Equal
+
     }
 }

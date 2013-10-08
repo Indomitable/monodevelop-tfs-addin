@@ -59,15 +59,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         internal static BranchRelative FromXml(Repository repository, XElement element)
         {
             //string elementName = element.Name;
-            BranchRelative branch = new BranchRelative();
-
-            branch.relativeToItemId = Convert.ToInt32(element.Attribute("reltoid").Value);
-            branch.relativeFromItemId = Convert.ToInt32(element.Attribute("relfromid").Value);
-            branch.isRequestedItem = Convert.ToBoolean(element.Attribute("reqstd").Value);
-
-            branch.branchFromItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchFromItem")));
-            branch.branchToItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchToItem")));
-            return branch;
+            throw new NotImplementedException();
+//            BranchRelative branch = new BranchRelative();
+//
+//            branch.relativeToItemId = Convert.ToInt32(element.Attribute("reltoid").Value);
+//            branch.relativeFromItemId = Convert.ToInt32(element.Attribute("relfromid").Value);
+//            branch.isRequestedItem = Convert.ToBoolean(element.Attribute("reqstd").Value);
+//
+//            branch.branchFromItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchFromItem")));
+//            branch.branchToItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchToItem")));
+//            return branch;
         }
 
         public override string ToString()

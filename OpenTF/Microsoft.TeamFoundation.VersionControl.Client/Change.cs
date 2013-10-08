@@ -49,7 +49,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 change.changeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("type").Value.Replace(" ", ","), true);
             }
-            change.item = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("Item")));
+            change.item = Item.FromXml(element.Element(XmlNamespaces.GetMessageElementName("Item")));
 
             return change;
         }

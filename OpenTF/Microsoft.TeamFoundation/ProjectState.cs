@@ -26,15 +26,14 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
-	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/Classification/03")]
-  public enum ProjectState {
-		Deleting,
-		New,
-		WellFormed,
-  }
+    public enum ProjectState
+    {
+        New,
+        WellFormed,
+        Deleting,
+        CreatePending
+    }
 }
 

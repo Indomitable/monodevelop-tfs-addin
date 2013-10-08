@@ -35,10 +35,11 @@ using System.Xml;
 using System.Web.Services;
 using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class VersionControlServer : ITeamFoundationService
+    public sealed class VersionControlServer : BaseVersionControlService
     {
         private Repository repository;
         private string authenticatedUser;
@@ -79,36 +80,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 itemSpecs, version);
         }
 
-        public Workspace CreateWorkspace(string name, string owner)
-        {
-            WorkspaceData workspaceData = new WorkspaceData
-            {
-                Name = name,
-                Owner = owner,
-                Comment = string.Empty,
-                Computer = Environment.MachineName
-            };
-            return CreateWorkspace(workspaceData);
-        }
-
-        public Workspace CreateWorkspace(WorkspaceData workspaceData)
-        {
-            Workspace workspace = repository.CreateWorkspace(new Workspace(this, workspaceData));
-            Workstation.Current.AddCachedWorkspaceInfo(ServerGuid, Uri, workspace);
-            return workspace;
-        }
-
-        public Workspace UpdateWorkspace(string oldWorkspaceName, string oldWorkspaceOwner, WorkspaceData workspaceData)
-        {
-            var workspace = repository.UpdateWorkspace(oldWorkspaceName, oldWorkspaceOwner, new Workspace(this, workspaceData));
-            Workstation.Current.UpdateWorkspaceInfoCache(this, workspaceData.Owner);
-            return workspace;
-        }
-
         public void DeleteWorkspace(string workspaceName, string workspaceOwner)
         {
             repository.DeleteWorkspace(workspaceName, workspaceOwner);
-            Workstation.Current.RemoveCachedWorkspaceInfo(Uri, workspaceName);
         }
 
         public void DeleteShelveset(Shelveset shelveset)
@@ -124,25 +98,27 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public BranchHistoryTreeItem[][] GetBranchHistory(ItemSpec[] itemSpecs,
                                                           VersionSpec version)
         {
-            if (itemSpecs.Length == 0)
-                return null;
+            throw new NotImplementedException();
 
-            string workspaceName = String.Empty;
-            string workspaceOwner = String.Empty;
-            string item = itemSpecs[0].Item;
-
-            if (!VersionControlPath.IsServerItem(item))
-            {
-                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(item);
-                if (info != null)
-                {
-                    workspaceName = info.Name;
-                    workspaceOwner = info.OwnerName;
-                }
-            }
-
-            return repository.QueryBranches(workspaceName, workspaceOwner,
-                itemSpecs, version);
+//            if (itemSpecs.Length == 0)
+//                return null;
+//
+//            string workspaceName = String.Empty;
+//            string workspaceOwner = String.Empty;
+//            string item = itemSpecs[0].Item;
+//
+//            if (!VersionControlPath.IsServerItem(item))
+//            {
+//                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(item);
+//                if (info != null)
+//                {
+//                    workspaceName = info.Name;
+//                    workspaceOwner = info.OwnerName;
+//                }
+//            }
+//
+//            return repository.QueryBranches(workspaceName, workspaceOwner,
+//                itemSpecs, version);
         }
 
         public Changeset GetChangeset(int changesetId)
@@ -235,26 +211,28 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                   DeletedState deletedState, ItemType itemType, 
                                   bool includeDownloadInfo)
         {
-            if (itemSpecs.Length == 0)
-                return null;
+            throw new NotImplementedException();
 
-            string workspaceName = String.Empty;
-            string workspaceOwner = String.Empty;
-
-            string item = itemSpecs[0].Item;
-            if (!VersionControlPath.IsServerItem(item))
-            {
-                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(item);
-                if (info != null)
-                {
-                    workspaceName = info.Name;
-                    workspaceOwner = info.OwnerName;
-                }
-            }
-
-            return repository.QueryItems(workspaceName, workspaceOwner,
-                itemSpecs, versionSpec, deletedState,
-                itemType, includeDownloadInfo);
+//            if (itemSpecs.Length == 0)
+//                return null;
+//
+//            string workspaceName = String.Empty;
+//            string workspaceOwner = String.Empty;
+//
+//            string item = itemSpecs[0].Item;
+//            if (!VersionControlPath.IsServerItem(item))
+//            {
+//                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(item);
+//                if (info != null)
+//                {
+//                    workspaceName = info.Name;
+//                    workspaceOwner = info.OwnerName;
+//                }
+//            }
+//
+//            return repository.QueryItems(workspaceName, workspaceOwner,
+//                itemSpecs, versionSpec, deletedState,
+//                itemType, includeDownloadInfo);
         }
 
         public List<ExtendedItem> GetExtendedItems(string path,
@@ -286,20 +264,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public Workspace GetWorkspace(string localPath)
         {
-            string path = Path.GetFullPath(localPath);
+            throw new NotImplementedException();
 
-            WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(path);
-            if (info == null)
-                throw new ItemNotMappedException(path);
-
-            return new Workspace(this, info.Name, info.OwnerName,
-                info.Comment, new WorkingFolder[0], Workstation.Current.Name);
+//            string path = Path.GetFullPath(localPath);
+//
+//            WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(path);
+//            if (info == null)
+//                throw new ItemNotMappedException(path);
+//
+//            return new Workspace(this, info.Name, info.OwnerName,
+//                info.Comment, new WorkingFolder[0], Workstation.Current.Name);
         }
 
-        public Workspace GetWorkspace(string workspaceName, string workspaceOwner)
-        {
-            return repository.QueryWorkspace(workspaceName, workspaceOwner);
-        }
 
         public IEnumerable QueryHistory(string path, VersionSpec version,
                                         int deletionId, RecursionType recursion,
@@ -319,42 +295,43 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                         bool includeChanges, bool slotMode,
                                         bool includeDownloadInfo)
         {
-            ItemSpec itemSpec = new ItemSpec(path, recursion, deletionId);
-
-            string workspaceName = String.Empty;
-            string workspaceOwner = String.Empty;
-
-            if (!VersionControlPath.IsServerItem(itemSpec.Item))
-            {
-                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(itemSpec.Item);
-                if (info != null)
-                {
-                    workspaceName = info.Name;
-                    workspaceOwner = info.OwnerName;
-                }
-            }
-
-            List<Changeset> changes = new List<Changeset>();
-            int total = maxCount;
-            VersionSpec versionTo = versionToOrig;
-
-            while (total > 0)
-            {
-                int batchMax = Math.Min(256, total);
-                int batchCnt = repository.QueryHistory(workspaceName, workspaceOwner, itemSpec, 
-                                   version, user, versionFrom, versionTo,
-                                   batchMax, includeChanges, slotMode, 
-                                   includeDownloadInfo, ref changes);
-
-                if (batchCnt < batchMax)
-                    break;
-
-                total -= batchCnt;
-                Changeset lastChangeset = changes[changes.Count - 1];
-                versionTo = new ChangesetVersionSpec(lastChangeset.ChangesetId - 1);
-            }
-
-            return changes.ToArray();
+            throw new NotImplementedException();
+//            ItemSpec itemSpec = new ItemSpec(path, recursion, deletionId);
+//
+//            string workspaceName = String.Empty;
+//            string workspaceOwner = String.Empty;
+//
+//            if (!VersionControlPath.IsServerItem(itemSpec.Item))
+//            {
+//                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(itemSpec.Item);
+//                if (info != null)
+//                {
+//                    workspaceName = info.Name;
+//                    workspaceOwner = info.OwnerName;
+//                }
+//            }
+//
+//            List<Changeset> changes = new List<Changeset>();
+//            int total = maxCount;
+//            VersionSpec versionTo = versionToOrig;
+//
+//            while (total > 0)
+//            {
+//                int batchMax = Math.Min(256, total);
+//                int batchCnt = repository.QueryHistory(workspaceName, workspaceOwner, itemSpec, 
+//                                   version, user, versionFrom, versionTo,
+//                                   batchMax, includeChanges, slotMode, 
+//                                   includeDownloadInfo, ref changes);
+//
+//                if (batchCnt < batchMax)
+//                    break;
+//
+//                total -= batchCnt;
+//                Changeset lastChangeset = changes[changes.Count - 1];
+//                versionTo = new ChangesetVersionSpec(lastChangeset.ChangesetId - 1);
+//            }
+//
+//            return changes.ToArray();
         }
 
         public ChangesetMerge[] QueryMerges(string sourcePath, VersionSpec sourceVersion,
@@ -362,38 +339,31 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                             VersionSpec versionFrom, VersionSpec versionTo,
                                             RecursionType recursion)
         {
-            string workspaceName = String.Empty;
-            string workspaceOwner = String.Empty;
-
-            if (!VersionControlPath.IsServerItem(targetPath))
-            {
-                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(targetPath);
-                if (info != null)
-                {
-                    workspaceName = info.Name;
-                    workspaceOwner = info.OwnerName;
-                }
-            }
-
-            ItemSpec sourceItem = null;
-            if (!String.IsNullOrEmpty(sourcePath))
-                sourceItem = new ItemSpec(sourcePath, recursion);
-
-            ItemSpec targetItem = new ItemSpec(targetPath, recursion);
-            ChangesetMerge[] merges = repository.QueryMerges(workspaceName, workspaceOwner,
-                                          sourceItem, sourceVersion,
-                                          targetItem, targetVersion,
-                                          versionFrom, versionTo,
-                                          Int32.MaxValue);
-            return merges;
-        }
-
-        public Workspace GetWorkspace(WorkspaceInfo workspaceInfo)
-        {
-            if (workspaceInfo == null)
-                throw new ArgumentNullException("workspaceInfo");
-
-            return new Workspace(this, workspaceInfo); 
+            throw new NotImplementedException();
+//            string workspaceName = String.Empty;
+//            string workspaceOwner = String.Empty;
+//
+//            if (!VersionControlPath.IsServerItem(targetPath))
+//            {
+//                WorkspaceInfo info = Workstation.Current.GetLocalWorkspaceInfo(targetPath);
+//                if (info != null)
+//                {
+//                    workspaceName = info.Name;
+//                    workspaceOwner = info.OwnerName;
+//                }
+//            }
+//
+//            ItemSpec sourceItem = null;
+//            if (!String.IsNullOrEmpty(sourcePath))
+//                sourceItem = new ItemSpec(sourcePath, recursion);
+//
+//            ItemSpec targetItem = new ItemSpec(targetPath, recursion);
+//            ChangesetMerge[] merges = repository.QueryMerges(workspaceName, workspaceOwner,
+//                                          sourceItem, sourceVersion,
+//                                          targetItem, targetVersion,
+//                                          versionFrom, versionTo,
+//                                          Int32.MaxValue);
+//            return merges;
         }
 
         public VersionControlLabel[] QueryLabels(string labelName, string labelScope, 
@@ -434,11 +404,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public Shelveset[] QueryShelvesets(string shelvesetName, string shelvesetOwner)
         {
             return repository.QueryShelvesets(shelvesetName, shelvesetOwner);
-        }
-
-        public List<Workspace> QueryWorkspaces(string ownerName, string computer)
-        {
-            return repository.QueryWorkspaces(ownerName, computer);
         }
 
         internal void OnDownloading(GettingEventArgs args)

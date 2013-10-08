@@ -46,8 +46,6 @@
     <Compile Include="GUI\Constants.cs" />
     <Compile Include="Commands\TeamExplorerHandler.cs" />
     <Compile Include="GUI\DialogAction.cs" />
-    <Compile Include="Helpers\TeamFoundationServerHelper.cs" />
-    <Compile Include="GUI\ServerFoldersView.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

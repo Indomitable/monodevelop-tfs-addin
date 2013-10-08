@@ -1,5 +1,5 @@
 //
-// TeamFoundationServerHelper.cs
+// BaseVersionControlService.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,17 +23,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.Client;
-using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
+using System;
 
-namespace MonoDevelop.VersionControl.TFS.Helpers
+namespace Microsoft.TeamFoundation.Client.Services
 {
-    public static class TeamFoundationServerHelper
+    public abstract class BaseVersionControlService : TfsService
     {
-        public static TeamFoundationServer GetServer(ServerEntry server)
+        public override System.Xml.Linq.XNamespace MessageNs
         {
-            var credentials = CredentialsManager.LoadCredential(server.Url);
-            return TeamFoundationServerFactory.GetServer(server.Url, credentials);
+            get
+            {
+                return "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
+            }
         }
     }
 }

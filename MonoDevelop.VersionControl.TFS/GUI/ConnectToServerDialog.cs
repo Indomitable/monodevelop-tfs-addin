@@ -30,6 +30,12 @@ using System.Text.RegularExpressions;
 using System.Net;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.Ide;
+using Microsoft.TeamFoundation.Client;
+using System.Linq;
+using GLib;
+using System.Collections.Generic;
+using MonoDevelop.Ide.Gui;
+using MonoDevelop.Projects;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -107,8 +113,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                                 MessageService.ShowWarning("No keyring service found!\nPassword has been saved as plain text in server URL");
                             }
                             uriBuilder.Password = credentialsDialog.Credentials.Password;
-                            TFSVersionControlService.Instance.AddServer(dialog.Name, uriBuilder.Uri);
-                            UpdateServersList();
+                            TeamFoundationServer server = new TeamFoundationServer(uriBuilder.Uri, dialog.Name, credentialsDialog.Credentials);
+                            using (var projectCollectionDialog = new ChooseProjectsDialog(server))
+                            {
+                                if (projectCollectionDialog.Run(this) == Command.Ok && projectCollectionDialog.SelectedProjects.Any())
+                                {
+                                    var newServer = new TeamFoundationServer(uriBuilder.Uri, dialog.Name, credentialsDialog.Credentials);
+                                    newServer.LoadProjectConnections(projectCollectionDialog.SelectedProjects.Select(x => x.Collection.Id).ToList());
+                                    foreach (var c in newServer.ProjectCollections)
+                                    {
+                                        var c1 = c;
+                                        c.LoadProjects(projectCollectionDialog.SelectedProjects.Where(p => string.Equals(c1.Name, p.Collection.Name)).Select(x => x.Name).ToList());
+                                    }
+                                    TFSVersionControlService.Instance.AddServer(newServer);
+                                    UpdateServersList();
+                                }
+                            }
                         }
                     }
                 }
@@ -132,7 +152,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 var row = _store.AddRow();
                 _store.SetValue(row, _name, server.Name);
-                _store.SetValue(row, _url, server.Url.ToString());
+                _store.SetValue(row, _url, server.Uri.ToString());
             }
         }
     }
@@ -306,6 +326,112 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     return null;
                 return new NetworkCredential { Domain = _domain.Text, UserName = _userName.Text, Password = _password.Password };
             }
+        }
+    }
+
+    public class ChooseProjectsDialog : Dialog
+    {
+        readonly ListStore collectionStore;
+        readonly ListBox collectionsList = new ListBox();
+        readonly DataField<string> collectionName = new DataField<string>();
+        readonly DataField<ProjectCollection> collectionItem = new DataField<ProjectCollection>();
+        readonly TreeStore projectsStore;
+        readonly TreeView projectsList = new TreeView();
+        readonly DataField<bool> isProjectSelected = new DataField<bool>();
+        readonly DataField<string> projectName = new DataField<string>();
+        readonly DataField<ProjectInfo> projectItem = new DataField<ProjectInfo>();
+
+        public List<ProjectInfo> SelectedProjects { get; set; }
+
+        public ChooseProjectsDialog(TeamFoundationServer server)
+        {
+            collectionStore = new ListStore(collectionName, collectionItem);
+            projectsStore = new TreeStore(isProjectSelected, projectName, projectItem);
+            BuildGui();
+            LoadData(server);
+            SelectedProjects = new List<ProjectInfo>();
+        }
+
+        void BuildGui()
+        {
+            this.Title = "Select Projects";
+            this.Resizable = false;
+            var vBox = new VBox();
+            var hbox = new HBox();
+            collectionsList.DataSource = collectionStore;
+            collectionsList.Views.Add(new TextCellView(collectionName));
+            collectionsList.MinWidth = 200;
+            collectionsList.MinHeight = 300;
+            hbox.PackStart(collectionsList);
+
+            projectsList.DataSource = projectsStore;
+            projectsList.MinWidth = 200;
+            projectsList.MinHeight = 300;
+            var checkView = new CheckBoxCellView(isProjectSelected) { Editable = true };
+            checkView.Toggled += (sender, e) =>
+            {
+                var row = projectsList.CurrentEventRow;
+                var node = projectsStore.GetNavigatorAt(row);
+                var isSelected = !node.GetValue(isProjectSelected); //Xwt gives previous value
+                var project = node.GetValue(projectItem);
+                if (isSelected && !SelectedProjects.Any(p => string.Equals(p.Name, project.Name)))
+                {
+                    SelectedProjects.Add(project);
+                }
+                if (!isSelected && SelectedProjects.Any(p => string.Equals(p.Name, project.Name)))
+                {
+                    SelectedProjects.RemoveAll(p => string.Equals(p.Name, project.Name));
+                }
+            };
+            projectsList.Columns.Add(new ListViewColumn("", checkView));
+            projectsList.Columns.Add(new ListViewColumn("Name", new TextCellView(projectName)));
+            hbox.PackEnd(projectsList);
+
+            vBox.PackStart(hbox);
+
+            Button ok = new Button(GettextCatalog.GetString("OK"));
+            ok.Clicked += (sender, e) => Respond(Command.Ok);
+
+            Button cancel = new Button(GettextCatalog.GetString("Cancel"));
+            cancel.Clicked += (sender, e) => Respond(Command.Cancel);
+
+            ok.MinWidth = cancel.MinWidth = Constants.ButtonWidth;
+
+            var buttonBox = new HBox();
+            buttonBox.PackEnd(ok);
+            buttonBox.PackEnd(cancel);
+            vBox.PackStart(buttonBox);
+
+            this.Content = vBox;
+        }
+
+        void LoadData(TeamFoundationServer server)
+        {
+            server.LoadProjectConnections();
+            server.ProjectCollections.ForEach(c => c.LoadProjects());
+            foreach (var col in server.ProjectCollections)
+            {
+                var row = collectionStore.AddRow();
+                collectionStore.SetValue(row, collectionName, col.Name);
+                collectionStore.SetValue(row, collectionItem, col);
+            }
+            collectionsList.SelectionChanged += (sender, e) =>
+            {
+                if (collectionsList.SelectedRow > -1)
+                {
+                    var collection = collectionStore.GetValue(collectionsList.SelectedRow, collectionItem);
+                    projectsStore.Clear();
+                    foreach (var project in collection.Projects)
+                    {
+                        var node = projectsStore.AddNode();
+                        node.SetValue(isProjectSelected, false);    
+                        node.SetValue(projectName, project.Name);    
+                        node.SetValue(projectItem, project);
+                    }
+                }
+            };
+            if (server.ProjectCollections.Any())
+                collectionsList.SelectRow(0);
         }
     }
 }

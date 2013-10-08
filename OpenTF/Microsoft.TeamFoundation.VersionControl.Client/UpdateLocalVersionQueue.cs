@@ -76,7 +76,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public void Flush()
         {
             if (updates.Count > 0)
-                workspace.Repository.UpdateLocalVersion(this);
+                workspace.VersionControlService.UpdateLocalVersion(this);
             updates.Clear();
         }
 

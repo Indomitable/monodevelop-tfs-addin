@@ -61,73 +61,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.Credentials = credentials;
         }
 
-        #region Workspaces
-
-        public Workspace QueryWorkspace(string workspaceName, string ownerName)
-        {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryWorkspace");
-            msg.AddParam("workspaceName", workspaceName);
-            msg.AddParam("ownerName", ownerName);
-
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                return Workspace.FromXml(this, result);
-            }
-        }
-
-        public List<Workspace> QueryWorkspaces(string ownerName, string computer)
-        {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryWorkspaces");
-            if (!string.IsNullOrEmpty(ownerName))
-                msg.AddParam("ownerName", ownerName);
-            if (!string.IsNullOrEmpty(computer))
-                msg.AddParam("computer", computer);
-
-            List<Workspace> workspaces = new List<Workspace>();
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                workspaces.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("Workspace")).Select(el => Workspace.FromXml(this, el)));
-            }
-            workspaces.Sort();
-            return workspaces;
-        }
-
-        public Workspace UpdateWorkspace(string oldWorkspaceName, string ownerName,
-                                         Workspace newWorkspace)
-        {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateWorkspace");
-            msg.AddParam("oldWorkspaceName", oldWorkspaceName);
-            msg.AddParam("ownerName", ownerName);
-            msg.AddParam(newWorkspace.ToXml("newWorkspace"));
-        
-            Workspace workspace;
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                workspace = Workspace.FromXml(this, result);
-            }
-        
-            return workspace;
-        }
-
-        public Workspace CreateWorkspace(Workspace workspace)
-        {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "CreateWorkspace");
-            msg.AddParam(workspace.ToXml("workspace"));
-            Workspace newWorkspace;
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                newWorkspace = Workspace.FromXml(this, result);
-            }
-
-            return newWorkspace;
-        }
-
-        #endregion
-
         public void CheckInFile(string workspaceName, string ownerName, PendingChange change)
         {
             UploadFile(workspaceName, ownerName, change, "Checkin");
@@ -490,8 +423,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             msg.AddParam("workspaceName", workspaceName);
             msg.AddParam("ownerName", ownerName);
             msg.AddParam(new XElement(XmlNamespaces.GetMessageElementName("requests"), requests.Select(r => r.ToXml())));
-            msg.AddParam("force", force.ToLowString());
-            msg.AddParam("noGet", noGet.ToLowString());
+            if (force)
+                msg.AddParam("force", force.ToLowString());
+            if (noGet)
+                msg.AddParam("noGet", noGet.ToLowString());
 
             List<GetOperation> operations = new List<GetOperation>();
             using (HttpWebResponse response = Invoke(msg))
@@ -732,7 +667,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             using (HttpWebResponse response = Invoke(msg))
             {
                 XElement result = msg.ResponseReader(response);
-                itemSet.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("ItemSet")).Select(el => ItemSet.FromXml(this, el)));
+                itemSet.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("ItemSet")).Select(el => ItemSet.FromXml(el)));
             }
         
             return itemSet.ToArray();

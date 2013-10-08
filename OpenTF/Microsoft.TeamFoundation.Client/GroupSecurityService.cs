@@ -29,7 +29,7 @@
 using System;
 using System.Net;
 using System.Web.Services;
-using Microsoft.TeamFoundation.Server;
+using Microsoft.TeamFoundation.Client;
 
 namespace Microsoft.TeamFoundation.Client
 {

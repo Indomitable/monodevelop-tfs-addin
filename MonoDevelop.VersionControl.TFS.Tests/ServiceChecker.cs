@@ -31,12 +31,11 @@ using System.Web.Services.Protocols;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    [System.Web.Services.WebServiceBinding(Name = "LocationServiceSoap", Namespace = "http://microsoft.com/webservices/")]
-    public class ServiceChecker : SoapHttpClientProtocol
+    public class ServiceChecker
     {
         public HttpWebRequest CreateRequest(string serviceUrl)
         {
-            var request = (HttpWebRequest)GetWebRequest(new Uri("https://tfs.codeplex.com/tfs" + serviceUrl)); 
+            var request = (HttpWebRequest)WebRequest.Create(new Uri("https://tfs.codeplex.com/tfs" + serviceUrl)); 
             request.Credentials = new NetworkCredential { Domain = "snd", UserName = "mono_tfs_plugin_cp", Password = "mono_tfs_plugin" };
             request.AllowWriteStreamBuffering = true;
             request.Method = "POST";
@@ -64,7 +63,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
 
         public HttpWebResponse GetResponse(HttpWebRequest request)
         {
-            return (HttpWebResponse)GetWebResponse(request);
+            return (HttpWebResponse)request.GetResponse();
         }
     }
 }

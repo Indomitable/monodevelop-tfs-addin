@@ -68,7 +68,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //            <Item xsi:nil="true" />
         //          </Items>
         //        </VersionControlLabel>
-        internal static VersionControlLabel FromXml(Repository repository, XElement element)
+        internal static VersionControlLabel FromXml(XElement element)
         {
             VersionControlLabel label = new VersionControlLabel();
             label.lastModifiedDate = DateTime.Parse(element.Attribute("date").Value);
@@ -79,7 +79,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             label.comment = element.Element(XmlNamespaces.GetMessageElementName("Comment")).Value;
             label.items = element.Element(XmlNamespaces.GetMessageElementName("Items"))
                 .Elements(XmlNamespaces.GetMessageElementName("Item"))
-                .Select(el => Item.FromXml(repository, el)).ToArray();
+                .Select(el => Item.FromXml(el)).ToArray();
             return label;
         }
 

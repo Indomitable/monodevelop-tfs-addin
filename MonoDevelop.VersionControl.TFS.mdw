@@ -1,0 +1,6 @@
+<WorkspaceItem ctype="Workspace">
+  <Items>
+    <Item>MonoDevelop.VersionControl.TFS.sln</Item>
+    <Item>External/monodevelop/main/Main.sln</Item>
+  </Items>
+</WorkspaceItem>

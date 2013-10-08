@@ -59,7 +59,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
         public long RowVersion;
     }
 
-    public sealed class WorkItemStore : ITeamFoundationService
+    public sealed class WorkItemStore
     {
         private ClientService clientService;
         private ProjectCollection project;

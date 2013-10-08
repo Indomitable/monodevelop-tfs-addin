@@ -35,7 +35,8 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using System.Linq;
 using System.IO;
-using System.Net.Configuration;
+using Microsoft.TeamFoundation.Client;
+using VersionControlService = Microsoft.TeamFoundation.VersionControl.Client.TfsVersionControlService;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -74,7 +75,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         #endregion
 
-        private ServerEntry _server;
+        private ProjectCollection projectCollection;
         private readonly List<Workspace> _workspaces = new List<Workspace>();
         private Workspace _currentWorkspace = null;
 
@@ -87,36 +88,41 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             BuildContent();
         }
 
-        public static void Open(string serverName, string projectName)
+        public static void Open(ProjectInfo project)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var sourceDoc = view.GetContent<SourceControlExplorerView>();
                 if (sourceDoc != null)
                 {
-                    sourceDoc.Load(serverName);
-                    sourceDoc.ExpandPath(VersionControlPath.RootFolder + projectName);
+                    sourceDoc.Load(project);
+                    sourceDoc.ExpandPath(VersionControlPath.RootFolder + project.Name);
                     view.Window.SelectWindow();
                     return;
                 }
             }
 
             SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
-            sourceControlExplorerView.Load(serverName);
-            sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder + projectName);
+            sourceControlExplorerView.Load(project);
+            sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder + project.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         #region implemented abstract members of AbstractViewContent
 
-        public override void Load(string serverName)
+        public override void Load(string fileName)
         {
-            if (this._server != null && string.Equals(serverName, this._server.Name, StringComparison.OrdinalIgnoreCase))
+            throw new NotImplementedException();
+        }
+
+        public void Load(ProjectInfo project)
+        {
+            if (this.projectCollection != null && string.Equals(project.Collection.Id, this.projectCollection.Id, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
-            _server = TFSVersionControlService.Instance.GetServer(serverName);
-            ContentName = GettextCatalog.GetString("Source Explorer") + " - " + serverName;
+            projectCollection = project.Collection;
+            ContentName = GettextCatalog.GetString("Source Explorer") + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
             FillWorkspaces();
             FillTreeView();
         }
@@ -192,9 +198,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             _workspaceStore.Clear();
             _workspaces.Clear();
-            _workspaces.AddRange(WorkspaceHelper.GetLocalWorkspaces(_server));
+            _workspaces.AddRange(WorkspaceHelper.GetLocalWorkspaces(projectCollection));
             int activeWorkspaceRow = -1;
-            string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(_server);
+            string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(projectCollection);
             foreach (var workspace in _workspaces)
             {
                 var row = _workspaceStore.AddRow();
@@ -216,53 +222,45 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillTreeView()
         {
             _treeStore.Clear();
-            using (var tfsServer = TeamFoundationServerHelper.GetServer(_server))
-            {
-                tfsServer.Authenticate();
+            var versionControl = projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
-                var versionControl = tfsServer.GetService<VersionControlServer>();
-                var itemSet = versionControl.GetItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
-
-                var root = ItemSetToHierarchItemConverter.Convert(itemSet.Items);
-                var node = _treeStore.AddNode().SetValue(_nameTree, root.Name).SetValue(_itemTree, root.Item);
-                AddChilds(node, root.Children);
-                var topNode = _treeStore.GetFirstNode();
-                _treeView.ExpandRow(topNode.CurrentPosition, false);
-            }
+            var root = ItemSetToHierarchItemConverter.Convert(items);
+            var node = _treeStore.AddNode().SetValue(_nameTree, root.Name).SetValue(_itemTree, root.Item);
+            AddChilds(node, root.Children);
+            var topNode = _treeStore.GetFirstNode();
+            _treeView.ExpandRow(topNode.CurrentPosition, false);
         }
 
         private void FillListView(string serverPath)
         {
             _listStore.Clear();
-            using (var tfsServer = TeamFoundationServerHelper.GetServer(_server))
+
+            var versionControl = projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var itemSet = versionControl.QueryItemsExtended(this._currentWorkspace, new ItemSpec(serverPath, RecursionType.OneLevel), DeletedState.NonDeleted, ItemType.Any);
+            //var itemSet1 = versionControl.GetItems(serverPath, RecursionType.OneLevel);
+            foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {
-                tfsServer.Authenticate();
-                var versionControl = tfsServer.GetService<VersionControlServer>();
-                var itemSet = versionControl.GetExtendedItems(serverPath, DeletedState.NonDeleted, ItemType.Any);
-                var itemSet1 = versionControl.GetItems(serverPath, RecursionType.OneLevel);
-                foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
+                var row = _listStore.AddRow();
+                _listStore.SetValue(row, _itemList, item);
+                _listStore.SetValue(row, _typeList, item.ItemType.ToString());
+                _listStore.SetValue(row, _nameList, item.TargetServerItem);
+                if (!IsMapped(serverPath))
                 {
-                    var row = _listStore.AddRow();
-                    _listStore.SetValue(row, _itemList, item);
-                    _listStore.SetValue(row, _typeList, item.ItemType.ToString());
-                    _listStore.SetValue(row, _nameList, item.TargetServerItem);
-                    if (!IsMapped(serverPath))
+                    _listStore.SetValue(row, _latestList, "Not mapped");
+                }
+                else
+                {
+                    if (!item.IsInWorkspace)
                     {
-                        _listStore.SetValue(row, _latestList, "Not mapped");
+                        _listStore.SetValue(row, _latestList, "Not downloaded");
                     }
                     else
                     {
-                        if (!item.IsInWorkspace)
-                        {
-                            _listStore.SetValue(row, _latestList, "Not downloaded");
-                        }
-                        else
-                        {
-                            _listStore.SetValue(row, _latestList, item.IsLatest ? "Yes" : "No");
-                        }
+                        _listStore.SetValue(row, _latestList, item.IsLatest ? "Yes" : "No");
                     }
-                    _listStore.SetValue(row, _lastCheckinList, item.CheckinDate);
                 }
+                _listStore.SetValue(row, _lastCheckinList, item.CheckinDate);
             }
         }
 
@@ -272,13 +270,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 var name = _workspaceStore.GetValue(_workspaceComboBox.SelectedIndex, _workspaceName);
                 _currentWorkspace = _workspaces.Single(ws => string.Equals(ws.Name, name, StringComparison.Ordinal));
-                TFSVersionControlService.Instance.SetActiveWorkspace(_server, name);
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, name);
                 if (_treeView.SelectedRow != null)
                     ShowMappingPath(_treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree).ServerItem);
             }
             else
             {
-                TFSVersionControlService.Instance.SetActiveWorkspace(_server, string.Empty);
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, string.Empty);
             }
         }
 
@@ -370,7 +368,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void OnManageWorkspaces(object sender, EventArgs e)
         {
-            using (var dialog = new WorkspacesDialog(_server))
+            using (var dialog = new WorkspacesDialog(projectCollection))
             {
                 if (dialog.Run(this.Widget.ParentWindow) == Command.Close)
                 {

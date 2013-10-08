@@ -29,7 +29,7 @@
 using System;
 using System.Text;
 
-namespace Microsoft.TeamFoundation.Server
+namespace Microsoft.TeamFoundation.Client
 {
 	public class ServiceInterface
 	{

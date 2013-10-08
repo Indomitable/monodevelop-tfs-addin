@@ -52,7 +52,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 
     public static class ItemSetToHierarchItemConverter
     {
-        public static HierarchyItem Convert(Item[] items)
+        public static HierarchyItem Convert(List<Item> items)
         {
             HierarchyItem[] linerHierarchy = items.Select(x => new HierarchyItem(x)).ToArray();
             HierarchyItem root = linerHierarchy[0];

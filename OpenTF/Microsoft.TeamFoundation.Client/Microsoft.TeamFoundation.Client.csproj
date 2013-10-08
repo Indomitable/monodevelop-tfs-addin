@@ -32,17 +32,29 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Authenticator.cs" />
-    <Compile Include="CommonStructureService.cs" />
     <Compile Include="GroupSecurityService.cs" />
     <Compile Include="ICredentialsProvider.cs" />
     <Compile Include="Linking.cs" />
-    <Compile Include="Registration.cs" />
     <Compile Include="TeamFoundationServer.cs" />
-    <Compile Include="TeamFoundationServerFactory.cs" />
+    <Compile Include="SoapInvoker.cs" />
+    <Compile Include="TeamFoundationServerService.cs" />
+    <Compile Include="ProjectCollection.cs" />
+    <Compile Include="ProjectCollectionService.cs" />
+    <Compile Include="IServiceResolver.cs" />
+    <Compile Include="Registration.cs" />
+    <Compile Include="Services\ServerStatusService.cs" />
+    <Compile Include="Services\LocationService.cs" />
+    <Compile Include="Services\CommonStructureService.cs" />
+    <Compile Include="Services\BaseVersionControlService.cs" />
+    <Compile Include="Services\TfsService.cs" />
+    <Compile Include="Services\Resolvers\CommonStructureServiceResolver.cs" />
+    <Compile Include="Services\Resolvers\ServerStatusResolver.cs" />
+    <Compile Include="Services\Resolvers\VersionControlServiceResolver.cs" />
+    <Compile Include="ProjectInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -57,5 +69,9 @@
       <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="Services\Resolvers\" />
   </ItemGroup>
 </Project>

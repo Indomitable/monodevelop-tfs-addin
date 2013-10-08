@@ -28,38 +28,62 @@ using MonoDevelop.Core;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System;
-using GLib;
+using Microsoft.TeamFoundation.Client;
+using MonoDevelop.VersionControl.TFS.Helpers;
+using System.Xml.XPath;
+using System.Net;
 
 namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSVersionControlService
     {
-        private readonly List<ServerEntry> _registredServers = new List<ServerEntry>();
-        private readonly Dictionary<ServerEntry, string> _activeWorkspaces = new Dictionary<ServerEntry, string>();
-        private static TFSVersionControlService _instance;
+        private readonly List<TeamFoundationServer> _registredServers = new List<TeamFoundationServer>();
+        private readonly Dictionary<string, string> _activeWorkspaces = new Dictionary<string, string>();
+        private static TFSVersionControlService instance;
 
         public TFSVersionControlService()
         {
             LoadPrefs();
         }
 
-        public static TFSVersionControlService Instance { get { return _instance ?? (_instance = new TFSVersionControlService()); } }
+        public static TFSVersionControlService Instance { get { return instance ?? (instance = new TFSVersionControlService()); } }
 
         private string ConfigFile { get { return UserProfile.Current.ConfigDir.Combine("VersionControl.TFS.config"); } }
-
+        //<TFSRoot>
+        //    <Servers>
+        //      <Server Name="ServerName" Url="ServerUrl" Workspace="activeWorkspaceName">
+        //         <ProjectCollection id="GUID" url="URL">
+        //              <Project name="projectName" />
+        //          </ProjectCollection>
+        //      </Server>
+        //    </Servers>
+        //</TFSRoot>
         public void StorePrefs()
         {
             using (var file = File.Create(ConfigFile))
             {
                 XDocument doc = new XDocument();
                 doc.Add(new XElement("TFSRoot"));
-                doc.Root.Add(new XElement("TFSServers", from server in _registredServers
-                                                                    select new XElement("TFSServer", 
-                                                                            new XAttribute("Name", server.Name),
-                                                                            new XAttribute("Url", server.Url),
-                                                                            new XAttribute("Workspace", _activeWorkspaces[server]))));
+                var serversEl = new XElement("Servers");
+
+                foreach (var server in _registredServers)
+                {
+                    var serverEl = new XElement("Server", 
+                                       new XAttribute("Name", server.Name),
+                                       new XAttribute("Url", server.Uri),  
+                                       from col in server.ProjectCollections
+                                       select new XElement("ProjectCollection", 
+                                              new XAttribute("Id", col.Id), 
+                                              new XAttribute("Url", col.Url),
+                                              new XAttribute("Workspace", _activeWorkspaces.ContainsKey(col.Id) ? _activeWorkspaces[col.Id] : string.Empty),
+                                              from p in col.Projects
+                                              select new XElement("Project", 
+                                              new XAttribute("Name", p.Name))));
+
+                    serversEl.Add(serverEl);
+                }
+                doc.Root.Add(serversEl);
                 doc.Save(file);
                 file.Close();
             }
@@ -75,15 +99,31 @@ namespace MonoDevelop.VersionControl.TFS
                 using (var file = File.OpenRead(ConfigFile))
                 {
                     XDocument doc = XDocument.Load(file);
-                    foreach (var serverElement in doc.Root.Element("TFSServers").Elements("TFSServer"))
+                    foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                     {
-                        var serverEntry = new ServerEntry
+                        var name = serverElement.Attribute("Name").Value;
+                        var uri = new Uri(serverElement.Attribute("Url").Value);
+                        var credentials = CredentialsManager.LoadCredential(uri);
+                        var server = new TeamFoundationServer(uri, name, credentials);
+                        try
                         {
-                            Name = serverElement.Attribute("Name").Value,
-                            Url = new Uri(serverElement.Attribute("Url").Value)
-                        };
-                        _registredServers.Add(serverEntry);
-                        _activeWorkspaces.Add(serverEntry, serverElement.Attribute("Workspace") == null ? string.Empty : serverElement.Attribute("Workspace").Value);
+                            var collections = new List<XElement>(serverElement.Elements("ProjectCollection"));
+                            server.LoadProjectConnections(collections.Select(x => x.Attribute("Id").Value).ToList());
+                            foreach (var collection in server.ProjectCollections) 
+                            {
+                                var projects = serverElement.XPathSelectElements("./ProjectCollection[@Id='" + collection.Id + "']/Project");
+                                collection.LoadProjects(projects.Select(x => x.Attribute("Name").Value).ToList());
+                                var collection1 = collection;
+                                var collectionElement = collections.Single(x => string.Equals(x.Attribute("Id").Value, collection1.Id));
+                                _activeWorkspaces.Add(collection.Id, collectionElement.Attribute("Workspace") == null ? string.Empty : collectionElement.Attribute("Workspace").Value);
+                            }
+                            _registredServers.Add(server);
+                        }
+                        catch 
+                        {
+                            continue;
+                        }
+
                     }
                     file.Close();
                 }
@@ -98,11 +138,11 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public void AddServer(string name, Uri url)
+        public void AddServer(TeamFoundationServer server)
         {
-            if (HasServer(name))
-                return;
-            _registredServers.Add(new ServerEntry { Name = name, Url = url });
+            if (HasServer(server.Name))
+                RemoveServer(server.Name);
+            _registredServers.Add(server);
             RaiseServersChange();
             StorePrefs();
         }
@@ -116,7 +156,7 @@ namespace MonoDevelop.VersionControl.TFS
             StorePrefs();
         }
 
-        public ServerEntry GetServer(string name)
+        public TeamFoundationServer GetServer(string name)
         {
             return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
@@ -126,7 +166,7 @@ namespace MonoDevelop.VersionControl.TFS
             return _registredServers.Any(x => string.Equals(x.Name, name, System.StringComparison.OrdinalIgnoreCase));
         }
 
-        public List<ServerEntry> Servers { get { return _registredServers; } }
+        public List<TeamFoundationServer> Servers { get { return _registredServers; } }
 
         public event Action OnServersChange;
 
@@ -138,14 +178,14 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public string GetActiveWorkspace(ServerEntry server)
+        public string GetActiveWorkspace(ProjectCollection collection)
         {
-            return _activeWorkspaces[server];
+            return _activeWorkspaces[collection.Id];
         }
 
-        public void SetActiveWorkspace(ServerEntry server, string workspaceName)
+        public void SetActiveWorkspace(ProjectCollection collection, string workspaceName)
         {
-            _activeWorkspaces[server] = workspaceName;
+            _activeWorkspaces[collection.Id] = workspaceName;
             StorePrefs();
         }
     }
