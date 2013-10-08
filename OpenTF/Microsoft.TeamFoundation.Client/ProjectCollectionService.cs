@@ -57,7 +57,7 @@ namespace Microsoft.TeamFoundation.Client
         public List<ProjectCollection> GetProjectCollections()
         {
             var teamProjects = GetXmlCollections();
-            return new List<ProjectCollection>(teamProjects.Select(t => ProjectCollection.FromXml(this.server, t)));
+            return new List<ProjectCollection>(teamProjects.Select(t => ProjectCollection.FromServerXml(this.server, t)));
         }
 
         public List<ProjectCollection> GetProjectCollections(List<string> projectCollectionsIds)
@@ -65,7 +65,7 @@ namespace Microsoft.TeamFoundation.Client
             var teamProjects = GetXmlCollections();
             return new List<ProjectCollection>(teamProjects
                 .Where(tp => projectCollectionsIds.Any(id => string.Equals(id, tp.Attribute("Identifier").Value)))
-                .Select(tp => ProjectCollection.FromXml(this.server, tp)));
+                .Select(tp => ProjectCollection.FromServerXml(this.server, tp)));
         }
     }
 }

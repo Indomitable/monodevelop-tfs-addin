@@ -52,6 +52,24 @@ namespace Microsoft.TeamFoundation.Client
             return projectInfo;
         }
 
+        public static ProjectInfo FromLocalXml(ProjectCollection collection, XElement element)
+        {
+            ProjectInfo projectInfo = new ProjectInfo();
+            projectInfo.Name = element.Attribute("Name").Value;
+            projectInfo.Uri = element.Attribute("Uri").Value;
+            projectInfo.Status = (ProjectState)Enum.Parse(typeof(ProjectState), element.Attribute("Status").Value);
+            projectInfo.Collection = collection;
+            return projectInfo;
+        }
+
+        public XElement ToLocalXml()
+        {
+            return new XElement("Project", 
+                new XAttribute("Name", this.Name),
+                new XAttribute("Status", this.Status),
+                new XAttribute("Uri", this.Uri));
+        }
+
         #region Equal
 
         #region IComparable<ProjectInfo> Members

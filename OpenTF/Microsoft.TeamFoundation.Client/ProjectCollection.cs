@@ -49,7 +49,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public Uri LocationServiceUrl { get; set; }
 
-        public static ProjectCollection FromXml(TeamFoundationServer server, XElement element)
+        public static ProjectCollection FromServerXml(TeamFoundationServer server, XElement element)
         {
             ProjectCollection collection = new ProjectCollection();
             collection.Server = server;
@@ -62,6 +62,29 @@ namespace Microsoft.TeamFoundation.Client
             collection.LocationServiceUrl = UrlHelper.AddPathToUri(server.Uri, locationService);
             collection.locationService = new LocationService(collection);
             return collection;
+        }
+
+        public static ProjectCollection FromLocalXml(TeamFoundationServer server, XElement element)
+        {
+            ProjectCollection collection = new ProjectCollection();
+            collection.Server = server;
+            collection.Id = element.Attribute("Id").Value;
+            collection.Name = element.Attribute("Name").Value;
+            collection.Url = new Uri(element.Attribute("Url").Value);
+            collection.LocationServiceUrl = new Uri(element.Attribute("LocationServiceUrl").Value);
+            collection.locationService = new LocationService(collection);
+            collection.Projects = element.Elements("Project").Select(x => ProjectInfo.FromLocalXml(collection, x)).ToList();
+            return collection;
+        }
+
+        public XElement ToLocalXml()
+        {
+            return new XElement("ProjectCollection", 
+                new XAttribute("Id", this.Id), 
+                new XAttribute("Url", this.Url),
+                new XAttribute("Name", this.Name),
+                new XAttribute("LocationServiceUrl", this.LocationServiceUrl),
+                this.Projects.Select(x => x.ToLocalXml()));
         }
 
         public void LoadProjects()

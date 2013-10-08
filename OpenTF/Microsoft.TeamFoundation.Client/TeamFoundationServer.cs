@@ -30,11 +30,18 @@
 using System;
 using System.Net;
 using System.Collections.Generic;
+using System.Xml.Linq;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.Client
 {
     public sealed class TeamFoundationServer : IEquatable<TeamFoundationServer>, IComparable<TeamFoundationServer>
     {
+        private TeamFoundationServer()
+        {
+            
+        }
+
         public TeamFoundationServer(Uri uri, string name, ICredentials creds)
         {
             this.Uri = uri;
@@ -48,15 +55,31 @@ namespace Microsoft.TeamFoundation.Client
             this.ProjectCollections = projectCollectionsService.GetProjectCollections();
         }
 
-        public void LoadProjectConnections(List<string> projectCollectionsIds)
+        public static TeamFoundationServer FromLocalXml(ICredentials credentials, XElement element)
         {
-            var projectCollectionsService = new ProjectCollectionService(this);
-            this.ProjectCollections = projectCollectionsService.GetProjectCollections(projectCollectionsIds);
+            TeamFoundationServer server = new TeamFoundationServer();
+            server.Name = element.Attribute("Name").Value;
+            server.Uri = new Uri(element.Attribute("Url").Value);
+            server.Credentials = credentials;
+            server.ProjectCollections = element.Elements("ProjectCollection").Select(x => ProjectCollection.FromLocalXml(server, x)).ToList();
+            return server;
         }
 
+        public XElement ToLocalXml()
+        {
+            return new XElement("Server", 
+                new XAttribute("Name", this.Name),
+                new XAttribute("Url", this.Uri),
+                this.ProjectCollections.Select(p => p.ToLocalXml()));
+        }
+        //        public void LoadProjectConnections(List<XElement> projectCollectionsIds)
+        //        {
+        //            var projectCollectionsService = new ProjectCollectionService(this);
+        //            this.ProjectCollections = projectCollectionsService.GetProjectCollections(projectCollectionsIds);
+        //        }
         public ICredentials Credentials { get; private set; }
 
-        public List<ProjectCollection> ProjectCollections { get; private set; }
+        public List<ProjectCollection> ProjectCollections { get; set; }
 
         public string Name { get; private set; }
 

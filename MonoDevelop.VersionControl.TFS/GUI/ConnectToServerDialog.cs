@@ -119,11 +119,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                                 if (projectCollectionDialog.Run(this) == Command.Ok && projectCollectionDialog.SelectedProjects.Any())
                                 {
                                     var newServer = new TeamFoundationServer(uriBuilder.Uri, dialog.Name, credentialsDialog.Credentials);
-                                    newServer.LoadProjectConnections(projectCollectionDialog.SelectedProjects.Select(x => x.Collection.Id).ToList());
+                                    newServer.ProjectCollections = projectCollectionDialog.SelectedProjects.Select(x => x.Collection).Distinct().ToList();
+                                    //newServer.LoadProjectConnections(projectCollectionDialog.SelectedProjects.Select(x => x.Collection.Id).ToList());
                                     foreach (var c in newServer.ProjectCollections)
                                     {
                                         var c1 = c;
-                                        c.LoadProjects(projectCollectionDialog.SelectedProjects.Where(p => string.Equals(c1.Name, p.Collection.Name)).Select(x => x.Name).ToList());
+                                        c.Projects = projectCollectionDialog.SelectedProjects.Where(sp => sp.Collection == c1).ToList();
+                                        //c.LoadProjects(projectCollectionDialog.SelectedProjects.Where(p => string.Equals(c1.Name, p.Collection.Name)).Select(x => x.Name).ToList());
                                     }
                                     TFSVersionControlService.Instance.AddServer(newServer);
                                     UpdateServersList();
