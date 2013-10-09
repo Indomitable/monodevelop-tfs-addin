@@ -68,6 +68,5 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
-    <Folder Include="Services\Resolvers\" />
   </ItemGroup>
 </Project>
