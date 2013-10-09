@@ -29,6 +29,9 @@ using System.Linq;
 using Microsoft.TeamFoundation.Common;
 using System.Xml.XPath;
 using Microsoft.TeamFoundation.Client;
+using System.IO;
+using System;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -145,7 +148,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
             if (!string.IsNullOrEmpty(workspaceOwner))
                 msg.Add(new XElement(MessageNs + "workspaceOwner", workspaceOwner));
-            msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(itemSpec => itemSpec.ToXml())));
+            msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(itemSpec => itemSpec.ToXml(MessageNs + "ItemSpec"))));
             msg.Add(versionSpec.ToXml(MessageNs + "version"));
             msg.Add(new XElement(MessageNs + "deletedState", deletedState));
             msg.Add(new XElement(MessageNs + "itemType", itemType));
@@ -187,11 +190,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             var msg = Invoker.CreateEnvelope("QueryItemsExtended");
             msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
             msg.Add(new XElement(MessageNs + "workspaceOwner", workspaceOwner));
-            msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(itemSpec => itemSpec.ToXml())));
+            msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(itemSpec => itemSpec.ToXml(MessageNs + "ItemSpec"))));
             msg.Add(new XElement(MessageNs + "deletedState", deletedState));
             msg.Add(new XElement(MessageNs + "itemType", itemType));
 
             var result = Invoker.Invoke();
+            File.AppendAllText("/home/vmladenov/res_" + itemSpecs[0].Item + ".txt", result.ToString());
             return result.Descendants(MessageNs + "ExtendedItem").Select(ExtendedItem.FromXml).ToList();
         }
 
@@ -227,6 +231,28 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 operations.Add(GetOperation.FromXml(operation));
             }
             return operations;
+        }
+
+        public List<PendingSet> QueryPendingSets(string localWorkspaceName, string localWorkspaceOwner,
+                                                 string queryWorkspaceName, string ownerName,
+                                                 ItemSpec[] itemSpecs, bool generateDownloadUrls)
+        {
+            var msg = Invoker.CreateEnvelope("QueryPendingSets");
+            msg.Add(new XElement(MessageNs + "localWorkspaceName", localWorkspaceName));
+            msg.Add(new XElement(MessageNs + "localWorkspaceOwner", localWorkspaceOwner));
+            msg.Add(new XElement(MessageNs + "queryWorkspaceName", queryWorkspaceName));
+            msg.Add(new XElement(MessageNs + "ownerName", ownerName));
+            msg.Add(new XElement(MessageNs + "itemSpecs", itemSpecs.Select(i => i.ToXml(MessageNs + "ItemSpec"))));
+            msg.Add(new XElement(MessageNs + "generateDownloadUrls", generateDownloadUrls.ToLowString()));
+
+            var result = Invoker.Invoke();
+            return new List<PendingSet>(result.Elements(MessageNs + "PendingSet").Select(PendingSet.FromXml));
+//            var pendingChangesElements = result.Descendants(MessageNs + "PendingChange");
+//            var failuresElements = result.Descendants(MessageNs + "PendingChange");
+//
+//            var changes = new List<PendingChange>(pendingChangesElements.Select(el => PendingChange.FromXml(el)));
+//            var faillist = new List<Failure>(failuresElements.Select(el => Failure.FromXml(el)));
+//            return new Tuple<List<PendingChange>, List<Failure>>(changes, faillist);
         }
     }
 }

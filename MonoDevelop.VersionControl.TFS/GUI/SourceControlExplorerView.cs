@@ -50,8 +50,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly Label _localFolder = new Label();
         private readonly ListView _listView = new ListView();
         private readonly DataField<ExtendedItem> _itemList = new DataField<ExtendedItem>();
-        private readonly DataField<string> _nameList = new DataField<string>();
         private readonly DataField<string> _typeList = new DataField<string>();
+        private readonly DataField<string> _nameList = new DataField<string>();
+        private readonly DataField<string> _changeList = new DataField<string>();
+        private readonly DataField<string> _userList = new DataField<string>();
         private readonly DataField<string> _latestList = new DataField<string>();
         private readonly DataField<DateTime> _lastCheckinList = new DataField<DateTime>();
         private readonly ListStore _listStore;
@@ -83,7 +85,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
             _workspaceStore = new ListStore(_workspaceName);
-            _listStore = new ListStore(_itemList, _typeList, _nameList, _latestList, _lastCheckinList);
+            _listStore = new ListStore(_itemList, _typeList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
             _treeStore = new TreeStore(_itemTree, _nameTree);
             BuildContent();
         }
@@ -176,6 +178,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             rightBox.PackStart(headerRightBox);
             _listView.Columns.Add(new ListViewColumn("Type", new TextCellView(_typeList)));
             _listView.Columns.Add(new ListViewColumn("Name", new TextCellView(_nameList)));
+            _listView.Columns.Add(new ListViewColumn("Pending Change", new TextCellView(_changeList)));
+            _listView.Columns.Add(new ListViewColumn("User", new TextCellView(_userList)));
             _listView.Columns.Add(new ListViewColumn("Latest", new TextCellView(_latestList)));
             _listView.Columns.Add(new ListViewColumn("Last Check-in", new TextCellView(_lastCheckinList)));
             _listView.RowActivated += OnListItemClicked;
@@ -244,6 +248,30 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 _listStore.SetValue(row, _itemList, item);
                 _listStore.SetValue(row, _typeList, item.ItemType.ToString());
                 _listStore.SetValue(row, _nameList, item.TargetServerItem);
+                if (this._currentWorkspace != null)
+                {
+                    if (item.ChangeType != Microsoft.TeamFoundation.VersionControl.Client.ChangeType.None && !item.HasOtherPendingChange)
+                    {
+                        _listStore.SetValue(row, _changeList, item.ChangeType.ToString());
+                        _listStore.SetValue(row, _userList, this._currentWorkspace.OwnerName);
+                    }
+                    if (item.HasOtherPendingChange)
+                    {
+                        var remoteChanges = this._currentWorkspace.GetPendingSets(item.SourceServerItem, RecursionType.None);
+                        List<string> changeNames = new List<string>();
+                        List<string> userNames = new List<string>();
+                        foreach (var remoteChange in remoteChanges)
+                        {
+                            var pChange = remoteChange.PendingChanges.FirstOrDefault();
+                            if (pChange == null)
+                                continue;
+                            changeNames.Add(pChange.ChangeType.ToString());
+                            userNames.Add(remoteChange.Owner);
+                        }
+                        _listStore.SetValue(row, _changeList, string.Join(", ", changeNames));
+                        _listStore.SetValue(row, _userList, string.Join(", ", userNames));
+                    }
+                }
                 if (!IsMapped(serverPath))
                 {
                     _listStore.SetValue(row, _latestList, "Not mapped");
@@ -332,7 +360,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             if (_currentWorkspace == null)
                 return false;
-            return _currentWorkspace.Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.Ordinal));
+            return _currentWorkspace.IsServerPathMapped(serverPath);
         }
 
         private void ShowMappingPath(string serverPath)

@@ -105,54 +105,47 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #region Get Pending Changes
 
-        public PendingChange[] GetPendingChanges()
+        public List<PendingChange> GetPendingChanges()
         {
             return GetPendingChanges(VersionControlPath.RootFolder, RecursionType.Full);
         }
 
-        public PendingChange[] GetPendingChanges(string item)
+        public List<PendingChange> GetPendingChanges(string item)
         {
             return GetPendingChanges(item, RecursionType.None);
         }
 
-        public PendingChange[] GetPendingChanges(string item, RecursionType rtype)
+        public List<PendingChange> GetPendingChanges(string item, RecursionType rtype)
         {
             return GetPendingChanges(item, rtype, false);
         }
 
-        public PendingChange[] GetPendingChanges(string item, RecursionType rtype,
-                                                 bool includeDownloadInfo)
+        public List<PendingChange> GetPendingChanges(string item, RecursionType rtype,
+                                                     bool includeDownloadInfo)
         {
-            string[] items = new string[1];
-            items[0] = item;
+            string[] items = { item };
             return GetPendingChanges(items, rtype, includeDownloadInfo);
         }
 
-        public PendingChange[] GetPendingChanges(string[] items, RecursionType rtype)
+        public List<PendingChange> GetPendingChanges(string[] items, RecursionType rtype)
         {
             return GetPendingChanges(items, rtype, false);
         }
 
-        public PendingChange[] GetPendingChanges(string[] items, RecursionType rtype,
-                                                 bool includeDownloadInfo)
+        public List<PendingChange> GetPendingChanges(string[] items, RecursionType rtype,
+                                                     bool includeDownloadInfo)
         {
+
             throw new NotImplementedException();
-//            List<ItemSpec> itemSpecs = new List<ItemSpec>();
-//            foreach (string item in items)
-//            {
-//                itemSpecs.Add(new ItemSpec(item, rtype));
-//            }
-//
-//            Failure[] failures = null;
-//            PendingChange[] changes = Repository.QueryPendingSets(Name, OwnerName, Name, OwnerName,
-//                                          itemSpecs.ToArray(), includeDownloadInfo,
-//                                          out failures);
-//            foreach (Failure failure in failures)
-//            {
-//                Console.WriteLine(failure.ToString());
-//            }
-//
-//            return changes;
+//            var itemSpecs = new List<ItemSpec>(items.Select(i => new ItemSpec(i, rtype)));
+//            var res = this.VersionControlService.QueryPendingSets(Name, OwnerName, Name, OwnerName, itemSpecs.ToArray(), includeDownloadInfo);
+//            return res.Item1;
+        }
+
+        public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
+        {
+            ItemSpec[] items = { new ItemSpec(item, recurse) };
+            return this.VersionControlService.QueryPendingSets(this.Name, this.OwnerName, string.Empty, string.Empty, items, false);
         }
 
         #endregion
@@ -265,57 +258,37 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public List<List<ExtendedItem>> GetExtendedItems(ItemSpec[] itemSpecs,
-                                                         DeletedState deletedState,
-                                                         ItemType itemType)
+        public List<ExtendedItem> GetExtendedItems(ItemSpec[] itemSpecs,
+                                                   DeletedState deletedState,
+                                                   ItemType itemType)
         {
-            throw new NotImplementedException();
-//            return Repository.QueryItemsExtended(Name, OwnerName,
-//                itemSpecs, deletedState, itemType);
+            return this.VersionControlService.QueryItemsExtended(this.Name, this.OwnerName, itemSpecs, deletedState, itemType);
         }
 
         public string GetServerItemForLocalItem(string localItem)
         {
-            throw new NotImplementedException();
-//            string item = TryGetServerItemForLocalItem(localItem);
-//            if (item == null)
-//                throw new ItemNotMappedException(localItem);
-//            return item;
+            string item = TryGetServerItemForLocalItem(localItem);
+            if (item == null)
+                throw new ItemNotMappedException(localItem);
+            return item;
         }
 
         public string GetLocalItemForServerItem(string serverItem)
         {
-            throw new NotImplementedException();
-//            string item = TryGetLocalItemForServerItem(serverItem);
-//            if (item == null)
-//                throw new ItemNotMappedException(serverItem);
-//            return item;
+            string item = TryGetLocalItemForServerItem(serverItem);
+            if (item == null)
+                throw new ItemNotMappedException(serverItem);
+            return item;
         }
 
         public bool IsLocalPathMapped(string localPath)
         {
-            throw new NotImplementedException();
-
-//            foreach (WorkingFolder workingFolder in Folders)
-//            {
-//                if (localPath.StartsWith(workingFolder.LocalItem))
-//                    return true;
-//            }
-//
-//            return false;
+            return Folders.Any(f => localPath.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
         }
 
         public bool IsServerPathMapped(string serverPath)
         {
-            throw new NotImplementedException();
-            
-//            foreach (WorkingFolder workingFolder in Folders)
-//            {
-//                if (serverPath.StartsWith(workingFolder.ServerItem, StringComparison.OrdinalIgnoreCase))
-//                    return true;
-//            }
-//
-//            return false;
+            return Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
         }
 
         public void Map(string teamProject, string sourceProject)

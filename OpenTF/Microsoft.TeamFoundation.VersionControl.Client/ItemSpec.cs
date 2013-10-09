@@ -54,9 +54,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.DeletionId = deletionId;
         }
 
-        internal XElement ToXml(string element = "ItemSpec")
+        internal XElement ToXml(XName element)
         {
-            XElement result = new XElement(XmlNamespaces.GetMessageElementName(element));
+            XElement result = new XElement(element);
             if (this.RecursionType != RecursionType.None)
                 result.Add(new XAttribute("recurse", RecursionType));
             if (this.DeletionId != 0)

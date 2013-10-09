@@ -121,6 +121,9 @@
     <Compile Include="TfsVersionControlService.cs" />
     <Compile Include="VersionControlServiceResolver.cs" />
     <Compile Include="DownloadService.cs" />
+    <Compile Include="GetItemOptions.cs" />
+    <Compile Include="SeverityType.cs" />
+    <Compile Include="PendingSet.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

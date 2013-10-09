@@ -45,8 +45,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             return new XElement(element, 
                 new XAttribute("ex", Exclude.ToLowString()),
-                ItemSpec.ToXml(),
-                Version.ToXml(XmlNamespaces.GetMessageElementName("Version")));
+                ItemSpec.ToXml(element.Namespace + "ItemSpec"),
+                Version.ToXml(element.Namespace + "Version"));
         }
 
         public bool Exclude { get; set; }

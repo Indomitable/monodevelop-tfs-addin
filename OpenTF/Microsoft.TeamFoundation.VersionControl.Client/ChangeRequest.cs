@@ -81,9 +81,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public string Target { get; set; }
 
-        internal XElement ToXml()
+        internal XElement ToXml(XNamespace ns)
         {
-            var result = new XElement("ChangeRequest", 
+            var result = new XElement(ns + "ChangeRequest", 
                              new XAttribute("req", RequestType),
                              new XAttribute("type", ItemType));
 
@@ -100,7 +100,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 result.Add(new XAttribute("target", fxdTarget));
             }
 
-            result.Add(this.Item.ToXml("item"));
+            result.Add(this.Item.ToXml(ns + "item"));
             return result;
         }
     }

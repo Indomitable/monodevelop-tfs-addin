@@ -30,26 +30,18 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public enum ChangeType {
-				
-		None = 1,
-				
-		Add = 2,
-				
-		Edit = 4,
-				
-		Encoding = 8,
-				
-		Rename = 16,
-				
-		Delete = 32,
-				
-		Undelete = 64,
-				
-		Branch = 128,
-				
-		Merge = 256,
-				
-		Lock = 512,
-	}
+    [Flags]
+    public enum ChangeType
+    {
+        None = 1,
+        Add = 2,
+        Edit = 4,
+        Encoding = 8,
+        Rename = 16,
+        Delete = 32,
+        Undelete = 64,
+        Branch = 128,
+        Merge = 256,
+        Lock = 512,
+    }
 }

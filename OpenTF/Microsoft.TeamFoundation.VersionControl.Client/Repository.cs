@@ -38,6 +38,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.Common;
 using System.Xml.XPath;
+using System.CodeDom;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -651,52 +652,54 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                     DeletedState deletedState, ItemType itemType,
                                     bool generateDownloadUrls)
         {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItems");
-            if (!string.IsNullOrEmpty(workspaceName))
-                msg.AddParam("workspaceName", workspaceName);
-            if (!string.IsNullOrEmpty(workspaceOwner))
-                msg.AddParam("workspaceOwner", workspaceOwner);
-
-            msg.AddParam("items", itemSpecs.Select(itemSpec => itemSpec.ToXml()));
-        
-            msg.AddParam(versionSpec.ToXml(XmlNamespaces.GetMessageElementName("version")));
-            msg.AddParam("deletedState", deletedState);
-            msg.AddParam("itemType", itemType);
-            msg.AddParam("generateDownloadUrls", generateDownloadUrls.ToLowString());
-        
-            List<ItemSet> itemSet = new List<ItemSet>();
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                itemSet.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("ItemSet")).Select(el => ItemSet.FromXml(el)));
-            }
-        
-            return itemSet.ToArray();
+            throw new NotImplementedException();
+//            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItems");
+//            if (!string.IsNullOrEmpty(workspaceName))
+//                msg.AddParam("workspaceName", workspaceName);
+//            if (!string.IsNullOrEmpty(workspaceOwner))
+//                msg.AddParam("workspaceOwner", workspaceOwner);
+//
+//            msg.AddParam("items", itemSpecs.Select(itemSpec => itemSpec.ToXml()));
+//        
+//            msg.AddParam(versionSpec.ToXml(XmlNamespaces.GetMessageElementName("version")));
+//            msg.AddParam("deletedState", deletedState);
+//            msg.AddParam("itemType", itemType);
+//            msg.AddParam("generateDownloadUrls", generateDownloadUrls.ToLowString());
+//        
+//            List<ItemSet> itemSet = new List<ItemSet>();
+//            using (HttpWebResponse response = Invoke(msg))
+//            {
+//                XElement result = msg.ResponseReader(response);
+//                itemSet.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("ItemSet")).Select(el => ItemSet.FromXml(el)));
+//            }
+//        
+//            return itemSet.ToArray();
         }
 
         public List<List<ExtendedItem>> QueryItemsExtended(string workspaceName, string workspaceOwner,
                                                            ItemSpec[] itemSpecs,
                                                            DeletedState deletedState, ItemType itemType)
         {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItemsExtended");
-            if (!string.IsNullOrEmpty(workspaceName))
-                msg.AddParam("workspaceName", workspaceName);
-            if (!string.IsNullOrEmpty(workspaceOwner))
-                msg.AddParam("workspaceOwner", workspaceOwner);
-            msg.AddParam("items", itemSpecs.Select(its => its.ToXml()));
-            msg.AddParam("deletedState", deletedState.ToString());
-            msg.AddParam("itemType", itemType.ToString());
-        
-            List<List<ExtendedItem>> listOfItemArrays = new List<List<ExtendedItem>>();
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                XElement result = msg.ResponseReader(response);
-                foreach (var item in result.Elements(XmlNamespaces.GetMessageElementName("ArrayOfExtendedItem")))
-                {
-                    listOfItemArrays.Add(new List<ExtendedItem>(item.Elements(XmlNamespaces.GetMessageElementName("ExtendedItem")).Select(el => ExtendedItem.FromXml(el))));
-                }
-            }
-            return listOfItemArrays;
+            throw new NotImplementedException();
+//            Message msg = new Message(GetWebRequest(new Uri(Url)), "QueryItemsExtended");
+//            if (!string.IsNullOrEmpty(workspaceName))
+//                msg.AddParam("workspaceName", workspaceName);
+//            if (!string.IsNullOrEmpty(workspaceOwner))
+//                msg.AddParam("workspaceOwner", workspaceOwner);
+//            msg.AddParam("items", itemSpecs.Select(its => its.ToXml()));
+//            msg.AddParam("deletedState", deletedState.ToString());
+//            msg.AddParam("itemType", itemType.ToString());
+//        
+//            List<List<ExtendedItem>> listOfItemArrays = new List<List<ExtendedItem>>();
+//            using (HttpWebResponse response = Invoke(msg))
+//            {
+//                XElement result = msg.ResponseReader(response);
+//                foreach (var item in result.Elements(XmlNamespaces.GetMessageElementName("ArrayOfExtendedItem")))
+//                {
+//                    listOfItemArrays.Add(new List<ExtendedItem>(item.Elements(XmlNamespaces.GetMessageElementName("ExtendedItem")).Select(el => ExtendedItem.FromXml(el))));
+//                }
+//            }
+//            return listOfItemArrays;
         }
 
         public VersionControlLabel[] QueryLabels(string workspaceName, string workspaceOwner,

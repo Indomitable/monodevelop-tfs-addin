@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -30,16 +31,31 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public enum RequestType
-	{
-    None,
-    Add,
-    Branch,
-    Encoding,
-    Edit,
-    Delete,
-    Lock,
-    Rename,
-    Undelete,
-	}
+    //<s:simpleType name="RequestType">
+    //    <s:restriction base="s:string">
+    //        <s:enumeration value="None"/>
+    //        <s:enumeration value="Add"/>
+    //        <s:enumeration value="Branch"/>
+    //        <s:enumeration value="Encoding"/>
+    //        <s:enumeration value="Edit"/>
+    //        <s:enumeration value="Delete"/>
+    //        <s:enumeration value="Lock"/>
+    //        <s:enumeration value="Rename"/>
+    //        <s:enumeration value="Undelete"/>
+    //        <s:enumeration value="Property"/>
+    //    </s:restriction>
+    //</s:simpleType>
+    public enum RequestType
+    {
+        None,
+        Add,
+        Branch,
+        Encoding,
+        Edit,
+        Delete,
+        Lock,
+        Rename,
+        Undelete,
+        Property
+    }
 }

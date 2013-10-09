@@ -23,6 +23,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using Microsoft.TeamFoundation.Client;
+using MonoDevelop.VersionControl.TFS.Helpers;
+using System.Linq;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -54,6 +57,15 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (path.IsNullOrEmpty)
                 return null;
+            foreach (var server in TFSVersionControlService.Instance.Servers)
+            {
+                foreach (var collection in server.ProjectCollections)
+                {
+                    var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
+                    if (workspaces.Any(w => w.IsLocalPathMapped(path)))
+                        return new TFSRepository();
+                }
+            }
             return null;
         }
     }

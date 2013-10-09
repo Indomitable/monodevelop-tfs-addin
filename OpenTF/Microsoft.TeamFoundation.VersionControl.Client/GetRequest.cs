@@ -64,7 +64,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             XElement result = new XElement(ns + "GetRequest");
             if (ItemSpec != null)
-                result.Add(ItemSpec.ToXml());
+                result.Add(ItemSpec.ToXml(ns + "ItemSpec"));
             result.Add(VersionSpec.ToXml(ns + "VersionSpec"));
             return result;
         }
