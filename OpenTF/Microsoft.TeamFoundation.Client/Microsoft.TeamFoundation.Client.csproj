@@ -49,11 +49,7 @@
     <Compile Include="Services\ServerStatusService.cs" />
     <Compile Include="Services\LocationService.cs" />
     <Compile Include="Services\CommonStructureService.cs" />
-    <Compile Include="Services\BaseVersionControlService.cs" />
     <Compile Include="Services\TfsService.cs" />
-    <Compile Include="Services\Resolvers\CommonStructureServiceResolver.cs" />
-    <Compile Include="Services\Resolvers\ServerStatusResolver.cs" />
-    <Compile Include="Services\Resolvers\VersionControlServiceResolver.cs" />
     <Compile Include="ProjectInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

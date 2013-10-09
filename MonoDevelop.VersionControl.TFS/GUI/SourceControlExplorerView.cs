@@ -222,7 +222,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var versionControl = projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var versionControl = projectCollection.GetService<TfsVersionControlService>();
             var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
@@ -236,9 +236,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             _listStore.Clear();
 
-            var versionControl = projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var versionControl = projectCollection.GetService<TfsVersionControlService>();
             var itemSet = versionControl.QueryItemsExtended(this._currentWorkspace, new ItemSpec(serverPath, RecursionType.OneLevel), DeletedState.NonDeleted, ItemType.Any);
-            //var itemSet1 = versionControl.GetItems(serverPath, RecursionType.OneLevel);
             foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {
                 var row = _listStore.AddRow();

@@ -49,9 +49,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int LocalVersion { get; private set; }
 
-        public XElement ToXml()
+        public XElement ToXml(XNamespace ns)
         {
-            var el = new XElement(XmlNamespaces.GetMessageElementName("LocalVersionUpdate"),
+            var el = new XElement(ns + "LocalVersionUpdate",
                          new XAttribute("itemid", ItemId),
                          new XAttribute("lver", LocalVersion));
             if (!string.IsNullOrEmpty(TargetLocalItem))
@@ -85,11 +85,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             updates.Add(new Update(itemId, targetLocalItem, localVersion));
         }
 
-        internal IEnumerable<XElement> ToXml()
+        internal IEnumerable<XElement> ToXml(XNamespace ns)
         {
-            yield return new XElement(XmlNamespaces.GetMessageElementName("workspaceName"), workspace.Name);
-            yield return new XElement(XmlNamespaces.GetMessageElementName("ownerName"), workspace.OwnerName);
-            yield return new XElement(XmlNamespaces.GetMessageElementName("updates"), updates.Select(u => u.ToXml()));
+            yield return new XElement(ns + "workspaceName", workspace.Name);
+            yield return new XElement(ns + "ownerName", workspace.OwnerName);
+            yield return new XElement(ns + "updates", updates.Select(u => u.ToXml(ns)));
         }
 
         public override string ToString()

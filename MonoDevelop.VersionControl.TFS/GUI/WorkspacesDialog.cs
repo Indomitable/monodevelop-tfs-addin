@@ -131,7 +131,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             if (_listView.SelectedRow > -1 &&
                 MessageService.Confirm(GettextCatalog.GetString("Are you sure you want to delete selected workspace?"), AlertButton.Yes))
             {
-                var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+                var versionControl = this.projectCollection.GetService<TfsVersionControlService>();
                 var name = _listStore.GetValue(_listView.SelectedRow, _name);
                 var owner = _listStore.GetValue(_listView.SelectedRow, _owner);
                 versionControl.DeleteWorkspace(name, owner);
@@ -344,7 +344,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             try
             {
-                var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+                var versionControl = this.projectCollection.GetService<TfsVersionControlService>();
                 switch (_action)
                 {
                     case DialogAction.Create:
@@ -425,7 +425,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public void FillTreeView()
         {
             _treeStore.Clear();
-            var versionControl = this.projectCollection.GetService<TfsVersionControlService>(new VersionControlServiceResolver());
+            var versionControl = this.projectCollection.GetService<TfsVersionControlService>();
             var items = versionControl.QueryItems(new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
             var root = ItemSetToHierarchItemConverter.Convert(items);
             var node = _treeStore.AddNode().SetValue(_name, root.Name).SetValue(_path, root.ServerPath);

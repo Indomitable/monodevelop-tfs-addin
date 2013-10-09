@@ -65,31 +65,8 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 XDocument doc = new XDocument();
                 doc.Add(new XElement("TFSRoot"));
-                var serversEl = new XElement("Servers");
-
-                foreach (var server in _registredServers)
-                {
-//                    var serverEl = new XElement("Server", 
-//                                       new XAttribute("Name", server.Name),
-//                                       new XAttribute("Url", server.Uri),  
-//                                       from col in server.ProjectCollections
-//                                                         select new XElement("ProjectCollection", 
-//                                                                 new XAttribute("Id", col.Id), 
-//                                                                 new XAttribute("Url", col.Url),
-//                            //new XAttribute("Workspace", _activeWorkspaces.ContainsKey(col.Id) ? _activeWorkspaces[col.Id] : string.Empty),
-//                                                                 from p in col.Projects
-//                                                                                      select new XElement("Project", 
-//                                                                                              new XAttribute("Name", p.Name))));
-
-                    serversEl.Add(server.ToLocalXml());
-                }
-                doc.Root.Add(serversEl);
-                var workspacesEl = new XElement("Workspaces");
-                foreach (var workspace in _activeWorkspaces)
-                {
-                    workspacesEl.Add(new XElement("Workspace", new XAttribute("Id", workspace.Key), new XAttribute("Name", workspace.Value)));
-                }
-                doc.Root.Add(workspacesEl);
+                doc.Root.Add(new XElement("Servers", _registredServers.Select(x => x.ToLocalXml())));
+                doc.Root.Add(new XElement("Workspaces", _activeWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
                 doc.Save(file);
                 file.Close();
             }
@@ -114,32 +91,6 @@ namespace MonoDevelop.VersionControl.TFS
                     {
                         _activeWorkspaces.Add(workspace.Attribute("Id").Value, workspace.Attribute("Name").Value);
                     }
-//                    foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
-//                    {
-//                        var name = serverElement.Attribute("Name").Value;
-//                        var uri = new Uri(serverElement.Attribute("Url").Value);
-//                        var credentials = CredentialsManager.LoadCredential(uri);
-//                        var server = new TeamFoundationServer(uri, name, credentials);
-//                        try
-//                        {
-//                            var collections = new List<XElement>(serverElement.Elements("ProjectCollection"));
-//                            server.LoadProjectConnections(collections.Select(x => x.Attribute("Id").Value).ToList());
-//                            foreach (var collection in server.ProjectCollections)
-//                            {
-//                                var projects = serverElement.XPathSelectElements("./ProjectCollection[@Id='" + collection.Id + "']/Project");
-//                                collection.LoadProjects(projects.Select(x => x.Attribute("Name").Value).ToList());
-//                                var collection1 = collection;
-//                                var collectionElement = collections.Single(x => string.Equals(x.Attribute("Id").Value, collection1.Id));
-//                                _activeWorkspaces.Add(collection.Id, collectionElement.Attribute("Workspace") == null ? string.Empty : collectionElement.Attribute("Workspace").Value);
-//                            }
-//                            _registredServers.Add(server);
-//                        }
-//                        catch
-//                        {
-//                            continue;
-//                        }
-//
-//                    }
                     file.Close();
                 }
             }

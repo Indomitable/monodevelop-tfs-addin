@@ -37,18 +37,18 @@ namespace Microsoft.TeamFoundation.Client
             this.collection = collection;
         }
 
-        internal T LoadService<T>(IServiceResolver resolver)
+        internal T LoadService<T>()
             where T: TfsService
         {
             SoapInvoker invoker = new SoapInvoker(collection.LocationServiceUrl, collection.Server.Credentials);
             var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
             invoker.CreateEnvelope("QueryServices", serviceNs);
             var resultEl = invoker.Invoke();
-            var serviceEl = resultEl.XPathSelectElement(string.Format("./msg:ServiceDefinitions/msg:ServiceDefinition[@identifier='{0}']", resolver.Id), 
+            T service = Activator.CreateInstance<T>();
+            var serviceEl = resultEl.XPathSelectElement(string.Format("./msg:ServiceDefinitions/msg:ServiceDefinition[@identifier='{0}']", service.ServiceResolver.Id), 
                                 TeamFoundationServerServiceMessage.NsResolver);
             if (serviceEl == null)
                 throw new Exception("Service not found");
-            T service = Activator.CreateInstance<T>();
             service.Collection = this.collection;
             service.RelativeUrl = serviceEl.Attribute("relativePath").Value;
             return service;

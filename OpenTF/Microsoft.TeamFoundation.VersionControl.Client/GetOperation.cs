@@ -56,7 +56,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int VersionServer { get; private set; }
 
-        public Uri ArtifactUri { get; private set; }
+        public string ArtifactUri { get; private set; }
 
         public LockLevel LockLevel { get; private set; }
         //<s:complexType name="GetOperation">
@@ -89,7 +89,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //    <s:attribute default="-2" name="enc" type="s:int"/>
         //    <s:attribute default="0001-01-01T00:00:00" name="vsd" type="s:dateTime"/>
         //</s:complexType>
-        internal static GetOperation FromXml(string itemUrl, XElement element)
+        internal static GetOperation FromXml(XElement element)
         {
             GetOperation getOperation = new GetOperation
             {
@@ -125,7 +125,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             // setup download url if found
             if (!string.IsNullOrEmpty(element.GetAttribute("durl")))
-                getOperation.ArtifactUri = new Uri(String.Format("{0}?{1}", itemUrl, element.Attribute("durl").Value));
+                getOperation.ArtifactUri = element.Attribute("durl").Value;
 
             // here's what you get if you remap a working folder from one
             // team project to another team project with the same file

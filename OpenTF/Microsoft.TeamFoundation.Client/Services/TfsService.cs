@@ -45,7 +45,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public abstract XNamespace MessageNs { get; }
 
-        protected IXmlNamespaceResolver Resolver
+        protected IXmlNamespaceResolver NsResolver
         {
             get
             {
@@ -55,7 +55,10 @@ namespace Microsoft.TeamFoundation.Client
             }
         }
 
+        public abstract IServiceResolver ServiceResolver { get; }
+
         private SoapInvoker invoker = null;
+
         public SoapInvoker Invoker
         {
             get

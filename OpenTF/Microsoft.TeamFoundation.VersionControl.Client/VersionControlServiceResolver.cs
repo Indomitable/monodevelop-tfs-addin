@@ -1,5 +1,5 @@
 //
-// BaseVersionControlService.cs
+// VersionControlServiceResolver.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,19 +23,27 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
 
-namespace Microsoft.TeamFoundation.Client.Services
+using Microsoft.TeamFoundation.Client;
+
+namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public abstract class BaseVersionControlService : TfsService
+    public class VersionControlServiceResolver : IServiceResolver
     {
-        public override System.Xml.Linq.XNamespace MessageNs
+        public string Id
         {
             get
             {
-                return "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
+                return "b2b178f5-bef9-460d-a5cf-35bcc0281cc4";
+            }
+        }
+
+        public string ServiceType
+        {
+            get
+            {
+                return "ISCCProvider";
             }
         }
     }
 }
-

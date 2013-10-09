@@ -23,18 +23,31 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.Client.Services;
 using System.Xml.Linq;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.TeamFoundation.Common;
+using System.Xml.XPath;
+using Microsoft.TeamFoundation.Client;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class TfsVersionControlService : BaseVersionControlService
+    public class TfsVersionControlService : TfsService
     {
-        public TfsVersionControlService()
+        public override System.Xml.Linq.XNamespace MessageNs
         {
+            get
+            {
+                return "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03";
+            }
+        }
+
+        public override IServiceResolver ServiceResolver
+        {
+            get
+            {
+                return new VersionControlServiceResolver();
+            }
         }
 
         #region Workspaces
@@ -101,7 +114,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue)
         {
             var msg = Invoker.CreateEnvelope("UpdateLocalVersion");
-            foreach (var el in updateLocalVersionQueue.ToXml())
+            foreach (var el in updateLocalVersionQueue.ToXml(MessageNs))
             {
                 msg.Add(el);
             }
@@ -153,6 +166,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                      DeletedState deletedState, ItemType itemType, 
                                      bool includeDownloadInfo)
         {
+            if (workspace == null)
+                return QueryItems(itemSpec, versionSpec, deletedState, itemType, includeDownloadInfo);
             return QueryItems(workspace.Name, workspace.OwnerName, new [] { itemSpec }, versionSpec, deletedState, itemType, includeDownloadInfo);
         }
         //    <QueryItemsExtended xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03">
@@ -183,11 +198,36 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public List<ExtendedItem> QueryItemsExtended(Workspace workspace, ItemSpec itemSpec,
                                                      DeletedState deletedState, ItemType itemType)
         {
+            if (workspace == null)
+                return QueryItemsExtended(string.Empty, string.Empty, new [] { itemSpec }, deletedState, itemType);
             return QueryItemsExtended(workspace.Name, workspace.OwnerName, new [] { itemSpec }, deletedState, itemType);
         }
 
         #endregion
 
+        internal List<GetOperation> Get(Workspace workspace,
+                                        GetRequest[] requests, bool force, bool noGet)
+        {
+            if (workspace == null)
+                throw new System.ArgumentNullException("workspace");
+            var msg = Invoker.CreateEnvelope("Get");
+            msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
+            msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "requests", requests.Select(r => r.ToXml(MessageNs))));
+            if (force)
+                msg.Add(new XElement(MessageNs + "force", force.ToLowString()));
+            if (noGet)
+                msg.Add(new XElement(MessageNs + "noGet", noGet.ToLowString()));
+
+            List<GetOperation> operations = new List<GetOperation>();
+            var result = Invoker.Invoke();
+
+            foreach (var operation in result.XPathSelectElements("msg:ArrayOfGetOperation/msg:GetOperation", NsResolver))
+            {
+                operations.Add(GetOperation.FromXml(operation));
+            }
+            return operations;
+        }
     }
 }
 

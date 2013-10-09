@@ -29,11 +29,38 @@ namespace Microsoft.TeamFoundation.Client
 {
     public class ServerStatusService : TfsService
     {
+        class ServerStatusResolver : IServiceResolver
+        {
+            public string Id
+            {
+                get
+                {
+                    return "d395630a-d784-45b9-b8d1-f4b82042a8d0";
+                }
+            }
+
+            public string ServiceType
+            {
+                get
+                {
+                    return "ServerStatus";
+                }
+            }
+        }
+
         public override System.Xml.Linq.XNamespace MessageNs
         {
             get
             {
                 return "http://schemas.microsoft.com/TeamFoundation/2005/06/Services/ServerStatus/03";
+            }
+        }
+
+        public override IServiceResolver ServiceResolver
+        {
+            get
+            {
+                return new ServerStatusResolver();
             }
         }
     }

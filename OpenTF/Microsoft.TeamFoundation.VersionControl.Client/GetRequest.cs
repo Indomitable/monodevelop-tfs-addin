@@ -60,12 +60,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public VersionSpec VersionSpec { get; private set; }
 
-        internal XElement ToXml()
+        internal XElement ToXml(XNamespace ns)
         {
-            XElement result = new XElement(XmlNamespaces.GetMessageElementName("GetRequest"));
+            XElement result = new XElement(ns + "GetRequest");
             if (ItemSpec != null)
                 result.Add(ItemSpec.ToXml());
-            result.Add(VersionSpec.ToXml(XmlNamespaces.GetMessageElementName("VersionSpec")));
+            result.Add(VersionSpec.ToXml(ns + "VersionSpec"));
             return result;
         }
     }

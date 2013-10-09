@@ -419,25 +419,26 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public List<GetOperation> Get(string workspaceName, string ownerName,
                                       GetRequest[] requests, bool force, bool noGet)
         {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "Get");
-            msg.AddParam("workspaceName", workspaceName);
-            msg.AddParam("ownerName", ownerName);
-            msg.AddParam(new XElement(XmlNamespaces.GetMessageElementName("requests"), requests.Select(r => r.ToXml())));
-            if (force)
-                msg.AddParam("force", force.ToLowString());
-            if (noGet)
-                msg.AddParam("noGet", noGet.ToLowString());
-
-            List<GetOperation> operations = new List<GetOperation>();
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                var result = msg.ResponseReader(response);
-                foreach (var operation in result.XPathSelectElements("msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver))
-                {
-                    operations.Add(GetOperation.FromXml(ItemUrl, operation));
-                }
-            }
-            return operations;
+            throw new NotImplementedException();
+//            Message msg = new Message(GetWebRequest(new Uri(Url)), "Get");
+//            msg.AddParam("workspaceName", workspaceName);
+//            msg.AddParam("ownerName", ownerName);
+//            msg.AddParam(new XElement(XmlNamespaces.GetMessageElementName("requests"), requests.Select(r => r.ToXml())));
+//            if (force)
+//                msg.AddParam("force", force.ToLowString());
+//            if (noGet)
+//                msg.AddParam("noGet", noGet.ToLowString());
+//
+//            List<GetOperation> operations = new List<GetOperation>();
+//            using (HttpWebResponse response = Invoke(msg))
+//            {
+//                var result = msg.ResponseReader(response);
+//                foreach (var operation in result.XPathSelectElements("msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver))
+//                {
+//                    operations.Add(GetOperation.FromXml(ItemUrl, operation));
+//                }
+//            }
+//            return operations;
         }
 
         public RepositoryProperties GetRepositoryProperties()
@@ -974,15 +975,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public void UpdateLocalVersion(UpdateLocalVersionQueue queue)
         {
-            Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateLocalVersion");
-            foreach (var el in queue.ToXml())
-            {
-                msg.AddParam(el);
-            }
-            using (HttpWebResponse response = Invoke(msg))
-            {
-                response.Close();
-            }
+            throw new NotImplementedException();
+//            Message msg = new Message(GetWebRequest(new Uri(Url)), "UpdateLocalVersion");
+//            foreach (var el in queue.ToXml())
+//            {
+//                msg.AddParam(el);
+//            }
+//            using (HttpWebResponse response = Invoke(msg))
+//            {
+//                response.Close();
+//            }
         }
 
         public VersionControlServer VersionControlServer { get { return versionControlServer; } }

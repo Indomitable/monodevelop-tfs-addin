@@ -31,11 +31,38 @@ namespace Microsoft.TeamFoundation.Client
 {
     public class CommonStructureService : TfsService
     {
+        class CommonStructureServiceResolver : IServiceResolver
+        {
+            public string Id
+            {
+                get
+                {
+                    return "d9c3f8ff-8938-4193-919b-7588e81cb730";
+                }
+            }
+
+            public string ServiceType
+            {
+                get
+                {
+                    return "CommonStructure";
+                }
+            }
+        }
+
         public override System.Xml.Linq.XNamespace MessageNs
         {
             get
             {
                 return "http://schemas.microsoft.com/TeamFoundation/2005/06/Services/Classification/03";
+            }
+        }
+
+        public override IServiceResolver ServiceResolver
+        {
+            get
+            {
+                return new CommonStructureServiceResolver();
             }
         }
 

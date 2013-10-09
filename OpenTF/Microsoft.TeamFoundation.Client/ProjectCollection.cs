@@ -89,13 +89,15 @@ namespace Microsoft.TeamFoundation.Client
 
         public void LoadProjects()
         {
-            this.Projects = this.CommonStructure.ListAllProjects();
+            var commonStructureService = this.GetService<CommonStructureService>();
+            this.Projects = commonStructureService.ListAllProjects();
             this.Projects.Sort();
         }
 
         public void LoadProjects(List<string> names)
         {
-            this.Projects = this.CommonStructure.ListAllProjects().Where(pi => names.Any(n => string.Equals(pi.Name, n))).ToList();
+            var commonStructureService = this.GetService<CommonStructureService>();
+            this.Projects = commonStructureService.ListAllProjects().Where(pi => names.Any(n => string.Equals(pi.Name, n))).ToList();
             this.Projects.Sort();
         }
 
@@ -103,26 +105,10 @@ namespace Microsoft.TeamFoundation.Client
 
         public TeamFoundationServer Server { get; set; }
 
-        public T GetService<T>(IServiceResolver resolver)
+        public T GetService<T>()
             where T : TfsService
         {
-            return locationService.LoadService<T>(resolver);
-        }
-
-        public ServerStatusService ServerStatus
-        {
-            get
-            {
-                return locationService.LoadService<ServerStatusService>(new ServerStatusResolver());
-            }
-        }
-
-        public CommonStructureService CommonStructure
-        {
-            get
-            {
-                return locationService.LoadService<CommonStructureService>(new CommonStructureServiceResolver());
-            }
+            return locationService.LoadService<T>();
         }
 
         #region Equal

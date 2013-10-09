@@ -29,17 +29,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Xml;
-using System.Web.Services;
 using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation.VersionControl.Common;
-using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class VersionControlServer : BaseVersionControlService
+    public sealed class VersionControlServer
     {
         private Repository repository;
         private string authenticatedUser;
@@ -275,7 +270,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            return new Workspace(this, info.Name, info.OwnerName,
 //                info.Comment, new WorkingFolder[0], Workstation.Current.Name);
         }
-
 
         public IEnumerable QueryHistory(string path, VersionSpec version,
                                         int deletionId, RecursionType recursion,

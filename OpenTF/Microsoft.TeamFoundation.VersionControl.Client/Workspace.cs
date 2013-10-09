@@ -198,90 +198,69 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public GetStatus Get(GetRequest[] requests, GetOptions options)
         {
-            throw new NotImplementedException();
-//            bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
-//            bool noGet = false; // not implemented below: ((GetOptions.Preview & options) == GetOptions.Preview);
-//
-//            SortedList<int, DateTime> changesetDates = new SortedList<int, DateTime>();
-//            var getOperations = Repository.Get(Name, OwnerName, requests, force, noGet);
-//
-//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-//            foreach (GetOperation getOperation in getOperations)
-//            {
-//                GettingEventArgs args = new GettingEventArgs(this, getOperation);
-//
-//                if (getOperation.DeletionId != 0)
-//                {
-//                    if ((getOperation.ItemType == ItemType.Folder) &&
-//                        (Directory.Exists(getOperation.SourceLocalItem)))
-//                    {
-//                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
-//                        Directory.Delete(getOperation.SourceLocalItem, true);
-//                    }
-//                    else if ((getOperation.ItemType == ItemType.File) &&
-//                             (File.Exists(getOperation.SourceLocalItem)))
-//                    {
-//                        UnsetFileAttributes(getOperation.SourceLocalItem);
-//                        File.Delete(getOperation.SourceLocalItem);
-//                    }
-//                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
-//                }
-//                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
-//                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
-//                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
-//                {
-//                    try
-//                    {
-//                        File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
-//                    }
-//                    catch (IOException)
-//                    {
-//                        args.Status = OperationStatus.TargetIsDirectory;
-//                    }
-//                    updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-//                }
-//                else if (getOperation.ChangeType == ChangeType.None &&
-//                         getOperation.VersionServer != 0)
-//                {
-//                    string path = getOperation.TargetLocalItem;
-//                    string directory = path;
-//
-//                    if (getOperation.ItemType == ItemType.File)
-//                        directory = Path.GetDirectoryName(path);
-//
-//                    if (!Directory.Exists(directory))
-//                        Directory.CreateDirectory(directory);
-//
-//                    if (getOperation.ItemType == ItemType.File)
-//                    {
-//                        DownloadFile.WriteTo(path, Repository, getOperation.ArtifactUri);
-//
-//                        // ChangesetMtimes functionality : none standard!
-//                        if (true)
-//                        {
-//                            int cid = getOperation.VersionServer;
-//                            DateTime modDate;
-//
-//                            if (!changesetDates.TryGetValue(cid, out modDate))
-//                            {
-//                                Changeset changeset = VersionControlServer.GetChangeset(cid);
-//                                modDate = changeset.CreationDate;
-//                                changesetDates.Add(cid, modDate);
-//                            }
-//
-//                            File.SetLastWriteTime(path, modDate);
-//                        }
-//
-//                        // do this after setting the last write time!
-//                        SetFileAttributes(path);
-//                    }
-//                    updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
-//                }
-//                //versionControlServer.OnDownloading(args);
-//            }
-//
-//            updates.Flush();
-//            return new GetStatus(getOperations.Count);
+            bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
+            bool noGet = ((GetOptions.Preview & options) == GetOptions.Preview);
+
+            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);
+            var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
+
+            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+            foreach (GetOperation getOperation in getOperations)
+            {
+                GettingEventArgs args = new GettingEventArgs(this, getOperation);
+
+                if (getOperation.DeletionId != 0)
+                {
+                    if ((getOperation.ItemType == ItemType.Folder) &&
+                        (Directory.Exists(getOperation.SourceLocalItem)))
+                    {
+                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
+                        Directory.Delete(getOperation.SourceLocalItem, true);
+                    }
+                    else if ((getOperation.ItemType == ItemType.File) &&
+                             (File.Exists(getOperation.SourceLocalItem)))
+                        {
+                            UnsetFileAttributes(getOperation.SourceLocalItem);
+                            File.Delete(getOperation.SourceLocalItem);
+                        }
+                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
+                }
+                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
+                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
+                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
+                    {
+                        try
+                        {
+                            File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
+                        }
+                        catch (IOException)
+                        {
+                            args.Status = OperationStatus.TargetIsDirectory;
+                        }
+                        updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
+                    }
+                    else if (getOperation.ChangeType == ChangeType.None &&
+                             getOperation.VersionServer != 0)
+                        {
+                            string path = getOperation.TargetLocalItem;
+                            string directory = path;
+
+                            if (getOperation.ItemType == ItemType.File)
+                                directory = Path.GetDirectoryName(path);
+
+                            if (!Directory.Exists(directory))
+                                Directory.CreateDirectory(directory);
+
+                            if (getOperation.ItemType == ItemType.File)
+                            {
+                                downloadService.Download(path, getOperation.ArtifactUri);
+                                SetFileAttributes(path);
+                            }
+                            updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
+                        }
+            }
+            updates.Flush();
+            return new GetStatus(getOperations.Count);
         }
 
         #endregion

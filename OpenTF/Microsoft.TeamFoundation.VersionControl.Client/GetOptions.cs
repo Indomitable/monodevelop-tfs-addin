@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,22 +28,17 @@
 //
 
 using System;
-using System.Net;
-using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	/// <remarks/>
-	[System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
-	public enum GetOptions {
-				
-		GetAll,
-				
-		None,
-				
-		Overwrite,
-
-		Preview,
-	}
+    [Flags]
+    public enum GetOptions
+    {
+        None = 0,
+        Overwrite = 1,
+        GetAll = 2,
+        Preview = 4,
+        Remap = 8,
+    }
 }
 
