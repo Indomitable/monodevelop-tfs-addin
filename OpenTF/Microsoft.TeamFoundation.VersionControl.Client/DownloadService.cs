@@ -28,7 +28,6 @@ using Microsoft.TeamFoundation.Client;
 using System.Net;
 using System.IO;
 using System.IO.Compression;
-using System.Diagnostics;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -73,29 +72,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public void Download(string path, string artifactUri)
+        public string DownloadToTemp(string artifactUri)
         {
-            WebClient client = new WebClient();
-            client.Credentials = this.Collection.Server.Credentials;
-            string tempFileName = Path.GetTempFileName();
             try
             {
+                WebClient client = new WebClient();
+                client.Credentials = this.Collection.Server.Credentials;
+                string tempFileName = Path.GetTempFileName();
                 UriBuilder bulder = new UriBuilder(this.Url);
                 bulder.Query = artifactUri;
                 client.DownloadFile(bulder.Uri, tempFileName);
 
-                if (File.Exists(path))
-                {
-                    File.SetAttributes(path, FileAttributes.Normal);
-                    File.Delete(path);
-                }
-
-
                 if (string.Equals(client.ResponseHeaders[HttpResponseHeader.ContentType], "application/gzip"))
                 {
+                    string newTempFileName = Path.GetTempFileName();
                     using (var inStream = new GZipStream(File.OpenRead(tempFileName), CompressionMode.Decompress))
                     {
-                        using (var outStream = File.Create(path))
+                        using (var outStream = File.Create(newTempFileName))
                         {
                             inStream.CopyTo(outStream);
                             outStream.Flush();
@@ -103,17 +96,34 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         }
                         inStream.Close();
                     }
+                    File.Delete(tempFileName); //Delete zipped tmp.
+                    return newTempFileName;
                 }
                 else
                 {
-                    File.Move(tempFileName, path);
+                    return tempFileName;
                 }
             }
-            finally
+            catch
             {
-                if (File.Exists(tempFileName))
-                    File.Delete(tempFileName);
+                return string.Empty;
             }
+        }
+
+        public void Download(string path, string artifactUri)
+        {
+            var tempPath = this.DownloadToTemp(artifactUri);
+            if (string.IsNullOrEmpty(tempPath))
+                return;
+
+            if (File.Exists(path))
+            {
+                File.SetAttributes(path, FileAttributes.Normal);
+                File.Delete(path);
+            }
+
+            File.Move(tempPath, path);
+            File.Delete(tempPath);
         }
     }
 }

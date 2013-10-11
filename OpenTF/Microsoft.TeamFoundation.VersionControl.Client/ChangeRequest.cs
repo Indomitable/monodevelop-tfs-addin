@@ -32,54 +32,42 @@ using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
+    //<s:complexType name="ChangeRequest">
+    //    <s:sequence>
+    //        <s:element minOccurs="0" maxOccurs="1" name="item" type="tns:ItemSpec"/>
+    //        <s:element minOccurs="0" maxOccurs="1" name="vspec" type="tns:VersionSpec"/>
+    //        <s:element minOccurs="0" maxOccurs="1" name="Properties" type="tns:ArrayOfPropertyValue"/>
+    //    </s:sequence>
+    //    <s:attribute default="None" name="req" type="tns:RequestType"/>
+    //    <s:attribute default="0" name="did" type="s:int"/>
+    //    <s:attribute default="-2" name="enc" type="s:int"/>
+    //    <s:attribute default="Any" name="type" type="tns:ItemType"/>
+    //    <s:attribute default="Unchanged" name="lock" type="tns:LockLevel"/>
+    //    <s:attribute name="target" type="s:string"/>
+    //    <s:attribute default="Any" name="targettype" type="tns:ItemType"/>
+    //</s:complexType>
     internal class ChangeRequest
     {
-        // used to be -2
-        private readonly LockLevel lockLevel = LockLevel.None;
-        private readonly ItemSpec item;
-        private readonly VersionSpec versionSpec = VersionSpec.Latest;
-
-        public ChangeRequest(string path, RequestType requestType, ItemType itemType)
+        public ChangeRequest(string path, RequestType requestType, ItemType itemType,
+                             RecursionType recursion, LockLevel lockLevel, VersionSpec version)
         {
-            this.item = new ItemSpec(path, RecursionType.None);
+            this.Item = new ItemSpec(path, recursion);
             this.RequestType = requestType;
             this.ItemType = itemType;
+            this.LockLevel = lockLevel;
+            this.VersionSpec = version;
         }
 
-        public ChangeRequest(string path, RequestType requestType, ItemType itemType,
-                             RecursionType recursion, LockLevel lockLevel)
+        public ChangeRequest(string path, RequestType requestType, ItemType itemType)
+            : this(path, requestType, itemType, RecursionType.None, LockLevel.None, VersionSpec.Latest)
         {
-            this.item = new ItemSpec(path, recursion);
-            this.RequestType = requestType;
-            this.ItemType = itemType;
-            this.lockLevel = lockLevel;
         }
 
         public ChangeRequest(string path, string target, RequestType requestType, ItemType itemType)
+            : this(path, requestType, itemType)
         {
-            this.item = new ItemSpec(path, RecursionType.None);
             this.Target = target;
-            this.RequestType = requestType;
-            this.ItemType = itemType;
         }
-
-        public LockLevel LockLevel { get { return lockLevel; } }
-
-        public ItemSpec Item { get { return item; } }
-
-        public VersionSpec VersionSpec { get { return versionSpec; } }
-
-        public ItemType ItemType { get; set; }
-
-        public ItemType TargetType { get; set; }
-
-        public RequestType RequestType { get; set; }
-
-        public int DeletionId { get; set; }
-
-        public int Encoding { get; set; }
-
-        public string Target { get; set; }
 
         internal XElement ToXml(XNamespace ns)
         {
@@ -101,8 +89,28 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
 
             result.Add(this.Item.ToXml(ns + "item"));
+            result.Add(this.VersionSpec.ToXml(ns + "vspec"));
+
             return result;
         }
+
+        public LockLevel LockLevel { get; private set; }
+
+        public ItemSpec Item { get; private set; }
+
+        public VersionSpec VersionSpec { get; private set; }
+
+        public ItemType ItemType { get; set; }
+
+        public ItemType TargetType { get; set; }
+
+        public RequestType RequestType { get; set; }
+
+        public int DeletionId { get; set; }
+
+        public int Encoding { get; set; }
+
+        public string Target { get; set; }
     }
 }
 

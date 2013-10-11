@@ -75,7 +75,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             List<Workspace> workspaces = new List<Workspace>();
             XElement result = Invoker.Invoke();
-            workspaces.AddRange(result.Elements(XmlNamespaces.GetMessageElementName("Workspace")).Select(el => Workspace.FromXml(this, el)));
+            workspaces.AddRange(result.Elements(MessageNs + "Workspace").Select(el => Workspace.FromXml(this, el)));
             workspaces.Sort();
             return workspaces;
         }
@@ -195,7 +195,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             msg.Add(new XElement(MessageNs + "itemType", itemType));
 
             var result = Invoker.Invoke();
-            File.AppendAllText("/home/vmladenov/res_" + itemSpecs[0].Item + ".txt", result.ToString());
             return result.Descendants(MessageNs + "ExtendedItem").Select(ExtendedItem.FromXml).ToList();
         }
 
@@ -253,6 +252,84 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            var changes = new List<PendingChange>(pendingChangesElements.Select(el => PendingChange.FromXml(el)));
 //            var faillist = new List<Failure>(failuresElements.Select(el => Failure.FromXml(el)));
 //            return new Tuple<List<PendingChange>, List<Failure>>(changes, faillist);
+        }
+        //    <PendChanges xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03">
+        //      <workspaceName>string</workspaceName>
+        //      <ownerName>string</ownerName>
+        //      <changes>
+        //        <ChangeRequest req="None or Add or Branch or Encoding or Edit or Delete or Lock or Rename or Undelete or Property" did="int" enc="int" type="Any or Folder or File" lock="None or Checkin or CheckOut or Unchanged" target="string" targettype="Any or Folder or File">
+        //          <item item="string" recurse="None or OneLevel or Full" did="int" />
+        //          <vspec />
+        //          <Properties>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </Properties>
+        //        </ChangeRequest>
+        //        <ChangeRequest req="None or Add or Branch or Encoding or Edit or Delete or Lock or Rename or Undelete or Property" did="int" enc="int" type="Any or Folder or File" lock="None or Checkin or CheckOut or Unchanged" target="string" targettype="Any or Folder or File">
+        //          <item item="string" recurse="None or OneLevel or Full" did="int" />
+        //          <vspec />
+        //          <Properties>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </Properties>
+        //        </ChangeRequest>
+        //      </changes>
+        //      <pendChangesOptions>int</pendChangesOptions>
+        //      <supportedFeatures>int</supportedFeatures>
+        //    </PendChanges>
+        //      <PendChangesResult>
+        //        <GetOperation type="Any or Folder or File" itemid="int" slocal="string" tlocal="string" titem="string" sitem="string" sver="int" vrevto="int" lver="int" did="int" chgEx="int" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" lock="None or Checkin or CheckOut or Unchanged" il="boolean" pcid="int" cnflct="boolean" cnflctchg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" cnflctchgEx="int" cnflctitemid="int" nmscnflct="unsignedByte" durl="string" enc="int" vsd="dateTime">
+        //          <HashValue>base64Binary</HashValue>
+        //          <Properties>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </Properties>
+        //          <PropertyValues>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </PropertyValues>
+        //        </GetOperation>
+        //        <GetOperation type="Any or Folder or File" itemid="int" slocal="string" tlocal="string" titem="string" sitem="string" sver="int" vrevto="int" lver="int" did="int" chgEx="int" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" lock="None or Checkin or CheckOut or Unchanged" il="boolean" pcid="int" cnflct="boolean" cnflctchg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" cnflctchgEx="int" cnflctitemid="int" nmscnflct="unsignedByte" durl="string" enc="int" vsd="dateTime">
+        //          <HashValue>base64Binary</HashValue>
+        //          <Properties>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </Properties>
+        //          <PropertyValues>
+        //            <PropertyValue xsi:nil="true" />
+        //            <PropertyValue xsi:nil="true" />
+        //          </PropertyValues>
+        //        </GetOperation>
+        //      </PendChangesResult>
+        internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest)
+        {
+            var msg = Invoker.CreateEnvelope("PendChanges");
+            msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
+            msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "changes", changeRequest.Select(x => x.ToXml(MessageNs))));
+            var result = Invoker.Invoke();
+            return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
+        }
+
+        internal List<GetOperation> UndoPendChanges(Workspace workspace, List<ItemSpec> itemSpecs)
+        {
+            var msg = Invoker.CreateEnvelope("UndoPendingChanges");
+            msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
+            msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(x => x.ToXml(MessageNs + "ItemSpec"))));
+            var result = Invoker.Invoke();
+            return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
+        }
+
+        public List<PendingChange> QueryPendingChangesForWorkspace(Workspace workspace, List<ItemSpec> itemSpecs, bool includeDownloadInfo)
+        {
+            var msg = Invoker.CreateEnvelope("QueryPendingChangesForWorkspace");
+            msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
+            msg.Add(new XElement(MessageNs + "workspaceOwner", workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "itemSpecs", itemSpecs.Select(i => i.ToXml(MessageNs + "ItemSpec"))));
+            msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadInfo.ToLowString()));
+            var result = Invoker.Invoke();
+            return result.Elements(MessageNs + "PendingChange").Select(PendingChange.FromXml).ToList();
         }
     }
 }

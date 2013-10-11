@@ -8,12 +8,11 @@ namespace MonoDevelop.VersionControl.TFS.Tests
     [TestFixture]
     public class TFSRepositoryTests
     {
-        private TFSRepository _repository;
-
+        //private TFSRepository _repository;
         [SetUp]
         public void CreateRepository()
         {
-            _repository = new TFSRepository();
+            //_repository = new TFSRepository();
         }
 
         [Test]

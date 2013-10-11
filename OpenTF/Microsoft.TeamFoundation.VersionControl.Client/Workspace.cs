@@ -34,28 +34,17 @@ using System.Text;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
+using Microsoft.TeamFoundation.Client;
+using System.CodeDom;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
     {
-        //        public static readonly string XmlElementName = "Workspace";
-        //        private string comment;
-        //        private string computer;
-        //        private string name;
-        //        private string ownerName;
-        //        private DateTime lastAccessDate;
-        //        private WorkingFolder[] folders;
-        //        private VersionControlService service;
-        internal Workspace()
+        private Workspace(string name, 
+                          string ownerName, string comment, 
+                          WorkingFolder[] folders, string computer)
         {
-        }
-
-        internal Workspace(TfsVersionControlService service, string name, 
-                           string ownerName, string comment, 
-                           WorkingFolder[] folders, string computer) : this()
-        {
-            this.VersionControlService = service;
             this.Name = name;
             this.OwnerName = ownerName;
             this.Comment = comment;
@@ -63,8 +52,31 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.Computer = computer;
         }
 
-        public Workspace(TfsVersionControlService service, WorkspaceData workspaceData) 
-            : this(service, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
+        public Workspace(TfsVersionControlService versionControl, string name, 
+                         string ownerName, string comment, 
+                         WorkingFolder[] folders, string computer) 
+            : this(name, ownerName, comment, folders, computer)
+        {
+            this.ProjectCollection = versionControl.Collection;
+            this.VersionControlService = versionControl;
+        }
+
+        public Workspace(ProjectCollection collection, string name, 
+                         string ownerName, string comment, 
+                         WorkingFolder[] folders, string computer)
+            : this(name, ownerName, comment, folders, computer)
+        {
+            this.ProjectCollection = collection;
+            this.VersionControlService = collection.GetService<TfsVersionControlService>();
+        }
+
+        public Workspace(TfsVersionControlService versionControl, WorkspaceData workspaceData) 
+            : this(versionControl, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
+        {
+        }
+
+        public Workspace(ProjectCollection collection, WorkspaceData workspaceData) 
+            : this(collection, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
         {
         }
 
@@ -136,10 +148,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                      bool includeDownloadInfo)
         {
 
-            throw new NotImplementedException();
-//            var itemSpecs = new List<ItemSpec>(items.Select(i => new ItemSpec(i, rtype)));
-//            var res = this.VersionControlService.QueryPendingSets(Name, OwnerName, Name, OwnerName, itemSpecs.ToArray(), includeDownloadInfo);
-//            return res.Item1;
+            var itemSpecs = new List<ItemSpec>(items.Select(i => new ItemSpec(i, rtype)));
+            return this.VersionControlService.QueryPendingChangesForWorkspace(this, itemSpecs, includeDownloadInfo);
         }
 
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
@@ -194,69 +204,33 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
             bool noGet = ((GetOptions.Preview & options) == GetOptions.Preview);
 
-            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);
-            var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
-
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-            foreach (GetOperation getOperation in getOperations)
-            {
-                GettingEventArgs args = new GettingEventArgs(this, getOperation);
-
-                if (getOperation.DeletionId != 0)
-                {
-                    if ((getOperation.ItemType == ItemType.Folder) &&
-                        (Directory.Exists(getOperation.SourceLocalItem)))
-                    {
-                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
-                        Directory.Delete(getOperation.SourceLocalItem, true);
-                    }
-                    else if ((getOperation.ItemType == ItemType.File) &&
-                             (File.Exists(getOperation.SourceLocalItem)))
-                        {
-                            UnsetFileAttributes(getOperation.SourceLocalItem);
-                            File.Delete(getOperation.SourceLocalItem);
-                        }
-                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
-                }
-                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
-                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
-                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
-                    {
-                        try
-                        {
-                            File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
-                        }
-                        catch (IOException)
-                        {
-                            args.Status = OperationStatus.TargetIsDirectory;
-                        }
-                        updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-                    }
-                    else if (getOperation.ChangeType == ChangeType.None &&
-                             getOperation.VersionServer != 0)
-                        {
-                            string path = getOperation.TargetLocalItem;
-                            string directory = path;
-
-                            if (getOperation.ItemType == ItemType.File)
-                                directory = Path.GetDirectoryName(path);
-
-                            if (!Directory.Exists(directory))
-                                Directory.CreateDirectory(directory);
-
-                            if (getOperation.ItemType == ItemType.File)
-                            {
-                                downloadService.Download(path, getOperation.ArtifactUri);
-                                SetFileAttributes(path);
-                            }
-                            updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
-                        }
-            }
-            updates.Flush();
+            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
+            ProcessGetOperations(getOperations);
             return new GetStatus(getOperations.Count);
         }
 
         #endregion
+
+        #region GetItems
+
+        public Item GetItem(string path, ItemType itemType)
+        {
+            return GetItem(path, itemType, false);
+        }
+
+        public Item GetItem(string path, ItemType itemType, bool includeDownloadUrl)
+        {
+            var itemSpec = new ItemSpec(path, RecursionType.None);
+            var items = this.VersionControlService.QueryItems(this, itemSpec, VersionSpec.Latest, DeletedState.Any, itemType, includeDownloadUrl);
+            return items.SingleOrDefault();
+        }
+
+        public ExtendedItem GetExtendedItem(string path, ItemType itemType)
+        {
+            var itemSpec = new ItemSpec(path, RecursionType.None);
+            var items = this.VersionControlService.QueryItemsExtended(this, itemSpec, DeletedState.Any, itemType);
+            return items.SingleOrDefault();
+        }
 
         public List<ExtendedItem> GetExtendedItems(ItemSpec[] itemSpecs,
                                                    DeletedState deletedState,
@@ -265,20 +239,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return this.VersionControlService.QueryItemsExtended(this.Name, this.OwnerName, itemSpecs, deletedState, itemType);
         }
 
-        public string GetServerItemForLocalItem(string localItem)
-        {
-            string item = TryGetServerItemForLocalItem(localItem);
-            if (item == null)
-                throw new ItemNotMappedException(localItem);
-            return item;
-        }
+        #endregion
 
-        public string GetLocalItemForServerItem(string serverItem)
+        /// <summary>
+        /// Checkouts the file, marked it as pending for editing.
+        /// </summary>
+        /// <param name="localPath">Local path.</param>
+        public void CheckOutFile(string localPath)
         {
-            string item = TryGetLocalItemForServerItem(serverItem);
-            if (item == null)
-                throw new ItemNotMappedException(serverItem);
-            return item;
+            var serverFile = TryGetServerItemForLocalItem(localPath);
+            if (serverFile == null) //Not Mapped
+                return;
+            var item = this.GetItem(serverFile, ItemType.File);
+            if (item == null) //Not Versionned
+                return;
+            this.PendEdit(item.ServerPath);
         }
 
         public bool IsLocalPathMapped(string localPath)
@@ -289,6 +264,54 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public bool IsServerPathMapped(string serverPath)
         {
             return Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public string TryGetServerItemForLocalItem(string localItem)
+        {
+            var mappedFolder = Folders.FirstOrDefault(f => localItem.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
+            if (mappedFolder == null)
+                return null;
+            if (string.Equals(mappedFolder.LocalItem, localItem, StringComparison.OrdinalIgnoreCase))
+                return mappedFolder.ServerItem;
+            else
+            {
+                string rest = TfsPath.LocalToServerPath(localItem.Substring(mappedFolder.LocalItem.Length));
+                return mappedFolder.ServerItem + rest;
+            }
+        }
+
+        public string TryGetLocalItemForServerItem(string serverItem)
+        {
+            var mappedFolder = Folders.FirstOrDefault(f => serverItem.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
+            if (mappedFolder == null)
+                return null;
+            if (string.Equals(serverItem, mappedFolder.ServerItem, StringComparison.OrdinalIgnoreCase))
+                return mappedFolder.LocalItem;
+            else
+            {
+                string rest = TfsPath.ServerToLocalPath(serverItem.Substring(mappedFolder.ServerItem.Length + 1));
+                return Path.Combine(mappedFolder.LocalItem, rest);
+            }
+        }
+
+        public WorkingFolder TryGetWorkingFolderForServerItem(string serverItem)
+        {
+            int maxPath = 0;
+            WorkingFolder workingFolder = null;
+
+            foreach (WorkingFolder folder in Folders)
+            {
+                if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+
+                if (folder.LocalItem.Length > maxPath)
+                {
+                    workingFolder = folder;
+                    maxPath = folder.LocalItem.Length;
+                }
+            }
+
+            return workingFolder;
         }
 
         public void Map(string teamProject, string sourceProject)
@@ -431,23 +454,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int PendEdit(string[] paths, RecursionType recursionType)
         {
-            throw new NotImplementedException();
-//            List<ChangeRequest> changes = new List<ChangeRequest>();
-//            foreach (string path in paths)
-//            {
-//                changes.Add(new ChangeRequest(path, RequestType.Edit, ItemType.File));
-//            }
-//
-//            if (changes.Count == 0)
-//                return 0;
-//
-//            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
-//            foreach (GetOperation getOperation in getOperations)
-//            {
-//                UnsetFileAttributes(getOperation.TargetLocalItem);
-//            }
-//
-//            return getOperations.Length;
+            List<ChangeRequest> changes = new List<ChangeRequest>();
+            foreach (string path in paths)
+            {
+                changes.Add(new ChangeRequest(path, RequestType.Edit, ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest));
+            }
+
+            if (changes.Count == 0)
+                return 0;
+
+            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            ProcessGetOperations(getOperations);
+            foreach (GetOperation getOperation in getOperations)
+            {
+                UnsetFileAttributes(getOperation.TargetLocalItem);
+            }
+            return getOperations.Count;
         }
 
         public int PendRename(string oldPath, string newPath)
@@ -541,7 +563,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
         }
 
-        internal static Workspace FromXml(TfsVersionControlService service, XElement element)
+        internal static Workspace FromXml(TfsVersionControlService versionControl, XElement element)
         {
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
@@ -554,7 +576,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                          .Elements(XmlNamespaces.GetMessageElementName("WorkingFolder"))
                                                          .Select(el => WorkingFolder.FromXml(el)));
 
-            return new Workspace(service, name, owner, comment, folders.ToArray(), computer)
+            return new Workspace(versionControl, name, owner, comment, folders.ToArray(), computer)
             { 
                 LastAccessDate = lastAccessDate 
             };
@@ -609,70 +631,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return sb.ToString();
         }
 
-        public string TryGetServerItemForLocalItem(string localItem)
-        {
-            string serverItem = null;
-            int longest = 0;
-
-            // find the longest matching serveritem 
-            foreach (WorkingFolder folder in Folders)
-            {
-                //Console.WriteLine("item: {0} =? folder: {1}", localItem, folder.LocalItem);
-                if (!localItem.StartsWith(folder.LocalItem, StringComparison.InvariantCultureIgnoreCase))
-                    continue;
-
-                int clen = folder.LocalItem.Length;
-                if (clen > longest)
-                {
-                    serverItem = String.Format("{0}{1}", folder.ServerItem, localItem.Substring(clen));
-                    longest = clen;
-                }
-            }
-
-            return serverItem;
-        }
-
-        public string TryGetLocalItemForServerItem(string serverItem)
-        {
-            string localItem = null;
-            int longest = 0;
-
-            foreach (WorkingFolder folder in Folders)
-            {
-                if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
-                    continue;
-
-                int clen = folder.ServerItem.Length;
-                if (clen > longest)
-                {
-                    localItem = String.Format("{0}{1}", folder.LocalItem, serverItem.Substring(clen));
-                    longest = clen;
-                }
-            }
-				
-            return localItem;
-        }
-
-        public WorkingFolder TryGetWorkingFolderForServerItem(string serverItem)
-        {
-            int maxPath = 0;
-            WorkingFolder workingFolder = null;
-
-            foreach (WorkingFolder folder in Folders)
-            {
-                if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
-                    continue;
-
-                if (folder.LocalItem.Length > maxPath)
-                {
-                    workingFolder = folder;
-                    maxPath = folder.LocalItem.Length;
-                }
-            }
-				
-            return workingFolder;
-        }
-
         public int Undo(string path)
         {
             return Undo(path, RecursionType.None);
@@ -687,45 +645,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int Undo(string[] paths, RecursionType recursionType)
         {
-            throw new NotImplementedException();
-//            List<ItemSpec> specs = new List<ItemSpec>();
-//
-//            foreach (string path in paths)
-//            {
-//                specs.Add(new ItemSpec(path, recursionType));
-//            }
-//
-//            // is this the same logic as a workspace Get? 
-//            // can we make one function to handle both cases?
-//
-//            GetOperation[] getOperations = Repository.UndoPendingChanges(Name, OwnerName, specs.ToArray());
-//            foreach (GetOperation getOperation in getOperations)
-//            {
-//                if (getOperation.ChangeType == ChangeType.Edit ||
-//                    getOperation.ChangeType == ChangeType.Delete)
-//                {
-//                    string uPath = getOperation.TargetLocalItem;
-//                    string directory = uPath;
-//
-//                    if (getOperation.ItemType == ItemType.File)
-//                        directory = Path.GetDirectoryName(uPath);
-//
-//                    // directory is null if file is deleted on server, you haven't that
-//                    // version yet, you've marked it deleted locally, then you try to 
-//                    // undo because it won't you let you checkin the delete because
-//                    // its already deleted on the server
-//                    if (!Directory.Exists(directory) && !String.IsNullOrEmpty(directory))
-//                        Directory.CreateDirectory(directory);
-//
-//                    if (getOperation.ItemType == ItemType.File)
-//                    {
-//                        DownloadFile.WriteTo(uPath, Repository, getOperation.ArtifactUri);
-//                        SetFileAttributes(uPath);
-//                    }
-//                }
-//            }
-//
-//            return getOperations.Length;
+            List<ItemSpec> specs = new List<ItemSpec>();
+
+            foreach (string path in paths)
+            {
+                specs.Add(new ItemSpec(path, recursionType));
+            }
+            var operations = this.VersionControlService.UndoPendChanges(this, specs);
+            ProcessUndoGetOperations(operations);
+            return operations.Count;
         }
 
         public void Update(string newName, string newComment, WorkingFolder[] newMappings)
@@ -757,6 +685,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public DateTime LastAccessDate { get; private set; }
 
         public string OwnerName { get; private set; }
+
+        public ProjectCollection ProjectCollection { get; set; }
 
         public TfsVersionControlService VersionControlService { get; set; }
 
@@ -834,5 +764,70 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion Equal
 
+        private void ProcessGetOperations(List<GetOperation> getOperations)
+        {
+            var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
+            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+            foreach (GetOperation getOperation in getOperations)
+            {
+                GettingEventArgs args = new GettingEventArgs(this, getOperation);
+
+                if (getOperation.DeletionId != 0)
+                {
+                    if ((getOperation.ItemType == ItemType.Folder) &&
+                        (Directory.Exists(getOperation.SourceLocalItem)))
+                    {
+                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
+                        Directory.Delete(getOperation.SourceLocalItem, true);
+                    }
+                    else if ((getOperation.ItemType == ItemType.File) &&
+                             (File.Exists(getOperation.SourceLocalItem)))
+                        {
+                            UnsetFileAttributes(getOperation.SourceLocalItem);
+                            File.Delete(getOperation.SourceLocalItem);
+                        }
+                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
+                }
+                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
+                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
+                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
+                    {
+                        try
+                        {
+                            File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
+                        }
+                        catch (IOException)
+                        {
+                            args.Status = OperationStatus.TargetIsDirectory;
+                        }
+                        updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
+                    }
+                    else if (getOperation.ChangeType == ChangeType.None &&
+                             getOperation.VersionServer != 0)
+                        {
+                            string path = getOperation.TargetLocalItem;
+                            string directory = path;
+
+                            if (getOperation.ItemType == ItemType.File)
+                                directory = Path.GetDirectoryName(path);
+
+                            if (!Directory.Exists(directory))
+                                Directory.CreateDirectory(directory);
+
+                            if (getOperation.ItemType == ItemType.File)
+                            {
+                                downloadService.Download(path, getOperation.ArtifactUri);
+                                SetFileAttributes(path);
+                            }
+                            updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
+                        }
+            }
+            updates.Flush();
+        }
+
+        private void ProcessUndoGetOperations(List<GetOperation> getOperations)
+        {
+            this.ProcessGetOperations(getOperations);
+        }
     }
 }

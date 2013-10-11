@@ -1,5 +1,5 @@
 //
-// ServerEntry.cs
+// TfsRevision.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -27,11 +27,22 @@ using System;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
-    public class ServerEntry
+    public class TfsRevision : Revision
     {
-        public string Name { get; set; }
+        public TfsRevision(Repository repo) : base(repo)
+        {
+            
+        }
 
-        public Uri Url { get; set; }
+        #region implemented abstract members of Revision
+
+        public override Revision GetPrevious()
+        {
+            return new TfsRevision(this.Repository);
+        }
+
+        #endregion
+
     }
 }
 

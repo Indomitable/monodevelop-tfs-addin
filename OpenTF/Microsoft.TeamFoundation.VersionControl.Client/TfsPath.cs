@@ -28,21 +28,29 @@
 //
 
 using System;
+using System.Runtime.ConstrainedExecution;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     static class TfsPath
     {
-        private static bool runningOnUnix = true;
+        static bool IsRunningUnix
+        {
+            get
+            {
+                int p = (int)Environment.OSVersion.Platform;
+                return (p == 4) || (p == 6) || (p == 128);
+            }
+        }
+
+        private static bool isRunningOnUnix = true;
         public static StringComparison PlatformComparison = StringComparison.InvariantCulture;
 
         static TfsPath()
         {
-            int p = (int)Environment.OSVersion.Platform;
-            if (!((p == 4) || (p == 128)))
-                runningOnUnix = false;
+            isRunningOnUnix = IsRunningUnix;
 
-            if (!runningOnUnix)
+            if (!isRunningOnUnix)
                 PlatformComparison = StringComparison.InvariantCultureIgnoreCase;
         }
 
@@ -52,7 +60,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return path;
 
             // TFS servers corrupt *nix type paths
-            if (!runningOnUnix)
+            if (!isRunningOnUnix)
                 return path;
             return path.Remove(0, 2).Replace('\\', '/');
         }
@@ -63,9 +71,29 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return path;
 
             // TFS servers corrupt *nix type paths
-            if (!runningOnUnix)
+            if (!isRunningOnUnix)
                 return path;
             return "U:" + path.Replace('/', '\\'); //Use U: like git-tf
+        }
+
+        public static string ServerToLocalPath(string path)
+        {
+            //tfs uses / for server paths and \ for localpaths
+            if (!isRunningOnUnix)
+            {
+                path = path.Replace('/', '\\');
+            }
+            return path;
+        }
+
+        public static string LocalToServerPath(string path)
+        {
+            //tfs uses / for server paths and \ for localpaths
+            if (!isRunningOnUnix)
+            {
+                path = path.Replace('\\', '/');
+            }
+            return path;
         }
     }
 }
