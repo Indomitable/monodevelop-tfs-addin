@@ -26,10 +26,6 @@
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using System.Linq;
-using Xwt;
-using MonoDevelop.Ide;
-using MonoDevelop.Ide.Gui;
-using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace MonoDevelop.VersionControl.TFS
@@ -70,7 +66,7 @@ namespace MonoDevelop.VersionControl.TFS
                     var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
                     var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
                     if (workspace != null)
-                        return new TFSRepository(workspace);
+                        return new TFSRepository(workspace, path);
                 }
             }
             return null;

@@ -29,9 +29,6 @@ using System.Linq;
 using Microsoft.TeamFoundation.Common;
 using System.Xml.XPath;
 using Microsoft.TeamFoundation.Client;
-using System.IO;
-using System;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -184,7 +181,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //      <itemType>Any or Folder or File</itemType>
         //      <options>int</options>
         //    </QueryItemsExtended>
-        public List<ExtendedItem> QueryItemsExtended(string workspaceName, string workspaceOwner, ItemSpec[] itemSpecs,
+        public List<ExtendedItem> QueryItemsExtended(string workspaceName, string workspaceOwner, List<ItemSpec>  itemSpecs,
                                                      DeletedState deletedState, ItemType itemType)
         {
             var msg = Invoker.CreateEnvelope("QueryItemsExtended");
@@ -202,8 +199,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                      DeletedState deletedState, ItemType itemType)
         {
             if (workspace == null)
-                return QueryItemsExtended(string.Empty, string.Empty, new [] { itemSpec }, deletedState, itemType);
-            return QueryItemsExtended(workspace.Name, workspace.OwnerName, new [] { itemSpec }, deletedState, itemType);
+                return QueryItemsExtended(string.Empty, string.Empty, new List<ItemSpec> { itemSpec }, deletedState, itemType);
+            return QueryItemsExtended(workspace.Name, workspace.OwnerName, new List<ItemSpec> { itemSpec }, deletedState, itemType);
         }
 
         #endregion
@@ -330,6 +327,38 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadInfo.ToLowString()));
             var result = Invoker.Invoke();
             return result.Elements(MessageNs + "PendingChange").Select(PendingChange.FromXml).ToList();
+        }
+
+        public List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, 
+                                            VersionSpec versionFrom, VersionSpec versionTo, int maxCount = short.MaxValue)
+        {
+            var msg = Invoker.CreateEnvelope("QueryHistory");
+            msg.Add(item.ToXml(MessageNs + "itemSpec"));
+            msg.Add(versionItem.ToXml(MessageNs + "versionItem"));
+            if (versionFrom != null)
+                msg.Add(versionFrom.ToXml(MessageNs + "versionFrom"));
+            if (versionTo != null)
+                msg.Add(versionTo.ToXml(MessageNs + "versionTo"));
+            msg.Add(new XElement(MessageNs + "maxCount", maxCount));
+            msg.Add(new XElement(MessageNs + "includeFiles", false));
+            msg.Add(new XElement(MessageNs + "generateDownloadUrls", false));
+            msg.Add(new XElement(MessageNs + "slotMode", false));
+            msg.Add(new XElement(MessageNs + "sortAscending", false));
+
+            var result = Invoker.Invoke();
+            return result.Elements(MessageNs + "Changeset").Select(Changeset.FromXml).ToList();
+        }
+
+        public Changeset QueryChangeset(int changeSetId, bool includeChanges = false, bool includeDownloadUrls = false, bool includeSourceRenames = true)
+        {
+            var msg = Invoker.CreateEnvelope("QueryChangeset");
+            msg.Add(new XElement(MessageNs + "changesetId", changeSetId));
+            msg.Add(new XElement(MessageNs + "includeChanges", includeChanges));
+            msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadUrls));
+            msg.Add(new XElement(MessageNs + "includeSourceRenames", includeSourceRenames));
+
+            var result = Invoker.Invoke();
+            return Changeset.FromXml(result);
         }
     }
 }

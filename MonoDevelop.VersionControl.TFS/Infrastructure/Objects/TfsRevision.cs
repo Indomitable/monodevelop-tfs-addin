@@ -23,26 +23,50 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
     public class TfsRevision : Revision
     {
-        public TfsRevision(Repository repo) : base(repo)
+        public int Version { get; set; }
+
+        public TfsRevision(Repository repo, int version) : base(repo)
         {
-            
+            this.Version = version;
+        }
+
+        public TfsRevision(Repository repo, Changeset changeset) : this(repo, changeset.ChangesetId)
+        {
+            this.Author = changeset.Committer;
+            this.Message = changeset.Comment;
+            this.Time = changeset.CreationDate;
+        }
+
+        public void Load(TfsVersionControlService service)
+        {
+            var changeset = service.QueryChangeset(this.Version);
+            this.Author = changeset.Committer;
+            this.Message = changeset.Comment;
+            this.Time = changeset.CreationDate;
         }
 
         #region implemented abstract members of Revision
 
         public override Revision GetPrevious()
         {
-            return new TfsRevision(this.Repository);
+            if (this.Version > 2)
+                return new TfsRevision(this.Repository, this.Version - 1);
+            return null;
         }
 
         #endregion
 
+        public override string ToString()
+        {
+            return Convert.ToString(this.Version);
+        }
     }
 }
 

@@ -35,22 +35,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class Change
     {
-        private Item item;
-        private ChangeType changeType;
         //          <Change type="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" typeEx="int">
         //            <Item xsi:nil="true" />
         //            <MergeSources xsi:nil="true" />
         //          </Change>
-        internal static Change FromXml(Repository repository, XElement element)
+        internal static Change FromXml(XElement element)
         {
             Change change = new Change();
-
             if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
             {
-                change.changeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("type").Value.Replace(" ", ","), true);
+                change.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("type").Value.Replace(" ", ","), true);
             }
-            change.item = Item.FromXml(element.Element(XmlNamespaces.GetMessageElementName("Item")));
-
+            change.Item = Item.FromXml(element.Element(element.Name.Namespace + "Item"));
             return change;
         }
 
@@ -79,8 +75,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return sb.ToString();
         }
 
-        public ChangeType ChangeType { get { return changeType; } }
+        public ChangeType ChangeType { get; private set; }
 
-        public Item Item { get { return item; } }
+        public Item Item { get; private set; }
     }
 }

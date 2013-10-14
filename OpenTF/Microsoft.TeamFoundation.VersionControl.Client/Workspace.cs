@@ -232,7 +232,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return items.SingleOrDefault();
         }
 
-        public List<ExtendedItem> GetExtendedItems(ItemSpec[] itemSpecs,
+        public List<ExtendedItem> GetExtendedItems(List<ItemSpec> itemSpecs,
                                                    DeletedState deletedState,
                                                    ItemType itemType)
         {
@@ -467,7 +467,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             ProcessGetOperations(getOperations);
             foreach (GetOperation getOperation in getOperations)
             {
-                UnsetFileAttributes(getOperation.TargetLocalItem);
+                SetFileWritable(getOperation.TargetLocalItem);
             }
             return getOperations.Count;
         }
@@ -690,12 +690,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public TfsVersionControlService VersionControlService { get; set; }
 
-        internal void SetFileAttributes(string path)
+        internal void SetFileReadOnly(string path)
         {
             File.SetAttributes(path, FileAttributes.ReadOnly);
         }
 
-        internal void UnsetFileAttributes(string path)
+        internal void SetFileWritable(string path)
         {
             File.SetAttributes(path, FileAttributes.Normal);
         }
@@ -770,8 +770,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
             foreach (GetOperation getOperation in getOperations)
             {
-                GettingEventArgs args = new GettingEventArgs(this, getOperation);
-
                 if (getOperation.DeletionId != 0)
                 {
                     if ((getOperation.ItemType == ItemType.Folder) &&
@@ -783,7 +781,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                     else if ((getOperation.ItemType == ItemType.File) &&
                              (File.Exists(getOperation.SourceLocalItem)))
                         {
-                            UnsetFileAttributes(getOperation.SourceLocalItem);
+                            SetFileWritable(getOperation.SourceLocalItem);
                             File.Delete(getOperation.SourceLocalItem);
                         }
                     updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
@@ -798,7 +796,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         }
                         catch (IOException)
                         {
-                            args.Status = OperationStatus.TargetIsDirectory;
                         }
                         updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
                     }
@@ -817,7 +814,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                             if (getOperation.ItemType == ItemType.File)
                             {
                                 downloadService.Download(path, getOperation.ArtifactUri);
-                                SetFileAttributes(path);
+                                SetFileReadOnly(path);
                             }
                             updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
                         }
@@ -827,7 +824,39 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         private void ProcessUndoGetOperations(List<GetOperation> getOperations)
         {
-            this.ProcessGetOperations(getOperations);
+            var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
+            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+            foreach (GetOperation getOperation in getOperations)
+            {
+                switch (getOperation.ChangeType)
+                {
+                    case ChangeType.Edit:
+                        if (getOperation.ItemType == ItemType.File)
+                        {
+                            downloadService.Download(getOperation.TargetLocalItem, getOperation.ArtifactUri);
+                            SetFileReadOnly(getOperation.TargetLocalItem);
+                            updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
+                        }
+                        break;
+                    default:
+                        continue;
+                }
+            }
+            updates.Flush();
+        }
+
+        public string GetItemContent(Item item)
+        {
+            if (item == null || item.ItemType == ItemType.Folder)
+                return string.Empty;
+            if (item.DeletionId > 0)
+                return string.Empty;
+            var dowloadService = this.ProjectCollection.GetService<VersionControlDownloadService>();
+            var tempName = dowloadService.DownloadToTemp(item.ArtifactUri);
+            var text = item.Encoding > 0 ? File.ReadAllText(tempName, Encoding.GetEncoding(item.Encoding)) :
+                       File.ReadAllText(tempName);
+            File.Delete(tempName);
+            return text;
         }
     }
 }

@@ -175,6 +175,23 @@ namespace MonoDevelop.VersionControl.TFS.Tests
                 Console.WriteLine(responseDoc);
             }
         }
+
+        [Test]
+        public void QueryHistory()
+        {
+            var service = new ServiceChecker();
+            var request = service.CreateRequest("/TeamFoundation/Administration/v3.0/CatalogService.asmx");
+            XElement message;
+            var requestDoc = service.CreateEnvelope("QueryResourcesByType", ns, out message);
+            message.Add(new XElement(ns + "resourceTypes", new XElement(ns + "guid", "26338d9e-d437-44aa-91f2-55880a328b54")));
+            requestDoc.Save(request.GetRequestStream());
+            Console.WriteLine(requestDoc);
+            using (var response = service.GetResponse(request))
+            {
+                var responseDoc = XDocument.Load(response.GetResponseStream());
+                Console.WriteLine(responseDoc);
+            }
+        }
     }
 }
 
