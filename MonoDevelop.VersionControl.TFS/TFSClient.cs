@@ -27,14 +27,17 @@ using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using System.Collections.Generic;
+using MonoDevelop.Core;
 
 namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSClient : VersionControlSystem
     {
+        private TFSRepository repository;
+
         public TFSClient()
         {
-
         }
 
         #region implemented abstract members of VersionControlSystem
@@ -55,7 +58,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public override bool IsInstalled { get { return true; } }
 
-        public override Repository GetRepositoryReference(MonoDevelop.Core.FilePath path, string id)
+        public override Repository GetRepositoryReference(FilePath path, string id)
         {
             if (path.IsNullOrEmpty)
                 return null;
@@ -66,7 +69,11 @@ namespace MonoDevelop.VersionControl.TFS
                     var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
                     var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
                     if (workspace != null)
-                        return new TFSRepository(workspace, path);
+                    {
+                        var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService));
+                        result.AttachWorkspace(workspace);
+                        return result;
+                    }
                 }
             }
             return null;

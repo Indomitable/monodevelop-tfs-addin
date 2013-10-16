@@ -31,7 +31,6 @@ using System.Xml.Linq;
 using System;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using System.Xml.XPath;
 using System.Net;
 
 namespace MonoDevelop.VersionControl.TFS

@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
+using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
@@ -32,12 +33,16 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
     {
         public int Version { get; set; }
 
-        public TfsRevision(Repository repo, int version) : base(repo)
+        public string ItemPath { get; set; }
+
+        public TfsRevision(Repository repo, int version, string itemPath) : base(repo)
         {
             this.Version = version;
+            this.ItemPath = itemPath;
         }
 
-        public TfsRevision(Repository repo, Changeset changeset) : this(repo, changeset.ChangesetId)
+        public TfsRevision(Repository repo, string itemPath, Changeset changeset) : 
+            this(repo, changeset.ChangesetId, itemPath)
         {
             this.Author = changeset.Committer;
             this.Message = changeset.Comment;
@@ -56,8 +61,15 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 
         public override Revision GetPrevious()
         {
-            if (this.Version > 2)
-                return new TfsRevision(this.Repository, this.Version - 1);
+            var repo = (TFSRepository)this.Repository;
+            //var workspace = repo.GetWorkspaceByServerPath(ItemPath);
+            var changeSets = repo.VersionControlService.QueryHistory(new ItemSpec(ItemPath, RecursionType.None), 
+                                 new ChangesetVersionSpec(this.Version), null, 
+                                 new ChangesetVersionSpec(this.Version), 2);
+            if (changeSets.Count == 2)
+            {
+                return new TfsRevision(repo, ItemPath, changeSets[1]);
+            }
             return null;
         }
 

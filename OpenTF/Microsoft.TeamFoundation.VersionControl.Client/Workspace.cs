@@ -35,7 +35,6 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
-using System.CodeDom;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -115,7 +114,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            return cset;
         }
 
-        #region Get Pending Changes
+        #region Pending Changes
+
+        public List<PendingChange> PendingChanges { get; set; }
+
+        public void FillPendingChanges()
+        {
+            PendingChanges = new List<PendingChange>();
+            foreach (var wf in this.Folders)
+            {
+                PendingChanges.AddRange(GetPendingChanges(wf.LocalItem, RecursionType.Full));
+            }
+        }
 
         public List<PendingChange> GetPendingChanges()
         {
@@ -258,6 +268,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public bool IsLocalPathMapped(string localPath)
         {
+            if (localPath == null)
+                throw new ArgumentNullException("localPath");
             return Folders.Any(f => localPath.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
         }
 
@@ -266,7 +278,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
         }
 
-        public string TryGetServerItemForLocalItem(string localItem)
+        public VersionControlPath TryGetServerItemForLocalItem(string localItem)
         {
             var mappedFolder = Folders.FirstOrDefault(f => localItem.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
             if (mappedFolder == null)
@@ -599,36 +611,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("Workspace instance ");
-            sb.Append(GetHashCode());
-
-            sb.Append("\n	 Comment: ");
-            sb.Append(Comment);
-
-            sb.Append("\n	 LastAccessDate: ");
-            sb.Append(LastAccessDate);
-
-            sb.Append("\n	 Folders: ");
-            if (Folders != null)
-            {
-                foreach (WorkingFolder folder in Folders)
-                {
-                    sb.Append(folder.ToString());
-                }
-            }
-
-            sb.Append("\n	 Computer: ");
-            sb.Append(Computer);
-
-            sb.Append("\n	 Name: ");
-            sb.Append(Name);
-
-            sb.Append("\n	 OwnerName: ");
-            sb.Append(OwnerName);
-
-            return sb.ToString();
+            return "Owner: " + OwnerName + ", Name: " + Name;
         }
 
         public int Undo(string path)
@@ -638,12 +621,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int Undo(string path, RecursionType recursionType)
         {
-            string[] paths = new string[1];
-            paths[0] = path;
+            var paths = new List<string> { path };
             return Undo(paths, recursionType);
         }
 
-        public int Undo(string[] paths, RecursionType recursionType)
+        public int Undo(List<string> paths, RecursionType recursionType)
         {
             List<ItemSpec> specs = new List<ItemSpec>();
 
