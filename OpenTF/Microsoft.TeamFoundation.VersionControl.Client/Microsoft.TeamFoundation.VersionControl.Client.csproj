@@ -124,6 +124,7 @@
     <Compile Include="GetItemOptions.cs" />
     <Compile Include="SeverityType.cs" />
     <Compile Include="PendingSet.cs" />
+    <Compile Include="UploadService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -61,6 +61,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 
         public override Revision GetPrevious()
         {
+            if (this.Version <= 0)
+                return null;
             var repo = (TFSRepository)this.Repository;
             //var workspace = repo.GetWorkspaceByServerPath(ItemPath);
             var changeSets = repo.VersionControlService.QueryHistory(new ItemSpec(ItemPath, RecursionType.None), 

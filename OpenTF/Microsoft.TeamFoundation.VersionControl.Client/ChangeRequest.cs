@@ -79,7 +79,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 result.Add(new XAttribute("lock", LockLevel));
 
             if (RequestType == RequestType.Add)
-                result.Add("enc", Encoding);
+                result.Add(new XAttribute("enc", Encoding));
 
             if (!string.IsNullOrEmpty(Target))
             {

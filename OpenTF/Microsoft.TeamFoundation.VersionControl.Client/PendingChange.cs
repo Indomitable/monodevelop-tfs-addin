@@ -66,7 +66,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     //</s:complexType>
     public class PendingChange
     {
-        //		<PendingChange chg="Add Edit Encoding" hash="" uhash="" pcid="-339254" />
         internal static PendingChange FromXml(XElement element)
         {
             PendingChange change = new PendingChange

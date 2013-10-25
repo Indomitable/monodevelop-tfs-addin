@@ -78,7 +78,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             };
 
             if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
-                item.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value, true);
+                item.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value.Replace(" ", ","), true);
 
             if (!string.IsNullOrEmpty(element.GetAttribute("ochg")))
                 item.HasOtherPendingChange = bool.Parse(element.Attribute("ochg").Value);

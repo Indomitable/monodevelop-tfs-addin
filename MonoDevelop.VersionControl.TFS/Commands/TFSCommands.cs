@@ -30,7 +30,8 @@ namespace MonoDevelop.VersionControl.TFS.Commands
     {
         ConnectToServer,
         TeamExplorer,
-        SourceControlExplorer
+        SourceControlExplorer,
+        Checkout
     }
 }
 

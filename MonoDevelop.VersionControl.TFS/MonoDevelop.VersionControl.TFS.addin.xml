@@ -28,6 +28,10 @@
 				_label = "_Team Explorer"
 				defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.TeamExplorerHandler"
 				description = "Team Explorer."/>
+			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
+				_label = "_Check Out"
+				description = "Check Out File."
+				defaultHandler="MonoDevelop.VersionControl.TFS.Commands.CheckoutCommandHandler"  ></Command>
 		</Category>
 	</Extension>
 
@@ -38,6 +42,17 @@
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
 		</ItemSet>
 	</Extension>
+
+	<Extension path = "/MonoDevelop/Ide/ContextMenu/ProjectPad/VersionControl">
+		<Condition id="ItemType" value="IFolderItem|IFileItem">
+			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" 
+			insertbefore="MonoDevelop.VersionControl.Commands.ResolveConflicts"/>
+		</Condition>
+	</Extension>
+
+<!--	<Extension path = "/MonoDevelop/VersionControl/StatusViewCommands">
+		<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" type=""/>
+	</Extension>-->
 
 	<Extension path = "/MonoDevelop/Ide/Pads">
 		<Pad id = "MonoDevelop.VersionControl.TFS.TeamExplorerPad" defaultLayout="Solution" defaultPlacement = "Right" 
