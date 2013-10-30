@@ -35,7 +35,6 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
-using System.Threading.Tasks;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -83,16 +82,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		public void CheckIn(List<PendingChange> changes, string comment)
 		{
-			List<Task> uploadTasks = new List<Task>();
 			foreach (var change in changes)
 			{
-				uploadTasks.Add(this.VersionControlService.UploadFile(this, change));
+				this.VersionControlService.UploadFile(this, change);
 			}
-			Task.Factory.ContinueWhenAll(uploadTasks.ToArray(), () =>
-			{
-				this.VersionControlService.CheckIn(this, changes, comment);
-			});
 
+			this.VersionControlService.CheckIn(this, changes, comment);
 		}
 
 		#region Pending Changes
