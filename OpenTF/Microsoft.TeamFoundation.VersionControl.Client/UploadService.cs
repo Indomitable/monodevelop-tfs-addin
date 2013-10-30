@@ -31,12 +31,18 @@ using System.Net.Sockets;
 using System.IO;
 using System.Text;
 using System.Collections.Specialized;
+using System.IO.Compression;
+using System.Diagnostics;
+using System.Security.Cryptography;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
 	public class UploadService: TfsService
 	{
 		const string newLine = "\r\n";
+		const string boundary = "----------------------------8e5m2D6l5Q4h6";
+		private static string uncompressedContentType = "application/octet-stream";
+		private static string compressedContentType = "application/gzip";
 
 		class UploadServiceResolver : IServiceResolver
 		{
@@ -77,108 +83,136 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		#endregion
 
-		private void AddParam(StreamWriter writer, string paramName, string paramValue, string boundary)
-		{
-			writer.Write("Content-Disposition: form-data; name=\"" + paramName + "\"" + newLine + newLine);
-			writer.Write(paramValue);
-			writer.Write(newLine);
-			writer.Write(boundary);
-		}
-
 		public void UploadFile(string workspaceName, string workspaceOwner, PendingChange change)
 		{
-//			var request = (HttpWebRequest)WebRequest.Create(this.Url);
-//			request.Method = "POST";
-//			request.Credentials = this.Collection.Server.Credentials;
-//			request.AllowWriteStreamBuffering = true;
-//			var boundary = "------------" + DateTime.Now.Ticks.ToString("x");
-//			request.ContentType = "multipart/form-data; boundary=" + boundary;
-//			boundary = "--" + boundary + newLine;
-//
-//			using (var requestStream = request.GetRequestStream())
-//			{
-//				using (var writer = new StreamWriter(requestStream))
-//				{
-//					writer.Write(boundary);
-//					var content = File.ReadAllBytes(change.LocalItem);
-//					// Write the values
-//					this.AddParam(writer, "item", change.ServerItem, boundary);
-//					this.AddParam(writer, "wsname", workspaceName, boundary);
-//					this.AddParam(writer, "wsowner", workspaceOwner, boundary);
-//					this.AddParam(writer, "filelength", content.Length.ToString(), boundary);
-//					this.AddParam(writer, "hash", Convert.ToBase64String(change.UploadHashValue), boundary);
-//
-//
-//					writer.Write(@"Content-Disposition: form-data; name=""content""; filename=""item""" + newLine);
-//					writer.Write("Content-Type: application/octet-stream" + newLine + newLine);
-//					writer.Flush();
-//					writer.BaseStream.Write(content, 0, content.Length);
-//
-//					writer.Write(newLine);
-//					writer.Write(boundary);
-//					writer.Flush();
-//				}
-//				requestStream.Close();
-//			}
-//
-//			request.GetResponse();
-			NameValueCollection parameters = new NameValueCollection();
-			parameters.Add("item", change.ServerItem);
-			parameters.Add("wsname", workspaceName);
-			parameters.Add("wsowner", workspaceOwner);
-			parameters.Add("filelength", new FileInfo(change.LocalItem).Length.ToString());
-			parameters.Add("hash", Convert.ToBase64String(change.UploadHashValue));
+			var request = (HttpWebRequest)WebRequest.Create(this.Url);
+			request.Method = "POST";
+			request.Credentials = this.Collection.Server.Credentials;
+			request.AllowWriteStreamBuffering = true;
+			request.ContentType = "multipart/form-data; boundary=" + boundary.Substring(2);
 
-			this.HttpUploadFile(this.Url, change.LocalItem, "content", "application/octet-stream", parameters);
+			var fileContent = File.ReadAllBytes(change.LocalItem);
+			var fileHash = Hash(fileContent);
+			var template = GetTemplate();
+			var content = string.Format(template, change.ServerItem, workspaceName, workspaceOwner, fileContent.Length, fileHash, GetRange(fileContent.Length), "item", uncompressedContentType);
+			var contentBytes = Encoding.UTF8.GetBytes(content.Replace(Environment.NewLine, newLine));
+			using (var stream = new MemoryStream())
+			{
+				stream.Write(contentBytes, 0, contentBytes.Length);
+				stream.Write(fileContent, 0, fileContent.Length);
+				var footContent = Encoding.UTF8.GetBytes(newLine + boundary + "--" + newLine);
+				stream.Write(footContent, 0, footContent.Length);
+				stream.Flush();
+				contentBytes = stream.ToArray();
+			}
+
+			request.ContentLength = contentBytes.Length;
+
+			using (var requestStream = request.GetRequestStream())
+			{
+				requestStream.Write(contentBytes, 0, contentBytes.Length);
+				requestStream.Close();
+			}
+
+			request.GetResponse();
+
 		}
 
-		private void HttpUploadFile(Uri url, string file, string paramName, string contentType, NameValueCollection nvc)
+		private string GetTemplate()
 		{
-			string boundary = "---------------------------" + DateTime.Now.Ticks.ToString("x");
-			byte[] boundarybytes = Encoding.ASCII.GetBytes("\r\n--" + boundary + "\r\n");
+			var builder = new StringBuilder();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("item");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{0}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("wsname");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{1}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("wsowner");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{2}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("filelength");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{3}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("hash");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{4}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("range");
+			builder.AppendLine("\"");
+			builder.AppendLine();
+			builder.Append("{5}");
+			builder.AppendLine();
+			builder.AppendLine(boundary);
+			builder.Append("Content-Disposition: form-data; name=\"");
+			builder.Append("content");
+			builder.Append("\"; filename=\"");
+			builder.Append("{6}");
+			builder.AppendLine("\"");
+			builder.Append("Content-Type: ");
+			builder.Append("{7}");
+			builder.AppendLine();
+			builder.AppendLine();
+//			builder.Append("{8}");
+//			builder.AppendLine();
+//			builder.Append("----------------------------8e5m2D6l5Q4h6");
+//			builder.AppendLine("--");
+			return builder.ToString();
+		}
 
-			HttpWebRequest wr = (HttpWebRequest)WebRequest.Create(url);
-			wr.ContentType = "multipart/form-data; boundary=" + boundary;
-			wr.Headers.Add("X-TFS-Version", "1.0.0.0");
-			wr.Headers.Add("accept-language", "en-US");
-			wr.Headers.Add("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886, Checkin");
-			wr.Method = "POST";
-			wr.KeepAlive = true;
-			wr.Credentials = this.Collection.Server.Credentials;
-			wr.AllowWriteStreamBuffering = true;
-
-			using (Stream rs = wr.GetRequestStream())
+		private byte[] Compress(byte[] input)
+		{
+			using (var memoryStream = new MemoryStream())
 			{
-				string formdataTemplate = "Content-Disposition: form-data; name=\"{0}\"\r\n\r\n{1}";
-				foreach (string key in nvc.Keys)
+				using (GZipStream stream = new GZipStream(memoryStream, CompressionMode.Compress))
 				{
-					rs.Write(boundarybytes, 0, boundarybytes.Length);
-					string formitem = string.Format(formdataTemplate, key, nvc[key]);
-					byte[] formitembytes = Encoding.UTF8.GetBytes(formitem);
-					rs.Write(formitembytes, 0, formitembytes.Length);
+					stream.Write(input, 0, input.Length);
+					stream.Flush();
 				}
-				rs.Write(boundarybytes, 0, boundarybytes.Length);
-
-				string headerTemplate = "Content-Disposition: form-data; name=\"{0}\"; filename=\"{1}\"\r\nContent-Type: {2}\r\n\r\n";
-				string header = string.Format(headerTemplate, paramName, /*file*/"item", contentType);
-				byte[] headerbytes = Encoding.UTF8.GetBytes(header);
-				rs.Write(headerbytes, 0, headerbytes.Length);
-
-				using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read))
-				{
-					byte[] buffer = new byte[4096];
-					int bytesRead = 0;
-					while ((bytesRead = fileStream.Read(buffer, 0, buffer.Length)) != 0)
-					{
-						rs.Write(buffer, 0, bytesRead);
-					}
-					fileStream.Close();
-				}
-				byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
-				rs.Write(trailer, 0, trailer.Length);
-				rs.Close();
+				return memoryStream.ToArray();
 			}
-			wr.GetResponse();
+		}
+
+		private string Hash(byte[] input)
+		{
+			using (var md5 = new MD5CryptoServiceProvider())
+			{
+				return Convert.ToBase64String(md5.ComputeHash(input));
+			}
+
+		}
+
+		private string GetRange(int length)
+		{
+			var builder = new StringBuilder(100);
+			builder.Append("bytes=");
+			builder.Append(0);
+			builder.Append('-');
+			builder.Append(length - 1);
+			builder.Append('/');
+			builder.Append(length);
+			builder.AppendLine();
+			return builder.ToString();
 		}
 	}
 }

@@ -364,7 +364,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		public void UploadFile(Workspace workspace, PendingChange change)
 		{
-			if (change.ChangeType == ChangeType.Add || change.ChangeType == ChangeType.Edit)
+			if (change.ChangeType.HasFlag(ChangeType.Edit) && (!change.ChangeType.HasFlag(ChangeType.Merge) || !change.ChangeType.HasFlag(ChangeType.Delete))) //change.ChangeType == ChangeType.Add || 
 				UploadFile(workspace.Name, workspace.OwnerName, change);
 		}
 
@@ -381,6 +381,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				new XElement(MessageNs + "Comment", comment),
 				new XElement(MessageNs + "CheckinNote", string.Empty),
 				new XElement(MessageNs + "PolicyOverride", string.Empty)));
+
+			var result = Invoker.Invoke();
 		}
 		//		public void ShelveFile(string workspaceName, string ownerName, PendingChange change)
 		//		{
