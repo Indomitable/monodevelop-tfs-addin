@@ -31,6 +31,10 @@ using System.Net.Sockets;
 using System.IO;
 using System.Text;
 using System.Collections.Specialized;
+using System.Xml;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Threading.Tasks;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -85,43 +89,52 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			writer.Write(boundary);
 		}
 
-		public void UploadFile(string workspaceName, string workspaceOwner, PendingChange change)
+		public async Task UploadFile(string workspaceName, string workspaceOwner, PendingChange change)
 		{
-//			var request = (HttpWebRequest)WebRequest.Create(this.Url);
-//			request.Method = "POST";
-//			request.Credentials = this.Collection.Server.Credentials;
-//			request.AllowWriteStreamBuffering = true;
-//			var boundary = "------------" + DateTime.Now.Ticks.ToString("x");
-//			request.ContentType = "multipart/form-data; boundary=" + boundary;
-//			boundary = "--" + boundary + newLine;
-//
-//			using (var requestStream = request.GetRequestStream())
-//			{
-//				using (var writer = new StreamWriter(requestStream))
-//				{
-//					writer.Write(boundary);
-//					var content = File.ReadAllBytes(change.LocalItem);
-//					// Write the values
-//					this.AddParam(writer, "item", change.ServerItem, boundary);
-//					this.AddParam(writer, "wsname", workspaceName, boundary);
-//					this.AddParam(writer, "wsowner", workspaceOwner, boundary);
-//					this.AddParam(writer, "filelength", content.Length.ToString(), boundary);
-//					this.AddParam(writer, "hash", Convert.ToBase64String(change.UploadHashValue), boundary);
-//
-//
-//					writer.Write(@"Content-Disposition: form-data; name=""content""; filename=""item""" + newLine);
-//					writer.Write("Content-Type: application/octet-stream" + newLine + newLine);
-//					writer.Flush();
-//					writer.BaseStream.Write(content, 0, content.Length);
-//
-//					writer.Write(newLine);
-//					writer.Write(boundary);
-//					writer.Flush();
-//				}
-//				requestStream.Close();
-//			}
-//
-//			request.GetResponse();
+			await UploadFile4(workspaceName, workspaceOwner, change);
+		}
+
+		public void UploadFile1(string workspaceName, string workspaceOwner, PendingChange change)
+		{
+			var request = (HttpWebRequest)WebRequest.Create(this.Url);
+			request.Method = "POST";
+			request.Credentials = this.Collection.Server.Credentials;
+			request.AllowWriteStreamBuffering = true;
+			var boundary = "------------" + DateTime.Now.Ticks.ToString("x");
+			request.ContentType = "multipart/form-data; boundary=" + boundary;
+			boundary = "--" + boundary + newLine;
+
+			using (var requestStream = request.GetRequestStream())
+			{
+				using (var writer = new StreamWriter(requestStream))
+				{
+					writer.Write(boundary);
+					var content = File.ReadAllBytes(change.LocalItem);
+					// Write the values
+					this.AddParam(writer, "item", change.ServerItem, boundary);
+					this.AddParam(writer, "wsname", workspaceName, boundary);
+					this.AddParam(writer, "wsowner", workspaceOwner, boundary);
+					this.AddParam(writer, "filelength", content.Length.ToString(), boundary);
+					this.AddParam(writer, "hash", Convert.ToBase64String(change.UploadHashValue), boundary);
+
+
+					writer.Write(@"Content-Disposition: form-data; name=""content""; filename=""item""" + newLine);
+					writer.Write("Content-Type: application/octet-stream" + newLine + newLine);
+					writer.Flush();
+					writer.BaseStream.Write(content, 0, content.Length);
+
+					writer.Write(newLine);
+					writer.Write(boundary);
+					writer.Flush();
+				}
+				requestStream.Close();
+			}
+
+			request.GetResponse();
+		}
+
+		public void UploadFile2(string workspaceName, string workspaceOwner, PendingChange change)
+		{
 			NameValueCollection parameters = new NameValueCollection();
 			parameters.Add("item", change.ServerItem);
 			parameters.Add("wsname", workspaceName);
@@ -141,7 +154,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			wr.ContentType = "multipart/form-data; boundary=" + boundary;
 			wr.Headers.Add("X-TFS-Version", "1.0.0.0");
 			wr.Headers.Add("accept-language", "en-US");
-			wr.Headers.Add("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886, Checkin");
+//			wr.Headers.Add("X-VersionControl-Instance", "ac4d8821-8927-4f07-9acf-adbf71119886, Checkin");
 			wr.Method = "POST";
 			wr.KeepAlive = true;
 			wr.Credentials = this.Collection.Server.Credentials;
@@ -174,11 +187,49 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 					}
 					fileStream.Close();
 				}
-				byte[] trailer = Encoding.ASCII.GetBytes("\r\n--" + boundary + "--\r\n");
+				byte[] trailer = Encoding.UTF8.GetBytes("\r\n--" + boundary + "--\r\n");
 				rs.Write(trailer, 0, trailer.Length);
 				rs.Close();
 			}
 			wr.GetResponse();
+		}
+
+		public void UploadFile3(string workspaceName, string workspaceOwner, PendingChange change)
+		{
+			WebClient client = new WebClient();
+			client.Credentials = this.Collection.Server.Credentials;
+			client.Headers["item"] = change.ServerItem; 
+			client.Headers["wsname"] = workspaceName;
+			client.Headers["wsowner"] = workspaceOwner;
+			client.Headers["filelength"] = new FileInfo(change.LocalItem).Length.ToString();
+			client.Headers["hash"] = Convert.ToBase64String(change.UploadHashValue);
+			client.UploadFile(this.Url, "POST", change.LocalItem);
+		}
+
+		public async Task UploadFile4(string workspaceName, string workspaceOwner, PendingChange change)
+		{
+			using (var handler = new HttpClientHandler())
+			{
+				handler.Credentials = this.Collection.Server.Credentials;
+				using (var client = new HttpClient(handler))
+				{
+					using (var f = File.OpenRead(change.LocalItem))
+					{
+						using (var content = new StreamContent(f))
+						{
+							var mpcontent = new MultipartFormDataContent();
+							content.Headers.Add("item", change.ServerItem);
+							content.Headers.Add("wsname", workspaceName);
+							content.Headers.Add("wsowner", workspaceOwner);
+							content.Headers.Add("filelength", new FileInfo(change.LocalItem).Length.ToString());
+							content.Headers.Add("hash", Convert.ToBase64String(change.UploadHashValue));
+							content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+							mpcontent.Add(content);   
+							await client.PostAsync(this.Url, mpcontent);
+						}
+					}
+				}
+			}
 		}
 	}
 }

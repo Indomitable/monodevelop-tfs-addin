@@ -30,6 +30,7 @@ using Microsoft.TeamFoundation.Common;
 using System.Xml.XPath;
 using Microsoft.TeamFoundation.Client;
 using System;
+using System.Threading.Tasks;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -362,10 +363,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			return Changeset.FromXml(result);
 		}
 
-		public void UploadFile(Workspace workspace, PendingChange change)
+		public async Task UploadFile(Workspace workspace, PendingChange change)
 		{
 			if (change.ChangeType == ChangeType.Add || change.ChangeType == ChangeType.Edit)
-				UploadFile(workspace.Name, workspace.OwnerName, change);
+				await UploadFile(workspace.Name, workspace.OwnerName, change);
 		}
 
 		public void CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
@@ -386,10 +387,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		//		{
 		//			UploadFile(workspaceName, ownerName, change);
 		//		}
-		private void UploadFile(string workspaceName, string ownerName, PendingChange change)
+		private async Task UploadFile(string workspaceName, string ownerName, PendingChange change)
 		{
 			var uploadService = this.Collection.GetService<UploadService>();
-			uploadService.UploadFile(workspaceName, ownerName, change);
+			await uploadService.UploadFile(workspaceName, ownerName, change);
 		}
 	}
 }
