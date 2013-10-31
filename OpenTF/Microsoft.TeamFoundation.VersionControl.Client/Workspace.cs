@@ -698,7 +698,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		private void DownloadFile(GetOperation operation, VersionControlDownloadService downloadService)
 		{
-			string path = operation.TargetLocalItem;
+			string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
 			if (operation.ItemType == ItemType.Folder && !Directory.Exists(path))
 			{
 				Directory.CreateDirectory(path);
