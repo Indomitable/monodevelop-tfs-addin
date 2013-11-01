@@ -110,3 +110,7 @@ UpgradeLog*.XML
 *.userprefs
 *.dll.sources
 [Tt]est/
+
+
+Output/
+MonoDevelop.Repository/

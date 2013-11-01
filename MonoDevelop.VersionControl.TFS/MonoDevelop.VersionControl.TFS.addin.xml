@@ -63,6 +63,10 @@
 		<Class class="MonoDevelop.VersionControl.TFS.Commands.InitHandler" />
 	</Extension>-->
 
+	<Extension path = "/MonoDevelop/VersionControl/CommitDialogExtensions">
+		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
+	</Extension>
+
 	<Extension path = "/MonoDevelop/Core/UserDataMigration">
 		<!-- 4.0+ -->
 		<Migration sourceVersion="4.0+" kind="Config" path="VersionControl.TFS.config" />

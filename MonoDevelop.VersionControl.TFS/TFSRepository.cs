@@ -107,22 +107,30 @@ namespace MonoDevelop.VersionControl.TFS
 			if (workspace == null)
 				return VersionStatus.Unversioned;
 			var status = VersionStatus.Versioned;
-			var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.LocalItem, item.LocalItem, StringComparison.OrdinalIgnoreCase)); //ch.ItemId == item.ItemId
-			foreach (var change in changes)
+			var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.LocalItem, item.LocalItem, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
+
+			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Lock)))
+				status = status | VersionStatus.Locked;
+
+			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0))
 			{
-				if (change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0)
-				{
-					status = status | VersionStatus.ScheduledAdd;
-					continue;
-				}
-				if (change.ChangeType.HasFlag(ChangeType.Edit))
-					status = status | VersionStatus.Modified;
-
-				if (change.ChangeType.HasFlag(ChangeType.Delete))
-					status = status | VersionStatus.ScheduledDelete;
-
-				if (change.ChangeType.HasFlag(ChangeType.Lock))
-					status = status | VersionStatus.Locked;
+				status = status | VersionStatus.ScheduledAdd;
+				return status;
+			}
+			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Delete)))
+			{
+				status = status | VersionStatus.Modified;
+				return status;
+			}
+			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Merge)))
+			{
+				status = status | VersionStatus.Conflicted;
+				return status;
+			}
+			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Edit)))
+			{
+				status = status | VersionStatus.Modified;
+				return status;
 			}
 			return status;
 		}
@@ -400,6 +408,43 @@ namespace MonoDevelop.VersionControl.TFS
 			workspace.PendEdit(path, RecursionType.None);
 			MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, path, false));
 			FileService.NotifyFileChanged(path);
+		}
+
+		public List<FilePath> CheckItemsChangedOnServer(List<FilePath> localPaths)
+		{
+			var filesPerWorkspace = from f in localPaths
+			                        let workspace = this.GetWorkspaceByLocalPath(f)
+			                        group f by workspace into wg
+			                        select wg; 
+			var result = new List<FilePath>();
+			foreach (var ws in filesPerWorkspace)
+			{
+				List<ItemSpec> specs = new List<ItemSpec>();
+				foreach (var item in ws)
+				{
+					specs.Add(new ItemSpec(item, RecursionType.None));
+				}
+				var items = ws.Key.GetExtendedItems(specs, DeletedState.Any, ItemType.Any);
+				foreach (var item in items)
+				{
+					if (item.VersionLocal != item.VersionLatest)
+						result.Add(item.LocalItem);
+				}
+			}
+			return result;
+		}
+
+		public void SetConflicted(List<FilePath> result)
+		{
+			this.ClearCachedVersionInfo(result.ToArray());
+			var filesPerWorkspace = from f in result
+			                        let workspace = this.GetWorkspaceByLocalPath(f)
+			                        group f by workspace into wg
+			                        select wg; 
+
+			var args = new FileUpdateEventArgs();
+			args.AddRange(result.Select(path => new FileUpdateEventInfo(this, path, false)));
+			MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(args);	
 		}
 	}
 }

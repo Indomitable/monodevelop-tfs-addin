@@ -47,6 +47,7 @@
     <Compile Include="GUI\DialogAction.cs" />
     <Compile Include="Infrastructure\Objects\TfsRevision.cs" />
     <Compile Include="Commands\CheckoutCommandHandler.cs" />
+    <Compile Include="GUI\TFSCommitDialogExtension.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

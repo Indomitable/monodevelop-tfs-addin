@@ -778,66 +778,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				}
 			}
 			updates.Flush();
-//            foreach (GetOperation getOperation in getOperations)
-//            {
-//                if (getOperation.DeletionId != 0)
-//                {
-//                    if ((getOperation.ItemType == ItemType.Folder) &&
-//                        (Directory.Exists(getOperation.SourceLocalItem)))
-//                    {
-//                        UnsetDirectoryAttributes(getOperation.SourceLocalItem);
-//                        Directory.Delete(getOperation.SourceLocalItem, true);
-//                    }
-//                    else if ((getOperation.ItemType == ItemType.File) &&
-//                             (File.Exists(getOperation.SourceLocalItem)))
-//                        {
-//                            SetFileWritable(getOperation.SourceLocalItem);
-//                            File.Delete(getOperation.SourceLocalItem);
-//                        }
-//                    updates.QueueUpdate(getOperation.ItemId, null, getOperation.VersionServer);
-//                }
-//                else if ((!string.IsNullOrEmpty(getOperation.TargetLocalItem)) &&
-//                         (!string.IsNullOrEmpty(getOperation.SourceLocalItem)) &&
-//                         (getOperation.SourceLocalItem != getOperation.TargetLocalItem))
-//                    {
-//                        try
-//                        {
-//                            File.Move(getOperation.SourceLocalItem, getOperation.TargetLocalItem);
-//                        }
-//                        catch (IOException)
-//                        {
-//                        }
-//                        updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-//                    }
-//                    else if (getOperation.ChangeType == ChangeType.None &&
-//                             getOperation.VersionServer != 0)
-//                        {
-//                            string path = getOperation.TargetLocalItem;
-//                            string directory = path;
-//
-//                            if (getOperation.ItemType == ItemType.File)
-//                                directory = Path.GetDirectoryName(path);
-//
-//                            if (!Directory.Exists(directory))
-//                                Directory.CreateDirectory(directory);
-//
-//                            if (getOperation.ItemType == ItemType.File)
-//                            {
-//                                downloadService.Download(path, getOperation.ArtifactUri);
-//                                SetFileReadOnly(path);
-//                            }
-//                            updates.QueueUpdate(getOperation.ItemId, path, getOperation.VersionServer);
-//                        }
-//                        else if (getOperation.ChangeType != ChangeType.None)
-//                            {
-//                                switch (getOperation.ChangeType)
-//                                {
-//                                    default:
-//                                        break;
-//                                }
-//                            }
-//            }
-//            updates.Flush();
 		}
 
 		public string GetItemContent(Item item)
