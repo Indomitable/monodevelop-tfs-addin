@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Repository xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Addin>
-    <Url>MonoDevelop.VersionControl.TFS_4.1.11.mpack</Url>
+    <Url>MonoDevelop.VersionControl.TFS_0.1.mpack</Url>
     <Addin>
       <Id>VersionControl.TFS</Id>
       <Namespace>MonoDevelop</Namespace>
       <Name>TFS support</Name>
-      <Version>4.1.11</Version>
+      <Version>0.1</Version>
       <BaseVersion />
       <Author>Ventsislav Mladenov</Author>
       <Copyright>MIT X11</Copyright>
@@ -16,20 +16,20 @@
       <Dependencies>
         <AddinDependency>
           <AddinId>Core</AddinId>
-          <Version>4.1.11</Version>
+          <Version>4.1</Version>
         </AddinDependency>
         <AddinDependency>
           <AddinId>Ide</AddinId>
-          <Version>4.1.11</Version>
+          <Version>4.1</Version>
         </AddinDependency>
         <AddinDependency>
           <AddinId>VersionControl</AddinId>
-          <Version>4.1.11</Version>
+          <Version>4.1</Version>
         </AddinDependency>
       </Dependencies>
       <OptionalDependencies />
       <Properties>
-        <Property name="DownloadSize">99110</Property>
+        <Property name="DownloadSize">99104</Property>
       </Properties>
     </Addin>
   </Addin>
