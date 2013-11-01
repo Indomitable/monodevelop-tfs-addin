@@ -29,43 +29,33 @@ using System;
 
 namespace Microsoft.TeamFoundation.Client
 {
-    public abstract class TfsService
-    {
-        public ProjectCollection Collection { get; set; }
+	public abstract class TfsService
+	{
+		public ProjectCollection Collection { get; set; }
 
-        public string RelativeUrl { get; set; }
+		public string RelativeUrl { get; set; }
 
-        public Uri Url
-        {
-            get
-            {
-                return UrlHelper.AddPathToUri(Collection.Url, RelativeUrl);
-            }
-        }
+		public Uri Url
+		{
+			get
+			{
+				return UrlHelper.AddPathToUri(Collection.Url, RelativeUrl);
+			}
+		}
 
-        public abstract XNamespace MessageNs { get; }
+		public abstract XNamespace MessageNs { get; }
 
-        protected IXmlNamespaceResolver NsResolver
-        {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", MessageNs.ToString());
-                return manager;
-            }
-        }
+		protected IXmlNamespaceResolver NsResolver
+		{
+			get
+			{
+				XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
+				manager.AddNamespace("msg", MessageNs.ToString());
+				return manager;
+			}
+		}
 
-        public abstract IServiceResolver ServiceResolver { get; }
-
-        private SoapInvoker invoker = null;
-
-        public SoapInvoker Invoker
-        {
-            get
-            {
-                return invoker ?? (invoker = new SoapInvoker(this));
-            }
-        }
-    }
+		public abstract IServiceResolver ServiceResolver { get; }
+	}
 }
 

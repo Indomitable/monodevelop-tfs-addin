@@ -35,6 +35,7 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
+using MonoDevelop.Core;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -88,6 +89,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			}
 
 			this.VersionControlService.CheckIn(this, changes, comment);
+			this.RefreshPendingChanges();
 		}
 
 		#region Pending Changes
@@ -308,6 +310,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			return PendAdd(paths, isRecursive);
 		}
 
+		private void CollectPaths(FilePath root, List<ChangeRequest> paths)
+		{
+			if (!root.IsDirectory)
+				return;
+			foreach (var dir in Directory.EnumerateDirectories(root))
+			{
+				paths.Add(new ChangeRequest(dir, RequestType.Add, ItemType.Folder));
+				CollectPaths(dir, paths);
+			}
+			foreach (var file in Directory.EnumerateFiles(root))
+			{
+				paths.Add(new ChangeRequest(file, RequestType.Add, ItemType.File));
+			}
+		}
+
 		public int PendAdd(List<string> paths, bool isRecursive)
 		{
 			if (paths.Count == 0)
@@ -321,15 +338,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				if (Directory.Exists(path))
 					itemType = ItemType.Folder;
 				changes.Add(new ChangeRequest(path, RequestType.Add, itemType));
-
-				if (!isRecursive || itemType != ItemType.Folder)
-					continue;
-
-				DirectoryInfo dir = new DirectoryInfo(path);
-				FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
-					
-				foreach (FileInfo file in localFiles)
-					changes.Add(new ChangeRequest(file.FullName, RequestType.Add, ItemType.File));
+				if (isRecursive && itemType == ItemType.Folder)
+				{
+					CollectPaths(path, changes);
+				}
 			}
 			var operations = this.VersionControlService.PendChanges(this, changes);
 			ProcessGetOperations(operations, false);
@@ -563,18 +575,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			return "Owner: " + OwnerName + ", Name: " + Name;
 		}
 
-		public int Undo(string path)
+		public List<FilePath> Undo(string path)
 		{
 			return Undo(path, RecursionType.None);
 		}
 
-		public int Undo(string path, RecursionType recursionType)
+		public List<FilePath> Undo(string path, RecursionType recursionType)
 		{
 			var paths = new List<string> { path };
 			return Undo(paths, recursionType);
 		}
 
-		public int Undo(List<string> paths, RecursionType recursionType)
+		public List<FilePath> Undo(List<string> paths, RecursionType recursionType)
 		{
 			List<ItemSpec> specs = new List<ItemSpec>();
 
@@ -585,7 +597,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			var operations = this.VersionControlService.UndoPendChanges(this, specs);
 			ProcessGetOperations(operations, true);
 			this.RefreshPendingChanges();
-			return operations.Count;
+			List<FilePath> undoPaths = new List<FilePath>();
+			foreach (var oper in operations)
+			{
+				undoPaths.Add(oper.SourceLocalItem);
+			}
+			return undoPaths;
 		}
 
 		public void Update(string newName, string newComment, WorkingFolder[] newMappings)
@@ -629,7 +646,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		internal void MakeFileWritable(string path)
 		{
-			File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.Normal);
+			File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
 		}
 
 		internal void UnsetDirectoryAttributes(string path)

@@ -221,15 +221,6 @@ namespace MonoDevelop.VersionControl.TFS
 				var workspace1 = workspace;
 				var changes = workspace.Key.PendingChanges.Where(pc => workspace1.Any(wi => string.Equals(pc.LocalItem, wi.LocalPath))).ToList();
 				workspace.Key.CheckIn(changes, changeSet.GlobalComment);
-//				var groupByComment = from i in workspace
-//				                     group i by i.Comment into gc
-//				                     select gc;
-//				foreach (var comment in groupByComment)
-//				{
-//					var comment1 = comment;
-//					var changes = workspace.Key.PendingChanges.Where(pc => comment1.Any(c => string.Equals(pc.LocalItem, c.LocalPath))).ToList();
-//					workspace.Key.CheckIn(changes, comment.Key);
-//				}
 			}
 		}
 
@@ -249,9 +240,9 @@ namespace MonoDevelop.VersionControl.TFS
 
 			foreach (var ws in filesPerWorkspace)
 			{
-				ws.Key.Undo(ws.ToList(), recurse ? RecursionType.Full : RecursionType.None);
+				var operations = ws.Key.Undo(ws.ToList(), recurse ? RecursionType.Full : RecursionType.None);
+				FileService.NotifyFilesChanged(operations);
 			}
-			FileService.NotifyFilesChanged(localPaths.Where(x => File.Exists(x)));
 			FileService.NotifyFilesRemoved(localPaths.Where(x => !File.Exists(x)));
 		}
 
@@ -292,6 +283,8 @@ namespace MonoDevelop.VersionControl.TFS
 		protected override string OnGetTextAtRevision(FilePath repositoryPath, Revision revision)
 		{
 			var tfsRevision = (TfsRevision)revision;
+			if (tfsRevision.Version == 0)
+				return string.Empty;
 			var workspace = GetWorkspaceByLocalPath(repositoryPath);
 			var changeSet = this.VersionControlService.QueryChangeset(tfsRevision.Version, true, true);
 			var serverPath = workspace.TryGetServerItemForLocalItem(repositoryPath);
@@ -401,9 +394,11 @@ namespace MonoDevelop.VersionControl.TFS
 		/// <param name="path">Path.</param>
 		public void CheckoutFile(FilePath path)
 		{
+			this.ClearCachedVersionInfo(path);
 			var workspace = this.GetWorkspaceByLocalPath(path);
 			workspace.Get(new GetRequest(path, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);
 			workspace.PendEdit(path, RecursionType.None);
+			MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, path, false));
 			FileService.NotifyFileChanged(path);
 		}
 	}

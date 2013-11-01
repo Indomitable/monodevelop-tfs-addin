@@ -55,24 +55,26 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		public Workspace QueryWorkspace(string workspaceName, string ownerName)
 		{
-			XElement msg = Invoker.CreateEnvelope("QueryWorkspace");
+			var invoker = new SoapInvoker(this);
+			XElement msg = invoker.CreateEnvelope("QueryWorkspace");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
 			msg.Add(new XElement(MessageNs + "ownerName", ownerName));
 
-			XElement result = Invoker.Invoke();
+			XElement result = invoker.Invoke();
 			return Workspace.FromXml(this, result);
 		}
 
 		public List<Workspace> QueryWorkspaces(string ownerName, string computer)
 		{
-			XElement msg = Invoker.CreateEnvelope("QueryWorkspaces");
+			var invoker = new SoapInvoker(this);
+			XElement msg = invoker.CreateEnvelope("QueryWorkspaces");
 			if (!string.IsNullOrEmpty(ownerName))
 				msg.Add(new XElement(MessageNs + "ownerName", ownerName));
 			if (!string.IsNullOrEmpty(computer))
 				msg.Add(new XElement(MessageNs + "computer", computer));
 
 			List<Workspace> workspaces = new List<Workspace>();
-			XElement result = Invoker.Invoke();
+			XElement result = invoker.Invoke();
 			workspaces.AddRange(result.Elements(MessageNs + "Workspace").Select(el => Workspace.FromXml(this, el)));
 			workspaces.Sort();
 			return workspaces;
@@ -81,21 +83,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		public Workspace UpdateWorkspace(string oldWorkspaceName, string ownerName,
 		                                 Workspace newWorkspace)
 		{
-			XElement msg = Invoker.CreateEnvelope("UpdateWorkspace");
+			var invoker = new SoapInvoker(this);
+			XElement msg = invoker.CreateEnvelope("UpdateWorkspace");
 
 			msg.Add(new XElement(MessageNs + "oldWorkspaceName", oldWorkspaceName));
 			msg.Add(new XElement(MessageNs + "ownerName", ownerName));
 			msg.Add(newWorkspace.ToXml("newWorkspace"));
 
-			XElement result = Invoker.Invoke();
+			XElement result = invoker.Invoke();
 			return Workspace.FromXml(this, result);
 		}
 
 		public Workspace CreateWorkspace(Workspace workspace)
 		{
-			XElement msg = Invoker.CreateEnvelope("CreateWorkspace");
+			var invoker = new SoapInvoker(this);
+			XElement msg = invoker.CreateEnvelope("CreateWorkspace");
 			msg.Add(workspace.ToXml("workspace"));
-			XElement result = Invoker.Invoke();
+			XElement result = invoker.Invoke();
 			return Workspace.FromXml(this, result);
 		}
 		//    <DeleteWorkspace xmlns="http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03">
@@ -104,22 +108,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		//    </DeleteWorkspace>
 		public void DeleteWorkspace(string workspaceName, string ownerName)
 		{
-			var msg = Invoker.CreateEnvelope("DeleteWorkspace");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("DeleteWorkspace");
 			msg.Add(new XElement("workspaceName", workspaceName));
 			msg.Add(new XElement("ownerName", ownerName));
-			Invoker.Invoke();
+			invoker.Invoke();
 		}
 
 		#endregion
 
 		public void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue)
 		{
-			var msg = Invoker.CreateEnvelope("UpdateLocalVersion");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("UpdateLocalVersion");
 			foreach (var el in updateLocalVersionQueue.ToXml(MessageNs))
 			{
 				msg.Add(el);
 			}
-			Invoker.Invoke();
+			invoker.Invoke();
 		}
 
 		#region Query Items
@@ -141,7 +147,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		                             DeletedState deletedState, ItemType itemType, 
 		                             bool includeDownloadInfo)
 		{
-			var msg = Invoker.CreateEnvelope("QueryItems");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryItems");
 			if (!string.IsNullOrEmpty(workspaceName))
 				msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
 			if (!string.IsNullOrEmpty(workspaceOwner))
@@ -152,7 +159,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			msg.Add(new XElement(MessageNs + "itemType", itemType));
 			msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadInfo.ToLowString()));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Descendants(MessageNs + "Item").Select(Item.FromXml).ToList();
 		}
 
@@ -185,14 +192,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		public List<ExtendedItem> QueryItemsExtended(string workspaceName, string workspaceOwner, List<ItemSpec>  itemSpecs,
 		                                             DeletedState deletedState, ItemType itemType)
 		{
-			var msg = Invoker.CreateEnvelope("QueryItemsExtended");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryItemsExtended");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
 			msg.Add(new XElement(MessageNs + "workspaceOwner", workspaceOwner));
 			msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(itemSpec => itemSpec.ToXml(MessageNs + "ItemSpec"))));
 			msg.Add(new XElement(MessageNs + "deletedState", deletedState));
 			msg.Add(new XElement(MessageNs + "itemType", itemType));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Descendants(MessageNs + "ExtendedItem").Select(ExtendedItem.FromXml).ToList();
 		}
 
@@ -211,7 +219,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		{
 			if (workspace == null)
 				throw new System.ArgumentNullException("workspace");
-			var msg = Invoker.CreateEnvelope("Get");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("Get");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
 			msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
 			msg.Add(new XElement(MessageNs + "requests", requests.Select(r => r.ToXml(MessageNs))));
@@ -221,7 +230,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				msg.Add(new XElement(MessageNs + "noGet", noGet.ToLowString()));
 
 			List<GetOperation> operations = new List<GetOperation>();
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 
 			foreach (var operation in result.XPathSelectElements("msg:ArrayOfGetOperation/msg:GetOperation", NsResolver))
 			{
@@ -234,7 +243,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		                                         string queryWorkspaceName, string ownerName,
 		                                         ItemSpec[] itemSpecs, bool generateDownloadUrls)
 		{
-			var msg = Invoker.CreateEnvelope("QueryPendingSets");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryPendingSets");
 			msg.Add(new XElement(MessageNs + "localWorkspaceName", localWorkspaceName));
 			msg.Add(new XElement(MessageNs + "localWorkspaceOwner", localWorkspaceOwner));
 			msg.Add(new XElement(MessageNs + "queryWorkspaceName", queryWorkspaceName));
@@ -242,7 +252,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			msg.Add(new XElement(MessageNs + "itemSpecs", itemSpecs.Select(i => i.ToXml(MessageNs + "ItemSpec"))));
 			msg.Add(new XElement(MessageNs + "generateDownloadUrls", generateDownloadUrls.ToLowString()));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return new List<PendingSet>(result.Elements(MessageNs + "PendingSet").Select(PendingSet.FromXml));
 //            var pendingChangesElements = result.Descendants(MessageNs + "PendingChange");
 //            var failuresElements = result.Descendants(MessageNs + "PendingChange");
@@ -301,39 +311,43 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		//      </PendChangesResult>
 		internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest)
 		{
-			var msg = Invoker.CreateEnvelope("PendChanges");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("PendChanges");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
 			msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
 			msg.Add(new XElement(MessageNs + "changes", changeRequest.Select(x => x.ToXml(MessageNs))));
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
 		}
 
 		internal List<GetOperation> UndoPendChanges(Workspace workspace, List<ItemSpec> itemSpecs)
 		{
-			var msg = Invoker.CreateEnvelope("UndoPendingChanges");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("UndoPendingChanges");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
 			msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
 			msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(x => x.ToXml(MessageNs + "ItemSpec"))));
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
 		}
 
 		public List<PendingChange> QueryPendingChangesForWorkspace(Workspace workspace, List<ItemSpec> itemSpecs, bool includeDownloadInfo)
 		{
-			var msg = Invoker.CreateEnvelope("QueryPendingChangesForWorkspace");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryPendingChangesForWorkspace");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
 			msg.Add(new XElement(MessageNs + "workspaceOwner", workspace.OwnerName));
 			msg.Add(new XElement(MessageNs + "itemSpecs", itemSpecs.Select(i => i.ToXml(MessageNs + "ItemSpec"))));
 			msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadInfo.ToLowString()));
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Elements(MessageNs + "PendingChange").Select(PendingChange.FromXml).ToList();
 		}
 
 		public List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, 
 		                                    VersionSpec versionFrom, VersionSpec versionTo, int maxCount = short.MaxValue)
 		{
-			var msg = Invoker.CreateEnvelope("QueryHistory");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryHistory");
 			msg.Add(item.ToXml(MessageNs + "itemSpec"));
 			msg.Add(versionItem.ToXml(MessageNs + "versionItem"));
 			if (versionFrom != null)
@@ -346,31 +360,35 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			msg.Add(new XElement(MessageNs + "slotMode", false));
 			msg.Add(new XElement(MessageNs + "sortAscending", false));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return result.Elements(MessageNs + "Changeset").Select(Changeset.FromXml).ToList();
 		}
 
 		public Changeset QueryChangeset(int changeSetId, bool includeChanges = false, bool includeDownloadUrls = false, bool includeSourceRenames = true)
 		{
-			var msg = Invoker.CreateEnvelope("QueryChangeset");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("QueryChangeset");
 			msg.Add(new XElement(MessageNs + "changesetId", changeSetId));
 			msg.Add(new XElement(MessageNs + "includeChanges", includeChanges));
 			msg.Add(new XElement(MessageNs + "generateDownloadUrls", includeDownloadUrls));
 			msg.Add(new XElement(MessageNs + "includeSourceRenames", includeSourceRenames));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 			return Changeset.FromXml(result);
 		}
 
 		public void UploadFile(Workspace workspace, PendingChange change)
 		{
-			if (change.ChangeType.HasFlag(ChangeType.Edit) && (!change.ChangeType.HasFlag(ChangeType.Merge) || !change.ChangeType.HasFlag(ChangeType.Delete))) //change.ChangeType == ChangeType.Add || 
+			if (change.ItemType != ItemType.File)
+				return;
+			if (change.ChangeType.HasFlag(ChangeType.Edit) || change.ChangeType.HasFlag(ChangeType.Add))
 				UploadFile(workspace.Name, workspace.OwnerName, change);
 		}
 
 		public void CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
 		{
-			var msg = Invoker.CreateEnvelope("CheckIn");
+			var invoker = new SoapInvoker(this);
+			var msg = invoker.CreateEnvelope("CheckIn");
 			msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
 			msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
 			msg.Add(new XElement(MessageNs + "serverItems", changes.Select(x => x.ServerItem).Distinct().Select(s => new XElement(MessageNs + "string", s))));
@@ -382,7 +400,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				new XElement(MessageNs + "CheckinNote", string.Empty),
 				new XElement(MessageNs + "PolicyOverride", string.Empty)));
 
-			var result = Invoker.Invoke();
+			var result = invoker.Invoke();
 		}
 		//		public void ShelveFile(string workspaceName, string ownerName, PendingChange change)
 		//		{
