@@ -21,11 +21,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.Wo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDevelop.VersionControl.TFS.Tests", "MonoDevelop.VersionControl.TFS.Tests\MonoDevelop.VersionControl.TFS.Tests.csproj", "{9FC22AA3-D1F4-478C-8B22-6790EA407534}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{53CB7AFD-C5A3-4D9E-93B8-6FE13BC5FA5D}"
-	ProjectSection(SolutionItems) = preProject
-		addin-project.xml = addin-project.xml
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

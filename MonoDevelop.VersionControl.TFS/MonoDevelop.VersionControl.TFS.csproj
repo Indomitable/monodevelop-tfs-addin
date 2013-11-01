@@ -55,12 +55,15 @@
   <ItemGroup>
     <Reference Include="MonoDevelop.Core">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="MonoDevelop.Ide">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Ide.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="MonoDevelop.VersionControl">
       <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <Package>monodevelop-core-addins</Package>
     </Reference>
     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
       <Private>False</Private>
@@ -75,9 +78,11 @@
     <Reference Include="System.Core" />
     <Reference Include="Xwt">
       <HintPath>..\External\monodevelop\main\build\bin\Xwt.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\External\monodevelop\main\build\bin\ICSharpCode.NRefactory.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5">
       <Private>False</Private>
@@ -89,6 +94,7 @@
     </Reference>
     <Reference Include="Mono.TextEditor">
       <HintPath>..\External\monodevelop\main\build\bin\Mono.TextEditor.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
   </ItemGroup>
   <ItemGroup>
