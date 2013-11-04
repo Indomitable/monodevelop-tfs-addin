@@ -122,4 +122,12 @@
       <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
   </ItemGroup>
+  <Target Name="AfterBuild">
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.Common.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Common.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+  </Target>
 </Project>
