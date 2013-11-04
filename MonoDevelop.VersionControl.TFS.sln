@@ -75,6 +75,6 @@ Global
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = MonoDevelop.VersionControl.TFS\MonoDevelop.VersionControl.TFS.csproj
-		version = 0.2
+		version = 0.3
 	EndGlobalSection
 EndGlobal
