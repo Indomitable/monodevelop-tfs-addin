@@ -226,11 +226,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		#endregion
 
-		/// <summary>
-		/// Checkouts the file, marked it as pending for editing.
-		/// </summary>
-		/// <param name="localPath">Local path.</param>
-
 		public bool IsLocalPathMapped(string localPath)
 		{
 			if (localPath == null)
@@ -299,14 +294,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            Update(Name, OwnerName, folders);
 		}
 
-		public int PendAdd(string path)
+		#region Pend Add
+
+		public int PendAdd(FilePath path)
 		{
 			return PendAdd(path, false);
 		}
 
-		public int PendAdd(string path, bool isRecursive)
+		public int PendAdd(FilePath path, bool isRecursive)
 		{
-			var paths = new List<string> { path };
+			var paths = new List<FilePath> { path };
 			return PendAdd(paths, isRecursive);
 		}
 
@@ -325,7 +322,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			}
 		}
 
-		public int PendAdd(List<string> paths, bool isRecursive)
+		public int PendAdd(List<FilePath> paths, bool isRecursive)
 		{
 			if (paths.Count == 0)
 				return 0;
@@ -349,37 +346,28 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			return operations.Count;
 		}
 
-		public int PendDelete(string path)
+		#endregion
+
+		#region Pend Delete
+
+		public void PendDelete(FilePath path)
 		{
-			throw new NotImplementedException();
-//            return PendDelete(path, RecursionType.None);
+			PendDelete(path, RecursionType.None);
 		}
 
-		public int PendDelete(string path, RecursionType recursionType)
+		public void PendDelete(FilePath path, RecursionType recursionType)
 		{
-			throw new NotImplementedException();
-//            string[] paths = new string[1];
-//            paths[0] = path;
-//
-//            return PendDelete(paths, recursionType);
+			var paths = new List<FilePath> { path };
+			PendDelete(paths, recursionType);
 		}
-
-		public int PendDelete(string[] paths, RecursionType recursionType)
+		//Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
+		public void PendDelete(List<FilePath> paths, RecursionType recursionType)
 		{
-			throw new NotImplementedException();
-//            List<ChangeRequest> changes = new List<ChangeRequest>();
-//            foreach (string path in paths)
-//            {
-//                ItemType itemType = ItemType.File;
-//                if (Directory.Exists(path))
-//                    itemType = ItemType.Folder;
-//                changes.Add(new ChangeRequest(path, RequestType.Delete, itemType));
-//            }
-//
-//            if (changes.Count == 0)
-//                return 0;
-//
-//            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
+			if (paths.Count == 0)
+				return;
+
+			var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, p.IsDirectory ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
+			var getOperations = this.VersionControlService.PendChanges(this, changes);
 //            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
 //
 //            // first delete all files
@@ -416,22 +404,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            return operations.Length;
 		}
 
-		public int PendEdit(string path)
+		#endregion
+
+		#region Pend Edit
+
+		public int PendEdit(FilePath path)
 		{
 			return PendEdit(path, RecursionType.None);
 		}
 
-		public int PendEdit(string path, RecursionType recursionType)
+		public int PendEdit(FilePath path, RecursionType recursionType)
 		{
-			string[] paths = new string[1];
-			paths[0] = path;
-
+			var paths = new List<FilePath> { path };
 			return PendEdit(paths, recursionType);
 		}
 
-		public int PendEdit(string[] paths, RecursionType recursionType)
+		public int PendEdit(List<FilePath> paths, RecursionType recursionType)
 		{
-			if (paths.Length == 0)
+			if (paths.Count == 0)
 				return 0;
 
 			var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
@@ -444,6 +434,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			this.RefreshPendingChanges();
 			return getOperations.Count;
 		}
+
+		#endregion
 
 		public int PendRename(string oldPath, string newPath)
 		{
@@ -754,6 +746,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			MakeFileReadOnly(operation.TargetLocalItem);
 		}
 
+		void ProcessDelete(GetOperation operation)
+		{
+			var path = new FilePath(operation.TargetLocalItem);
+			if (path.IsDirectory)
+				Directory.Delete(path, true);
+			else
+				File.Delete(path);
+		}
+
 		private void ProcessGetOperations(List<GetOperation> getOperations, bool reverse)
 		{
 			var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
@@ -769,6 +770,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				if (operation.ChangeType.HasFlag(ChangeType.Edit))
 				{
 					ProcessEdit(operation, downloadService, reverse);
+					updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+				}
+				if (operation.ChangeType.HasFlag(ChangeType.Delete))
+				{
+					if (reverse)
+						ProcessGet(operation, downloadService);
+					else
+						ProcessDelete(operation);
 					updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
 				}
 				if (operation.ChangeType.HasFlag(ChangeType.None))

@@ -30,8 +30,7 @@
 				description = "Team Explorer."/>
 			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
 				_label = "_Check Out"
-				description = "Check Out File."
-				defaultHandler="MonoDevelop.VersionControl.TFS.Commands.CheckoutCommandHandler"  ></Command>
+				description = "Check Out File."/>
 		</Category>
 	</Extension>
 
@@ -43,26 +42,22 @@
 		</ItemSet>
 	</Extension>
 
+	<Extension path = "/MonoDevelop/Ide/Pads/ProjectPad">
+		<NodeBuilder class = "MonoDevelop.VersionControl.TFS.Infrastructure.TFSNodeExtension"/>
+	</Extension>
+
 	<Extension path = "/MonoDevelop/Ide/ContextMenu/ProjectPad/VersionControl">
-		<Condition id="ItemType" value="IFolderItem|IFileItem">
+		<Condition id="ItemType" value="IFileItem">
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" 
 			insertbefore="MonoDevelop.VersionControl.Commands.ResolveConflicts"/>
 		</Condition>
 	</Extension>
-
-<!--	<Extension path = "/MonoDevelop/VersionControl/StatusViewCommands">
-		<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" type=""/>
-	</Extension>-->
-
+	
 	<Extension path = "/MonoDevelop/Ide/Pads">
 		<Pad id = "MonoDevelop.VersionControl.TFS.TeamExplorerPad" defaultLayout="Solution" defaultPlacement = "Right" 
 			class = "MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad" _label="Team Explorer" />
 	</Extension>
-
-<!--	<Extension path = "/MonoDevelop/Ide/StartupHandlers">
-		<Class class="MonoDevelop.VersionControl.TFS.Commands.InitHandler" />
-	</Extension>-->
-
+	
 	<Extension path = "/MonoDevelop/VersionControl/CommitDialogExtensions">
 		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
 	</Extension>

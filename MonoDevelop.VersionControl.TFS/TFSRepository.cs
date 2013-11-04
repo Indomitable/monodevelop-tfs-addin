@@ -120,7 +120,7 @@ namespace MonoDevelop.VersionControl.TFS
 			}
 			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Delete)))
 			{
-				status = status | VersionStatus.Modified;
+				status = status | VersionStatus.ScheduledDelete;
 				return status;
 			}
 			if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Merge)))
@@ -271,7 +271,7 @@ namespace MonoDevelop.VersionControl.TFS
 
 		protected override void OnAdd(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
 		{
-			var filesPerWorkspace = from f in localPaths.Select(p => (string)p)
+			var filesPerWorkspace = from f in localPaths
 			                        let workspace = this.GetWorkspaceByLocalPath(f)
 			                        group f by workspace into wg
 			                        select wg;
@@ -285,12 +285,30 @@ namespace MonoDevelop.VersionControl.TFS
 
 		protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor)
 		{
-			throw new NotImplementedException();
+			var filesPerWorkspace = from f in localPaths
+			                        let workspace = this.GetWorkspaceByLocalPath(f)
+			                        group f by workspace into wg
+			                        select wg;
+
+			foreach (var ws in filesPerWorkspace)
+			{
+				ws.Key.PendDelete(ws.ToList(), RecursionType.None);
+			}
+			FileService.NotifyFilesChanged(localPaths);
 		}
 
 		protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor)
 		{
-			throw new NotImplementedException();
+			var filesPerWorkspace = from f in localPaths
+			                        let workspace = this.GetWorkspaceByLocalPath(f)
+			                        group f by workspace into wg
+			                        select wg;
+
+			foreach (var ws in filesPerWorkspace)
+			{
+				ws.Key.PendDelete(ws.ToList(), RecursionType.Full);
+			}
+			FileService.NotifyFilesChanged(localPaths);
 		}
 
 		protected override string OnGetTextAtRevision(FilePath repositoryPath, Revision revision)
@@ -397,6 +415,24 @@ namespace MonoDevelop.VersionControl.TFS
 			if (vinfo.Status.HasFlag(VersionStatus.ScheduledAdd))
 				supportedOperations &= ~VersionControlOperation.Log;
 			return supportedOperations;
+		}
+
+		public override bool RequestFileWritePermission(FilePath path)
+		{
+			if (!File.Exists(path))
+				return true;
+			if (!File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
+				return true;
+			try
+			{
+				this.CheckoutFile(path);
+			}
+			catch
+			{
+				return false;
+			}
+			MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, path, false));
+			return true;
 		}
 
 		#endregion
