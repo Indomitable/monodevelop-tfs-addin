@@ -791,10 +791,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
 				{
 					if (reverse)
+					{
 						ProcessGet(operation, downloadService);
+						updates.QueueUpdate(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
+					}
 					else
+					{
 						ProcessDelete(operation);
-					updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
+						updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
+					}
 					continue;
 				}
 				if (operation.ChangeType.HasFlag(ChangeType.None))
