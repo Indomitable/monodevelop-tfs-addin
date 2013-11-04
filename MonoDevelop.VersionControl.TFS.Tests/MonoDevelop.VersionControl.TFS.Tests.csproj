@@ -10,6 +10,7 @@
     <RootNamespace>MonoDevelop.VersionControl.TFS.Tests</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS.Tests</AssemblyName>
     <UseMSBuildEngine>False</UseMSBuildEngine>
+    <ReleaseVersion>0.2</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -36,11 +37,9 @@
     </Reference>
     <Reference Include="MonoDevelop.VersionControl">
       <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
-      <Package>monodevelop-core-addins</Package>
     </Reference>
     <Reference Include="MonoDevelop.Core">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
-      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
