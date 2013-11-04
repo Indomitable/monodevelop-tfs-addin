@@ -374,10 +374,10 @@ namespace MonoDevelop.VersionControl.TFS
 			if (versionInfo.LocalPath.IsDirectory)
 				return null;
 			string text = string.Empty;
-			if (versionInfo.Status == VersionStatus.ScheduledAdd || versionInfo.Status == VersionStatus.ScheduledDelete)
+			if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd) || versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
 			{
 				var lines = File.ReadAllLines(versionInfo.LocalPath);
-				if (versionInfo.Status == VersionStatus.ScheduledAdd)
+				if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd))
 				{
 					text = string.Join(Environment.NewLine, lines.Select(l => "+" + l));
 					return new DiffInfo(baseLocalPath, versionInfo.LocalPath, text);

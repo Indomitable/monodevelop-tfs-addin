@@ -36,6 +36,8 @@ using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.Core;
+using System.Diagnostics;
+using MonoDevelop.Ide.Gui;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -748,11 +750,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
 		void ProcessDelete(GetOperation operation)
 		{
-			var path = new FilePath(operation.TargetLocalItem);
-			if (path.IsDirectory)
-				Directory.Delete(path, true);
-			else
-				File.Delete(path);
+			var path = operation.SourceLocalItem;
+			try
+			{
+				if (operation.ItemType == ItemType.File)
+				{
+					if (File.Exists(path))
+						File.Delete(path);
+				}
+				else
+				{
+					if (Directory.Exists(path))
+						Directory.Delete(path, true);
+				}
+			}
+			catch
+			{
+				LoggingService.Log(MonoDevelop.Core.Logging.LogLevel.Info, "Can not delete path:" + path);
+			}
 		}
 
 		private void ProcessGetOperations(List<GetOperation> getOperations, bool reverse)
@@ -771,14 +786,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 				{
 					ProcessEdit(operation, downloadService, reverse);
 					updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+					continue;
 				}
-				if (operation.ChangeType.HasFlag(ChangeType.Delete))
+				if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
 				{
 					if (reverse)
 						ProcessGet(operation, downloadService);
 					else
 						ProcessDelete(operation);
-					updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+					updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
+					continue;
 				}
 				if (operation.ChangeType.HasFlag(ChangeType.None))
 				{
