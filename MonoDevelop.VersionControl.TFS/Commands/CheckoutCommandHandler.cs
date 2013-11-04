@@ -30,43 +30,43 @@ using MonoDevelop.Core;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
-    class CheckoutCommandHandler : CommandHandler
-    {
-        protected override void Run(object dataItem)
-        {
-            var fileItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFileItem;
-            var folderItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFolderItem;
-            if (fileItem == null) //Only files for now.
+	class CheckoutCommandHandler : CommandHandler
+	{
+		protected override void Run(object dataItem)
+		{
+			var fileItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFileItem;
+			var folderItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFolderItem;
+			if (fileItem == null) //Only files for now.
                 return;
-            var workspaceItem = IdeApp.ProjectOperations.CurrentSelectedWorkspaceItem;
-            var tfsRepo = (TFSRepository)VersionControlService.GetRepository(workspaceItem);
-            var path = fileItem == null ? folderItem.BaseDirectory : fileItem.FileName;
-            tfsRepo.CheckoutFile(path);
-        }
+			var workspaceItem = IdeApp.ProjectOperations.CurrentSelectedWorkspaceItem;
+			var tfsRepo = (TFSRepository)VersionControlService.GetRepository(workspaceItem);
+			var path = fileItem == null ? folderItem.BaseDirectory : fileItem.FileName;
+			tfsRepo.CheckoutFile(path);
+		}
 
-        protected override void Update(CommandInfo info)
-        {
-            var workspaceItem = IdeApp.ProjectOperations.CurrentSelectedWorkspaceItem;
-            var tfsRepo = VersionControlService.GetRepository(workspaceItem) as TFSRepository;
-            if (tfsRepo == null)
-            {
-                info.Visible = false;
-                return;
-            }
-            var fileItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFileItem;
-            var folderItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFolderItem;
-            if (fileItem == null && folderItem == null)
-            {
-                info.Visible = false;
-                return;
-            }
-            var path = fileItem == null ? folderItem.BaseDirectory : fileItem.FileName; 
-            var versionItem = new VersionControlItem(tfsRepo, workspaceItem, path, fileItem == null, null);
-            if (!versionItem.VersionInfo.IsVersioned || versionItem.VersionInfo.HasLocalChanges)
-            {
-                info.Visible = false;
-                return;
-            }
-        }
-    }
+		protected override void Update(CommandInfo info)
+		{
+			var workspaceItem = IdeApp.ProjectOperations.CurrentSelectedWorkspaceItem;
+			var tfsRepo = VersionControlService.GetRepository(workspaceItem) as TFSRepository;
+			if (tfsRepo == null)
+			{
+				info.Visible = false;
+				return;
+			}
+			var fileItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFileItem;
+			var folderItem = IdeApp.ProjectOperations.CurrentSelectedItem as IFolderItem;
+			if (fileItem == null && folderItem == null)
+			{
+				info.Visible = false;
+				return;
+			}
+			var path = fileItem == null ? folderItem.BaseDirectory : fileItem.FileName;
+			var versionInfo = tfsRepo.GetVersionInfo(path);
+			if (!versionInfo.IsVersioned || versionInfo.HasLocalChanges)
+			{
+				info.Visible = false;
+				return;
+			}
+		}
+	}
 }

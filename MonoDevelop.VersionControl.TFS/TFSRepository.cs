@@ -33,6 +33,7 @@ using System.Linq;
 using Mono.TextEditor;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using Gtk;
+using MonoDevelop.Core.Serialization;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -139,11 +140,15 @@ namespace MonoDevelop.VersionControl.TFS
 		{
 			if (item == null)
 				return VersionStatus.Unversioned;
+			var status = VersionStatus.Versioned;
+			if (item.LockStatus.HasFlag(LockLevel.Checkin) || item.LockStatus.HasFlag(LockLevel.CheckOut))
+				status = status | VersionStatus.Locked;
 			if (item.DeletionId > 0)
-				return VersionStatus.Missing;
+				return status | VersionStatus.Missing;
 			if (item.VersionLatest > item.VersionLocal)
-				return VersionStatus.Modified;
-			return VersionStatus.Versioned;
+				return status | VersionStatus.Modified;
+
+			return status;
 		}
 
 		protected Revision GetLocalRevision(ExtendedItem item)
@@ -189,7 +194,7 @@ namespace MonoDevelop.VersionControl.TFS
 				GetLocalVersionStatus(i), GetLocalRevision(i), 
 				getRemoteStatus ? GetServerVersionStatus(i) : VersionStatus.Versioned, 
 				getRemoteStatus ? GetServerRevision(i) : null)));
-			infos.AddRange(paths.Where(p => infos.All(i => p != i.LocalPath)).Select(p => VersionInfo.CreateUnversioned(p, p.IsDirectory)));
+			infos.AddRange(paths.Where(p => infos.All(i => p.CanonicalPath != i.LocalPath.CanonicalPath)).Select(p => VersionInfo.CreateUnversioned(p, p.IsDirectory)));
 			return infos.ToArray();
 		}
 

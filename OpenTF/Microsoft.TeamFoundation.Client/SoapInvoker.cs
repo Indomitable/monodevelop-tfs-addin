@@ -42,7 +42,6 @@ namespace Microsoft.TeamFoundation.Client
 		XNamespace messagegNs;
 		XDocument document;
 		string methodName;
-		private readonly object locker = new object();
 
 		public SoapInvoker(string serverUrl, string serviceUrl, ICredentials credentials)
 		{
@@ -113,6 +112,16 @@ namespace Microsoft.TeamFoundation.Client
 				}
 			}
 
+		}
+
+		public override string ToString()
+		{
+			StringBuilder builder = new StringBuilder();
+			builder.AppendLine("User Name:" + ((NetworkCredential)credentials).UserName);
+			builder.AppendLine("Domain:" + ((NetworkCredential)credentials).Domain);
+			builder.AppendLine("Password:" + ((NetworkCredential)credentials).Password);
+			builder.Append(document.ToString());
+			return builder.ToString();
 		}
 	}
 }
