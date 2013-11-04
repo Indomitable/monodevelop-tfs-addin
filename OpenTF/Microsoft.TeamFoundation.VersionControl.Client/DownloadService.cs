@@ -28,6 +28,7 @@ using Microsoft.TeamFoundation.Client;
 using System.Net;
 using System.IO;
 using System.IO.Compression;
+using MonoDevelop.Core;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -122,7 +123,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 File.Delete(path);
             }
 
-            File.Move(tempPath, path);
+			File.Copy(tempPath, path);
             File.Delete(tempPath);
         }
     }

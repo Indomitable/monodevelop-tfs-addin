@@ -729,7 +729,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 			if (reverse)
 			{
 				DownloadFile(operation, downloadService);
-				MakeFileReadOnly(operation.TargetLocalItem);
+				if (operation.ItemType == ItemType.File)
+					MakeFileReadOnly(operation.TargetLocalItem);
 			}
 			else
 			{
@@ -745,7 +746,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 		private void ProcessGet(GetOperation operation, VersionControlDownloadService downloadService)
 		{
 			DownloadFile(operation, downloadService);
-			MakeFileReadOnly(operation.TargetLocalItem);
+			if (operation.ItemType == ItemType.File)
+				MakeFileReadOnly(operation.TargetLocalItem);
 		}
 
 		void ProcessDelete(GetOperation operation)
