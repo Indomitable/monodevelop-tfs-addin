@@ -22,11 +22,26 @@
       </CustomCommands>
     </CustomCommands>
     <DebugSymbols>true</DebugSymbols>
+    <DefineConstants>DBus</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>false</Optimize>
     <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
     <WarningLevel>4</WarningLevel>
+    <DefineConstants>DBus</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug - No Dbus|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <Optimize>false</Optimize>
+    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
+    <WarningLevel>4</WarningLevel>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
+      </CustomCommands>
+    </CustomCommands>
+    <ConsolePause>false</ConsolePause>
+    <DefineConstants>NoDBus</DefineConstants>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -81,9 +96,6 @@
     <Reference Include="ICSharpCode.NRefactory">
       <HintPath>..\External\monodevelop\main\build\bin\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
-    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5">
-      <Private>False</Private>
-    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
@@ -91,6 +103,11 @@
     </Reference>
     <Reference Include="Mono.TextEditor">
       <HintPath>..\External\monodevelop\main\build\bin\Mono.TextEditor.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup Condition=" '$(DefineConstants)' == 'DBus' ">
+    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5">
+      <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

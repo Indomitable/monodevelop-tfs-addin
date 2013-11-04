@@ -26,7 +26,10 @@
 using System;
 using System.Net;
 using MonoDevelop.Core;
+
+#if DBus
 using DBus;
+#endif
 using System.Collections.Generic;
 
 namespace MonoDevelop.VersionControl.TFS.Helpers
@@ -36,7 +39,7 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 		public const string DomainUrlSplitter = "%5C";
 		const string applicationId = "MonoDevelop.VersionControl.TFS.Addin";
 		const string folderName = "VersionControl.TFS";
-
+		#if DBus
 		public static bool IsRunningKDE { get { return !string.IsNullOrWhiteSpace(System.Environment.GetEnvironmentVariable("KDE_SESSION_VERSION")); } }
 
 		[Interface("org.kde.KWallet")]
@@ -116,6 +119,9 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 			}
 		}
 
+#else
+		public static bool IsRunningKDE { get { return false; } }
+		#endif
 		/// <summary>
 		/// Stores the credential.
 		/// </summary>
@@ -131,10 +137,14 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 			}
 			else //If Linux
 			{
+#if DBus
 				if (!IsRunningKDE || !SaveToKWallet(url, password)) //Use KDE Wallet should write code for Gnome Keyring.
 				{
 					return false;
 				}
+#else
+				return false;
+#endif
 			}
 			return true;
 		}
@@ -151,10 +161,12 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 			}
 			else //If Linux
 			{
+#if DBus
 				if (IsRunningKDE)
 				{
 					return LoadFromKWallet(buider.Uri);
 				}
+#endif
 			}
 			return password;
 		}
