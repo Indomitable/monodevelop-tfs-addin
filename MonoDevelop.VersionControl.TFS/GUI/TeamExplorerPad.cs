@@ -29,8 +29,6 @@ using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.Client;
-using MonoDevelop.VersionControl.TFS.Helpers;
-using Microsoft.TeamFoundation.Client;
 using System.Linq;
 using System;
 

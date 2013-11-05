@@ -411,6 +411,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var item = _listStore.GetValue(e.RowIndex, _itemList);
             if (item.ItemType == ItemType.Folder)
                 ExpandPath(item.TargetServerItem);
+            if (item.ItemType == ItemType.File && IsMapped(item.ServerPath))
+            {
+                if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalItem))
+                {
+                    IdeApp.Workspace.OpenWorkspaceItem(item.LocalItem, true);
+                }
+                else
+                {
+                    IdeApp.Workbench.OpenDocument(item.LocalItem, null, true);
+                }
+            }
         }
 
         #endregion
@@ -435,6 +446,21 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
                 getLatestVersionItem.Clicked += (sender, e) => GetLatestVersion(item, invoker);
                 menu.Items.Add(getLatestVersionItem);
+
+                MenuItem forceGetLatestVersionItem = new MenuItem(GettextCatalog.GetString("Force Get Latest Version"));
+                forceGetLatestVersionItem.Clicked += (sender, e) => ForceGetLatestVersion(item, invoker);
+                menu.Items.Add(forceGetLatestVersionItem);
+
+                if (invoker == MenuInvoker.ListView) //List Popup Menu
+                {
+                    var listItem = (ExtendedItem)item;
+                    if (listItem.ChangeType != Microsoft.TeamFoundation.VersionControl.Client.ChangeType.None)
+                    {
+                        MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
+                        revertItem.Clicked += (sender, e) => UndoChanges(listItem);
+                        menu.Items.Add(revertItem);
+                    }
+                }
             }
             return menu;
         }
@@ -453,6 +479,29 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 FillListView(item.ServerPath.ParentPath);
             }
+        }
+
+        private void ForceGetLatestVersion(IItem item, MenuInvoker invoker)
+        {
+            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
+            GetRequest request = new GetRequest(item.ServerPath, recursion, VersionSpec.Latest);
+            _currentWorkspace.Get(request, GetOptions.Overwrite);
+            //Refresh List
+            if (invoker == MenuInvoker.TreeView)
+            {
+                FillListView(item.ServerPath);
+            }
+            else
+            {
+                FillListView(item.ServerPath.ParentPath);
+            }
+        }
+
+        private void UndoChanges(ExtendedItem item)
+        {
+            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
+            _currentWorkspace.Undo(item.LocalItem, recursion);
+            FillListView(item.ServerPath.ParentPath);
         }
 
         #endregion
