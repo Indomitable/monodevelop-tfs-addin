@@ -99,4 +99,37 @@
       </Properties>
     </Addin>
   </Addin>
+  <Addin>
+    <Url>MonoDevelop.VersionControl.TFS_0.4.mpack</Url>
+    <Addin>
+      <Id>VersionControl.TFS</Id>
+      <Namespace>MonoDevelop</Namespace>
+      <Name>TFS support</Name>
+      <Version>0.4</Version>
+      <BaseVersion />
+      <Author>Ventsislav Mladenov</Author>
+      <Copyright>MIT X11</Copyright>
+      <Url>https://github.com/Indomitable</Url>
+      <Description>TFS support for the Version Control Add-in</Description>
+      <Category>Version Control</Category>
+      <Dependencies>
+        <AddinDependency>
+          <AddinId>Core</AddinId>
+          <Version>4.1</Version>
+        </AddinDependency>
+        <AddinDependency>
+          <AddinId>Ide</AddinId>
+          <Version>4.1</Version>
+        </AddinDependency>
+        <AddinDependency>
+          <AddinId>VersionControl</AddinId>
+          <Version>4.1</Version>
+        </AddinDependency>
+      </Dependencies>
+      <OptionalDependencies />
+      <Properties>
+        <Property name="DownloadSize">101093</Property>
+      </Properties>
+    </Addin>
+  </Addin>
 </Repository>
