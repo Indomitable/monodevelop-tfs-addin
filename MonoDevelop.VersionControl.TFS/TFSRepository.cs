@@ -34,6 +34,7 @@ using Mono.TextEditor;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using Gtk;
 using MonoDevelop.Core.Serialization;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -425,7 +426,17 @@ namespace MonoDevelop.VersionControl.TFS
 				return true;
 			try
 			{
+				var doc = IdeApp.Workbench.ActiveDocument;
+				DocumentLocation location = default(DocumentLocation);
+				if (doc != null && doc.FileName == path && doc.Editor != null)
+				{
+					location = doc.Editor.Caret.Location;
+				}
 				this.CheckoutFile(path);
+				if (!location.IsEmpty)
+				{
+					doc.Editor.SetCaretTo(location.Line, location.Column, false);
+				}
 			}
 			catch
 			{

@@ -66,7 +66,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public void Initialize(IPadWindow window)
         {
             var toolBar = window.GetToolbar(Gtk.PositionType.Top);
-            CommandToolButton button = new CommandToolButton(TFSCommands.ConnectToServer, IdeApp.CommandService) { IconName = Gtk.Stock.Add };
+            CommandToolButton button = new CommandToolButton(TFSCommands.ConnectToServer, IdeApp.CommandService) { StockId = Gtk.Stock.Add };
             toolBar.Add(button);
             _treeView.Columns.Add(new ListViewColumn(string.Empty, new TextCellView(_name)));
             _treeView.DataSource = _treeStore;
@@ -110,7 +110,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                                                .SetValue(_item, server);
                 try
                 {
-                    foreach (var pc in server.ProjectCollections) 
+                    foreach (var pc in server.ProjectCollections)
                     {
                         node.AddChild().SetValue(_name, pc.Name)
                                        .SetValue(_type, NodeType.ProjectCollection)

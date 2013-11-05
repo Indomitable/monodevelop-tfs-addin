@@ -36,7 +36,10 @@ namespace MonoDevelop.VersionControl.TFS.Commands
             if (pad == null)
             {
                 var content = new MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad();
+                //pad = IdeApp.Workbench.AddPad(content, "MonoDevelop.VersionControl.TFS.TeamExplorerPad", "Team Explorer", "Right", null);
                 pad = IdeApp.Workbench.ShowPad(content, "MonoDevelop.VersionControl.TFS.TeamExplorerPad", "Team Explorer", "Right", null);
+                if (pad == null)
+                    return;
             }
             pad.Sticky = true;
             pad.AutoHide = false;
