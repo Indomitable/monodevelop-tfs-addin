@@ -37,6 +37,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class RepositoryService : Microsoft.TeamFoundation.Client.TfsService
     {
+
+        #region TfsService
+
         public override XNamespace MessageNs
         {
             get
@@ -52,6 +55,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return new VersionControlServiceResolver();
             }
         }
+
+        #endregion
 
         #region Workspaces
 
@@ -119,7 +124,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue)
+        internal void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("UpdateLocalVersion");
@@ -333,7 +338,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
         }
 
-        public List<PendingChange> QueryPendingChangesForWorkspace(Workspace workspace, List<ItemSpec> itemSpecs, bool includeDownloadInfo)
+        internal List<PendingChange> QueryPendingChangesForWorkspace(Workspace workspace, List<ItemSpec> itemSpecs, bool includeDownloadInfo)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("QueryPendingChangesForWorkspace");
@@ -379,7 +384,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return Changeset.FromXml(result);
         }
 
-        public void UploadFile(Workspace workspace, PendingChange change)
+        internal void UploadFile(Workspace workspace, PendingChange change)
         {
             if (change.ItemType != ItemType.File)
                 return;
@@ -395,7 +400,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return null;
         }
 
-        public void CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
+        internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("CheckIn");
@@ -411,7 +416,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 new XElement(MessageNs + "PolicyOverride", string.Empty)));
 
             var response = invoker.InvokeResponse();
+            //var result = invoker.MethodResultExtractor(response);
             var failures = FailuresExtractor(response);
+            return failures;
         }
 
         public void QueryConflicts(Workspace workspace)

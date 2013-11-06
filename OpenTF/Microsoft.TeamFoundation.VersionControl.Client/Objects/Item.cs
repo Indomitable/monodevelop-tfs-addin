@@ -47,19 +47,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             Item item = new Item();
             item.ServerItem = element.GetAttribute("item");
             item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            item.DeletionId = Convert.ToInt32(element.GetAttribute("did"));
+            item.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
             item.CheckinDate = DateTime.Parse(element.GetAttribute("date"));
-            item.ChangesetId = Convert.ToInt32(element.GetAttribute("cs"));
-            item.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
-            item.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
+            item.ChangesetId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("cs"));
+            item.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
+            item.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
 
             if (!string.IsNullOrEmpty(element.GetAttribute("isbranch")))
             {
-                item.IsBranch = GeneralHelper.ToBool(element.GetAttribute("isbranch"));
+                item.IsBranch = GeneralHelper.XmlAttributeToBool(element.GetAttribute("isbranch"));
             }
             if (item.ItemType == ItemType.File)
             {
-                item.ContentLength = Convert.ToInt32(element.GetAttribute("len"));
+                item.ContentLength = GeneralHelper.XmlAttributeToInt(element.GetAttribute("len"));
                 item.ArtifactUri = element.GetAttribute("durl");
                 item.HashValue = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
             }
@@ -157,7 +157,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
                 return false;
             if (ReferenceEquals(this, other))
                 return true;
-            return other.ServerItem == ServerItem;
+            return string.Equals(other.ServerItem, ServerItem, StringComparison.OrdinalIgnoreCase);
         }
 
         #endregion

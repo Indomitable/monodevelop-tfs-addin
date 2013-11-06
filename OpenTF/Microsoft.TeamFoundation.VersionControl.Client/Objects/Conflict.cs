@@ -35,45 +35,45 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         internal static Conflict FromXml(XElement element)
         {
             Conflict conflict = new Conflict();
-            conflict.ConflictId = Convert.ToInt32(element.GetAttribute("cid"));
-            conflict.PendingChangeId = Convert.ToInt32(element.GetAttribute("pcid"));
+            conflict.ConflictId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("cid"));
+            conflict.PendingChangeId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("pcid"));
             //Your
             conflict.YourChangeType = EnumHelper.ParseChangeType(element.GetAttribute("ychg"));
             conflict.YourServerItem = element.GetAttribute("ysitem");
             conflict.YourServerItemSource = element.GetAttribute("ysitemsrc");
-            conflict.YourEncoding = Convert.ToInt32(element.GetAttribute("yenc"));
+            conflict.YourEncoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("yenc"));
             conflict.YourItemType = EnumHelper.ParseItemType(element.GetAttribute("ytype"));
-            conflict.YourVersion = Convert.ToInt32(element.GetAttribute("yver"));
-            conflict.YourItemId = Convert.ToInt32(element.GetAttribute("yitemid"));
-            conflict.YourDeletionId = Convert.ToInt32(element.GetAttribute("ydid"));
+            conflict.YourVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("yver"));
+            conflict.YourItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("yitemid"));
+            conflict.YourDeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("ydid"));
             conflict.YourLocalChangeType = EnumHelper.ParseChangeType(element.GetAttribute("ylchg"));
-            conflict.YourLastMergedVersion = Convert.ToInt32(element.GetAttribute("ylmver"));
+            conflict.YourLastMergedVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("ylmver"));
             //Base
             conflict.BaseServerItem = element.GetAttribute("bsitem");
-            conflict.BaseEncoding = Convert.ToInt32(element.GetAttribute("benc"));
-            conflict.BaseItemId = Convert.ToInt32(element.GetAttribute("bitemid"));
-            conflict.BaseVersion = Convert.ToInt32(element.GetAttribute("bver"));
+            conflict.BaseEncoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("benc"));
+            conflict.BaseItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("bitemid"));
+            conflict.BaseVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("bver"));
             conflict.BaseHashValue = GeneralHelper.ToByteArray(element.GetAttribute("bhash"));
-            conflict.BaseDeletionId = Convert.ToInt32(element.GetAttribute("bdid"));
+            conflict.BaseDeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("bdid"));
             conflict.BaseItemType = EnumHelper.ParseItemType(element.GetAttribute("btype"));
             conflict.BaseChangeType = EnumHelper.ParseChangeType(element.GetAttribute("bchg"));
             //Their
-            conflict.TheirItemId = Convert.ToInt32(element.GetAttribute("titemid"));
-            conflict.TheirVersion = Convert.ToInt32(element.GetAttribute("tver"));
+            conflict.TheirItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("titemid"));
+            conflict.TheirVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tver"));
             conflict.TheirServerItem = element.GetAttribute("tsitem");
-            conflict.TheirEncoding = Convert.ToInt32(element.GetAttribute("tenc"));
+            conflict.TheirEncoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tenc"));
             conflict.TheirHashValue = GeneralHelper.ToByteArray(element.GetAttribute("tenc"));
-            conflict.TheirDeletionId = Convert.ToInt32(element.GetAttribute("tdid"));
+            conflict.TheirDeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tdid"));
             conflict.TheirItemType = EnumHelper.ParseItemType(element.GetAttribute("ttype"));
-            conflict.TheirLastMergedVersion = Convert.ToInt32(element.GetAttribute("tlmver"));
+            conflict.TheirLastMergedVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tlmver"));
             conflict.SourceLocalItem = element.GetAttribute("srclitem");
             conflict.TargetLocalItem = element.GetAttribute("tgtlitem");
 
             conflict.ConflictType = EnumHelper.ParseConflictType(element.GetAttribute("ctype"));
-            conflict.Reason = Convert.ToInt32(element.GetAttribute("reason"));
-            conflict.IsNamespaceConflict = GeneralHelper.ToBool(element.GetAttribute("isnamecflict"));
-            conflict.IsForced = GeneralHelper.ToBool(element.GetAttribute("isforced"));
-            conflict.IsResolved = GeneralHelper.ToBool(element.GetAttribute("tgtlitem"));
+            conflict.Reason = GeneralHelper.XmlAttributeToInt(element.GetAttribute("reason"));
+            conflict.IsNamespaceConflict = GeneralHelper.XmlAttributeToBool(element.GetAttribute("isnamecflict"));
+            conflict.IsForced = GeneralHelper.XmlAttributeToBool(element.GetAttribute("isforced"));
+            conflict.IsResolved = GeneralHelper.XmlAttributeToBool(element.GetAttribute("tgtlitem"));
 
             conflict.BaseDowloadUrl = element.GetAttribute("bdurl");
             conflict.TheirDowloadUrl = element.GetAttribute("tdurl");

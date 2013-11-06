@@ -36,12 +36,25 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Helpers
             return Convert.FromBase64String(value);
         }
 
-        public static bool ToBool(string value)
+        public static bool XmlAttributeToBool(string value)
         {
             if (string.IsNullOrWhiteSpace(value))
                 return false;
             return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
         }
+
+        public static int XmlAttributeToInt(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return 0;
+            return Convert.ToInt32(value);
+        }
+
+        public static DateTime XmlAttributeToDate(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return DateTime.MinValue;
+            return DateTime.Parse(value);
+        }
     }
 }
-

@@ -96,7 +96,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             failure.IdentityName = element.GetAttribute("ident");
             failure.LocalItem = element.GetAttribute("local");
             failure.ServerItem = element.GetAttribute("item");
-            failure.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
+            failure.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
             if (element.Element(element.Name.Namespace + "Message") != null)
                 failure.Message = element.Element(element.Name.Namespace + "Message").Value;
             return failure;

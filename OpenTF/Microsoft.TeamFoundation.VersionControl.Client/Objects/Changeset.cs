@@ -32,6 +32,7 @@ using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 using System.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -76,7 +77,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         {
             Changeset changeset = new Changeset();
             changeset.Committer = element.Attribute("cmtr").Value;
-            changeset.ChangesetId = Convert.ToInt32(element.Attribute("cset").Value);
+            changeset.ChangesetId = GeneralHelper.XmlAttributeToInt(element.Attribute("cset").Value);
             string date = element.Attribute("date").Value;
             changeset.CreationDate = DateTime.ParseExact(date, DateTimeFormats, null, DateTimeStyles.None);
             changeset.Owner = element.Attribute("owner").Value;

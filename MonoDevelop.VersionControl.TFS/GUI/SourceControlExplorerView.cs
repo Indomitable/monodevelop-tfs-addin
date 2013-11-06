@@ -500,7 +500,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void UndoChanges(ExtendedItem item)
         {
             RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
-            _currentWorkspace.Undo(item.LocalItem, recursion);
+            _currentWorkspace.Undo(new List<FilePath> { item.LocalItem }, recursion);
             FillListView(item.ServerPath.ParentPath);
         }
 

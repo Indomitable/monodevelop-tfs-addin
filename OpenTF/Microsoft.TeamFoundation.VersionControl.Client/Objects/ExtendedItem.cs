@@ -80,23 +80,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             };
 
             item.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
-            item.HasOtherPendingChange = GeneralHelper.ToBool(element.GetAttribute("ochg"));
+            item.HasOtherPendingChange = GeneralHelper.XmlAttributeToBool(element.GetAttribute("ochg"));
             item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttribute("lock"));
             item.LockOwner = element.GetAttribute("lowner");
             item.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
             item.TargetServerItem = element.GetAttribute("titem");
             item.SourceServerItem = element.GetAttribute("sitem");
             item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            item.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
-            item.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
-            item.VersionLocal = Convert.ToInt32(element.GetAttribute("lver"));
-            item.VersionLatest = Convert.ToInt32(element.GetAttribute("latest"));
-            item.DeletionId = Convert.ToInt32(element.GetAttribute("did"));
-            item.CheckinDate = DateTime.Parse(element.GetAttribute("date"));
+            item.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
+            item.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
+            item.VersionLocal = GeneralHelper.XmlAttributeToInt(element.GetAttribute("lver"));
+            item.VersionLatest = GeneralHelper.XmlAttributeToInt(element.GetAttribute("latest"));
+            item.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
+            item.CheckinDate = GeneralHelper.XmlAttributeToDate(element.GetAttribute("date"));
 
             if (element.Element(XmlNamespaces.GetMessageElementName("IsBranch")) != null &&
                 !string.IsNullOrEmpty(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value))
-                item.IsBranch = Convert.ToBoolean(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value);
+                item.IsBranch = GeneralHelper.XmlAttributeToBool(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value);
 
             return item;
         }

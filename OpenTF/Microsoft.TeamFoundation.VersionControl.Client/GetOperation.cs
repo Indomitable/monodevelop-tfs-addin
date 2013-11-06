@@ -101,29 +101,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 VersionLocal = 0,
             };
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("type")))
-                getOperation.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
-                getOperation.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("slocal")))
-                getOperation.SourceLocalItem = TfsPath.ToPlatformPath(element.Attribute("slocal").Value);
-            if (!string.IsNullOrEmpty(element.GetAttribute("tlocal")))
-                getOperation.TargetLocalItem = TfsPath.ToPlatformPath(element.Attribute("tlocal").Value);
-
+            getOperation.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
+            getOperation.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
+            getOperation.SourceLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("slocal"));
+            getOperation.TargetLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("tlocal"));
             getOperation.SourceServerItem = element.GetAttribute("sitem");
             getOperation.TargetServerItem = element.GetAttribute("titem");
-
-            getOperation.VersionServer = Convert.ToInt32(element.Attribute("sver").Value);
-
-            getOperation.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
-
+            getOperation.VersionServer = GeneralHelper.XmlAttributeToInt(element.GetAttribute("sver"));
+            getOperation.VersionLocal = GeneralHelper.XmlAttributeToInt(element.GetAttribute("lver"));
             getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
 
             // setup download url if found
-            if (!string.IsNullOrEmpty(element.GetAttribute("durl")))
-                getOperation.ArtifactUri = element.Attribute("durl").Value;
+            getOperation.ArtifactUri = element.GetAttribute("durl");
 
             // here's what you get if you remap a working folder from one
             // team project to another team project with the same file
@@ -131,9 +120,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             // <GetOperation type="File" itemid="159025" slocal="foo.xml" titem="$/bar/foo.xml" lver="12002"><HashValue /></GetOperation>
 
             // look for a deletion id
-            if (!string.IsNullOrEmpty(element.GetAttribute("did")))
-                getOperation.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
-
+            getOperation.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
             return getOperation;
         }
 

@@ -90,5 +90,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Common
         {
             return path.path;
         }
+
+        public override string ToString()
+        {
+            return this.path;
+        }
     }
 }

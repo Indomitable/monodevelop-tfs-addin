@@ -42,6 +42,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
     {
+
+        #region Constructors
+
         private Workspace(string name, 
                           string ownerName, string comment, 
                           WorkingFolder[] folders, string computer)
@@ -81,6 +84,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             : this(collection, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
         {
         }
+
+        #endregion
 
         public void CheckIn(List<PendingChange> changes, string comment)
         {
@@ -147,13 +152,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public void Delete()
-        {
-            throw new NotImplementedException();
-//            Repository.DeleteWorkspace(Name, OwnerName);
-            //Workstation.Current.RemoveCachedWorkspaceInfo(VersionControlServer.Uri, Name);
-        }
-
         #region Get
 
         public GetStatus Get()
@@ -191,7 +189,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             bool noGet = ((GetOptions.Preview & options) == GetOptions.Preview);
 
             var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
-            ProcessGetOperations(getOperations, false);
+            ProcessGetOperations(getOperations, ProcessType.Get);
             return new GetStatus(getOperations.Count);
         }
 
@@ -295,18 +293,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            Update(Name, OwnerName, folders);
         }
 
-        #region Pend Add
-
-        public int PendAdd(FilePath path)
-        {
-            return PendAdd(path, false);
-        }
-
-        public int PendAdd(FilePath path, bool isRecursive)
-        {
-            var paths = new List<FilePath> { path };
-            return PendAdd(paths, isRecursive);
-        }
+        #region Version Control Operations
 
         private void CollectPaths(FilePath root, List<ChangeRequest> paths)
         {
@@ -342,24 +329,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 }
             }
             var operations = this.VersionControlService.PendChanges(this, changes);
-            ProcessGetOperations(operations, false);
+            ProcessGetOperations(operations, ProcessType.Get);
             this.RefreshPendingChanges();
             return operations.Count;
-        }
-
-        #endregion
-
-        #region Pend Delete
-
-        public void PendDelete(FilePath path)
-        {
-            PendDelete(path, RecursionType.None);
-        }
-
-        public void PendDelete(FilePath path, RecursionType recursionType)
-        {
-            var paths = new List<FilePath> { path };
-            PendDelete(paths, recursionType);
         }
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
         public void PendDelete(List<FilePath> paths, RecursionType recursionType)
@@ -369,6 +341,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, p.IsDirectory ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
             var getOperations = this.VersionControlService.PendChanges(this, changes);
+            this.RefreshPendingChanges();
 //            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
 //
 //            // first delete all files
@@ -405,71 +378,63 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            return operations.Length;
         }
 
-        #endregion
-
-        #region Pend Edit
-
-        public int PendEdit(FilePath path)
-        {
-            return PendEdit(path, RecursionType.None);
-        }
-
-        public int PendEdit(FilePath path, RecursionType recursionType)
-        {
-            var paths = new List<FilePath> { path };
-            return PendEdit(paths, recursionType);
-        }
-
-        public int PendEdit(List<FilePath> paths, RecursionType recursionType)
+        public void PendEdit(List<FilePath> paths, RecursionType recursionType)
         {
             if (paths.Count == 0)
-                return 0;
+                return;
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
             var getOperations = this.VersionControlService.PendChanges(this, changes);
-            ProcessGetOperations(getOperations, false);
+            ProcessGetOperations(getOperations, ProcessType.Get);
             foreach (GetOperation getOperation in getOperations)
             {
                 MakeFileWritable(getOperation.TargetLocalItem);
             }
             this.RefreshPendingChanges();
-            return getOperations.Count;
+        }
+
+        private void PendRename(string oldPath, string newPath, ItemType itemType)
+        {
+            List<ChangeRequest> changes = new List<ChangeRequest>();
+            changes.Add(new ChangeRequest(oldPath, newPath, RequestType.Rename, itemType));
+
+            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            ProcessGetOperations(getOperations, ProcessType.Get);
+            this.RefreshPendingChanges();
+        }
+
+        public void PendRenameFile(string oldPath, string newPath)
+        {
+            PendRename(oldPath, newPath, ItemType.File);
+        }
+
+        public void PendRenameFolder(string oldPath, string newPath)
+        {
+            PendRename(oldPath, newPath, ItemType.Folder);
+        }
+
+        public List<FilePath> Undo(List<FilePath> paths, RecursionType recursionType)
+        {
+            List<ItemSpec> specs = new List<ItemSpec>();
+
+            foreach (string path in paths)
+            {
+                specs.Add(new ItemSpec(path, recursionType));
+            }
+            var operations = this.VersionControlService.UndoPendChanges(this, specs);
+            ProcessGetOperations(operations, ProcessType.Undo);
+            this.RefreshPendingChanges();
+            List<FilePath> undoPaths = new List<FilePath>();
+            foreach (var oper in operations)
+            {
+                undoPaths.Add(oper.TargetLocalItem);
+            }
+            return undoPaths;
         }
 
         #endregion
 
-        public int PendRename(string oldPath, string newPath)
-        {
-            throw new NotImplementedException();
-//            string newServerPath;
-//            if (VersionControlPath.IsServerItem(newPath))
-//                newServerPath = GetServerItemForLocalItem(newPath);
-//            else
-//                newServerPath = newPath;
-//
-//            ItemType itemType = ItemType.File;
-//            if (Directory.Exists(oldPath))
-//                itemType = ItemType.Folder;
-//
-//            List<ChangeRequest> changes = new List<ChangeRequest>();
-//            changes.Add(new ChangeRequest(oldPath, newServerPath, RequestType.Rename, itemType));
-//
-//            GetOperation[] getOperations = Repository.PendChanges(this, changes.ToArray());
-//			
-//            if (itemType == ItemType.File)
-//                File.Move(oldPath, newPath);
-//            else
-//                Directory.Move(oldPath, newPath);
-//
-//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-//            foreach (GetOperation getOperation in getOperations)
-//            {
-//                updates.QueueUpdate(getOperation.ItemId, getOperation.TargetLocalItem, getOperation.VersionServer);
-//            }
-//
-//            updates.Flush();
-//            return 1;
-        }
+        #region Lock
 
         public int SetLock(string path, LockLevel lockLevel)
         {
@@ -507,26 +472,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
 //            return operations.Length;
         }
-        //        public void Shelve(Shelveset shelveset, PendingChange[] changes,
-        //                     ShelvingOptions options)
-        //        {
-        //            throw new NotImplementedException();
-        ////            List<string> serverItems = new List<string>();
-        ////
-        ////            foreach (PendingChange change in changes)
-        ////            {
-        ////                // upload new or changed files only
-        ////                if ((change.ItemType == ItemType.File) &&
-        ////                    (change.IsAdd || change.IsEdit))
-        ////                {
-        ////                    Repository.ShelveFile(Name, OwnerName, change);
-        ////                }
-        ////
-        ////                serverItems.Add(change.ServerItem);
-        ////            }
-        ////
-        ////            Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
-        //        }
+
+        #endregion
+
+        #region Serialization
 
         internal static Workspace FromXml(RepositoryService versionControl, XElement element)
         {
@@ -562,51 +511,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return element;
         }
 
-        public override string ToString()
-        {
-            return "Owner: " + OwnerName + ", Name: " + Name;
-        }
-
-        public List<FilePath> Undo(string path)
-        {
-            return Undo(path, RecursionType.None);
-        }
-
-        public List<FilePath> Undo(string path, RecursionType recursionType)
-        {
-            var paths = new List<string> { path };
-            return Undo(paths, recursionType);
-        }
-
-        public List<FilePath> Undo(List<string> paths, RecursionType recursionType)
-        {
-            List<ItemSpec> specs = new List<ItemSpec>();
-
-            foreach (string path in paths)
-            {
-                specs.Add(new ItemSpec(path, recursionType));
-            }
-            var operations = this.VersionControlService.UndoPendChanges(this, specs);
-            ProcessGetOperations(operations, true);
-            this.RefreshPendingChanges();
-            List<FilePath> undoPaths = new List<FilePath>();
-            foreach (var oper in operations)
-            {
-                undoPaths.Add(oper.SourceLocalItem);
-            }
-            return undoPaths;
-        }
-
-        public void Update(string newName, string newComment, WorkingFolder[] newMappings)
-        {
-            throw new NotImplementedException();
-//            Workspace w1 = new Workspace(VersionControlServer, newName, OwnerName,
-//                               newComment, newMappings, Computer);
-//            Workspace w2 = Repository.UpdateWorkspace(Name, OwnerName, w1);
-//
-//            //Workstation.Current.UpdateWorkspaceInfoCache(VersionControlServer, OwnerName);
-//            folders = w2.Folders;
-        }
+        #endregion
 
         public void RefreshMappings()
         {
@@ -614,22 +519,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 //            Workspace w = Repository.QueryWorkspace(Name, OwnerName);
 //            this.folders = w.folders;
         }
-
-        public string Comment { get; private set; }
-
-        public string Computer { get; private set; }
-
-        public WorkingFolder[] Folders { get; private set; }
-
-        public string Name { get; private set; }
-
-        public DateTime LastAccessDate { get; private set; }
-
-        public string OwnerName { get; private set; }
-
-        public Microsoft.TeamFoundation.Client.ProjectCollection ProjectCollection { get; set; }
-
-        public RepositoryService VersionControlService { get; set; }
 
         internal void MakeFileReadOnly(string path)
         {
@@ -705,6 +594,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion Equal
 
+        #region Process Get Operations
+
         private void DownloadFile(GetOperation operation, VersionControlDownloadService downloadService)
         {
             string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
@@ -722,9 +613,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        private void ProcessEdit(GetOperation operation, VersionControlDownloadService downloadService, bool reverse)
+        private UpdateLocalVersion ProcessEdit(GetOperation operation, VersionControlDownloadService downloadService, ProcessType processType)
         {
-            if (reverse)
+            if (processType == ProcessType.Undo)
             {
                 DownloadFile(operation, downloadService);
                 if (operation.ItemType == ItemType.File)
@@ -734,21 +625,42 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 MakeFileWritable(operation.TargetLocalItem);
             }
+            return new UpdateLocalVersion(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
         }
 
-        private void ProcessAdd(GetOperation operation, VersionControlDownloadService downloadService, bool reverse)
-        {
-            //Nothing to implement ???
-        }
-
-        private void ProcessGet(GetOperation operation, VersionControlDownloadService downloadService)
+        private UpdateLocalVersion ProcessGet(GetOperation operation, VersionControlDownloadService downloadService)
         {
             DownloadFile(operation, downloadService);
             if (operation.ItemType == ItemType.File)
                 MakeFileReadOnly(operation.TargetLocalItem);
+            return new UpdateLocalVersion(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
         }
 
-        void ProcessDelete(GetOperation operation)
+        private UpdateLocalVersion ProcessDelete(GetOperation operation, VersionControlDownloadService downloadService, ProcessType processType)
+        {
+            if (processType == ProcessType.Undo)
+            {
+                var update = ProcessGet(operation, downloadService);
+                var filePath = (FilePath)operation.TargetLocalItem;
+                var projects = MonoDevelop.Ide.IdeApp.Workspace.GetAllProjects();
+                foreach (var project in projects)
+                {
+                    if (filePath.IsChildPathOf(project.BaseDirectory))
+                    {
+                        if (operation.ItemType == ItemType.File)
+                            project.AddFile(operation.TargetLocalItem);
+                        if (operation.ItemType == ItemType.Folder)
+                            project.AddDirectory(operation.TargetLocalItem.Substring(((string)project.BaseDirectory).Length + 1));
+                        break;
+                    }
+                }
+                return update;
+            }
+            else
+                return InternalProcessDelete(operation);
+        }
+
+        private UpdateLocalVersion InternalProcessDelete(GetOperation operation)
         {
             var path = operation.SourceLocalItem;
             try
@@ -768,48 +680,92 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 LoggingService.Log(MonoDevelop.Core.Logging.LogLevel.Info, "Can not delete path:" + path);
             }
+            return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
         }
 
-        private void ProcessGetOperations(List<GetOperation> getOperations, bool reverse)
+        private UpdateLocalVersion ProcessRename(GetOperation operation, ProcessType processType)
+        {
+            if (processType == ProcessType.Undo)
+            {
+                var filePath = (FilePath)operation.SourceLocalItem;
+                var projects = MonoDevelop.Ide.IdeApp.Workspace.GetAllProjects();
+                var found = false;
+                foreach (var project in projects)
+                {
+                    if (filePath.IsChildPathOf(project.BaseDirectory))
+                    {
+                        found = true;
+                        project.Files.Remove(operation.SourceLocalItem);
+                        //Move file only on undo, let Ide do Get Process Type
+                        if (operation.ItemType == ItemType.File)
+                        {
+                            FileService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
+                            project.AddFile(operation.TargetLocalItem);
+                        }    
+                        if (operation.ItemType == ItemType.Folder)
+                        {
+                            FileService.MoveDirectory(operation.SourceLocalItem, operation.TargetLocalItem);
+                            project.AddDirectory(operation.TargetLocalItem.Substring(((string)project.BaseDirectory).Length + 1));
+                        }
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    if (operation.ItemType == ItemType.File)
+                        FileService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
+                    if (operation.ItemType == ItemType.Folder)
+                        FileService.MoveDirectory(operation.SourceLocalItem, operation.TargetLocalItem);
+                }
+            }
+            return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+        }
+
+        private enum ProcessType
+        {
+            Get,
+            Undo,
+        }
+
+        private IEnumerable<UpdateLocalVersion> InternalProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
             var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
             foreach (var operation in getOperations)
             {
                 if (operation.ChangeType.HasFlag(ChangeType.Add))
                 {
-                    ProcessAdd(operation, downloadService, reverse);
-                    continue; //Add changetype has Edit and Encoding changetypes, no need to process more.
-                    //updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+                    continue; //Noting to process
                 }
                 if (operation.ChangeType.HasFlag(ChangeType.Edit))
                 {
-                    ProcessEdit(operation, downloadService, reverse);
-                    updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+                    yield return ProcessEdit(operation, downloadService, processType);
                     continue;
                 }
                 if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
                 {
-                    if (reverse)
-                    {
-                        ProcessGet(operation, downloadService);
-                        updates.QueueUpdate(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
-                    }
-                    else
-                    {
-                        ProcessDelete(operation);
-                        updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
-                    }
+                    yield return ProcessDelete(operation, downloadService, processType);
+                    continue;
+                }
+                if (operation.ChangeType.HasFlag(ChangeType.Rename))
+                {
+                    yield return ProcessRename(operation, processType);
                     continue;
                 }
                 if (operation.ChangeType.HasFlag(ChangeType.None))
                 {
-                    ProcessGet(operation, downloadService);
-                    updates.QueueUpdate(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+                    yield return ProcessGet(operation, downloadService);
                 }
             }
+        }
+
+        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
+        {
+            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+            updates.QueueUpdates(InternalProcessGetOperations(getOperations, processType));
             updates.Flush();
         }
+
+        #endregion
 
         public string GetItemContent(Item item)
         {
@@ -823,6 +779,27 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                        File.ReadAllText(tempName);
             File.Delete(tempName);
             return text;
+        }
+
+        public string Comment { get; private set; }
+
+        public string Computer { get; private set; }
+
+        public WorkingFolder[] Folders { get; private set; }
+
+        public string Name { get; private set; }
+
+        public DateTime LastAccessDate { get; private set; }
+
+        public string OwnerName { get; private set; }
+
+        public Microsoft.TeamFoundation.Client.ProjectCollection ProjectCollection { get; set; }
+
+        public RepositoryService VersionControlService { get; set; }
+
+        public override string ToString()
+        {
+            return "Owner: " + OwnerName + ", Name: " + Name;
         }
     }
 }

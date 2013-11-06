@@ -34,9 +34,9 @@ using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    class Update
+    internal class UpdateLocalVersion
     {
-        public Update(int itemId, string targetLocalItem, int localVersion)
+        public UpdateLocalVersion(int itemId, string targetLocalItem, int localVersion)
         {
             this.ItemId = itemId;
             this.TargetLocalItem = targetLocalItem;
@@ -60,15 +60,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
     }
 
-    public sealed class UpdateLocalVersionQueue
+    internal sealed class UpdateLocalVersionQueue
     {
-        private readonly List<Update> updates;
+        private readonly List<UpdateLocalVersion> updates;
         private readonly Workspace workspace;
 
         public UpdateLocalVersionQueue(Workspace workspace)
         {
             this.workspace = workspace;
-            updates = new List<Update>();
+            updates = new List<UpdateLocalVersion>();
         }
 
         public int Count { get { return updates.Count; } }
@@ -80,9 +80,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             updates.Clear();
         }
 
-        public void QueueUpdate(int itemId, string targetLocalItem, int localVersion)
+        internal void QueueUpdates(IEnumerable<UpdateLocalVersion> updates)
         {
-            updates.Add(new Update(itemId, targetLocalItem, localVersion));
+            this.updates.AddRange(updates);
         }
 
         internal IEnumerable<XElement> ToXml(XNamespace ns)

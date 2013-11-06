@@ -86,7 +86,6 @@ Global
 		$0.CSharpFormattingPolicy = $3
 		$3.IndentSwitchBody = True
 		$3.AlignEmbeddedUsingStatements = False
-		$3.AlignEmbeddedIfStatements = False
 		$3.AutoPropertyFormatting = ForceOneLine
 		$3.AnonymousMethodBraceStyle = NextLine
 		$3.PropertyBraceStyle = NextLine

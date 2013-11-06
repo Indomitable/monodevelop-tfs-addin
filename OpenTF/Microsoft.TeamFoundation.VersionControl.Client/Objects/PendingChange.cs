@@ -72,9 +72,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             PendingChange change = new PendingChange();
             change.ServerItem = element.GetAttribute("item");
             change.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
-            change.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
-            change.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
-            change.Version = Convert.ToInt32(element.GetAttribute("ver"));
+            change.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
+            change.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
+            change.Version = GeneralHelper.XmlAttributeToInt(element.GetAttribute("ver"));
             change.CreationDate = DateTime.Parse(element.GetAttribute("date"));
             change.Hash = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
             change.uploadHashValue = GeneralHelper.ToByteArray(element.GetAttribute("uhash"));
