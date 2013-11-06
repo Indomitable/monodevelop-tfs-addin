@@ -29,6 +29,7 @@
 using System;
 using System.Text;
 using System.Xml;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {

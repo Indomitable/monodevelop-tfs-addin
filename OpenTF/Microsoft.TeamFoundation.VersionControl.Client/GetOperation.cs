@@ -30,7 +30,8 @@
 using System;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -114,14 +115,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             getOperation.SourceServerItem = element.GetAttribute("sitem");
             getOperation.TargetServerItem = element.GetAttribute("titem");
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("sver")))
-                getOperation.VersionServer = Convert.ToInt32(element.Attribute("sver").Value);
+            getOperation.VersionServer = Convert.ToInt32(element.Attribute("sver").Value);
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("lver")))
-                getOperation.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
+            getOperation.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
-                getOperation.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value.Replace(" ", ","), true);
+            getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
 
             // setup download url if found
             if (!string.IsNullOrEmpty(element.GetAttribute("durl")))

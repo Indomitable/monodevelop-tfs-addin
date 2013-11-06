@@ -30,11 +30,10 @@
 using System;
 using System.Globalization;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using System.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public sealed class Changeset
     {

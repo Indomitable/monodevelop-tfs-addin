@@ -24,8 +24,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public interface IItem
     {

@@ -31,7 +31,7 @@ using System;
 using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public class ItemSpec
     {

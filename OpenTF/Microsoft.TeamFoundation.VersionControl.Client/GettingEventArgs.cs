@@ -27,70 +27,72 @@
 //
 
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class GettingEventArgs : System.EventArgs
-	{
-		private Workspace workspace;
-		private OperationStatus status;
-		internal GetOperation operation;
+    public class GettingEventArgs : System.EventArgs
+    {
+        private Workspace workspace;
+        private OperationStatus status;
+        internal GetOperation operation;
 
-		internal GettingEventArgs(Workspace workspace, GetOperation operation)
-			{
-				this.workspace = workspace;
-				this.operation = operation;
+        internal GettingEventArgs(Workspace workspace, GetOperation operation)
+        {
+            this.workspace = workspace;
+            this.operation = operation;
 
-				if (operation.ChangeType == ChangeType.Delete)
-					status = OperationStatus.Deleting;
-				else status = OperationStatus.Getting;
-			}
+            if (operation.ChangeType == ChangeType.Delete)
+                status = OperationStatus.Deleting;
+            else
+                status = OperationStatus.Getting;
+        }
 
-		public ChangeType ChangeType
-		{
-			get { return operation.ChangeType; }
-		}
+        public ChangeType ChangeType
+        {
+            get { return operation.ChangeType; }
+        }
 
-		public int DeletionId 
-		{
-			get { return operation.DeletionId; }
-		}
+        public int DeletionId
+        {
+            get { return operation.DeletionId; }
+        }
 
-		public int ItemId
-		{
-			get { return operation.ItemId; }
-		}
+        public int ItemId
+        {
+            get { return operation.ItemId; }
+        }
 
-		public ItemType ItemType
-		{
-			get { return operation.ItemType; }
-		}
+        public ItemType ItemType
+        {
+            get { return operation.ItemType; }
+        }
 
-		public string TargetLocalItem
-		{
-			get { return operation.TargetLocalItem; }
-		}
+        public string TargetLocalItem
+        {
+            get { return operation.TargetLocalItem; }
+        }
 
-		public string SourceLocalItem
-		{
-			get { return operation.SourceLocalItem; }
-		}
+        public string SourceLocalItem
+        {
+            get { return operation.SourceLocalItem; }
+        }
 
-		public Workspace Workspace 
-		{
-			get { return workspace; }
-		}
+        public Workspace Workspace
+        {
+            get { return workspace; }
+        }
 
-		public OperationStatus Status
-		{
-			get { return status; }
-			internal set { status = value; }
-		}
+        public OperationStatus Status
+        {
+            get { return status; }
+            internal set { status = value; }
+        }
 
-		public int Version
-		{
-			get { return operation.VersionServer; }
-		}
-	}
+        public int Version
+        {
+            get { return operation.VersionServer; }
+        }
+    }
 }
 

@@ -27,16 +27,11 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Xml;
-using System.Web.Services;
 using System.Xml.Linq;
 using System.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public sealed class ItemSet
     {

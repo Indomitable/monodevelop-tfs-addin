@@ -1,11 +1,10 @@
 //
-// Microsoft.TeamFoundation.VersionControl.Client.LabelItemSpec
+// Microsoft.TeamFoundation.VersionControl.Client.ConflictType
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
-//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
+// Copyright (C) 2007 Joel Reed
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,32 +26,15 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System.Xml.Linq;
-using Microsoft.TeamFoundation.Common;
+using System;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-    public sealed class LabelItemSpec
+    public enum ConflictType
     {
-        public LabelItemSpec(ItemSpec itemSpec, VersionSpec version, bool exclude)
-        {
-            this.ItemSpec = itemSpec;
-            this.Version = version;
-            this.Exclude = exclude;
-        }
-
-        internal XElement ToXml(XName element)
-        {
-            return new XElement(element, 
-                new XAttribute("ex", Exclude.ToLowString()),
-                ItemSpec.ToXml(element.Namespace + "ItemSpec"),
-                Version.ToXml(element.Namespace + "Version"));
-        }
-
-        public bool Exclude { get; set; }
-
-        public ItemSpec ItemSpec { get; set; }
-
-        public VersionSpec Version { get; set; }
+        Checkin,
+        Get,
+        Local,
+        Merge,
     }
 }

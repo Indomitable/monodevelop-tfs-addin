@@ -25,7 +25,7 @@
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
-using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {

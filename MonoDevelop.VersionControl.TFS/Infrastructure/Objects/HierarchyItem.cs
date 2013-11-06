@@ -25,9 +25,9 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {

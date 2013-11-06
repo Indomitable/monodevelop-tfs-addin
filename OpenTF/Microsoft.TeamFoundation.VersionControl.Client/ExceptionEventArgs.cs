@@ -27,29 +27,30 @@
 //
 
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ExceptionEventArgs : System.EventArgs
-	{
-		private Workspace workspace;
-		private Failure failure;
+    public class ExceptionEventArgs : System.EventArgs
+    {
+        private Workspace workspace;
+        private Failure failure;
 
-		internal ExceptionEventArgs(Workspace workspace, Failure failure)
-			{
-				this.workspace = workspace;
-				this.failure = failure;
-			}
+        internal ExceptionEventArgs(Workspace workspace, Failure failure)
+        {
+            this.workspace = workspace;
+            this.failure = failure;
+        }
 
-		public Workspace Workspace 
-		{
-			get { return workspace; }
-		}
+        public Workspace Workspace
+        {
+            get { return workspace; }
+        }
 
-		public Failure Failure
-		{
-			get { return failure; }
-		}
-	}
+        public Failure Failure
+        {
+            get { return failure; }
+        }
+    }
 }
 

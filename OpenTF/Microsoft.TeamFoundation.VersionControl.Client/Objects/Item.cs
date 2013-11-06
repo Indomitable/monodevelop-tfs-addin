@@ -31,56 +31,37 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public sealed class Item: IEquatable<Item>, IComparable<Item>, IItem
     {
-        internal Item(string serverItem)
-        {
-            this.ServerItem = serverItem;
-        }
-        //        public void DownloadFile(string localFileName)
-        //        {
-        //            if (ItemType == ItemType.Folder)
-        //                return;
-        //
-        //            //Client.DownloadFile.WriteTo(localFileName, ArtifactUri);
-        //        }
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
         internal static Item FromXml(XElement element)
         {
             if (element == null)
                 return null;
-            string serverItem = element.Attribute("item").Value;
-            Item item = new Item(serverItem);
-
-            if (element.Attribute("type") != null && !string.IsNullOrEmpty(element.Attribute("type").Value))
-                item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
-
-            if (element.Attribute("did") != null && !string.IsNullOrEmpty(element.Attribute("did").Value))
-                item.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
-
-
-            item.CheckinDate = DateTime.Parse(element.Attribute("date").Value);
-            item.ChangesetId = Convert.ToInt32(element.Attribute("cs").Value);
-            item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
-            item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
+            Item item = new Item();
+            item.ServerItem = element.GetAttribute("item");
+            item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
+            item.DeletionId = Convert.ToInt32(element.GetAttribute("did"));
+            item.CheckinDate = DateTime.Parse(element.GetAttribute("date"));
+            item.ChangesetId = Convert.ToInt32(element.GetAttribute("cs"));
+            item.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
+            item.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
 
             if (!string.IsNullOrEmpty(element.GetAttribute("isbranch")))
             {
-                item.IsBranch = Convert.ToBoolean(element.GetAttribute("isbranch"));
+                item.IsBranch = GeneralHelper.ToBool(element.GetAttribute("isbranch"));
             }
             if (item.ItemType == ItemType.File)
             {
-                item.ContentLength = Convert.ToInt32(element.Attribute("len").Value);
-                if (element.Attribute("durl") != null)
-                    item.ArtifactUri = element.Attribute("durl").Value;
-
-                if (element.Attribute("hash") != null && !string.IsNullOrEmpty(element.Attribute("hash").Value))
-                    item.HashValue = Convert.FromBase64String(element.Attribute("hash").Value);
+                item.ContentLength = Convert.ToInt32(element.GetAttribute("len"));
+                item.ArtifactUri = element.GetAttribute("durl");
+                item.HashValue = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
             }
             return item;
         }
@@ -142,18 +123,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public byte[] HashValue { get; private set; }
 
         public string ArtifactUri { get; private set; }
-        //        {
-        //            get
-        //            {
-        //                if (string.IsNullOrEmpty(downloadUrl))
-        //                {
-        //                    Item item = VersionControlServer.GetItem(ItemId, ChangesetId, true);
-        //                    downloadUrl = item.downloadUrl;
-        //                }
-        //
-        //                return new Uri(String.Format("{0}?{1}", VersionControlServer.Repository.ItemUrl, downloadUrl));
-        //            }
-        //        }
+
         public string ServerItem { get; private set; }
 
         public VersionControlPath ServerPath { get { return ServerItem; } }
@@ -162,9 +132,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             get
             {
-                if (string.Equals(ServerItem, VersionControlPath.RootFolder))
-                    return VersionControlPath.RootFolder;
-                return ServerItem.Substring(ServerItem.LastIndexOf(VersionControlPath.Separator) + 1);
+                return ServerPath.ItemName;
             }
         }
 

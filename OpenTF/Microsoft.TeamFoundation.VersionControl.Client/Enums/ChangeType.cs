@@ -28,7 +28,7 @@
 
 using System;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
     [Flags]
     public enum ChangeType
@@ -43,5 +43,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         Branch = 128,
         Merge = 256,
         Lock = 512,
+        SourceRename = 2048
     }
 }

@@ -27,28 +27,29 @@
 //
 
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class PendingChangeEventArgs : System.EventArgs
-	{
-		internal PendingChangeEventArgs(Workspace workspace, PendingChange pendingChange)
-			{
-				this.workspace = workspace;
-				this.pendingChange = pendingChange;
-			}
+    public class PendingChangeEventArgs : System.EventArgs
+    {
+        internal PendingChangeEventArgs(Workspace workspace, PendingChange pendingChange)
+        {
+            this.workspace = workspace;
+            this.pendingChange = pendingChange;
+        }
 
-		private Workspace workspace;
-		private PendingChange pendingChange;
-		
-		public Workspace Workspace
-		{
-			get { return workspace; }
-		}
+        private Workspace workspace;
+        private PendingChange pendingChange;
 
-		public PendingChange PendingChange
-		{
-			get { return pendingChange; }
-		}
-	}
+        public Workspace Workspace
+        {
+            get { return workspace; }
+        }
+
+        public PendingChange PendingChange
+        {
+            get { return pendingChange; }
+        }
+    }
 }

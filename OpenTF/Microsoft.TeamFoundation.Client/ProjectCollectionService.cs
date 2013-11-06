@@ -49,7 +49,7 @@ namespace Microsoft.TeamFoundation.Client
             var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
             var message = invoker.CreateEnvelope("QueryResourcesByType", serviceNs);
             message.Add(new XElement(serviceNs + "resourceTypes", new XElement(serviceNs + "guid", projectCollectionsTypeId)));
-            var resultElement = invoker.Invoke();
+            var resultElement = invoker.InvokeResult();
             return resultElement.XPathSelectElements("./msg:CatalogResources/msg:CatalogResource", 
                 TeamFoundationServerServiceMessage.NsResolver);
         }

@@ -59,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var credentials = new NetworkCredential { Domain = "snd", UserName = "mono_tfs_plugin_cp", Password = "mono_tfs_plugin" };
             var soapInvoker = new SoapInvoker("https://tfs.codeplex.com/tfs/", "/TeamFoundation/Administration/v3.0/LocationService.asmx", credentials);
             soapInvoker.CreateEnvelope("QueryServices", ns);
-            Console.WriteLine(soapInvoker.Invoke());
+            Console.WriteLine(soapInvoker.InvokeResult());
         }
 
         [Test]

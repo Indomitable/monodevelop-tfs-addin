@@ -44,7 +44,6 @@
     <Compile Include="LinkingUtilities.cs" />
     <Compile Include="ServiceInterfaces.cs" />
     <Compile Include="TeamFoundationServerException.cs" />
-    <Compile Include="Extender.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

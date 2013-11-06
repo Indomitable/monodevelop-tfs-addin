@@ -35,57 +35,57 @@ using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class LabelResult
-	{
-    private string label;
-    private string scope;
-    private LabelResultStatus status;
-
-		internal static LabelResult FromXml(Repository repository, XmlReader reader)
-		{
-			LabelResult labelResult = new LabelResult();
-
-			labelResult.label = reader.GetAttribute("label");
-			labelResult.scope = reader.GetAttribute("scope");
-
-			string status = reader.GetAttribute("status");
-			labelResult.status = (LabelResultStatus) Enum.Parse(typeof(LabelResultStatus), status, true);
-
-			return labelResult;
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append("LabelResult instance ");
-			sb.Append(GetHashCode());
-			sb.Append("\n	 Label: ");
-			sb.Append(Label);
-
-			sb.Append("\n	 Scope: ");
-			sb.Append(Scope);
-
-			sb.Append("\n	 Status: ");
-			sb.Append(Status);
-
-			return sb.ToString();
-		}
-
-		public string Label
-		{
-			get { return label; }
-		}
-
-		public string Scope
-		{
-			get { return scope; }
-		}
-
-		public LabelResultStatus Status
-		{
-			get { return status; }
-		}
-	}
+    //    public sealed class LabelResult
+    //    {
+    //        private string label;
+    //        private string scope;
+    //        private LabelResultStatus status;
+    //
+    //        internal static LabelResult FromXml(XmlReader reader)
+    //        {
+    //            LabelResult labelResult = new LabelResult();
+    //
+    //            labelResult.label = reader.GetAttribute("label");
+    //            labelResult.scope = reader.GetAttribute("scope");
+    //
+    //            string status = reader.GetAttribute("status");
+    //            labelResult.status = (LabelResultStatus)Enum.Parse(typeof(LabelResultStatus), status, true);
+    //
+    //            return labelResult;
+    //        }
+    //
+    //        public override string ToString()
+    //        {
+    //            StringBuilder sb = new StringBuilder();
+    //
+    //            sb.Append("LabelResult instance ");
+    //            sb.Append(GetHashCode());
+    //            sb.Append("\n	 Label: ");
+    //            sb.Append(Label);
+    //
+    //            sb.Append("\n	 Scope: ");
+    //            sb.Append(Scope);
+    //
+    //            sb.Append("\n	 Status: ");
+    //            sb.Append(Status);
+    //
+    //            return sb.ToString();
+    //        }
+    //
+    //        public string Label
+    //        {
+    //            get { return label; }
+    //        }
+    //
+    //        public string Scope
+    //        {
+    //            get { return scope; }
+    //        }
+    //
+    //        public LabelResultStatus Status
+    //        {
+    //            get { return status; }
+    //        }
+    //    }
 }
 

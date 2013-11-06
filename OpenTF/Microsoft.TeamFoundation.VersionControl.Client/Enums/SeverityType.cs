@@ -1,5 +1,5 @@
 //
-// TFSCommitDialogExtension.cs
+// SeverityType.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,37 +23,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
-using System.Linq;
-using MonoDevelop.Ide;
-using Microsoft.TeamFoundation.VersionControl.Client;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-    public class TFSCommitDialogExtension: CommitDialogExtension
+    //<s:simpleType name="SeverityType">
+    //    <s:restriction base="s:string">
+    //        <s:enumeration value="Error"/>
+    //        <s:enumeration value="Warning"/>
+    //    </s:restriction>
+    //</s:simpleType>
+    public enum SeverityType
     {
-        public TFSCommitDialogExtension()
-        {
-        }
-
-        public override bool OnBeginCommit(ChangeSet changeSet)
-        {
-            return true;
-            var repo = (TFSRepository)changeSet.Repository;
-            var result = repo.CheckItemsChangedOnServer(changeSet.Items.Select(x => x.LocalPath).ToList());
-            if (result.Any())
-            {
-                MessageService.ShowMessage("Some files are changed on server! Merge is required");
-                repo.SetConflicted(result);
-                return false;
-            }
-            return true;
-        }
-
-        public override void OnEndCommit(ChangeSet changeSet, bool success)
-        {
-            base.OnEndCommit(changeSet, success);
-        }
+        Error,
+        Warning
     }
 }
 

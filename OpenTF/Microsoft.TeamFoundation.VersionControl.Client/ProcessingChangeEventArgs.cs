@@ -27,17 +27,18 @@
 //
 
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ProcessingChangeEventArgs : System.EventArgs
-	{
-		private PendingChange pendingChange;
+    public class ProcessingChangeEventArgs : System.EventArgs
+    {
+        private PendingChange pendingChange;
 
-		public PendingChange PendingChange
-		{
-			get { return pendingChange; }
-		}
-	}
+        public PendingChange PendingChange
+        {
+            get { return pendingChange; }
+        }
+    }
 }
 

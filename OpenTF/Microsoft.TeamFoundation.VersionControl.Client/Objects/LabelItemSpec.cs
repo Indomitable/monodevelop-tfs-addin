@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.VersionControl.Client.LabelVersionSpec
+// Microsoft.TeamFoundation.VersionControl.Client.LabelItemSpec
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -28,27 +28,31 @@
 //
 
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class LabelVersionSpec : VersionSpec
+    public sealed class LabelItemSpec
     {
-        private readonly string label;
-
-        public LabelVersionSpec(string label)
+        public LabelItemSpec(ItemSpec itemSpec, VersionSpec version, bool exclude)
         {
-            this.label = label;
+            this.ItemSpec = itemSpec;
+            this.Version = version;
+            this.Exclude = exclude;
         }
 
-        internal override XElement ToXml(XName element)
+        internal XElement ToXml(XName element)
         {
-            return new XElement(element,
-                new XAttribute(XsiNs + "type", "LabelVersionSpec"),
-                new XAttribute("label", Label));
+            return new XElement(element, 
+                new XAttribute("ex", Exclude.ToLowString()),
+                ItemSpec.ToXml(element.Namespace + "ItemSpec"),
+                Version.ToXml(element.Namespace + "Version"));
         }
 
-        public string Label { get { return label; } }
+        public bool Exclude { get; set; }
 
-        public override string DisplayString { get { return "L" + label; } }
+        public ItemSpec ItemSpec { get; set; }
+
+        public VersionSpec Version { get; set; }
     }
 }

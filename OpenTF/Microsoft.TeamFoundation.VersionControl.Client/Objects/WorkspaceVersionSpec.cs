@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.VersionControl.Client.ChangesetVersionSpec
+// Microsoft.TeamFoundation.VersionControl.Client.WorkspaceVersionSpec
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -27,32 +27,42 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
 using System.Xml.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class ChangesetVersionSpec : VersionSpec
+    public class WorkspaceVersionSpec : VersionSpec
     {
-        public ChangesetVersionSpec(string changesetId)
+        private readonly string ownerName;
+
+        public WorkspaceVersionSpec(string name, string ownerName)
         {
-            this.ChangesetId = Convert.ToInt32(changesetId);
+            this.Name = name;
+            this.ownerName = ownerName;
         }
 
-        public ChangesetVersionSpec(int changesetId)
+        public WorkspaceVersionSpec(Workspace workspace)
         {
-            this.ChangesetId = changesetId;
+            this.Name = workspace.Name;
+            this.ownerName = workspace.OwnerName;
         }
-
+        //        public WorkspaceVersionSpec(WorkspaceInfo workspaceInfo)
+        //        {
+        //            this.Name = workspaceInfo.Name;
+        //            this.ownerName = workspaceInfo.OwnerName;
+        //        }
         internal override XElement ToXml(XName element)
         {
-            return new XElement(element, 
-                new XAttribute(XsiNs + "type", "ChangesetVersionSpec"),
-                new XAttribute("cs", ChangesetId));
+            return new XElement(element,
+                new XAttribute(XsiNs + "type", "WorkspaceVersionSpec"),
+                new XAttribute("name", Name),
+                new XAttribute("owner", OwnerName));
         }
 
-        public int ChangesetId { get; set; }
+        public string Name { get; set; }
 
-        public override string DisplayString { get { return String.Format("C{0}", ChangesetId); } }
+        public string OwnerName { get { return ownerName; } }
+
+        public override string DisplayString { get { return string.Format("W{0};{1}", Name, OwnerName); } }
     }
 }

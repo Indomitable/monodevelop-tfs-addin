@@ -30,7 +30,7 @@
 using System;
 using System.Xml.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public class DateVersionSpec : VersionSpec
     {

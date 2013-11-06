@@ -26,21 +26,15 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Net;
-using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public enum LockLevel {
-				
-		None = 0,
-				
-		Checkin = 1,
-				
-		CheckOut = 2,
-				
-		Unchanged = 3,
-	}
+    public enum LockLevel
+    {
+        None = 0,
+        Checkin = 1,
+        CheckOut = 2,
+        Unchanged = 3,
+    }
 }
 

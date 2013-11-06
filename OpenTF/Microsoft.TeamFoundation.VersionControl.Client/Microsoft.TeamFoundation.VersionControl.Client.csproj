@@ -47,19 +47,13 @@
     <Compile Include="Annotation.cs" />
     <Compile Include="BranchRelative.cs" />
     <Compile Include="BranchHistoryTreeItem.cs" />
-    <Compile Include="ChangesetVersionSpec.cs" />
     <Compile Include="ChangeRequest.cs" />
-    <Compile Include="Change.cs" />
-    <Compile Include="Changeset.cs" />
     <Compile Include="ChangesetMerge.cs" />
-    <Compile Include="ChangeType.cs" />
     <Compile Include="CheckinNote.cs" />
     <Compile Include="CheckinOptions.cs" />
     <Compile Include="CheckinNoteFieldValue.cs" />
     <Compile Include="ConflictEventArgs.cs" />
     <Compile Include="ConflictEventHandler.cs" />
-    <Compile Include="ConflictType.cs" />
-    <Compile Include="DateVersionSpec.cs" />
     <Compile Include="DeletedState.cs" />
     <Compile Include="Difference.cs" />
     <Compile Include="DifferenceUtil.cs" />
@@ -68,8 +62,6 @@
     <Compile Include="DiffUtil.cs" />
     <Compile Include="ExceptionEventArgs.cs" />
     <Compile Include="ExceptionEventHandler.cs" />
-    <Compile Include="ExtendedItem.cs" />
-    <Compile Include="Failure.cs" />
     <Compile Include="GetFilterCallback.cs" />
     <Compile Include="GetOperation.cs" />
     <Compile Include="GetOptions.cs" />
@@ -79,59 +71,69 @@
     <Compile Include="GettingEventHandler.cs" />
     <Compile Include="IDiffItem.cs" />
     <Compile Include="ILocalUpdateOperation.cs" />
-    <Compile Include="InternalDownloadFile.cs" />
     <Compile Include="InternalUploadFile.cs" />
     <Compile Include="InternalMessage.cs" />
     <Compile Include="InternalServerInfo.cs" />
-    <Compile Include="Item.cs" />
     <Compile Include="ItemNotMappedException.cs" />
     <Compile Include="ItemSecurity.cs" />
-    <Compile Include="ItemSet.cs" />
-    <Compile Include="ItemSpec.cs" />
-    <Compile Include="ItemType.cs" />
     <Compile Include="LabelChildOption.cs" />
-    <Compile Include="LabelItemSpec.cs" />
     <Compile Include="LabelResult.cs" />
     <Compile Include="LabelResultStatus.cs" />
-    <Compile Include="LabelVersionSpec.cs" />
-    <Compile Include="LatestVersionSpec.cs" />
     <Compile Include="LockLevel.cs" />
     <Compile Include="MappingException.cs" />
     <Compile Include="OperationStatus.cs" />
-    <Compile Include="PendingChange.cs" />
     <Compile Include="PendingChangeEventArgs.cs" />
     <Compile Include="PendingChangeEventHandler.cs" />
     <Compile Include="ProcessingChangeEventArgs.cs" />
     <Compile Include="ProcessingChangeEventHandler.cs" />
     <Compile Include="RecursionType.cs" />
-    <Compile Include="Repository.cs" />
     <Compile Include="RepositoryProperties.cs" />
-    <Compile Include="RequestType.cs" />
     <Compile Include="SecurityChange.cs" />
     <Compile Include="Shelveset.cs" />
     <Compile Include="ShelvingOptions.cs" />
     <Compile Include="TeamProjectFolderOptions.cs" />
     <Compile Include="UpdateLocalVersionQueue.cs" />
     <Compile Include="VersionControlException.cs" />
-    <Compile Include="VersionControlLabel.cs" />
-    <Compile Include="VersionControlServer.cs" />
-    <Compile Include="VersionSpec.cs" />
     <Compile Include="WorkingFolder.cs" />
     <Compile Include="WorkingFolderType.cs" />
     <Compile Include="Workspace.cs" />
     <Compile Include="WorkspaceInfo.cs" />
-    <Compile Include="WorkspaceVersionSpec.cs" />
     <Compile Include="WorkspaceData.cs" />
     <Compile Include="TfsPath.cs" />
     <Compile Include="XmlNamespaces.cs" />
-    <Compile Include="IItem.cs" />
     <Compile Include="TfsVersionControlService.cs" />
     <Compile Include="VersionControlServiceResolver.cs" />
     <Compile Include="DownloadService.cs" />
     <Compile Include="GetItemOptions.cs" />
-    <Compile Include="SeverityType.cs" />
-    <Compile Include="PendingSet.cs" />
     <Compile Include="UploadService.cs" />
+    <Compile Include="FailureException.cs" />
+    <Compile Include="Helpers\EnumHelper.cs" />
+    <Compile Include="Helpers\GeneralHelper.cs" />
+    <Compile Include="Objects\Conflict.cs" />
+    <Compile Include="Objects\Change.cs" />
+    <Compile Include="Enums\ChangeType.cs" />
+    <Compile Include="Objects\Failure.cs" />
+    <Compile Include="Enums\ConflictType.cs" />
+    <Compile Include="Objects\Changeset.cs" />
+    <Compile Include="Enums\ItemType.cs" />
+    <Compile Include="Objects\ExtendedItem.cs" />
+    <Compile Include="Objects\ItemSpec.cs" />
+    <Compile Include="Objects\IItem.cs" />
+    <Compile Include="Objects\Item.cs" />
+    <Compile Include="Objects\ItemSet.cs" />
+    <Compile Include="Objects\LabelItemSpec.cs" />
+    <Compile Include="Objects\VersionSpec.cs" />
+    <Compile Include="Objects\ChangesetVersionSpec.cs" />
+    <Compile Include="Objects\DateVersionSpec.cs" />
+    <Compile Include="Objects\WorkspaceVersionSpec.cs" />
+    <Compile Include="Objects\LabelVersionSpec.cs" />
+    <Compile Include="Objects\LatestVersionSpec.cs" />
+    <Compile Include="Objects\PendingChange.cs" />
+    <Compile Include="Helpers\Extender.cs" />
+    <Compile Include="Objects\PendingSet.cs" />
+    <Compile Include="Enums\RequestType.cs" />
+    <Compile Include="Enums\SeverityType.cs" />
+    <Compile Include="VersionControlLabel.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -154,5 +156,10 @@
       <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Objects\" />
+    <Folder Include="Helpers\" />
+    <Folder Include="Enums\" />
   </ItemGroup>
 </Project>

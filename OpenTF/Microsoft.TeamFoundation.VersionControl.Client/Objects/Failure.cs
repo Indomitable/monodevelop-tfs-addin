@@ -30,9 +30,10 @@
 using System;
 using System.Text;
 using System.Xml.Linq;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     //    <s:complexType name="Failure">
     //        <s:sequence>
@@ -85,23 +86,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         internal static Failure FromXml(XElement element)
         {
             Failure failure = new Failure();
-            if (!string.IsNullOrEmpty(element.GetAttribute("req")))
-            {
-                failure.RequestType = (RequestType)Enum.Parse(typeof(RequestType), element.GetAttribute("req"), true);
-            }
+            failure.RequestType = EnumHelper.ParseRequestType(element.GetAttribute("req"));
             if (!string.IsNullOrEmpty(element.GetAttribute("sev")))
             {
-                failure.SeverityType = (SeverityType)Enum.Parse(typeof(SeverityType), element.GetAttribute("sev"), true);
+                failure.SeverityType = EnumHelper.ParseSeverityType(element.GetAttribute("sev"));
             }
             failure.Code = element.GetAttribute("code");
             failure.ComputerName = element.GetAttribute("computer");
             failure.IdentityName = element.GetAttribute("ident");
             failure.LocalItem = element.GetAttribute("local");
             failure.ServerItem = element.GetAttribute("item");
-            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
-            {
-                failure.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
-            }
+            failure.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
             if (element.Element(element.Name.Namespace + "Message") != null)
                 failure.Message = element.Element(element.Name.Namespace + "Message").Value;
             return failure;
@@ -131,6 +126,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public SeverityType SeverityType { get; private set; }
 
         public string Code { get; private set; }
+
+        public FailureException Exception
+        {
+            get
+            {
+                FailureException exception;
+                if (!Enum.TryParse<FailureException>(Code, true, out exception))
+                    exception = FailureException.Other;
+                return exception;
+            }
+        }
 
         public string ComputerName { get; private set; }
 

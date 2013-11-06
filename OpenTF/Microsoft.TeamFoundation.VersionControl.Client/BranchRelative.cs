@@ -31,69 +31,70 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 using System.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class BranchRelative
-    {
-        private Item branchFromItem;
-
-        public Item BranchFromItem { get { return branchFromItem; } }
-
-        private Item branchToItem;
-
-        public Item BranchToItem { get { return branchToItem; } }
-
-        private bool isRequestedItem;
-
-        public bool IsRequestedItem { get { return isRequestedItem; } }
-
-        private int relativeFromItemId;
-
-        public int RelativeFromItemId { get { return relativeFromItemId; } set { relativeFromItemId = value; } }
-
-        private int relativeToItemId;
-
-        public int RelativeToItemId { get { return relativeToItemId; } set { relativeToItemId = value; } }
-
-        internal static BranchRelative FromXml(Repository repository, XElement element)
-        {
-            //string elementName = element.Name;
-            throw new NotImplementedException();
-//            BranchRelative branch = new BranchRelative();
-//
-//            branch.relativeToItemId = Convert.ToInt32(element.Attribute("reltoid").Value);
-//            branch.relativeFromItemId = Convert.ToInt32(element.Attribute("relfromid").Value);
-//            branch.isRequestedItem = Convert.ToBoolean(element.Attribute("reqstd").Value);
-//
-//            branch.branchFromItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchFromItem")));
-//            branch.branchToItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchToItem")));
-//            return branch;
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("BranchRelative instance ");
-            sb.Append(GetHashCode());
-
-            sb.Append("\n	 BranchFromItem: ");
-            sb.Append(BranchFromItem);
-
-            sb.Append("\n	 BranchToItem: ");
-            sb.Append(BranchToItem);
-
-            sb.Append("\n	 RelativeFromItemId: ");
-            sb.Append(RelativeFromItemId);
-
-            sb.Append("\n	 RelativeToItemId: ");
-            sb.Append(RelativeToItemId);
-
-            sb.Append("\n	 IsRequestedItem: ");
-            sb.Append(IsRequestedItem);
-
-            return sb.ToString();
-        }
-    }
+    //    public sealed class BranchRelative
+    //    {
+    //        private Item branchFromItem;
+    //
+    //        public Item BranchFromItem { get { return branchFromItem; } }
+    //
+    //        private Item branchToItem;
+    //
+    //        public Item BranchToItem { get { return branchToItem; } }
+    //
+    //        private bool isRequestedItem;
+    //
+    //        public bool IsRequestedItem { get { return isRequestedItem; } }
+    //
+    //        private int relativeFromItemId;
+    //
+    //        public int RelativeFromItemId { get { return relativeFromItemId; } set { relativeFromItemId = value; } }
+    //
+    //        private int relativeToItemId;
+    //
+    //        public int RelativeToItemId { get { return relativeToItemId; } set { relativeToItemId = value; } }
+    //
+    //        internal static BranchRelative FromXml(Repository repository, XElement element)
+    //        {
+    //            //string elementName = element.Name;
+    //            throw new NotImplementedException();
+    ////            BranchRelative branch = new BranchRelative();
+    ////
+    ////            branch.relativeToItemId = Convert.ToInt32(element.Attribute("reltoid").Value);
+    ////            branch.relativeFromItemId = Convert.ToInt32(element.Attribute("relfromid").Value);
+    ////            branch.isRequestedItem = Convert.ToBoolean(element.Attribute("reqstd").Value);
+    ////
+    ////            branch.branchFromItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchFromItem")));
+    ////            branch.branchToItem = Item.FromXml(repository, element.Element(XmlNamespaces.GetMessageElementName("BranchToItem")));
+    ////            return branch;
+    //        }
+    //
+    //        public override string ToString()
+    //        {
+    //            StringBuilder sb = new StringBuilder();
+    //
+    //            sb.Append("BranchRelative instance ");
+    //            sb.Append(GetHashCode());
+    //
+    //            sb.Append("\n	 BranchFromItem: ");
+    //            sb.Append(BranchFromItem);
+    //
+    //            sb.Append("\n	 BranchToItem: ");
+    //            sb.Append(BranchToItem);
+    //
+    //            sb.Append("\n	 RelativeFromItemId: ");
+    //            sb.Append(RelativeFromItemId);
+    //
+    //            sb.Append("\n	 RelativeToItemId: ");
+    //            sb.Append(RelativeToItemId);
+    //
+    //            sb.Append("\n	 IsRequestedItem: ");
+    //            sb.Append(IsRequestedItem);
+    //
+    //            return sb.ToString();
+    //        }
+    //    }
 }

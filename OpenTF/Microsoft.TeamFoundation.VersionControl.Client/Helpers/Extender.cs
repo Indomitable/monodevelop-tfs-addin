@@ -25,7 +25,7 @@
 // THE SOFTWARE.
 using System.Xml.Linq;
 
-namespace Microsoft.TeamFoundation.Common
+namespace Microsoft.TeamFoundation.VersionControl.Client.Helpers
 {
     public static class Extender
     {

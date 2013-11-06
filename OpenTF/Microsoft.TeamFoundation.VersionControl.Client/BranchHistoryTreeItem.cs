@@ -38,63 +38,63 @@ using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class BranchHistoryTreeItem
-	{
-		private BranchHistoryTreeItem parent;
-		private BranchRelative relative;
-		private int level = 0;
-		private ArrayList children = new ArrayList();
-
-		internal BranchHistoryTreeItem(BranchRelative[] branches)
-		{
-			foreach (BranchRelative branch in branches)
-				{
-					if (branch.RelativeFromItemId == 0) relative = branch;
-					else children.Add(branch);
-				}
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append("BranchHistoryTreeItem instance ");
-			sb.Append(GetHashCode());
-
-			sb.Append("\n	 Parent: ");
-			sb.Append(Parent);
-
-			sb.Append("\n	 Relative: ");
-			sb.Append(Relative);
-
-			sb.Append("\n	 Level: ");
-			sb.Append(Level);
-
-			sb.Append("\n	 Children: ");
-			sb.Append(Children);
-
-			return sb.ToString();
-		}
-
-		public BranchHistoryTreeItem Parent
-		{
-			get { return parent; }
-		}
-
-		public BranchRelative Relative
-		{
-			get { return relative; }
-		}
-
-		public int Level
-		{
-			get { return level; }
-		}
-
-		public ICollection Children
-		{
-			get { return children;
-			}
-		}
-	}
+    //	public sealed class BranchHistoryTreeItem
+    //	{
+    //		private BranchHistoryTreeItem parent;
+    //		private BranchRelative relative;
+    //		private int level = 0;
+    //		private ArrayList children = new ArrayList();
+    //
+    //		internal BranchHistoryTreeItem(BranchRelative[] branches)
+    //		{
+    //			foreach (BranchRelative branch in branches)
+    //				{
+    //					if (branch.RelativeFromItemId == 0) relative = branch;
+    //					else children.Add(branch);
+    //				}
+    //		}
+    //
+    //		public override string ToString()
+    //		{
+    //			StringBuilder sb = new StringBuilder();
+    //
+    //			sb.Append("BranchHistoryTreeItem instance ");
+    //			sb.Append(GetHashCode());
+    //
+    //			sb.Append("\n	 Parent: ");
+    //			sb.Append(Parent);
+    //
+    //			sb.Append("\n	 Relative: ");
+    //			sb.Append(Relative);
+    //
+    //			sb.Append("\n	 Level: ");
+    //			sb.Append(Level);
+    //
+    //			sb.Append("\n	 Children: ");
+    //			sb.Append(Children);
+    //
+    //			return sb.ToString();
+    //		}
+    //
+    //		public BranchHistoryTreeItem Parent
+    //		{
+    //			get { return parent; }
+    //		}
+    //
+    //		public BranchRelative Relative
+    //		{
+    //			get { return relative; }
+    //		}
+    //
+    //		public int Level
+    //		{
+    //			get { return level; }
+    //		}
+    //
+    //		public ICollection Children
+    //		{
+    //			get { return children;
+    //			}
+    //		}
+    //	}
 }

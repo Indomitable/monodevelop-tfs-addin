@@ -2,6 +2,7 @@
 // Microsoft.TeamFoundation.VersionControl.Client.Change
 //
 // Authors:
+//  Joel Reed (joelwreed@gmail.com)
 //  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
 // Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
@@ -28,10 +29,10 @@
 
 using System;
 using System.Text;
-using System.Xml;
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public sealed class Change
     {
@@ -48,15 +49,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
             change.Item = Item.FromXml(element.Element(element.Name.Namespace + "Item"));
             return change;
-        }
-
-        internal void ToXml(XmlWriter writer, string element)
-        {
-            Console.WriteLine("WARNING: Change.ToXml not verified yet!");
-            writer.WriteStartElement(element);
-            writer.WriteElementString("ChangeType", ChangeType.ToString());
-            writer.WriteElementString("Item", Item.ToString());
-            writer.WriteEndElement();
         }
 
         public override string ToString()

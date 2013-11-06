@@ -32,73 +32,73 @@ using System.Xml;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	internal sealed class RepositoryProperties 
-	{
-		private string id;
-		private string name;
-		private string ver;
-		private int latestChangesetId;
-
-		internal static RepositoryProperties FromXml(Repository repository, XmlReader reader)
-		{
-			RepositoryProperties repositoryProperties = new RepositoryProperties();
-			repositoryProperties.id = reader.GetAttribute("id");
-			repositoryProperties.name = reader.GetAttribute("name");
-			repositoryProperties.ver = reader.GetAttribute("ver");
-			repositoryProperties.latestChangesetId = Convert.ToInt32(reader.GetAttribute("lcset"));
-			return repositoryProperties;
-		}
-
-		internal void ToXml(XmlWriter writer, string element)
-		{
-			writer.WriteStartElement(element);
-			writer.WriteAttributeString("id", Id);
-			writer.WriteAttributeString("name", Name);
-			writer.WriteAttributeString("ver", ver);
-			writer.WriteAttributeString("lcset", LatestChangesetId.ToString());
-			writer.WriteEndElement();
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append("RepositoryProperties instance ");
-			sb.Append(GetHashCode());
-
-			sb.Append("\n	 Id: ");
-			sb.Append(Id);
-
-			sb.Append("\n	 Name: ");
-			sb.Append(Name);
-
-			sb.Append("\n	 Ver: ");
-			sb.Append(Ver);
-
-			sb.Append("\n	 LatestChangesetId: ");
-			sb.Append(LatestChangesetId);
-
-			return sb.ToString();
-		}
-
-		public string Id
-		{
-			get { return id; }
-		}
-
-		public string Name
-		{
-			get { return name; }
-		}
-
-		public int LatestChangesetId
-		{
-			get { return latestChangesetId; }
-		}
-
-		public string Ver
-		{
-			get { return ver; }
-		}
-	}
+    //    internal sealed class RepositoryProperties
+    //    {
+    //        private string id;
+    //        private string name;
+    //        private string ver;
+    //        private int latestChangesetId;
+    //
+    //        internal static RepositoryProperties FromXml(XmlReader reader)
+    //        {
+    //            RepositoryProperties repositoryProperties = new RepositoryProperties();
+    //            repositoryProperties.id = reader.GetAttribute("id");
+    //            repositoryProperties.name = reader.GetAttribute("name");
+    //            repositoryProperties.ver = reader.GetAttribute("ver");
+    //            repositoryProperties.latestChangesetId = Convert.ToInt32(reader.GetAttribute("lcset"));
+    //            return repositoryProperties;
+    //        }
+    //
+    //        internal void ToXml(XmlWriter writer, string element)
+    //        {
+    //            writer.WriteStartElement(element);
+    //            writer.WriteAttributeString("id", Id);
+    //            writer.WriteAttributeString("name", Name);
+    //            writer.WriteAttributeString("ver", ver);
+    //            writer.WriteAttributeString("lcset", LatestChangesetId.ToString());
+    //            writer.WriteEndElement();
+    //        }
+    //
+    //        public override string ToString()
+    //        {
+    //            StringBuilder sb = new StringBuilder();
+    //
+    //            sb.Append("RepositoryProperties instance ");
+    //            sb.Append(GetHashCode());
+    //
+    //            sb.Append("\n	 Id: ");
+    //            sb.Append(Id);
+    //
+    //            sb.Append("\n	 Name: ");
+    //            sb.Append(Name);
+    //
+    //            sb.Append("\n	 Ver: ");
+    //            sb.Append(Ver);
+    //
+    //            sb.Append("\n	 LatestChangesetId: ");
+    //            sb.Append(LatestChangesetId);
+    //
+    //            return sb.ToString();
+    //        }
+    //
+    //        public string Id
+    //        {
+    //            get { return id; }
+    //        }
+    //
+    //        public string Name
+    //        {
+    //            get { return name; }
+    //        }
+    //
+    //        public int LatestChangesetId
+    //        {
+    //            get { return latestChangesetId; }
+    //        }
+    //
+    //        public string Ver
+    //        {
+    //            get { return ver; }
+    //        }
+    //    }
 }

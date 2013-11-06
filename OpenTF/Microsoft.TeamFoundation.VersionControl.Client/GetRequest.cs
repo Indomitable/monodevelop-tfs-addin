@@ -28,6 +28,7 @@
 //
 
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {

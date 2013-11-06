@@ -33,94 +33,94 @@ using System.Xml;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class AccessEntry 
-	{
-		private string[] allow;
-		private string[] deny;
-		private string[] allowInherited;
-		private string[] denyInherited;
-		private string ident;
-
-		internal static string[] ReadPermissions(XmlReader reader)
-		{
-			if (reader.IsEmptyElement) return new string[0];
-
-			string elementName = reader.Name;
-
- 			List<string> perms = new List<string>();
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
-
-					if (reader.NodeType == XmlNodeType.Element && reader.Name == "string")
-						{
-							string perm = reader.ReadString();
-							perms.Add(perm);
-						}
-				}
-
-			return perms.ToArray();
-		}
-
-		internal static AccessEntry FromXml(Repository repository, XmlReader reader)
-		{
-			AccessEntry entry = new AccessEntry();
-			string elementName = reader.Name;
-
-			entry.ident = reader.GetAttribute("ident");
-
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
-
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "Allow":
-									entry.allow = ReadPermissions(reader);
-									break;
-								case "Deny":
-									entry.deny = ReadPermissions(reader);
-									break;
-								case "AllowInherited":
-									entry.allowInherited = ReadPermissions(reader);
-									break;
-								case "DenyInherited":
-									entry.denyInherited = ReadPermissions(reader);
-									break;
-								}
-						}
-				}
-
-			return entry;
-		}
-
-		public string[] Allow
-		{
-			get { return allow; }
-		}
-
-		public string[] Deny
-		{
-			get { return deny; }
-		}
-
-		public string[] AllowInherited
-		{
-			get { return allowInherited; }
-		}
-
-		public string[] DenyInherited
-		{
-			get { return denyInherited; }
-		}
-
-		public string IdentityName
-		{
-			get { return ident; }
-		}
-	}
+    //	public class AccessEntry
+    //	{
+    //		private string[] allow;
+    //		private string[] deny;
+    //		private string[] allowInherited;
+    //		private string[] denyInherited;
+    //		private string ident;
+    //
+    //		internal static string[] ReadPermissions(XmlReader reader)
+    //		{
+    //			if (reader.IsEmptyElement) return new string[0];
+    //
+    //			string elementName = reader.Name;
+    //
+    // 			List<string> perms = new List<string>();
+    //			while (reader.Read())
+    //				{
+    //					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
+    //						break;
+    //
+    //					if (reader.NodeType == XmlNodeType.Element && reader.Name == "string")
+    //						{
+    //							string perm = reader.ReadString();
+    //							perms.Add(perm);
+    //						}
+    //				}
+    //
+    //			return perms.ToArray();
+    //		}
+    //
+    //		internal static AccessEntry FromXml(Repository repository, XmlReader reader)
+    //		{
+    //			AccessEntry entry = new AccessEntry();
+    //			string elementName = reader.Name;
+    //
+    //			entry.ident = reader.GetAttribute("ident");
+    //
+    //			while (reader.Read())
+    //				{
+    //					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
+    //						break;
+    //
+    //					if (reader.NodeType == XmlNodeType.Element)
+    //						{
+    //							switch (reader.Name)
+    //								{
+    //								case "Allow":
+    //									entry.allow = ReadPermissions(reader);
+    //									break;
+    //								case "Deny":
+    //									entry.deny = ReadPermissions(reader);
+    //									break;
+    //								case "AllowInherited":
+    //									entry.allowInherited = ReadPermissions(reader);
+    //									break;
+    //								case "DenyInherited":
+    //									entry.denyInherited = ReadPermissions(reader);
+    //									break;
+    //								}
+    //						}
+    //				}
+    //
+    //			return entry;
+    //		}
+    //
+    //		public string[] Allow
+    //		{
+    //			get { return allow; }
+    //		}
+    //
+    //		public string[] Deny
+    //		{
+    //			get { return deny; }
+    //		}
+    //
+    //		public string[] AllowInherited
+    //		{
+    //			get { return allowInherited; }
+    //		}
+    //
+    //		public string[] DenyInherited
+    //		{
+    //			get { return denyInherited; }
+    //		}
+    //
+    //		public string IdentityName
+    //		{
+    //			get { return ident; }
+    //		}
+    //	}
 }

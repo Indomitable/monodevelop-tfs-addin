@@ -33,54 +33,54 @@ using System.Xml;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ItemSecurity 
-	{
-		private string serverItem;
-		private bool writable;
-		private AccessEntry[] entries;
-
-		internal static ItemSecurity FromXml(Repository repository, XmlReader reader)
-		{
-			ItemSecurity itemSecurity = new ItemSecurity();
-			string elementName = reader.Name;
-
-			itemSecurity.serverItem = reader.GetAttribute("item");
-			itemSecurity.writable = Convert.ToBoolean(reader.GetAttribute("writable"));
-
- 			List<AccessEntry> entries = new List<AccessEntry>();
-			while (reader.Read())
-				{
-					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
-						break;
-
-					if (reader.NodeType == XmlNodeType.Element)
-						{
-							switch (reader.Name)
-								{
-								case "AccessEntry":
-									entries.Add(AccessEntry.FromXml(repository, reader));
-									break;
-								}
-						}
-				}
-
-			itemSecurity.entries = entries.ToArray();
-			return itemSecurity;
-		}
-
-		public string ServerItem
-		{
-			get { return serverItem; }
-		}
-
-		public bool Writable
-		{
-			get { return writable; }
-		}
-
-		public AccessEntry[] Entries
-		{
-			get { return entries; }
-		}
-	}
+    //	public class ItemSecurity
+    //	{
+    //		private string serverItem;
+    //		private bool writable;
+    //		private AccessEntry[] entries;
+    //
+    //		internal static ItemSecurity FromXml(Repository repository, XmlReader reader)
+    //		{
+    //			ItemSecurity itemSecurity = new ItemSecurity();
+    //			string elementName = reader.Name;
+    //
+    //			itemSecurity.serverItem = reader.GetAttribute("item");
+    //			itemSecurity.writable = Convert.ToBoolean(reader.GetAttribute("writable"));
+    //
+    // 			List<AccessEntry> entries = new List<AccessEntry>();
+    //			while (reader.Read())
+    //				{
+    //					if (reader.NodeType == XmlNodeType.EndElement && reader.Name == elementName)
+    //						break;
+    //
+    //					if (reader.NodeType == XmlNodeType.Element)
+    //						{
+    //							switch (reader.Name)
+    //								{
+    //								case "AccessEntry":
+    //									entries.Add(AccessEntry.FromXml(repository, reader));
+    //									break;
+    //								}
+    //						}
+    //				}
+    //
+    //			itemSecurity.entries = entries.ToArray();
+    //			return itemSecurity;
+    //		}
+    //
+    //		public string ServerItem
+    //		{
+    //			get { return serverItem; }
+    //		}
+    //
+    //		public bool Writable
+    //		{
+    //			get { return writable; }
+    //		}
+    //
+    //		public AccessEntry[] Entries
+    //		{
+    //			get { return entries; }
+    //		}
+    //	}
 }

@@ -3,8 +3,9 @@
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
+//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -30,9 +31,10 @@ using System;
 using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Common;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public sealed class ExtendedItem : IItem
     {
@@ -77,46 +79,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 LockStatus = LockLevel.None
             };
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
-                item.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), element.Attribute("chg").Value.Replace(" ", ","), true);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("ochg")))
-                item.HasOtherPendingChange = bool.Parse(element.Attribute("ochg").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("lock")))
-                item.LockStatus = (LockLevel)Enum.Parse(typeof(LockLevel), element.Attribute("lock").Value, true);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("lowner")))
-                item.LockOwner = element.Attribute("lowner").Value;
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("local")))
-                item.LocalItem = TfsPath.ToPlatformPath(element.Attribute("local").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("titem")))
-                item.TargetServerItem = element.Attribute("titem").Value;
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("sitem")))
-                item.SourceServerItem = element.Attribute("sitem").Value;
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("type")))
-                item.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.Attribute("type").Value, true);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
-                item.ItemId = Convert.ToInt32(element.Attribute("itemid").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("enc")))
-                item.Encoding = Convert.ToInt32(element.Attribute("enc").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("lver")))
-                item.VersionLocal = Convert.ToInt32(element.Attribute("lver").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("latest")))
-                item.VersionLatest = Convert.ToInt32(element.Attribute("latest").Value);
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("did")))
-                item.DeletionId = Convert.ToInt32(element.Attribute("did").Value);
-
-            item.CheckinDate = DateTime.Parse(element.Attribute("date").Value);
+            item.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
+            item.HasOtherPendingChange = GeneralHelper.ToBool(element.GetAttribute("ochg"));
+            item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttribute("lock"));
+            item.LockOwner = element.GetAttribute("lowner");
+            item.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
+            item.TargetServerItem = element.GetAttribute("titem");
+            item.SourceServerItem = element.GetAttribute("sitem");
+            item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
+            item.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
+            item.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
+            item.VersionLocal = Convert.ToInt32(element.GetAttribute("lver"));
+            item.VersionLatest = Convert.ToInt32(element.GetAttribute("latest"));
+            item.DeletionId = Convert.ToInt32(element.GetAttribute("did"));
+            item.CheckinDate = DateTime.Parse(element.GetAttribute("date"));
 
             if (element.Element(XmlNamespaces.GetMessageElementName("IsBranch")) != null &&
                 !string.IsNullOrEmpty(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value))

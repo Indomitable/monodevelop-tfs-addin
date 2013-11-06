@@ -43,7 +43,7 @@ namespace Microsoft.TeamFoundation.Client
             SoapInvoker invoker = new SoapInvoker(collection.LocationServiceUrl, collection.Server.Credentials);
             var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
             invoker.CreateEnvelope("QueryServices", serviceNs);
-            var resultEl = invoker.Invoke();
+            var resultEl = invoker.InvokeResult();
             T service = Activator.CreateInstance<T>();
             var serviceEl = resultEl.XPathSelectElement(string.Format("./msg:ServiceDefinitions/msg:ServiceDefinition[@identifier='{0}']", service.ServiceResolver.Id), 
                                 TeamFoundationServerServiceMessage.NsResolver);

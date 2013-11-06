@@ -1,5 +1,5 @@
 //
-// SeverityType.cs
+// Helper.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -25,18 +25,23 @@
 // THE SOFTWARE.
 using System;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Helpers
 {
-    //<s:simpleType name="SeverityType">
-    //    <s:restriction base="s:string">
-    //        <s:enumeration value="Error"/>
-    //        <s:enumeration value="Warning"/>
-    //    </s:restriction>
-    //</s:simpleType>
-    public enum SeverityType
+    public static class GeneralHelper
     {
-        Error,
-        Warning
+        public static byte[] ToByteArray(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return new byte[0];
+            return Convert.FromBase64String(value);
+        }
+
+        public static bool ToBool(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+            return string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
+        }
     }
 }
 

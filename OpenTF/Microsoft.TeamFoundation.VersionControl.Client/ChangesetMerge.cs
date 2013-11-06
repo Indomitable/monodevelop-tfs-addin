@@ -31,64 +31,65 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using System.Xml;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public sealed class ChangesetMerge
-	{
-		private bool partialFlag = false;
-		private int sourceVersion;
-		private int targetVersion;
-		private Changeset targetChangeset;
-
-		internal static ChangesetMerge FromXml(Repository repository, XmlReader reader)
-		{
-			ChangesetMerge merge = new ChangesetMerge();
-			merge.sourceVersion = Convert.ToInt32(reader.GetAttribute("srcver"));
-			merge.targetVersion = Convert.ToInt32(reader.GetAttribute("tgtver"));
-			merge.partialFlag = Convert.ToBoolean(reader.GetAttribute("part"));
-
-			return merge;
-		}
-
-		public bool Partial
-		{
-			get { return partialFlag; }
-		}
-
-		public int SourceVersion
-		{
-			get { return sourceVersion; }
-		}
-
-		public int TargetVersion
-		{
-			get { return targetVersion; }
-		}
-
-		public Changeset TargetChangeset
-		{
-			get { return targetChangeset; }
-			internal set { targetChangeset = value; }
-		}
-
-		public override string ToString()
-		{
-			StringBuilder sb = new StringBuilder();
-
-			sb.Append("ChangesetMerge instance ");
-			sb.Append(GetHashCode());
-
-			sb.Append("\n	 SourceVersion: ");
-			sb.Append(SourceVersion);
-
-			sb.Append("\n	 TargetVersion: ");
-			sb.Append(TargetVersion);
-
-			sb.Append("\n	 Partial: ");
-			sb.Append(Partial);
-
-			return sb.ToString();
-		}
-	}
+    //    public sealed class ChangesetMerge
+    //    {
+    //        private bool partialFlag = false;
+    //        private int sourceVersion;
+    //        private int targetVersion;
+    //        private Changeset targetChangeset;
+    //
+    //        internal static ChangesetMerge FromXml(Repository repository, XmlReader reader)
+    //        {
+    //            ChangesetMerge merge = new ChangesetMerge();
+    //            merge.sourceVersion = Convert.ToInt32(reader.GetAttribute("srcver"));
+    //            merge.targetVersion = Convert.ToInt32(reader.GetAttribute("tgtver"));
+    //            merge.partialFlag = Convert.ToBoolean(reader.GetAttribute("part"));
+    //
+    //            return merge;
+    //        }
+    //
+    //        public bool Partial
+    //        {
+    //            get { return partialFlag; }
+    //        }
+    //
+    //        public int SourceVersion
+    //        {
+    //            get { return sourceVersion; }
+    //        }
+    //
+    //        public int TargetVersion
+    //        {
+    //            get { return targetVersion; }
+    //        }
+    //
+    //        public Changeset TargetChangeset
+    //        {
+    //            get { return targetChangeset; }
+    //            internal set { targetChangeset = value; }
+    //        }
+    //
+    //        public override string ToString()
+    //        {
+    //            StringBuilder sb = new StringBuilder();
+    //
+    //            sb.Append("ChangesetMerge instance ");
+    //            sb.Append(GetHashCode());
+    //
+    //            sb.Append("\n	 SourceVersion: ");
+    //            sb.Append(SourceVersion);
+    //
+    //            sb.Append("\n	 TargetVersion: ");
+    //            sb.Append(TargetVersion);
+    //
+    //            sb.Append("\n	 Partial: ");
+    //            sb.Append(Partial);
+    //
+    //            return sb.ToString();
+    //        }
+    //    }
 }

@@ -32,9 +32,10 @@ using System.IO;
 using System.Text;
 using System.Security.Cryptography;
 using System.Xml.Linq;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     //<s:complexType name="PendingChange">
     //    <s:sequence>
@@ -68,41 +69,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     {
         internal static PendingChange FromXml(XElement element)
         {
-            PendingChange change = new PendingChange
-            {
-                ChangeType = ChangeType.None,
-                ItemType = ItemType.Any,
-                Encoding = -2,
-            };
-
+            PendingChange change = new PendingChange();
             change.ServerItem = element.GetAttribute("item");
             change.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
-            if (!string.IsNullOrEmpty(element.GetAttribute("itemid")))
-                change.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
-            if (!string.IsNullOrEmpty(element.GetAttribute("enc")))
-                change.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
-            if (!string.IsNullOrEmpty(element.GetAttribute("ver")))
-                change.Version = Convert.ToInt32(element.GetAttribute("ver"));
+            change.ItemId = Convert.ToInt32(element.GetAttribute("itemid"));
+            change.Encoding = Convert.ToInt32(element.GetAttribute("enc"));
+            change.Version = Convert.ToInt32(element.GetAttribute("ver"));
             change.CreationDate = DateTime.Parse(element.GetAttribute("date"));
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("hash")))
-                change.Hash = Convert.FromBase64String(element.GetAttribute("hash"));
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("uhash")))
-                change.uploadHashValue = Convert.FromBase64String(element.GetAttribute("uhash"));
-
-            if (!string.IsNullOrEmpty(element.GetAttribute("type")))
-                change.ItemType = (ItemType)Enum.Parse(typeof(ItemType), element.GetAttribute("type"), true);
-
+            change.Hash = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
+            change.uploadHashValue = GeneralHelper.ToByteArray(element.GetAttribute("uhash"));
+            change.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
             change.DownloadUrl = element.GetAttribute("durl");
-			
-            if (!string.IsNullOrEmpty(element.GetAttribute("chg")))
-            {
-                string chgAttr = element.GetAttribute("chg");
-                change.ChangeType = (ChangeType)Enum.Parse(typeof(ChangeType), chgAttr.Replace(" ", ","), true);
-                if (change.ChangeType == ChangeType.Edit)
-                    change.ItemType = ItemType.File;
-            }
+            change.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
+            if (change.ChangeType == ChangeType.Edit)
+                change.ItemType = ItemType.File;
             return change;
         }
 
@@ -148,16 +128,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 md5.ComputeHash(stream);
                 uploadHashValue = md5.Hash;
             }
-        }
-
-        public void DownloadBaseFile(string localFileName)
-        {
-            throw new NotImplementedException();
-//            if (itemType == ItemType.Folder)
-//                return;
-//            Uri artifactUri = new Uri(String.Format("{0}?{1}", VersionControlServer.Repository.ItemUrl, downloadUrl));
-//            Client.DownloadFile.WriteTo(localFileName, VersionControlServer.Repository,
-//                artifactUri);
         }
 
         public byte[] Hash { get; set; }

@@ -31,7 +31,7 @@ using System;
 using System.Xml.Linq;
 using System.Xml.Schema;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public abstract class VersionSpec
     {
@@ -49,13 +49,13 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             if (prefix == 'T')
                 return Latest;
             else if (prefix == 'C')
-                return new ChangesetVersionSpec(versionSpec.Substring(1));
-            else if (prefix == 'D')
-                return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
-            else if (prefix == 'L')
-                return new LabelVersionSpec(versionSpec.Substring(1));
-            else if (prefix == 'W')
-                return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
+                    return new ChangesetVersionSpec(versionSpec.Substring(1));
+                else if (prefix == 'D')
+                        return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
+                    else if (prefix == 'L')
+                            return new LabelVersionSpec(versionSpec.Substring(1));
+                        else if (prefix == 'W')
+                                return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
 
             return null;
         }

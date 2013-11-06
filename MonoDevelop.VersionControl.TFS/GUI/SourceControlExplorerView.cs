@@ -35,8 +35,9 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using System.Linq;
 using System.IO;
-using Microsoft.TeamFoundation.Client;
 using VersionControlService = Microsoft.TeamFoundation.VersionControl.Client.TfsVersionControlService;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -77,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         #endregion
 
-        private ProjectCollection projectCollection;
+        private Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
         private readonly List<Workspace> _workspaces = new List<Workspace>();
         private Workspace _currentWorkspace = null;
 
@@ -90,7 +91,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             BuildContent();
         }
 
-        public static void Open(ProjectInfo project)
+        public static void Open(Microsoft.TeamFoundation.Client.ProjectInfo project)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
@@ -117,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             throw new NotImplementedException();
         }
 
-        public void Load(ProjectInfo project)
+        public void Load(Microsoft.TeamFoundation.Client.ProjectInfo project)
         {
             if (this.projectCollection != null && string.Equals(project.Collection.Id, this.projectCollection.Id, StringComparison.OrdinalIgnoreCase))
             {
@@ -250,7 +251,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 _listStore.SetValue(row, _nameList, item.TargetServerItem);
                 if (this._currentWorkspace != null)
                 {
-                    if (item.ChangeType != Microsoft.TeamFoundation.VersionControl.Client.ChangeType.None && !item.HasOtherPendingChange)
+                    if (item.ChangeType != ChangeType.None && !item.HasOtherPendingChange)
                     {
                         _listStore.SetValue(row, _changeList, item.ChangeType.ToString());
                         _listStore.SetValue(row, _userList, this._currentWorkspace.OwnerName);
@@ -454,7 +455,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 if (invoker == MenuInvoker.ListView) //List Popup Menu
                 {
                     var listItem = (ExtendedItem)item;
-                    if (listItem.ChangeType != Microsoft.TeamFoundation.VersionControl.Client.ChangeType.None)
+                    if (listItem.ChangeType != ChangeType.None)
                     {
                         MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
                         revertItem.Clicked += (sender, e) => UndoChanges(listItem);

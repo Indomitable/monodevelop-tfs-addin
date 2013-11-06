@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.VersionControl.Client.LatestVersionSpec
+// Microsoft.TeamFoundation.VersionControl.Client.ItemType
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -27,22 +27,14 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System.Xml.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-    public class LatestVersionSpec : VersionSpec
+    public enum ItemType
     {
-        internal LatestVersionSpec()
-        {
-        }
-
-        internal override XElement ToXml(XName element)
-        {
-            return new XElement(element,
-                new XAttribute(XsiNs + "type", "LatestVersionSpec"));
-        }
-
-        public override string DisplayString { get { return "T"; } }
+        Any,
+        Folder,
+        File,
     }
 }
+

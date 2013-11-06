@@ -27,12 +27,13 @@ using System;
 using Xwt;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using Microsoft.TeamFoundation.Client;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.Collections.Generic;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -44,10 +45,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<string> _owner = new DataField<string>();
         private readonly DataField<string> _comment = new DataField<string>();
         private readonly ListStore _listStore;
-        private readonly ProjectCollection projectCollection;
+        private readonly Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
         private readonly CheckBox _showRemoteCheck = new CheckBox();
 
-        public WorkspacesDialog(ProjectCollection projectCollection)
+        public WorkspacesDialog(Microsoft.TeamFoundation.Client.ProjectCollection projectCollection)
         {
             this.projectCollection = projectCollection;
             _listStore = new ListStore(_name, _computer, _owner, _comment);
@@ -170,9 +171,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<string> _tfsFolder = new DataField<string>();
         private readonly DataField<string> _localFolder = new DataField<string>();
         private readonly ListStore _workingFoldersStore;
-        private readonly ProjectCollection projectCollection;
+        private readonly Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
 
-        public WorkspaceAddEditDialog(Workspace workspace, ProjectCollection projectCollection)
+        public WorkspaceAddEditDialog(Workspace workspace, Microsoft.TeamFoundation.Client.ProjectCollection projectCollection)
         {
             this.projectCollection = projectCollection;
             if (workspace == null)
@@ -369,9 +370,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<string> _path = new DataField<string>();
         private readonly TreeStore _treeStore;
         private readonly TreeView treeView = new TreeView();
-        private readonly ProjectCollection projectCollection;
+        private readonly Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
 
-        public ProjectSelectDialog(ProjectCollection projectCollection)
+        public ProjectSelectDialog(Microsoft.TeamFoundation.Client.ProjectCollection projectCollection)
         {
             this.projectCollection = projectCollection;
             _treeStore = new TreeStore(_name, _path);

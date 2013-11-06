@@ -37,23 +37,43 @@ namespace Microsoft.TeamFoundation.VersionControl.Common
     {
         public const string RootFolder = "$/";
         public const char Separator = '/';
-        private readonly List<string> pathParts = new List<string>();
-
-        private string Path { get { return RootFolder + string.Join(Separator.ToString(), pathParts); } }
+        private readonly string[] pathParts;
+        private readonly string path;
 
         public VersionControlPath ParentPath
         { 
             get
             { 
-                return RootFolder + string.Join(Separator.ToString(), pathParts.TakeWhile((item, index) => index < pathParts.Count - 1)); 
-            } 
+                string[] parentPath = new string[pathParts.Length - 1]; 
+                Array.Copy(pathParts, 0, parentPath, 0, pathParts.Length - 1);
+                return RootFolder + string.Join(Separator.ToString(), parentPath); 
+            }
         }
 
         public VersionControlPath(string path)
         {
             if (!IsServerItem(path))
                 throw new Exception("Not a server path");
-            this.pathParts = path.Split(Separator).Skip(1).ToList();
+            this.path = path;
+            this.pathParts = path.Split(Separator).Skip(1).ToArray();
+        }
+
+        public string ItemName
+        {
+            get
+            {
+                if (IsRoot)
+                    return VersionControlPath.RootFolder;
+                return pathParts[pathParts.Length - 1];
+            }
+        }
+
+        public bool IsRoot
+        {
+            get
+            {
+                return string.Equals(path, RootFolder);
+            }
         }
 
         public static bool IsServerItem(string path)
@@ -68,7 +88,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Common
 
         public static implicit operator string(VersionControlPath path)
         {
-            return path.Path;
+            return path.path;
         }
     }
 }

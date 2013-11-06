@@ -30,9 +30,9 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
-using Microsoft.TeamFoundation.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     //<s:complexType name="PendingSet">
     //    <s:sequence>
