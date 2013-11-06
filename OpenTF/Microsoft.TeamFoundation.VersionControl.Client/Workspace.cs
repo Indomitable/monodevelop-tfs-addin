@@ -54,7 +54,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             PendingChanges = new List<PendingChange>();
         }
 
-        public Workspace(TfsVersionControlService versionControl, string name, 
+        public Workspace(RepositoryService versionControl, string name, 
                          string ownerName, string comment, 
                          WorkingFolder[] folders, string computer) 
             : this(name, ownerName, comment, folders, computer)
@@ -69,10 +69,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             : this(name, ownerName, comment, folders, computer)
         {
             this.ProjectCollection = collection;
-            this.VersionControlService = collection.GetService<TfsVersionControlService>();
+            this.VersionControlService = collection.GetService<RepositoryService>();
         }
 
-        public Workspace(TfsVersionControlService versionControl, WorkspaceData workspaceData) 
+        public Workspace(RepositoryService versionControl, WorkspaceData workspaceData) 
             : this(versionControl, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
         {
         }
@@ -528,7 +528,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         ////            Repository.Shelve(this, shelveset, serverItems.ToArray(), options);
         //        }
 
-        internal static Workspace FromXml(TfsVersionControlService versionControl, XElement element)
+        internal static Workspace FromXml(RepositoryService versionControl, XElement element)
         {
             string computer = element.Attribute("computer").Value;
             string name = element.Attribute("name").Value;
@@ -629,7 +629,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public Microsoft.TeamFoundation.Client.ProjectCollection ProjectCollection { get; set; }
 
-        public TfsVersionControlService VersionControlService { get; set; }
+        public RepositoryService VersionControlService { get; set; }
 
         internal void MakeFileReadOnly(string path)
         {

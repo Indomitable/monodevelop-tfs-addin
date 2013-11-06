@@ -101,7 +101,6 @@
     <Compile Include="WorkspaceData.cs" />
     <Compile Include="TfsPath.cs" />
     <Compile Include="XmlNamespaces.cs" />
-    <Compile Include="TfsVersionControlService.cs" />
     <Compile Include="VersionControlServiceResolver.cs" />
     <Compile Include="DownloadService.cs" />
     <Compile Include="GetItemOptions.cs" />
@@ -134,6 +133,7 @@
     <Compile Include="Enums\RequestType.cs" />
     <Compile Include="Enums\SeverityType.cs" />
     <Compile Include="VersionControlLabel.cs" />
+    <Compile Include="RepositoryService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -35,9 +35,9 @@ using SoapInvoker = Microsoft.TeamFoundation.Client.SoapInvoker;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class TfsVersionControlService : Microsoft.TeamFoundation.Client.TfsService
+    public sealed class RepositoryService : Microsoft.TeamFoundation.Client.TfsService
     {
-        public override System.Xml.Linq.XNamespace MessageNs
+        public override XNamespace MessageNs
         {
             get
             {

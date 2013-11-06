@@ -35,7 +35,6 @@ using MonoDevelop.Ide;
 using MonoDevelop.Core;
 using System.Linq;
 using System.IO;
-using VersionControlService = Microsoft.TeamFoundation.VersionControl.Client.TfsVersionControlService;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
@@ -227,7 +226,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var versionControl = projectCollection.GetService<TfsVersionControlService>();
+            var versionControl = projectCollection.GetService<RepositoryService>();
             var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
@@ -241,7 +240,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             _listStore.Clear();
 
-            var versionControl = projectCollection.GetService<TfsVersionControlService>();
+            var versionControl = projectCollection.GetService<RepositoryService>();
             var itemSet = versionControl.QueryItemsExtended(this._currentWorkspace, new ItemSpec(serverPath, RecursionType.OneLevel), DeletedState.NonDeleted, ItemType.Any);
             foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {

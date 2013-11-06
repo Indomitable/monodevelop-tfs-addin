@@ -23,8 +23,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.VersionControl.Client;
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
@@ -49,7 +49,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
             this.Time = changeset.CreationDate;
         }
 
-        public void Load(TfsVersionControlService service)
+        public void Load(RepositoryService service)
         {
             var changeset = service.QueryChangeset(this.Version);
             this.Author = changeset.Committer;

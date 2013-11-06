@@ -50,7 +50,7 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public TfsVersionControlService VersionControlService { get; set; }
+        public RepositoryService VersionControlService { get; set; }
 
         public Workspace GetWorkspaceByLocalPath(FilePath path)
         {
@@ -72,7 +72,7 @@ namespace MonoDevelop.VersionControl.TFS
             workspaces.Add(workspace);
         }
 
-        public TFSRepository(TfsVersionControlService versionControlService)
+        public TFSRepository(RepositoryService versionControlService)
         {
             this.VersionControlService = versionControlService;
         }
@@ -374,7 +374,7 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (versionInfo.LocalPath.IsDirectory)
                 return null;
-            string text = string.Empty;
+            string text;
             if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd) || versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
             {
                 var lines = File.ReadAllLines(versionInfo.LocalPath);
