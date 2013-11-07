@@ -29,7 +29,7 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.Client
 {
@@ -44,27 +44,16 @@ namespace Microsoft.TeamFoundation.Client
         XDocument document;
         string methodName;
 
-        public SoapInvoker(string serverUrl, string serviceUrl, ICredentials credentials)
-        {
-            const string urlSeparator = "/";
-            if (!serverUrl.EndsWith(urlSeparator, StringComparison.Ordinal))
-                serverUrl = serverUrl + urlSeparator;
-            if (serviceUrl.StartsWith(urlSeparator, StringComparison.Ordinal))
-                serviceUrl = serviceUrl.Substring(urlSeparator.Length); 
-            this.url = new Uri(new Uri(serverUrl), serviceUrl);
-            this.credentials = credentials;
-        }
-
         public SoapInvoker(Uri fullUrl, ICredentials credentials)
         {
             this.url = fullUrl;
             this.credentials = credentials;
         }
 
-        public SoapInvoker(TfsService service)
+        public SoapInvoker(TFSService service)
         {
             this.url = service.Url;
-            this.credentials = service.Collection.Server.Credentials;
+            this.credentials = service.Server.Credentials;
             this.messagegNs = service.MessageNs;
         }
 

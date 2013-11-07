@@ -30,34 +30,46 @@ using System.Xml.XPath;
 using System.Linq;
 using Microsoft.TeamFoundation.Client;
 
-namespace Microsoft.TeamFoundation.Client
+namespace Microsoft.TeamFoundation.Client.Services
 {
-    public class ProjectCollectionService
+    public class ProjectCollectionService : TFSService
     {
+
+        #region implemented abstract members of TFSService
+
+        public override XNamespace MessageNs
+        {
+            get
+            {
+                return TeamFoundationServerServiceMessage.ServiceNs;
+            }
+        }
+
+        #endregion
+
         private readonly string serviceUrl = "/TeamFoundation/Administration/v3.0/CatalogService.asmx";
         private readonly string projectCollectionsTypeId = "26338d9e-d437-44aa-91f2-55880a328b54";
-        private readonly TeamFoundationServer server;
 
         public ProjectCollectionService(TeamFoundationServer server)
         {
-            this.server = server;
+            this.Server = server;
+            this.RelativeUrl = serviceUrl;
         }
 
         private IEnumerable<XElement> GetXmlCollections()
         {
-            SoapInvoker invoker = new SoapInvoker(this.server.Uri.ToString(), this.serviceUrl, this.server.Credentials);
-            var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
-            var message = invoker.CreateEnvelope("QueryResourcesByType", serviceNs);
-            message.Add(new XElement(serviceNs + "resourceTypes", new XElement(serviceNs + "guid", projectCollectionsTypeId)));
+            SoapInvoker invoker = new SoapInvoker(this);
+            //var serviceNs = 
+            var message = invoker.CreateEnvelope("QueryResourcesByType");
+            message.Add(new XElement(MessageNs + "resourceTypes", new XElement(MessageNs + "guid", projectCollectionsTypeId)));
             var resultElement = invoker.InvokeResult();
-            return resultElement.XPathSelectElements("./msg:CatalogResources/msg:CatalogResource", 
-                TeamFoundationServerServiceMessage.NsResolver);
+            return resultElement.XPathSelectElements("./msg:CatalogResources/msg:CatalogResource", this.NsResolver);
         }
 
         public List<ProjectCollection> GetProjectCollections()
         {
             var teamProjects = GetXmlCollections();
-            return new List<ProjectCollection>(teamProjects.Select(t => ProjectCollection.FromServerXml(this.server, t)));
+            return new List<ProjectCollection>(teamProjects.Select(t => ProjectCollection.FromServerXml(this.Server, t)));
         }
 
         public List<ProjectCollection> GetProjectCollections(List<string> projectCollectionsIds)
@@ -65,7 +77,7 @@ namespace Microsoft.TeamFoundation.Client
             var teamProjects = GetXmlCollections();
             return new List<ProjectCollection>(teamProjects
                 .Where(tp => projectCollectionsIds.Any(id => string.Equals(id, tp.Attribute("Identifier").Value)))
-                .Select(tp => ProjectCollection.FromServerXml(this.server, tp)));
+                .Select(tp => ProjectCollection.FromServerXml(this.Server, tp)));
         }
     }
 }

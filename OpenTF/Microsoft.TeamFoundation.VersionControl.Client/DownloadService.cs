@@ -28,11 +28,11 @@ using Microsoft.TeamFoundation.Client;
 using System.Net;
 using System.IO;
 using System.IO.Compression;
-using MonoDevelop.Core;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class VersionControlDownloadService : TfsService
+    public class VersionControlDownloadService : TFSCollectionService
     {
         class DownloadServiceResolver : IServiceResolver
         {
@@ -123,7 +123,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 File.Delete(path);
             }
 
-			File.Copy(tempPath, path);
+            File.Copy(tempPath, path);
             File.Delete(tempPath);
         }
     }

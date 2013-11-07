@@ -44,14 +44,15 @@
     <Compile Include="SoapInvoker.cs" />
     <Compile Include="TeamFoundationServerService.cs" />
     <Compile Include="ProjectCollection.cs" />
-    <Compile Include="ProjectCollectionService.cs" />
     <Compile Include="IServiceResolver.cs" />
     <Compile Include="Registration.cs" />
     <Compile Include="Services\ServerStatusService.cs" />
     <Compile Include="Services\LocationService.cs" />
     <Compile Include="Services\CommonStructureService.cs" />
-    <Compile Include="Services\TfsService.cs" />
     <Compile Include="ProjectInfo.cs" />
+    <Compile Include="Services\ProjectCollectionService.cs" />
+    <Compile Include="Services\TFSCollectionService.cs" />
+    <Compile Include="Services\TFSService.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -31,10 +31,11 @@ using System.Text;
 using System.IO.Compression;
 using System.Security.Cryptography;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class UploadService: TfsService
+    public class UploadService: TFSCollectionService
     {
         const string NewLine = "\r\n";
         const string Boundary = "----------------------------8e5m2D6l5Q4h6";

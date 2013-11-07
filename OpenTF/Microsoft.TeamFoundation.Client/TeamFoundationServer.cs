@@ -32,6 +32,7 @@ using System.Net;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.Client
 {

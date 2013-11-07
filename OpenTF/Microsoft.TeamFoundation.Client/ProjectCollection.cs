@@ -29,6 +29,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Linq;
 using System.Collections.Generic;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.Client
 {
@@ -106,7 +107,7 @@ namespace Microsoft.TeamFoundation.Client
         public TeamFoundationServer Server { get; set; }
 
         public T GetService<T>()
-            where T : TfsService
+            where T : TFSCollectionService
         {
             return locationService.LoadService<T>();
         }

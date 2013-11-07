@@ -27,9 +27,9 @@ using System.Linq;
 using Microsoft.TeamFoundation.Client;
 using System.Collections.Generic;
 
-namespace Microsoft.TeamFoundation.Client
+namespace Microsoft.TeamFoundation.Client.Services
 {
-    public class CommonStructureService : TfsService
+    public class CommonStructureService : TFSCollectionService
     {
         class CommonStructureServiceResolver : IServiceResolver
         {
@@ -69,7 +69,7 @@ namespace Microsoft.TeamFoundation.Client
         public List<ProjectInfo> ListProjects()
         {
             SoapInvoker invoker = new SoapInvoker(this);
-            invoker.CreateEnvelope("ListProjects", this.MessageNs);
+            invoker.CreateEnvelope("ListProjects");
             var resultEl = invoker.InvokeResult();
             return new List<ProjectInfo>(resultEl.Elements(this.MessageNs + "ProjectInfo").Select(x => ProjectInfo.FromXml(Collection, x)));
         }
@@ -77,7 +77,7 @@ namespace Microsoft.TeamFoundation.Client
         public List<ProjectInfo> ListAllProjects()
         {
             SoapInvoker invoker = new SoapInvoker(this);
-            invoker.CreateEnvelope("ListAllProjects", this.MessageNs);
+            invoker.CreateEnvelope("ListAllProjects");
             var resultEl = invoker.InvokeResult();
             return new List<ProjectInfo>(resultEl.Elements(this.MessageNs + "ProjectInfo").Select(x => ProjectInfo.FromXml(Collection, x)));
         }

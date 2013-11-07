@@ -23,39 +23,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System.Xml.Linq;
-using System.Xml;
 using System;
 
-namespace Microsoft.TeamFoundation.Client
+namespace Microsoft.TeamFoundation.Client.Services
 {
-	public abstract class TfsService
-	{
-		public ProjectCollection Collection { get; set; }
+    public abstract class TFSCollectionService : TFSService
+    {
+        public ProjectCollection Collection { get; set; }
 
-		public string RelativeUrl { get; set; }
+        public override Uri Url
+        {
+            get
+            {
+                return UrlHelper.AddPathToUri(Collection.Url, RelativeUrl);
+            }
+        }
 
-		public Uri Url
-		{
-			get
-			{
-				return UrlHelper.AddPathToUri(Collection.Url, RelativeUrl);
-			}
-		}
-
-		public abstract XNamespace MessageNs { get; }
-
-		protected IXmlNamespaceResolver NsResolver
-		{
-			get
-			{
-				XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-				manager.AddNamespace("msg", MessageNs.ToString());
-				return manager;
-			}
-		}
-
-		public abstract IServiceResolver ServiceResolver { get; }
-	}
+        public abstract IServiceResolver ServiceResolver { get; }
+    }
 }
 

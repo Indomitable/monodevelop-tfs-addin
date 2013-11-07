@@ -1,5 +1,5 @@
 //
-// LocationService.cs
+// TFSService.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,35 +24,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Xml.XPath;
+using System.Xml.Linq;
+using System.Xml;
 
 namespace Microsoft.TeamFoundation.Client.Services
 {
-    public class LocationService
+    public abstract class TFSService
     {
-        readonly ProjectCollection collection;
+        public TeamFoundationServer Server { get; set; }
 
-        public LocationService(ProjectCollection collection)
+        public string RelativeUrl { get; set; }
+
+        public virtual Uri Url
         {
-            this.collection = collection;
+            get
+            {
+                return UrlHelper.AddPathToUri(Server.Uri, RelativeUrl);
+            }
         }
 
-        internal T LoadService<T>()
-            where T: TFSCollectionService
+        public abstract XNamespace MessageNs { get; }
+
+        protected IXmlNamespaceResolver NsResolver
         {
-            SoapInvoker invoker = new SoapInvoker(collection.LocationServiceUrl, collection.Server.Credentials);
-            var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
-            invoker.CreateEnvelope("QueryServices", serviceNs);
-            var resultEl = invoker.InvokeResult();
-            T service = Activator.CreateInstance<T>();
-            var serviceEl = resultEl.XPathSelectElement(string.Format("./msg:ServiceDefinitions/msg:ServiceDefinition[@identifier='{0}']", service.ServiceResolver.Id), 
-                                TeamFoundationServerServiceMessage.NsResolver);
-            if (serviceEl == null)
-                throw new Exception("Service not found");
-            service.Server = this.collection.Server;
-            service.Collection = this.collection;
-            service.RelativeUrl = serviceEl.Attribute("relativePath").Value;
-            return service;
+            get
+            {
+                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
+                manager.AddNamespace("msg", MessageNs.ToString());
+                return manager;
+            }
         }
     }
 }

@@ -32,10 +32,11 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using SoapInvoker = Microsoft.TeamFoundation.Client.SoapInvoker;
+using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class RepositoryService : Microsoft.TeamFoundation.Client.TfsService
+    public sealed class RepositoryService : TFSCollectionService
     {
 
         #region TfsService
