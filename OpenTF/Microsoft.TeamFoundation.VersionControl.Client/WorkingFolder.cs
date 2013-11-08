@@ -85,7 +85,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             if (VersionControlPath.IsServerItem(serverItem))
                 return;
             string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, VersionControlPath.RootFolder);
-            throw new InvalidPathException(msg);
+            throw new VersionControlException(msg);
         }
 
         public bool IsCloaked { get { return this.Type == WorkingFolderType.Cloak; } }

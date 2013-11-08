@@ -122,21 +122,9 @@
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Common\Microsoft.TeamFoundation.Common.csproj">
-      <Project>{E0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
       <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Common\Microsoft.TeamFoundation.VersionControl.Common.csproj">
-      <Project>{A0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.VersionControl.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
-      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
   </ItemGroup>
   <Target Name="AfterBuild">

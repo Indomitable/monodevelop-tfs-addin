@@ -28,10 +28,9 @@
 //
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.TeamFoundation.VersionControl.Common
+namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class VersionControlPath
     {

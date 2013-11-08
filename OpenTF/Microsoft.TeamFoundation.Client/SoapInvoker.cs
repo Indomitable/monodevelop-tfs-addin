@@ -33,47 +33,53 @@ using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.Client
 {
+    public class SoapEnvelope
+    {
+        public XElement Header { get; set; }
+
+        public XElement Body { get; set; }
+    }
+
     public class SoapInvoker
     {
         readonly XNamespace xsiNs = XmlSchema.InstanceNamespace;
         readonly XNamespace xsdNs = XmlSchema.Namespace;
         readonly XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
+        readonly XNamespace messagegNs;
         readonly Uri url;
         readonly ICredentials credentials;
-        XNamespace messagegNs;
-        XDocument document;
+        readonly XDocument document;
         string methodName;
-
-        public SoapInvoker(Uri fullUrl, ICredentials credentials)
-        {
-            this.url = fullUrl;
-            this.credentials = credentials;
-        }
 
         public SoapInvoker(TFSService service)
         {
             this.url = service.Url;
             this.credentials = service.Server.Credentials;
             this.messagegNs = service.MessageNs;
+            this.document = new XDocument(
+                new XDeclaration("1.0", "utf-8", "no"),
+                new XElement(soapNs + "Envelope", 
+                    new XAttribute(XNamespace.Xmlns + "xsi", xsiNs),
+                    new XAttribute(XNamespace.Xmlns + "xsd", xsdNs),
+                    new XAttribute(XNamespace.Xmlns + "soap", soapNs)));
         }
 
         public XElement CreateEnvelope(string methodName)
         {
             this.methodName = methodName;
-            document = new XDocument(new XDeclaration("1.0", "utf-8", "no"));
             var innerMessage = new XElement(messagegNs + methodName);
-            document.Add(new XElement(soapNs + "Envelope", 
-                new XAttribute(XNamespace.Xmlns + "xsi", xsiNs),
-                new XAttribute(XNamespace.Xmlns + "xsd", xsdNs),
-                new XAttribute(XNamespace.Xmlns + "soap", soapNs),
-                new XElement(soapNs + "Body", innerMessage)));
+            this.document.Root.Add(new XElement(soapNs + "Body", innerMessage));
             return innerMessage;
         }
 
-        public XElement CreateEnvelope(string methodName, XNamespace messageNamespace)
+        public SoapEnvelope CreateEnvelope(string methodName, string headerName)
         {
-            this.messagegNs = messageNamespace;
-            return CreateEnvelope(methodName);
+            this.methodName = methodName;
+            var headerMessage = new XElement(messagegNs + headerName);
+            var bodyMessage = new XElement(messagegNs + methodName);
+            this.document.Root.Add(new XElement(soapNs + "Header", headerMessage));
+            this.document.Root.Add(new XElement(soapNs + "Body", bodyMessage));
+            return new SoapEnvelope { Header = headerMessage, Body = bodyMessage };
         }
 
         public XElement MethodResultExtractor(XElement responseElement)
@@ -94,6 +100,7 @@ namespace Microsoft.TeamFoundation.Client
             request.AllowWriteStreamBuffering = true;
             request.Method = "POST";
             request.ContentType = "text/xml; charset=utf-8";
+            request.Headers["SOAPAction"] = messagegNs.NamespaceName.TrimEnd('/') + '/' + this.methodName;
             this.document.Save(request.GetRequestStream());
             using (var response = (HttpWebResponse)request.GetResponse())
             {
@@ -115,9 +122,6 @@ namespace Microsoft.TeamFoundation.Client
         public override string ToString()
         {
             StringBuilder builder = new StringBuilder();
-            builder.AppendLine("User Name:" + ((NetworkCredential)credentials).UserName);
-            builder.AppendLine("Domain:" + ((NetworkCredential)credentials).Domain);
-            builder.AppendLine("Password:" + ((NetworkCredential)credentials).Password);
             builder.Append(document.ToString());
             return builder.ToString();
         }

@@ -26,11 +26,11 @@
 using System;
 using System.Linq;
 
-namespace Microsoft.TeamFoundation
+namespace Microsoft.TeamFoundation.Client
 {
     public static class UrlHelper
     {
-        const char UrlSeparator = '/';
+        private static readonly string[] urlSeparator = { "/" };
 
         public static Uri AddPathToUri(Uri baseUri, string path)
         {
@@ -39,7 +39,8 @@ namespace Microsoft.TeamFoundation
             if (path == null)
                 throw new ArgumentNullException("path");
             var uriBuilder = new UriBuilder(baseUri);
-            uriBuilder.Path = string.Join(UrlSeparator.ToString(), uriBuilder.Path.Split(UrlSeparator).Union(path.Split(UrlSeparator)));
+            var splOpt = StringSplitOptions.RemoveEmptyEntries;
+            uriBuilder.Path = string.Join(urlSeparator[0], uriBuilder.Path.Split(urlSeparator, splOpt).Union(path.Split(urlSeparator, splOpt)));
             return uriBuilder.Uri;
         }
 
@@ -47,7 +48,7 @@ namespace Microsoft.TeamFoundation
         {
             if (path == null)
                 throw new ArgumentNullException("path");
-            var items = path.Split(new [] { UrlSeparator }, StringSplitOptions.RemoveEmptyEntries);
+            var items = path.Split(urlSeparator, StringSplitOptions.RemoveEmptyEntries);
             if (items.Length > 0)
                 return items[0];
             return string.Empty;

@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.Common.TeamFoundationServerException
+// Microsoft.TeamFoundation.VersionControl.Common.DiffOptions
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -27,19 +27,32 @@
 //
 
 using System;
+using System.IO;
+using System.Text;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace Microsoft.TeamFoundation
+namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class TeamFoundationServerException : ApplicationException
-	{
-		public TeamFoundationServerException()
-			{
-			}
+    public class DiffOptions
+    {
+        public DiffOptions()
+        {
+        }
 
-		public TeamFoundationServerException(string message)
-			: base (message)
-			{
-			}
-	}
+        public bool UseThirdPartyTool { get; set; }
+
+        public StreamWriter StreamWriter { get; set; }
+
+        public Encoding TargetEncoding { get; set; }
+
+        public Encoding SourceEncoding { get; set; }
+
+        public DiffOutputType OutputType { get; set; }
+
+        public DiffOptionFlags Flags { get; set; }
+
+        public string TargetLabel { get; set; }
+
+        public string SourceLabel { get; set; }
+    }
 }
-

@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.Server.ChangeType
+// Microsoft.TeamFoundation.VersionControl.Common.DiffOutputType
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -27,14 +27,13 @@
 //
 
 using System;
+using System.IO;
+using System.Text;
 
-namespace Microsoft.TeamFoundation.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-  public enum ChangeType {
-		Add,
-		Change,
-		Delete,
-		NoChange,
-  }
+    public enum DiffOutputType
+    {
+        Unified,
+    }
 }
-

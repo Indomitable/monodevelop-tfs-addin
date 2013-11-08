@@ -1,5 +1,5 @@
 //
-// Microsoft.TeamFoundation.Server.IdentityType
+// Microsoft.TeamFoundation.VersionControl.Common.DiffOptionFlags
 //
 // Authors:
 //	Joel Reed (joelwreed@gmail.com)
@@ -27,17 +27,14 @@
 //
 
 using System;
+using System.IO;
+using System.Text;
 
-namespace Microsoft.TeamFoundation.Client
+namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-  [System.Xml.Serialization.XmlTypeAttribute(Namespace="http://schemas.microsoft.com/TeamFoundation/2005/06/Services/Authorization/03")]
-  public enum IdentityType {
-		InvalidIdentity,
-		UnknownIdentityType,
-		WindowsUser,
-		WindowsGroup,
-		ApplicationGroup,
-		NonCachedIdentity,
-  }
+    public enum DiffOptionFlags
+    {
+        EnablePreambleHandling,
+        IgnoreWhiteSpace,
+    }
 }
-

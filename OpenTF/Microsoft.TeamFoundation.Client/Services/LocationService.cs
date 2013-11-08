@@ -28,21 +28,42 @@ using System.Xml.XPath;
 
 namespace Microsoft.TeamFoundation.Client.Services
 {
-    public class LocationService
+    public class LocationService : TFSService
     {
+
+        #region implemented abstract members of TFSService
+
+        public override System.Xml.Linq.XNamespace MessageNs
+        {
+            get
+            {
+                return TeamFoundationServerServiceMessage.ServiceNs;
+            }
+        }
+
+        public override Uri Url
+        {
+            get
+            {
+                return collection.LocationServiceUrl;
+            }
+        }
+
+        #endregion
+
         readonly ProjectCollection collection;
 
         public LocationService(ProjectCollection collection)
         {
+            this.Server = collection.Server;
             this.collection = collection;
         }
 
         internal T LoadService<T>()
             where T: TFSCollectionService
         {
-            SoapInvoker invoker = new SoapInvoker(collection.LocationServiceUrl, collection.Server.Credentials);
-            var serviceNs = TeamFoundationServerServiceMessage.ServiceNs;
-            invoker.CreateEnvelope("QueryServices", serviceNs);
+            SoapInvoker invoker = new SoapInvoker(this);
+            invoker.CreateEnvelope("QueryServices");
             var resultEl = invoker.InvokeResult();
             T service = Activator.CreateInstance<T>();
             var serviceEl = resultEl.XPathSelectElement(string.Format("./msg:ServiceDefinitions/msg:ServiceDefinition[@identifier='{0}']", service.ServiceResolver.Id), 

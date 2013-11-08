@@ -71,7 +71,6 @@
     <Compile Include="GettingEventHandler.cs" />
     <Compile Include="IDiffItem.cs" />
     <Compile Include="ILocalUpdateOperation.cs" />
-    <Compile Include="InternalUploadFile.cs" />
     <Compile Include="InternalMessage.cs" />
     <Compile Include="InternalServerInfo.cs" />
     <Compile Include="ItemNotMappedException.cs" />
@@ -134,6 +133,13 @@
     <Compile Include="Enums\SeverityType.cs" />
     <Compile Include="VersionControlLabel.cs" />
     <Compile Include="RepositoryService.cs" />
+    <Compile Include="Enums\DiffOptionFlags.cs" />
+    <Compile Include="Enums\DiffOutputType.cs" />
+    <Compile Include="VersionControlPath.cs">
+      <DependentUpon>Workspace.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DiffOptions.cs" />
+    <Compile Include="RepositoryConstants.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -143,18 +149,6 @@
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.Common\Microsoft.TeamFoundation.Common.csproj">
-      <Project>{E0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.VersionControl.Common\Microsoft.TeamFoundation.VersionControl.Common.csproj">
-      <Project>{A0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.VersionControl.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
-      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

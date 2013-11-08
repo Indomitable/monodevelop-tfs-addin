@@ -39,7 +39,6 @@
     <Compile Include="ClientService.cs" />
     <Compile Include="InternalMessage.cs" />
     <Compile Include="Project.cs" />
-    <Compile Include="ProjectCollection.cs" />
     <Compile Include="WorkItem.cs" />
     <Compile Include="WorkItemStore.cs" />
     <Compile Include="WorkItemType.cs" />
@@ -52,18 +51,6 @@
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.Common\Microsoft.TeamFoundation.Common.csproj">
-      <Project>{E0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.WorkItemTracking.Common\Microsoft.TeamFoundation.WorkItemTracking.Common.csproj">
-      <Project>{D0953653-D631-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.WorkItemTracking.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
-      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

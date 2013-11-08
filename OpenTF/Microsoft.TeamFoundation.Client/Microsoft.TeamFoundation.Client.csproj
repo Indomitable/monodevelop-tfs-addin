@@ -37,15 +37,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="GroupSecurityService.cs" />
     <Compile Include="ICredentialsProvider.cs" />
-    <Compile Include="Linking.cs" />
     <Compile Include="TeamFoundationServer.cs" />
     <Compile Include="SoapInvoker.cs" />
     <Compile Include="TeamFoundationServerService.cs" />
     <Compile Include="ProjectCollection.cs" />
     <Compile Include="IServiceResolver.cs" />
-    <Compile Include="Registration.cs" />
     <Compile Include="Services\ServerStatusService.cs" />
     <Compile Include="Services\LocationService.cs" />
     <Compile Include="Services\CommonStructureService.cs" />
@@ -53,21 +50,13 @@
     <Compile Include="Services\ProjectCollectionService.cs" />
     <Compile Include="Services\TFSCollectionService.cs" />
     <Compile Include="Services\TFSService.cs" />
+    <Compile Include="ProjectState.cs" />
+    <Compile Include="UrlHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
     <VisualStudio AllowExistingFolder="true" />
   </ProjectExtensions>
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.Common\Microsoft.TeamFoundation.Common.csproj">
-      <Project>{E0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Common</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation\Microsoft.TeamFoundation.csproj">
-      <Project>{B0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation</Name>
-    </ProjectReference>
-  </ItemGroup>
   <ItemGroup>
     <Folder Include="Services\" />
   </ItemGroup>

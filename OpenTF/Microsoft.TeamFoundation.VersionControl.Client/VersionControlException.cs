@@ -31,16 +31,16 @@ using Microsoft.TeamFoundation;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class VersionControlException : TeamFoundationServerException
-	{
-		public VersionControlException()
-			{
-			}
+    public class VersionControlException : ApplicationException
+    {
+        public VersionControlException()
+        {
+        }
 
-		public VersionControlException(string message)
-			: base (message)
-			{
-			}
-	}
+        public VersionControlException(string message)
+			: base(message)
+        {
+        }
+    }
 }
 
