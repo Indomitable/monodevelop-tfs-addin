@@ -27,16 +27,9 @@
 //
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Xml;
-using System.Web.Services;
-using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public delegate void GettingEventHandler (Object sender,
+    public delegate void GettingEventHandler(Object sender,
 																						GettingEventArgs e);
 }

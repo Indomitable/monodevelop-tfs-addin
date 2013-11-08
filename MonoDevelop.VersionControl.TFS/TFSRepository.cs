@@ -31,7 +31,6 @@ using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.IO;
 using System.Linq;
 using Mono.TextEditor;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;

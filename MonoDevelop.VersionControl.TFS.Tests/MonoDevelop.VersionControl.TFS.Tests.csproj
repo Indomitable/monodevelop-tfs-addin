@@ -58,11 +58,11 @@
       <Project>{5D3D4474-FFFB-4B95-A525-AB43CCFFF7B3}</Project>
       <Name>MonoDevelop.VersionControl.TFS</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
+    <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
+    <ProjectReference Include="..\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
       <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
     </ProjectReference>

@@ -30,9 +30,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
-using System.Text;
-using Microsoft.TeamFoundation.VersionControl.Common;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -41,7 +39,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         internal static readonly int CONTEXT = 3;
 
         internal static void WriteHunkSet(StreamWriter stream, 
-                                    string[] a, string[] b, List<Hunk> hunkSet)
+                                          string[] a, string[] b, List<Hunk> hunkSet)
         {
             if (hunkSet.Count == 0)
                 return;
@@ -62,7 +60,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
 
             string header = String.Format("@@ -{0},{1} +",
-                       ctxStartA + 1, linesA);
+                                ctxStartA + 1, linesA);
 
             header += String.Format("{0},", ctxStartB + 1);
             header += String.Format("{0} @@", linesB);
@@ -79,7 +77,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         internal static void WriteUnified(StreamWriter stream, 
-                                    string[] a, string[] b, DiffItem[] items)
+                                          string[] a, string[] b, DiffItem[] items)
         {
             List<Hunk> hunkSet = new List<Hunk>();
             for (int x = 0; x < items.Length; x++)
@@ -108,7 +106,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         internal static void WriteNewFile(StreamWriter stream, 
-                                    string[] b)
+                                          string[] b)
         {
             DiffItem item = new DiffItem();
             item.StartA = 0;
@@ -122,7 +120,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         internal static void WriteHeader(DiffItemUtil aItem, DiffItemUtil bItem,
-                                   DiffOptions diffOpts)
+                                         DiffOptions diffOpts)
         {
             StreamWriter stream = diffOpts.StreamWriter;
             stream.Write("diff --tfs " + aItem.Name + " ");
@@ -141,8 +139,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public static void DiffFiles(IDiffItem source, IDiffItem target,
-                                DiffOptions diffOpts, string fileNameForHeader,
-                                bool wait)
+                                     DiffOptions diffOpts, string fileNameForHeader,
+                                     bool wait)
         {
             DiffItemUtil aItem = new DiffItemUtil('a', fileNameForHeader, source.GetFile());
             DiffItemUtil bItem = new DiffItemUtil('b', fileNameForHeader, target.GetFile());
@@ -168,7 +166,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             bool ignoreWhiteSpace = (diffOpts.Flags & DiffOptionFlags.IgnoreWhiteSpace) == DiffOptionFlags.IgnoreWhiteSpace;
 
             DiffItem[] items = DiffUtil.DiffText(hashtable, aItem.Lines, bItem.Lines, 
-                          ignoreWhiteSpace, ignoreWhiteSpace, false);
+                                   ignoreWhiteSpace, ignoreWhiteSpace, false);
 
             WriteUnified(stream, aItem.Lines, bItem.Lines, items);
         }

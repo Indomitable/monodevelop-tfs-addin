@@ -31,7 +31,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 using System.Linq;
 using MonoDevelop.Core;

@@ -117,16 +117,6 @@
     <Folder Include="Infrastructure\" />
     <Folder Include="Infrastructure\Objects\" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
-      <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\OpenTF\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
-      <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
@@ -135,4 +125,18 @@
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Common.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
   </Target>
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
+      <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
+      <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj">
+      <Project>{D0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.WorkItemTracking.Client</Name>
+    </ProjectReference>
+  </ItemGroup>
 </Project>

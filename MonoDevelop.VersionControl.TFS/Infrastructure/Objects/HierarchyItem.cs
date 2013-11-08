@@ -26,8 +26,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {

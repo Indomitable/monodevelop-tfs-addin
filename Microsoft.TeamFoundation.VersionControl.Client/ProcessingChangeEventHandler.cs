@@ -27,16 +27,9 @@
 //
 
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Xml;
-using System.Web.Services;
-using Microsoft.TeamFoundation.VersionControl.Common;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public delegate void ProcessingChangeEventHandler (Object sender,
+    public delegate void ProcessingChangeEventHandler(Object sender,
 																										 ProcessingChangeEventArgs e);
 }

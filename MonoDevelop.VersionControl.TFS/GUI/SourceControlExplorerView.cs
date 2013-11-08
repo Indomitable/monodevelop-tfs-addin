@@ -26,7 +26,6 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using MonoDevelop.Ide.Gui;
 using Xwt;
 using MonoDevelop.VersionControl.TFS.Helpers;

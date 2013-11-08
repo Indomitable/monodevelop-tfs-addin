@@ -31,7 +31,6 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.Collections.Generic;
 using MonoDevelop.Ide;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 

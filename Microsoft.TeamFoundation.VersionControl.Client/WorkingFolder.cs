@@ -30,7 +30,6 @@
 using System;
 using System.IO;
 using System.Text;
-using Microsoft.TeamFoundation.VersionControl.Common;
 using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
