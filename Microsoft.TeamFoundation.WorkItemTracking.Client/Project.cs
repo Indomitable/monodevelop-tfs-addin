@@ -36,25 +36,12 @@ using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
-	public sealed class Project
-	{
-		private string name;
-		public string Name
-		{
-			get { return name; }
-		}
+    public sealed class Project
+    {
+        public int Id { get; set; }
 
-		private int id;
-		public int Id
-		{
-			get { return id; }
-		}
+        public string Name { get; set; }
 
-		private Uri uri;
-		public Uri Uri
-		{
-			get { return uri; }
-		}
-
-	}
+        public string Guid { get; set; }
+    }
 }

@@ -33,6 +33,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -42,6 +43,12 @@
     <Compile Include="WorkItem.cs" />
     <Compile Include="WorkItemStore.cs" />
     <Compile Include="WorkItemType.cs" />
+    <Compile Include="Enums\MetadataRowSetNames.cs" />
+    <Compile Include="Objects\Hierarchy.cs" />
+    <Compile Include="WorkItemManager.cs" />
+    <Compile Include="Metadata\TableExtractor.cs" />
+    <Compile Include="Metadata\TableFieldNameAttribute.cs" />
+    <Compile Include="Objects\StoredQuery.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -52,5 +59,10 @@
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Enums\" />
+    <Folder Include="Objects\" />
+    <Folder Include="Metadata\" />
   </ItemGroup>
 </Project>

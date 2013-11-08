@@ -39,6 +39,16 @@ namespace Microsoft.TeamFoundation.Client
 
         public string Uri { get; private set; }
 
+        public string Guid
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(Uri) && Uri.Length > 36)
+                    return Uri.Remove(0, 36); //Remove vstfs:///Classification/TeamProject/
+                return string.Empty;
+            }
+        }
+
         public ProjectCollection Collection { get; private set; }
 
         public static ProjectInfo FromXml(ProjectCollection collection, XElement element)

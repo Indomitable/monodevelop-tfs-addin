@@ -1,5 +1,5 @@
 //
-// TFSService.cs
+// Hierarchy.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,36 +24,45 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Xml.Linq;
-using System.Xml;
+using System.Collections.Generic;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace Microsoft.TeamFoundation.Client.Services
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
-    public abstract class TFSService
+    public class Hierarchy
     {
-        public TeamFoundationServer Server { get; set; }
-
-        public string RelativeUrl { get; set; }
-
-        public virtual Uri Url
+        public Hierarchy()
         {
-            get
-            {
-                return UrlHelper.AddPathToUri(Server.Uri, RelativeUrl);
-            }
+            Children = new List<Hierarchy>();
         }
 
-        public abstract XNamespace MessageNs { get; }
+        [TableFieldName("AreaID")]
+        public int AreaId { get; set; }
 
-        public IXmlNamespaceResolver NsResolver
-        {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", MessageNs.ToString());
-                return manager;
-            }
-        }
+        [TableFieldName("fDeleted")]
+        public bool IsDeleted { get; set; }
+
+        [TableFieldName("TypeID")]
+        public int TypeId { get; set; }
+
+        [TableFieldName("Name")]
+        public string Name { get; set; }
+
+        [TableFieldName("ParentID")]
+        public int ParentId { get; set; }
+
+        [TableFieldName("fAdminOnly")]
+        public bool AdminOnly { get; set; }
+
+        [TableFieldName("StructureType")]
+        public int StructureType { get; set; }
+
+        [TableFieldName("GUID")]
+        public string Guid { get; set; }
+
+        public Hierarchy Parent { get; set; }
+
+        public List<Hierarchy> Children { get; set; }
     }
 }
 

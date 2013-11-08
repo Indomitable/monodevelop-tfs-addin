@@ -1,5 +1,5 @@
 //
-// TFSService.cs
+// StoredQuery.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,36 +24,43 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Xml.Linq;
-using System.Xml;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace Microsoft.TeamFoundation.Client.Services
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
-    public abstract class TFSService
+    public class StoredQuery
     {
-        public TeamFoundationServer Server { get; set; }
+        [TableFieldName("ID")]
+        public Guid Id { get; set; }
 
-        public string RelativeUrl { get; set; }
+        [TableFieldName("ProjectID")]
+        public int ProjectId { get; set; }
 
-        public virtual Uri Url
-        {
-            get
-            {
-                return UrlHelper.AddPathToUri(Server.Uri, RelativeUrl);
-            }
-        }
+        [TableFieldName("fPublic")]
+        public bool IsPublic { get; set; }
 
-        public abstract XNamespace MessageNs { get; }
+        [TableFieldName("Owner")]
+        public string Owner { get; set; }
 
-        public IXmlNamespaceResolver NsResolver
-        {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", MessageNs.ToString());
-                return manager;
-            }
-        }
+        [TableFieldName("QueryName")]
+        public string QueryName { get; set; }
+
+        [TableFieldName("QueryText")]
+        public string QueryText { get; set; }
+
+        [TableFieldName("Description")]
+        public string Description { get; set; }
+
+        [TableFieldName("CreateTime")]
+        public DateTime CreateTime { get; set; }
+
+        [TableFieldName("LastWriteTime")]
+        public DateTime LastWriteTime { get; set; }
+
+        [TableFieldName("fDeleted")]
+        public bool IsDeleted { get; set; }
+
+        [TableFieldName("ParentID")]
+        public Guid ParentId { get; set; }
     }
 }
-

@@ -1,5 +1,5 @@
 //
-// TFSService.cs
+// MetadataFieldName.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,36 +24,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Xml.Linq;
-using System.Xml;
 
-namespace Microsoft.TeamFoundation.Client.Services
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
 {
-    public abstract class TFSService
+    [Serializable]
+    public class TableFieldNameAttribute : Attribute
     {
-        public TeamFoundationServer Server { get; set; }
-
-        public string RelativeUrl { get; set; }
-
-        public virtual Uri Url
+        public TableFieldNameAttribute(string fieldName)
         {
-            get
-            {
-                return UrlHelper.AddPathToUri(Server.Uri, RelativeUrl);
-            }
+            this.FieldName = fieldName;
         }
 
-        public abstract XNamespace MessageNs { get; }
-
-        public IXmlNamespaceResolver NsResolver
-        {
-            get
-            {
-                XmlNamespaceManager manager = new XmlNamespaceManager(new NameTable());
-                manager.AddNamespace("msg", MessageNs.ToString());
-                return manager;
-            }
-        }
+        public string FieldName { get; set; }
     }
 }
 
