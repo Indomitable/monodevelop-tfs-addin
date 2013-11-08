@@ -5,13 +5,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDevelop.VersionControl.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenTF", "OpenTF", "{544F6E58-B111-4CB4-9E1D-5374BC57B5A2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDevelop.VersionControl.TFS.Tests", "MonoDevelop.VersionControl.TFS.Tests\MonoDevelop.VersionControl.TFS.Tests.csproj", "{9FC22AA3-D1F4-478C-8B22-6790EA407534}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.Client", "OpenTF\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj", "{C0953653-D640-4338-BDAE-91DA9C3583F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.VersionControl.Client", "OpenTF\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj", "{F0953653-D640-4338-BDAE-91DA9C3583F8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.TeamFoundation.WorkItemTracking.Client", "OpenTF\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj", "{D0953653-D640-4338-BDAE-91DA9C3583F8}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoDevelop.VersionControl.TFS.Tests", "MonoDevelop.VersionControl.TFS.Tests\MonoDevelop.VersionControl.TFS.Tests.csproj", "{9FC22AA3-D1F4-478C-8B22-6790EA407534}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,9 +41,6 @@ Global
 		{F0953653-D640-4338-BDAE-91DA9C3583F8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{C0953653-D640-4338-BDAE-91DA9C3583F8} = {544F6E58-B111-4CB4-9E1D-5374BC57B5A2}
-		{F0953653-D640-4338-BDAE-91DA9C3583F8} = {544F6E58-B111-4CB4-9E1D-5374BC57B5A2}
-		{D0953653-D640-4338-BDAE-91DA9C3583F8} = {544F6E58-B111-4CB4-9E1D-5374BC57B5A2}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = MonoDevelop.VersionControl.TFS\MonoDevelop.VersionControl.TFS.csproj
