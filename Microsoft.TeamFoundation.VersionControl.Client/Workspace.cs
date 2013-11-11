@@ -86,15 +86,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public void CheckIn(List<PendingChange> changes, string comment)
+        public List<Failure> CheckIn(List<PendingChange> changes, string comment)
         {
             foreach (var change in changes)
             {
                 this.VersionControlService.UploadFile(this, change);
             }
 
-            this.VersionControlService.CheckIn(this, changes, comment);
+            var failures = this.VersionControlService.CheckIn(this, changes, comment);
             this.RefreshPendingChanges();
+            return failures;
         }
 
         #region Pending Changes
