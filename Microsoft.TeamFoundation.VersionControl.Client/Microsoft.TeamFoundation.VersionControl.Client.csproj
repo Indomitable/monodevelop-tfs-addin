@@ -36,11 +36,9 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="MonoDevelop.Core">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
-      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="MonoDevelop.Ide">
       <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Ide.dll</HintPath>
-      <Package>monodevelop</Package>
     </Reference>
   </ItemGroup>
   <ItemGroup>
