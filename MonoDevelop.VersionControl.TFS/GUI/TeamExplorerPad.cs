@@ -116,33 +116,34 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         node.AddChild().SetValue(_name, pc.Name)
                                        .SetValue(_type, NodeType.ProjectCollection)
                                        .SetValue(_item, pc);
-                        var workItemManager = new WorkItemManager(pc);
+                        //var workItemManager = new WorkItemManager(pc);
                         foreach (var projectInfo in pc.Projects.OrderBy(x => x.Name))
                         {
                             node.AddChild().SetValue(_name, projectInfo.Name).SetValue(_type, NodeType.Project).SetValue(_item, projectInfo);
-                            var workItemProject = workItemManager.GetByGuid(projectInfo.Guid);
-                            if (workItemProject != null)
-                            {
-                                node.AddChild().SetValue(_name, "Work Items").SetValue(_type, NodeType.WorkItems);
-                                var privateQueries = workItemManager.GetMyQueries(workItemProject);
-                                if (privateQueries.Any())
-                                {
-                                    node.AddChild().SetValue(_name, "My Queries").SetValue(_type, NodeType.WorkItemQueryType);
-                                    node.MoveToParent();
-                                }
-                                var publicQueries = workItemManager.GetPublicQueries(workItemProject);
-                                if (publicQueries.Any())
-                                {
-                                    node.AddChild().SetValue(_name, "Public").SetValue(_type, NodeType.WorkItemQueryType);
-                                    foreach (var query in publicQueries)
-                                    {
-                                        node.AddChild().SetValue(_name, query.QueryName).SetValue(_type, NodeType.WorkItemQuery).SetValue(_item, query);
-                                        node.MoveToParent();
-                                    }
-                                    node.MoveToParent();
-                                }
-                                node.MoveToParent();
-                            }
+                            //No Work Items For now.
+//                            var workItemProject = workItemManager.GetByGuid(projectInfo.Guid);
+//                            if (workItemProject != null)
+//                            {
+//                                node.AddChild().SetValue(_name, "Work Items").SetValue(_type, NodeType.WorkItems);
+//                                var privateQueries = workItemManager.GetMyQueries(workItemProject);
+//                                if (privateQueries.Any())
+//                                {
+//                                    node.AddChild().SetValue(_name, "My Queries").SetValue(_type, NodeType.WorkItemQueryType);
+//                                    node.MoveToParent();
+//                                }
+//                                var publicQueries = workItemManager.GetPublicQueries(workItemProject);
+//                                if (publicQueries.Any())
+//                                {
+//                                    node.AddChild().SetValue(_name, "Public").SetValue(_type, NodeType.WorkItemQueryType);
+//                                    foreach (var query in publicQueries)
+//                                    {
+//                                        node.AddChild().SetValue(_name, query.QueryName).SetValue(_type, NodeType.WorkItemQuery).SetValue(_item, query);
+//                                        node.MoveToParent();
+//                                    }
+//                                    node.MoveToParent();
+//                                }
+//                                node.MoveToParent();
+//                            }
                             node.AddChild().SetValue(_name, "Source Control").SetValue(_type, NodeType.SourceControl);
                             node.MoveToParent();
                             node.MoveToParent();
