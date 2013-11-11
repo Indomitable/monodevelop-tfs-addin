@@ -124,8 +124,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
             projectCollection = project.Collection;
             ContentName = GettextCatalog.GetString("Source Explorer") + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
-            FillWorkspaces();
-            FillTreeView();
+            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true))
+            {
+                progress.BeginTask("Loading...", 2);
+                FillWorkspaces();
+                progress.Step(1);
+                FillTreeView();
+                progress.EndTask();
+            }
         }
 
         #endregion

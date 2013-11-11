@@ -729,31 +729,37 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         private IEnumerable<UpdateLocalVersion> InternalProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
             var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
-            foreach (var operation in getOperations)
+            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
             {
-                if (operation.ChangeType.HasFlag(ChangeType.Add))
+                progress.BeginTask("Process", getOperations.Count);
+                foreach (var operation in getOperations)
                 {
-                    continue; //Noting to process
+                    progress.Step(1);
+                    if (operation.ChangeType.HasFlag(ChangeType.Add))
+                    {
+                        continue; //Noting to process
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Edit))
+                    {
+                        yield return ProcessEdit(operation, downloadService, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
+                    {
+                        yield return ProcessDelete(operation, downloadService, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Rename))
+                    {
+                        yield return ProcessRename(operation, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.None))
+                    {
+                        yield return ProcessGet(operation, downloadService);
+                    }
                 }
-                if (operation.ChangeType.HasFlag(ChangeType.Edit))
-                {
-                    yield return ProcessEdit(operation, downloadService, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
-                {
-                    yield return ProcessDelete(operation, downloadService, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.Rename))
-                {
-                    yield return ProcessRename(operation, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.None))
-                {
-                    yield return ProcessGet(operation, downloadService);
-                }
+                progress.EndTask();
             }
         }
 
