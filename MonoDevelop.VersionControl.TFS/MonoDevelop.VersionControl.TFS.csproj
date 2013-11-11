@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
-    <ReleaseVersion>0.4</ReleaseVersion>
+    <ReleaseVersion>0.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -119,11 +119,9 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.Common.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Common.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.WorkItemTracking.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
   </Target>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">

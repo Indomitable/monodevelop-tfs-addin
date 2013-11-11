@@ -93,6 +93,6 @@ Global
 		$0.XmlFormattingPolicy = $6
 		$6.inheritsSet = null
 		$6.scope = application/x-addin+xml
-		version = 0.4
+		version = 0.5
 	EndGlobalSection
 EndGlobal
