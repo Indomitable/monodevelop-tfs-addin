@@ -38,6 +38,14 @@ namespace MonoDevelop.VersionControl.TFS
 
         public TFSClient()
         {
+            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            {
+                var pad = MonoDevelop.Ide.IdeApp.Workbench.GetPad<MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad>();
+                if (pad != null)
+                {
+                    pad.Destroy();
+                }
+            }
         }
 
         #region implemented abstract members of VersionControlSystem
@@ -62,6 +70,10 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (path.IsNullOrEmpty)
                 return null;
+            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            {
+                return null;
+            }
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
                 foreach (var collection in server.ProjectCollections)

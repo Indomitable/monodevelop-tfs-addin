@@ -45,6 +45,16 @@ namespace MonoDevelop.VersionControl.TFS.Commands
             pad.AutoHide = false;
             pad.BringToFront();
         }
+
+        protected override void Update(CommandInfo info)
+        {
+            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            {
+                info.Enabled = false;
+                return;
+            }
+            base.Update(info);
+        }
     }
 }
 

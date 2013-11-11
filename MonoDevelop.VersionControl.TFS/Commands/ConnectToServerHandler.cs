@@ -38,6 +38,16 @@ namespace MonoDevelop.VersionControl.TFS.Commands
                 dialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow));
             }
         }
+
+        protected override void Update(CommandInfo info)
+        {
+            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            {
+                info.Enabled = false;
+                return;
+            }
+            base.Update(info);
+        }
     }
 }
 
