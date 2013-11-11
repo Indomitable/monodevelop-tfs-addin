@@ -142,7 +142,7 @@
       <BaseVersion />
       <Author>Ventsislav Mladenov</Author>
       <Copyright>MIT X11</Copyright>
-      <Url>https://github.com/Indomitable</Url>
+      <Url>https://github.com/Indomitable/monodevelop-tfs-addin</Url>
       <Description>TFS support for the Version Control Add-in</Description>
       <Category>Version Control</Category>
       <Dependencies>
@@ -161,7 +161,7 @@
       </Dependencies>
       <OptionalDependencies />
       <Properties>
-        <Property name="DownloadSize">95215</Property>
+        <Property name="DownloadSize">95232</Property>
       </Properties>
     </Addin>
   </Addin>
