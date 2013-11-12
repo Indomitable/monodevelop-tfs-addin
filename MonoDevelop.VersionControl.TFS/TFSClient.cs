@@ -29,6 +29,9 @@ using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Collections.Generic;
 using MonoDevelop.Core;
+using MonoDevelop.Ide;
+using System.IO;
+using System;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -70,22 +73,66 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (path.IsNullOrEmpty)
                 return null;
-            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            var solutionPath = Path.ChangeExtension(Path.Combine(path, id), "sln");
+            if (File.Exists(solutionPath)) //Read Solution
             {
-                return null;
+                var repo = FindBySolution(solutionPath);
+                if (repo != null)
+                    return repo;
+                else
+                    FindByPath(path);
             }
+            else
+            {
+                return FindByPath(path);
+            }
+            return null;
+        }
+
+        private Repository FindBySolution(FilePath solutionPath)
+        {
+            var content = File.ReadAllLines(solutionPath);
+            var line = content.FirstOrDefault(x => x.IndexOf("SccTeamFoundationServer", System.StringComparison.OrdinalIgnoreCase) > -1);
+            if (line == null)
+                return null;
+            var parts = line.Split(new [] { "=" }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2)
+                return null;
+            var serverPath = new Uri(parts[1].Trim());
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                foreach (var collection in server.ProjectCollections)
+                if (string.Equals(serverPath.Host, server.Uri.Host, StringComparison.OrdinalIgnoreCase))
                 {
-                    var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
-                    var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
-                    if (workspace != null)
-                    {
-                        var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService));
-                        result.AttachWorkspace(workspace);
-                        return result;
-                    }
+                    var repo = GetRepoFromServer(server, solutionPath);
+                    if (repo != null)
+                        return repo;
+                }
+            }
+            return null;
+        }
+
+        private Repository FindByPath(FilePath path)
+        {
+            foreach (var server in TFSVersionControlService.Instance.Servers)
+            {
+                var repo = GetRepoFromServer(server, path);
+                if (repo != null)
+                    return repo;
+            }
+            return null;
+        }
+
+        private Repository GetRepoFromServer(TeamFoundationServer server, FilePath path)
+        {
+            foreach (var collection in server.ProjectCollections)
+            {
+                var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
+                var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
+                if (workspace != null)
+                {
+                    var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService));
+                    result.AttachWorkspace(workspace);
+                    return result;
                 }
             }
             return null;

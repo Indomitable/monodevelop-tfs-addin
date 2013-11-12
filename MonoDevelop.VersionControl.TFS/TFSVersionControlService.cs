@@ -32,6 +32,7 @@ using System;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using System.Net;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -93,8 +94,9 @@ namespace MonoDevelop.VersionControl.TFS
                     file.Close();
                 }
             }
-            catch
+            catch (Exception e)
             {
+                MessageService.ShowException(e);
                 return;
             }
             if (_registredServers.Any())
