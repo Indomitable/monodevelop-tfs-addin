@@ -673,12 +673,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         //Move file only on undo, let Ide do Get Process Type
                         if (operation.ItemType == ItemType.File)
                         {
-                            FileService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
+                            File.Move(operation.SourceLocalItem, operation.TargetLocalItem);
                             project.AddFile(operation.TargetLocalItem);
                         }    
                         if (operation.ItemType == ItemType.Folder)
                         {
-                            FileService.MoveDirectory(operation.SourceLocalItem, operation.TargetLocalItem);
+                            Directory.Move(operation.SourceLocalItem, operation.TargetLocalItem);
                             project.AddDirectory(operation.TargetLocalItem.Substring(((string)project.BaseDirectory).Length + 1));
                         }
                         break;
@@ -687,9 +687,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 if (!found)
                 {
                     if (operation.ItemType == ItemType.File)
-                        FileService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
+                        File.Move(operation.SourceLocalItem, operation.TargetLocalItem);
                     if (operation.ItemType == ItemType.Folder)
-                        FileService.MoveDirectory(operation.SourceLocalItem, operation.TargetLocalItem);
+                        Directory.Move(operation.SourceLocalItem, operation.TargetLocalItem);
                 }
             }
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
