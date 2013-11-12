@@ -73,19 +73,27 @@ namespace MonoDevelop.VersionControl.TFS
             if (workspace == null)
                 return VersionStatus.Unversioned;
             var status = VersionStatus.Versioned;
+
+            if (item.HasOtherPendingChange && item.ChangeType.HasFlag(ChangeType.Lock))
+            {
+                status |= VersionStatus.Locked; //Locked by someone else
+            }
+
             var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.LocalItem, item.LocalItem, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
 
             if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Lock)))
-                status = status | VersionStatus.Locked;
+            {
+                status |= VersionStatus.LockOwned; //Locked by me
+            }
 
             if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0))
             {
-                status = status | VersionStatus.ScheduledAdd;
+                status |= VersionStatus.ScheduledAdd;
                 return status;
             }
             if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Delete)))
             {
-                status = status | VersionStatus.ScheduledDelete;
+                status |= VersionStatus.ScheduledDelete;
                 return status;
             }
 //            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Rename)))
@@ -421,11 +429,6 @@ namespace MonoDevelop.VersionControl.TFS
             supportedOperations &= ~VersionControlOperation.Annotate; //Annotated is not supported yet.
             if (vinfo.Status.HasFlag(VersionStatus.ScheduledAdd))
                 supportedOperations &= ~VersionControlOperation.Log;
-            if (vinfo.Status.HasFlag(VersionStatus.Locked))
-            {
-                supportedOperations &= ~VersionControlOperation.Lock;
-                supportedOperations |= VersionControlOperation.Unlock;
-            }
             return supportedOperations;
         }
 
