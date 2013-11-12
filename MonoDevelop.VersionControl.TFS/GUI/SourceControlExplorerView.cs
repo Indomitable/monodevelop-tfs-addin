@@ -124,7 +124,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
             projectCollection = project.Collection;
             ContentName = GettextCatalog.GetString("Source Explorer") + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
-            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true))
+            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
             {
                 progress.BeginTask("Loading...", 2);
                 FillWorkspaces();
@@ -168,7 +168,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 if (_treeView.SelectedRow != null && e.Button == PointerButton.Right)
                 {
-                    BuildPopupMenu(MenuInvoker.TreeView).Popup();
+                    var menu = BuildPopupMenu(MenuInvoker.TreeView);
+                    if (menu.Items.Any())
+                        menu.Popup();
                 }
             };
             treeViewBox.WidthRequest = 50;
@@ -194,7 +196,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             {
                 if (e.Button == PointerButton.Right && _listView.SelectedRow >= 0)
                 {
-                    BuildPopupMenu(MenuInvoker.ListView).Popup();
+                    var menu = BuildPopupMenu(MenuInvoker.ListView);
+                    if (menu.Items.Any())
+                        menu.Popup();
                 }
             };
             rightBox.PackStart(_listView, true, true);
