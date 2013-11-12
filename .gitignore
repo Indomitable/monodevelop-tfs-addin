@@ -1,0 +1,8 @@
+Output/
+External/
+Microsoft.TeamFoundation.Client/
+Microsoft.TeamFoundation.VersionControl.Client/
+Microsoft.TeamFoundation.WorkItemTracking.Client/
+MonoDevelop.VersionControl.TFS.Tests/
+MonoDevelop.VersionControl.TFS.userprefs
+MonoDevelop.VersionControl.TFS/
