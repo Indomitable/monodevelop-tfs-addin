@@ -61,6 +61,11 @@
 	<Extension path = "/MonoDevelop/VersionControl/CommitDialogExtensions">
 		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
 	</Extension>
+<!--
+    <Extension path = "/MonoDevelop/Core/StockIcons">
+        <StockIcon stockid = "vc-repository" file = "Icons/repository.png" size="Menu" />
+    </Extension>
+-->
 
 	<Extension path = "/MonoDevelop/Core/UserDataMigration">
 		<!-- 4.0+ -->

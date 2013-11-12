@@ -36,6 +36,8 @@ using System.Linq;
 using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using System.Reflection;
+using Xwt.Drawing;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -69,6 +71,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         #region Folders TreeView
 
+        private readonly DataField<Xwt.Drawing.Image> _iconTree = new DataField<Xwt.Drawing.Image>();
         private readonly DataField<Item> _itemTree = new DataField<Item>();
         private readonly DataField<string> _nameTree = new DataField<string>();
         private readonly TreeView _treeView = new TreeView();
@@ -85,7 +88,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             ContentName = GettextCatalog.GetString("Source Explorer");
             _workspaceStore = new ListStore(_workspaceName);
             _listStore = new ListStore(_itemList, _typeList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
-            _treeStore = new TreeStore(_itemTree, _nameTree);
+            _treeStore = new TreeStore(_iconTree, _itemTree, _nameTree);
             BuildContent();
         }
 
@@ -161,7 +164,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             VBox treeViewBox = new VBox();
 
-            _treeView.Columns.Add(new ListViewColumn("Folders", new TextCellView(_nameTree)));
+            _treeView.Columns.Add("Folders", new ImageCellView(_iconTree), new TextCellView(_nameTree));
             _treeView.DataSource = _treeStore;
             _treeView.SelectionChanged += OnFolderChanged;
             _treeView.ButtonPressed += (sender, e) =>
@@ -232,6 +235,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
+        private Image GetRepositoryImage()
+        {
+            var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.repository.png");
+            return image.Scale(0.6);
+        }
+
         private void FillTreeView()
         {
             _treeStore.Clear();
@@ -239,7 +248,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
-            var node = _treeStore.AddNode().SetValue(_nameTree, root.Name).SetValue(_itemTree, root.Item);
+            var node = _treeStore.AddNode().SetValue(_iconTree, GetRepositoryImage()).SetValue(_nameTree, root.Name).SetValue(_itemTree, root.Item);
             AddChilds(node, root.Children);
             var topNode = _treeStore.GetFirstNode();
             _treeView.ExpandRow(topNode.CurrentPosition, false);
@@ -316,14 +325,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
+        int treeLevel = 0;
+
         private void AddChilds(TreeNavigator node, List<HierarchyItem> children)
         {
+            treeLevel++;
             foreach (var child in children)
             {
-                node.AddChild().SetValue(_nameTree, child.Name).SetValue(_itemTree, child.Item);
+                var childNode = node.AddChild().SetValue(_nameTree, child.Name).SetValue(_itemTree, child.Item);
+                if (treeLevel == 1)
+                    childNode.SetValue(_iconTree, GetRepositoryImage());
                 AddChilds(node, child.Children);
                 node.MoveToParent();
             }
+            treeLevel--;
         }
 
         private void ExpandPath(string path)
