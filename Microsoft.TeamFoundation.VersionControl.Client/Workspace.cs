@@ -36,6 +36,7 @@ using System.Linq;
 using MonoDevelop.Core;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.Ide;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -317,11 +318,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             List<ChangeRequest> changes = new List<ChangeRequest>();
 
-            foreach (string path in paths)
+            foreach (var path in paths)
             {
-                ItemType itemType = ItemType.File;
-                if (Directory.Exists(path))
-                    itemType = ItemType.Folder;
+                var itemType = path.IsDirectory ? ItemType.Folder : ItemType.File;
                 changes.Add(new ChangeRequest(path, RequestType.Add, itemType));
                 if (isRecursive && itemType == ItemType.Folder)
                 {
@@ -432,45 +431,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return undoPaths;
         }
 
-        #endregion
-
-        #region Lock
-
-        public int SetLock(string path, LockLevel lockLevel)
+        public void LockFiles(List<FilePath> paths, LockLevel lockLevel)
         {
-            return SetLock(path, lockLevel, RecursionType.None);
+            SetLock(paths, lockLevel, RecursionType.None);
         }
 
-        public int SetLock(string path, LockLevel lockLevel, RecursionType recursion)
+        public void SetLock(List<FilePath> paths, LockLevel lockLevel, RecursionType recursion)
         {
-            string[] paths = new string[1];
-            paths[0] = path;
-            return SetLock(paths, lockLevel, recursion);
-        }
+            if (paths.Count == 0)
+                return;
 
-        public int SetLock(string[] paths, LockLevel lockLevel)
-        {
-            return SetLock(paths, lockLevel, RecursionType.None);
-        }
-
-        public int SetLock(string[] paths, LockLevel lockLevel, RecursionType recursion)
-        {
-            throw new NotImplementedException();
-//            List<ChangeRequest> changes = new List<ChangeRequest>();
-//
-//            foreach (string path in paths)
-//            {
-//                ItemType itemType = ItemType.File;
-//                if (Directory.Exists(path))
-//                    itemType = ItemType.Folder;
-//                changes.Add(new ChangeRequest(path, RequestType.Lock, itemType, recursion, lockLevel));
-//            }
-//
-//            if (changes.Count == 0)
-//                return 0;
-//
-//            GetOperation[] operations = Repository.PendChanges(this, changes.ToArray());
-//            return operations.Length;
+            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, p.IsDirectory ? ItemType.Folder : ItemType.File, recursion, lockLevel, VersionSpec.Latest)).ToList();
+            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            ProcessGetOperations(getOperations, ProcessType.Get);
+            this.RefreshPendingChanges();
         }
 
         #endregion
@@ -625,7 +599,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 MakeFileWritable(operation.TargetLocalItem);
             }
-            return new UpdateLocalVersion(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
+            return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }
 
         private UpdateLocalVersion ProcessGet(GetOperation operation, VersionControlDownloadService downloadService)
@@ -633,7 +607,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             DownloadFile(operation, downloadService);
             if (operation.ItemType == ItemType.File)
                 MakeFileReadOnly(operation.TargetLocalItem);
-            return new UpdateLocalVersion(operation.ItemId, operation.SourceLocalItem, operation.VersionServer);
+            return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }
 
         private UpdateLocalVersion ProcessDelete(GetOperation operation, VersionControlDownloadService downloadService, ProcessType processType)
@@ -730,45 +704,48 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         private IEnumerable<UpdateLocalVersion> InternalProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
             var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
-            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
+            foreach (var operation in getOperations)
             {
-                progress.BeginTask("Process", getOperations.Count);
-                foreach (var operation in getOperations)
+                if (operation.ChangeType.HasFlag(ChangeType.Add))
                 {
-                    progress.Step(1);
-                    if (operation.ChangeType.HasFlag(ChangeType.Add))
-                    {
-                        continue; //Noting to process
-                    }
-                    if (operation.ChangeType.HasFlag(ChangeType.Edit))
-                    {
-                        yield return ProcessEdit(operation, downloadService, processType);
-                        continue;
-                    }
-                    if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
-                    {
-                        yield return ProcessDelete(operation, downloadService, processType);
-                        continue;
-                    }
-                    if (operation.ChangeType.HasFlag(ChangeType.Rename))
-                    {
-                        yield return ProcessRename(operation, processType);
-                        continue;
-                    }
-                    if (operation.ChangeType.HasFlag(ChangeType.None))
-                    {
-                        yield return ProcessGet(operation, downloadService);
-                    }
+                    continue; //Noting to process
                 }
-                progress.EndTask();
+                if (operation.ChangeType.HasFlag(ChangeType.Edit))
+                {
+                    yield return ProcessEdit(operation, downloadService, processType);
+                    continue;
+                }
+                if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
+                {
+                    yield return ProcessDelete(operation, downloadService, processType);
+                    continue;
+                }
+                if (operation.ChangeType.HasFlag(ChangeType.Rename))
+                {
+                    yield return ProcessRename(operation, processType);
+                    continue;
+                }
+                if (operation.ChangeType.HasFlag(ChangeType.None))
+                {
+                    yield return ProcessGet(operation, downloadService);
+                }
             }
         }
 
         private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
-            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-            updates.QueueUpdates(InternalProcessGetOperations(getOperations, processType));
-            updates.Flush();
+            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false))
+            {
+                progress.BeginTask("Process", getOperations.Count);
+                UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
+                foreach (var update in InternalProcessGetOperations(getOperations, processType))
+                {
+                    updates.QueueUpdate(update);
+                    progress.Step(1);
+                }
+                updates.Flush();
+                progress.EndTask();
+            }
         }
 
         #endregion

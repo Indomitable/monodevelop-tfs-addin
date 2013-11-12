@@ -80,9 +80,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             updates.Clear();
         }
 
-        internal void QueueUpdates(IEnumerable<UpdateLocalVersion> updates)
+        internal void QueueUpdate(UpdateLocalVersion update)
         {
-            this.updates.AddRange(updates);
+            this.updates.Add(update);
         }
 
         internal IEnumerable<XElement> ToXml(XNamespace ns)
