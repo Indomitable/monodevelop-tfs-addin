@@ -81,7 +81,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     commandInfo.Visible = false;
                     return;
                 }
-                if (!item.VersionInfo.IsVersioned || item.VersionInfo.HasLocalChanges)
+                if (!item.VersionInfo.IsVersioned || item.VersionInfo.HasLocalChanges || item.VersionInfo.Status.HasFlag(VersionStatus.Locked))
                 {
                     commandInfo.Visible = false;
                     return;

@@ -74,17 +74,15 @@ namespace MonoDevelop.VersionControl.TFS
                 return VersionStatus.Unversioned;
             var status = VersionStatus.Versioned;
 
-            if (item.HasOtherPendingChange && item.ChangeType.HasFlag(ChangeType.Lock))
+            if (item.LockStatus.HasFlag(LockLevel.CheckOut) || item.LockStatus.HasFlag(LockLevel.Checkin)) //Locked
             {
-                status |= VersionStatus.Locked; //Locked by someone else
+                if (item.HasOtherPendingChange)//Locked by someone else
+                    status |= VersionStatus.Locked;
+                else
+                    status |= VersionStatus.LockOwned; //Locked by me
             }
 
             var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.LocalItem, item.LocalItem, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
-
-            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Lock)))
-            {
-                status |= VersionStatus.LockOwned; //Locked by me
-            }
 
             if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0))
             {
@@ -429,6 +427,11 @@ namespace MonoDevelop.VersionControl.TFS
             supportedOperations &= ~VersionControlOperation.Annotate; //Annotated is not supported yet.
             if (vinfo.Status.HasFlag(VersionStatus.ScheduledAdd))
                 supportedOperations &= ~VersionControlOperation.Log;
+            if (vinfo.Status.HasFlag(VersionStatus.Locked))
+            {
+                supportedOperations &= ~VersionControlOperation.Lock;
+                supportedOperations &= ~VersionControlOperation.Remove;
+            }
             return supportedOperations;
         }
 
