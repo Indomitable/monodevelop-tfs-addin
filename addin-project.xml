@@ -1,4 +1,4 @@
-<AddinProject appVersion="4.1">
+<AddinProject appVersion="4.2">
 	<Project>
 		<AddinFile>Output/MonoDevelop.VersionControl.TFS.dll</AddinFile>
 		<BuildFile>MonoDevelop.VersionControl.TFS.sln</BuildFile>
