@@ -50,6 +50,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private readonly Label _localFolder = new Label();
         private readonly ListView _listView = new ListView();
+        private readonly DataField<Image> _iconList = new DataField<Image>();
         private readonly DataField<ExtendedItem> _itemList = new DataField<ExtendedItem>();
         private readonly DataField<string> _typeList = new DataField<string>();
         private readonly DataField<string> _nameList = new DataField<string>();
@@ -71,7 +72,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         #region Folders TreeView
 
-        private readonly DataField<Xwt.Drawing.Image> _iconTree = new DataField<Xwt.Drawing.Image>();
+        private readonly DataField<Image> _iconTree = new DataField<Image>();
         private readonly DataField<Item> _itemTree = new DataField<Item>();
         private readonly DataField<string> _nameTree = new DataField<string>();
         private readonly TreeView _treeView = new TreeView();
@@ -87,7 +88,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
             _workspaceStore = new ListStore(_workspaceName);
-            _listStore = new ListStore(_itemList, _typeList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
+            _listStore = new ListStore(_typeList, _iconList, _itemList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
             _treeStore = new TreeStore(_iconTree, _itemTree, _nameTree);
             BuildContent();
         }
@@ -186,8 +187,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             headerRightBox.PackStart(new Label(GettextCatalog.GetString("Local Path") + ":"));
             headerRightBox.PackStart(_localFolder);
             rightBox.PackStart(headerRightBox);
-            _listView.Columns.Add(new ListViewColumn("Type", new TextCellView(_typeList)));
-            _listView.Columns.Add(new ListViewColumn("Name", new TextCellView(_nameList)));
+            //_listView.Columns.Add(new ListViewColumn("Type", new TextCellView(_typeList)));
+            _listView.Columns.Add("Name", new ImageCellView(_iconList), new TextCellView(_nameList));
             _listView.Columns.Add(new ListViewColumn("Pending Change", new TextCellView(_changeList)));
             _listView.Columns.Add(new ListViewColumn("User", new TextCellView(_userList)));
             _listView.Columns.Add(new ListViewColumn("Latest", new TextCellView(_latestList)));
@@ -254,6 +255,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _treeView.ExpandRow(topNode.CurrentPosition, false);
         }
 
+        private Image GetItemImage(ItemType itemType)
+        {
+            if (itemType == ItemType.File)
+            {
+                var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.text-file-16.png");
+                return image;
+            }
+            else
+            {
+                var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.open-folder-16.png");
+                return image;
+            }
+        }
+
         private void FillListView(string serverPath)
         {
             _listStore.Clear();
@@ -265,6 +280,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 var row = _listStore.AddRow();
                 _listStore.SetValue(row, _itemList, item);
                 _listStore.SetValue(row, _typeList, item.ItemType.ToString());
+                _listStore.SetValue(row, _iconList, GetItemImage(item.ItemType));
                 _listStore.SetValue(row, _nameList, item.TargetServerItem);
                 if (this._currentWorkspace != null)
                 {
@@ -335,6 +351,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 var childNode = node.AddChild().SetValue(_nameTree, child.Name).SetValue(_itemTree, child.Item);
                 if (treeLevel == 1)
                     childNode.SetValue(_iconTree, GetRepositoryImage());
+                else
+                    childNode.SetValue(_iconTree, GetItemImage(ItemType.Folder));
                 AddChilds(node, child.Children);
                 node.MoveToParent();
             }

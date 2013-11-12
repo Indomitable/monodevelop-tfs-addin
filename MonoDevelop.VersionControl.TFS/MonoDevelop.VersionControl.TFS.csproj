@@ -69,6 +69,8 @@
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
     <EmbeddedResource Include="Icons\repository.png" />
+    <EmbeddedResource Include="Icons\open-folder-16.png" />
+    <EmbeddedResource Include="Icons\text-file-16.png" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Core">
