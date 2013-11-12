@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Ide;
+using MonoDevelop.Ide.Gui;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
@@ -32,7 +33,22 @@ namespace MonoDevelop.VersionControl.TFS.Commands
     {
         protected override void Run()
         {
-            var pad = IdeApp.Workbench.GetPad<MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad>();
+            Pad pad = null;
+            try
+            {
+                var pads = IdeApp.Workbench.Pads; // Try get Pads for first time
+            }
+            catch
+            {
+
+            }
+            foreach (var p in IdeApp.Workbench.Pads)
+            {
+                if (string.Equals(p.Id, "MonoDevelop.VersionControl.TFS.TeamExplorerPad", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    pad = p;
+                }    
+            }
             if (pad == null)
             {
                 var content = new MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad();
