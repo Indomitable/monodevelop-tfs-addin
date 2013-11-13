@@ -36,7 +36,6 @@ using System.Linq;
 using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using System.Reflection;
 using Xwt.Drawing;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
@@ -90,7 +89,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _workspaceStore = new ListStore(_workspaceName);
             _listStore = new ListStore(_typeList, _iconList, _itemList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
             _treeStore = new TreeStore(_iconTree, _itemTree, _nameTree);
-            BuildContent();
+            BuildGui();
         }
 
         public static void Open(Microsoft.TeamFoundation.Client.ProjectInfo project)
@@ -113,11 +112,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
-        #region implemented abstract members of AbstractViewContent
-
         public override void Load(string fileName)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         public void Load(Microsoft.TeamFoundation.Client.ProjectInfo project)
@@ -138,15 +135,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
-        #endregion
-
-        #region implemented abstract members of AbstractXwtViewContent
-
         public override Widget Widget { get { return _view; } }
 
-        #endregion
-
-        private void BuildContent()
+        private void BuildGui()
         {
             HBox headerBox = new HBox();
             headerBox.HeightRequest = 25;

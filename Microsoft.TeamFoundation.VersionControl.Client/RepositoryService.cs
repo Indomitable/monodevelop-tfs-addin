@@ -336,7 +336,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
             msg.Add(new XElement(MessageNs + "items", itemSpecs.Select(x => x.ToXml(MessageNs + "ItemSpec"))));
             var result = invoker.InvokeResult();
-            return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
+            return GetOperationExtractor(result);
         }
 
         internal List<PendingChange> QueryPendingChangesForWorkspace(Workspace workspace, List<ItemSpec> itemSpecs, bool includeDownloadInfo)
@@ -393,6 +393,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 UploadFile(workspace.Name, workspace.OwnerName, change);
         }
 
+        #region Result Extractors
+
         private List<Failure> FailuresExtractor(XElement response)
         {
             var failures = response.Element(MessageNs + "failures");
@@ -400,6 +402,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return failures.Elements(MessageNs + "Failure").Select(x => Failure.FromXml(x)).ToList();
             return null;
         }
+
+        private List<GetOperation> GetOperationExtractor(XElement element)
+        {
+            return element.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
+        }
+
+        private List<Conflict> ConflictExtractor(XElement element, Workspace wsp)
+        {
+            return element.Elements(MessageNs + "Conflict").Select(x => Conflict.FromXml(x, wsp)).ToList();
+        }
+
+        #endregion
 
         internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
         {
@@ -422,9 +436,32 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return failures;
         }
 
-        public void QueryConflicts(Workspace workspace)
+        internal List<Conflict> QueryConflicts(Workspace workspace, List<ItemSpec> items)
         {
+            var invoker = new SoapInvoker(this);
+            var msg = invoker.CreateEnvelope("QueryConflicts");
+            msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
+            msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "items", items.Select(itemSpec => itemSpec.ToXml(MessageNs + "ItemSpec"))));
 
+            var result = invoker.InvokeResult();
+            return ConflictExtractor(result, workspace);
+        }
+
+        internal ResolveResult Resolve(Conflict conflict, ResolutionType resolutionType)
+        {
+            var invoker = new SoapInvoker(this);
+            var msg = invoker.CreateEnvelope("Resolve");
+            msg.Add(new XElement(MessageNs + "workspaceName", conflict.Workspace.Name));
+            msg.Add(new XElement(MessageNs + "ownerName", conflict.Workspace.OwnerName));
+            msg.Add(new XElement(MessageNs + "conflictId", conflict.ConflictId));
+            msg.Add(new XElement(MessageNs + "resolution", resolutionType));
+            var response = invoker.InvokeResponse();
+            ResolveResult result = new ResolveResult();
+            result.GetOperations = GetOperationExtractor(invoker.MethodResultExtractor(response));
+            result.UndoOperations = GetOperationExtractor(response.Element(MessageNs + "undoOperations"));
+            result.ResolvedConflicts = ConflictExtractor(response.Element(MessageNs + "resolvedConflicts"), conflict.Workspace);
+            return result;
         }
         //		public void ShelveFile(string workspaceName, string ownerName, PendingChange change)
         //		{

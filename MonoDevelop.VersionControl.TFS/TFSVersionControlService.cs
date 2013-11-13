@@ -33,6 +33,7 @@ using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using System.Net;
 using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -67,6 +68,8 @@ namespace MonoDevelop.VersionControl.TFS
                 doc.Add(new XElement("TFSRoot"));
                 doc.Root.Add(new XElement("Servers", _registredServers.Select(x => x.ToLocalXml())));
                 doc.Root.Add(new XElement("Workspaces", _activeWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
+                if (this.MergeToolInfo != null)
+                    doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
                 doc.Save(file);
                 file.Close();
             }
@@ -92,6 +95,15 @@ namespace MonoDevelop.VersionControl.TFS
                     foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
                     {
                         _activeWorkspaces.Add(workspace.Attribute("Id").Value, workspace.Attribute("Name").Value);
+                    }
+                    var mergeToolElement = doc.Root.Element("MergeTool");
+                    if (mergeToolElement != null)
+                    {
+                        this.MergeToolInfo = new MergeToolInfo
+                        {
+                            CommandName = mergeToolElement.Attribute("Command").Value,
+                            Arguments = mergeToolElement.Attribute("Arguments").Value,
+                        };
                     }
                     file.Close();
                 }
@@ -159,5 +171,7 @@ namespace MonoDevelop.VersionControl.TFS
             _activeWorkspaces[collection.Id] = workspaceName;
             StorePrefs();
         }
+
+        public MergeToolInfo MergeToolInfo { get; set; }
     }
 }

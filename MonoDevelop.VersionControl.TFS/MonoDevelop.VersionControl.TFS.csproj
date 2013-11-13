@@ -65,6 +65,9 @@
     <Compile Include="GUI\TFSCommitDialogExtension.cs" />
     <Compile Include="Infrastructure\TFSNodeExtension.cs" />
     <Compile Include="Infrastructure\Objects\TFSRevision.cs" />
+    <Compile Include="GUI\ResolveConflictsView.cs" />
+    <Compile Include="Infrastructure\MergeToolInfo.cs" />
+    <Compile Include="GUI\MergeToolConfigDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

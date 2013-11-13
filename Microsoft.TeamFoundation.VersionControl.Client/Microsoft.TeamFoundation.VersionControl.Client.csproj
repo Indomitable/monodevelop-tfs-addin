@@ -136,10 +136,12 @@
     <Compile Include="Enums\DiffOptionFlags.cs" />
     <Compile Include="Enums\DiffOutputType.cs" />
     <Compile Include="VersionControlPath.cs">
-      <DependentUpon>Workspace.cs</DependentUpon>
+      <DependentUpon>WorkingFolder.cs</DependentUpon>
     </Compile>
     <Compile Include="DiffOptions.cs" />
     <Compile Include="RepositoryConstants.cs" />
+    <Compile Include="Enums\ResolutionType.cs" />
+    <Compile Include="Objects\ResolveResult.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

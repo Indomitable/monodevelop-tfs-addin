@@ -447,6 +447,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.RefreshPendingChanges();
         }
 
+        public List<Conflict> GetConflicts(IEnumerable<FilePath> paths)
+        {
+            var itemSpecs = paths.Select(p => new ItemSpec(p, RecursionType.Full)).ToList();
+            return this.VersionControlService.QueryConflicts(this, itemSpecs);
+        }
+
+        public void Resolve(Conflict conflict, ResolutionType resolutionType)
+        {
+            var result = this.VersionControlService.Resolve(conflict, resolutionType);
+            ProcessGetOperations(result.GetOperations, ProcessType.Get);
+            this.Undo(result.UndoOperations.Select(x => (FilePath)x.TargetLocalItem).ToList(), RecursionType.None);
+        }
+
         #endregion
 
         #region Serialization
@@ -486,13 +499,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         #endregion
-
-        public void RefreshMappings()
-        {
-            throw new NotImplementedException();
-//            Workspace w = Repository.QueryWorkspace(Name, OwnerName);
-//            this.folders = w.folders;
-        }
 
         internal void MakeFileReadOnly(string path)
         {
@@ -734,6 +740,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
+            if (getOperations == null || getOperations.Count == 0)
+                return;
             using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false))
             {
                 progress.BeginTask("Process", getOperations.Count);

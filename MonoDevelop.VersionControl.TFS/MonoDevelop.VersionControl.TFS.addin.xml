@@ -31,6 +31,9 @@
 			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
 				_label = "_Check Out"
 				description = "Check Out File."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
+                _label = "_Resolve Conflicts"
+                description = "Resolve Conflicts."/>
 		</Category>
 	</Extension>
 
@@ -51,6 +54,10 @@
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" 
 			insertbefore="MonoDevelop.VersionControl.Commands.ResolveConflicts"/>
 		</Condition>
+        <Condition id="ItemType" value="Solution|Project">
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" 
+            insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
+        </Condition>
 	</Extension>
 	
 	<Extension path = "/MonoDevelop/Ide/Pads">

@@ -1,5 +1,5 @@
 //
-// TFSCommands.cs
+// MergeToolInfo.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,16 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
 
-namespace MonoDevelop.VersionControl.TFS.Commands
+namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
-    public enum TFSCommands
+    public class MergeToolInfo
     {
-        ConnectToServer,
-        TeamExplorer,
-        SourceControlExplorer,
-        Checkout,
-        ResolveConflicts
+        public string CommandName { get; set; }
+
+        public string Arguments { get; set; }
     }
 }
 

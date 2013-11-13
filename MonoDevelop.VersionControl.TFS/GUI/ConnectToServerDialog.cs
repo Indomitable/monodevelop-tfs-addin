@@ -32,10 +32,7 @@ using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.Client;
 using System.Linq;
-using GLib;
 using System.Collections.Generic;
-using MonoDevelop.Ide.Gui;
-using MonoDevelop.Projects;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {

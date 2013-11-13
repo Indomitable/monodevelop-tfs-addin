@@ -32,7 +32,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
     public class Conflict
     {
-        internal static Conflict FromXml(XElement element)
+        internal static Conflict FromXml(XElement element, Workspace workspace)
         {
             Conflict conflict = new Conflict();
             conflict.ConflictId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("cid"));
@@ -62,12 +62,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             conflict.TheirVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tver"));
             conflict.TheirServerItem = element.GetAttribute("tsitem");
             conflict.TheirEncoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tenc"));
-            conflict.TheirHashValue = GeneralHelper.ToByteArray(element.GetAttribute("tenc"));
+            conflict.TheirHashValue = GeneralHelper.ToByteArray(element.GetAttribute("thash"));
             conflict.TheirDeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tdid"));
             conflict.TheirItemType = EnumHelper.ParseItemType(element.GetAttribute("ttype"));
             conflict.TheirLastMergedVersion = GeneralHelper.XmlAttributeToInt(element.GetAttribute("tlmver"));
-            conflict.SourceLocalItem = element.GetAttribute("srclitem");
-            conflict.TargetLocalItem = element.GetAttribute("tgtlitem");
+            conflict.SourceLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("srclitem"));
+            conflict.TargetLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("tgtlitem"));
 
             conflict.ConflictType = EnumHelper.ParseConflictType(element.GetAttribute("ctype"));
             conflict.Reason = GeneralHelper.XmlAttributeToInt(element.GetAttribute("reason"));
@@ -78,6 +78,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             conflict.BaseDowloadUrl = element.GetAttribute("bdurl");
             conflict.TheirDowloadUrl = element.GetAttribute("tdurl");
             conflict.YourDowloadUrl = element.GetAttribute("ydurl");
+
+            conflict.Workspace = workspace;
             return conflict;
         }
 
@@ -156,6 +158,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         public string TheirDowloadUrl { get; private set; }
 
         public string YourDowloadUrl { get; private set; }
+
+        public Workspace Workspace { get; set; }
     }
 }
 

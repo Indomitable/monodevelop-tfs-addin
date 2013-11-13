@@ -555,6 +555,21 @@ namespace MonoDevelop.VersionControl.TFS
         }
 
         internal RepositoryService VersionControlService { get; set; }
+
+        internal List<Conflict> GetConflicts(List<FilePath> paths)
+        {
+            List<Conflict> conflicts = new List<Conflict>();
+            foreach (var workspacePaths in GroupFilesPerWorkspace(paths))
+            {
+                conflicts.AddRange(workspacePaths.Key.GetConflicts(workspacePaths));
+            }
+            return conflicts;
+        }
+
+        public void Resolve(Conflict conflict, ResolutionType resolutionType)
+        {
+            conflict.Workspace.Resolve(conflict, resolutionType);
+        }
     }
 }
 

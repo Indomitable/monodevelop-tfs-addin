@@ -1,5 +1,5 @@
 //
-// TFSCommands.cs
+// ResolveResult.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,16 +23,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
+using System.Collections.Generic;
 
-namespace MonoDevelop.VersionControl.TFS.Commands
+namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public enum TFSCommands
+    internal class ResolveResult
     {
-        ConnectToServer,
-        TeamExplorer,
-        SourceControlExplorer,
-        Checkout,
-        ResolveConflicts
+        public List<GetOperation> GetOperations { get; set; }
+
+        public List<GetOperation> UndoOperations { get; set; }
+
+        public List<Conflict> ResolvedConflicts { get; set; }
     }
 }
 

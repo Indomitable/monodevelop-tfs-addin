@@ -29,6 +29,7 @@ using MonoDevelop.Projects;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide.Gui.Pads.ProjectPad;
+using MonoDevelop.VersionControl.TFS.GUI;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -62,7 +63,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         [CommandUpdateHandler(TFSCommands.Checkout)]
         protected void UpdateCheckoutFile(CommandInfo commandInfo)
         {
-            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            if (VersionControlService.IsGloballyDisabled)
             {
                 commandInfo.Visible = false;
                 return;
@@ -88,44 +89,41 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 }
             }
         }
-        //
-        //		[CommandHandler(Commands.Resolve)]
-        //		protected void OnResolve()
-        //		{
-        //			foreach (VersionControlItemList items in GetItems ().SplitByRepository ())
-        //			{
-        //				FilePath[] files = new FilePath[items.Count];
-        //				for (int n = 0; n < files.Length; n++)
-        //					files[n] = items[n].Path;
-        //				((SubversionRepository)items[0].Repository).Resolve(files, true, new NullProgressMonitor());
-        //			}
-        //		}
-        //
-        //		[CommandUpdateHandler(Commands.Resolve)]
-        //		protected void UpdateResolve(CommandInfo item)
-        //		{
-        //			foreach (VersionControlItem vit in GetItems (false))
-        //			{
-        //				if (!(vit.Repository is SubversionRepository))
-        //				{
-        //					item.Visible = false;
-        //					return;
-        //				}
-        //
-        //				if (vit.IsDirectory)
-        //				{
-        //					item.Visible = false;
-        //					return;
-        //				}
-        //
-        //				VersionInfo vi = vit.Repository.GetVersionInfo(vit.Path);
-        //				if (vi != null && (vi.Status & VersionStatus.Conflicted) == 0)
-        //				{
-        //					item.Visible = false;
-        //					return;
-        //				}
-        //			}
-        //		}
+
+        [CommandHandler(TFSCommands.ResolveConflicts)]
+        protected void OnResolveConflicts()
+        {
+            var items = base.GetItems(false);
+            if (items.Count == 0)
+                return;
+            var item = items[0];
+            var repo = (TFSRepository)item.Repository;
+            ResolveConflictsView.Open(repo, item);
+        }
+
+        [CommandUpdateHandler(TFSCommands.ResolveConflicts)]
+        protected void UpdateResolveConflicts(CommandInfo commandInfo)
+        {
+            if (VersionControlService.IsGloballyDisabled)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            var items = base.GetItems(false);
+            if (items.Count == 0)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            var item = items[0];
+            var repo = item.Repository as TFSRepository;
+            if (repo == null)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            commandInfo.Visible = true;
+        }
     }
 }
 
