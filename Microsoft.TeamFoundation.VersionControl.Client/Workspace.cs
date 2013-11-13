@@ -414,6 +414,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public List<FilePath> Undo(List<FilePath> paths, RecursionType recursionType)
         {
+            if (paths.Count == 0)
+                return new List<FilePath>();
             List<ItemSpec> specs = new List<ItemSpec>();
 
             foreach (string path in paths)

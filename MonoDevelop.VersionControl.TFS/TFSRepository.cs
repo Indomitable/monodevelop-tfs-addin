@@ -34,6 +34,7 @@ using Mono.TextEditor;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.GUI;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -255,6 +256,7 @@ namespace MonoDevelop.VersionControl.TFS
                 if (failures.Any())
                 {
                     MessageService.ShowError("Commit failed!", string.Join(Environment.NewLine, failures.Select(f => f.Message)));
+                    ResolveConflictsView.Open(this, workspace1.Select(w => w.LocalPath).ToList());
                     return;
                 }
             }

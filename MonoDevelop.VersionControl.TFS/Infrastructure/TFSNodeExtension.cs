@@ -30,6 +30,8 @@ using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide.Gui.Pads.ProjectPad;
 using MonoDevelop.VersionControl.TFS.GUI;
+using MonoDevelop.Core;
+using System.Collections.Generic;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -98,7 +100,30 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return;
             var item = items[0];
             var repo = (TFSRepository)item.Repository;
-            ResolveConflictsView.Open(repo, item);
+            ResolveConflictsView.Open(repo, GetWorkingPaths(item));
+        }
+
+        private List<FilePath> GetWorkingPaths(VersionControlItem item)
+        {
+            List<FilePath> paths = new List<FilePath>();
+            var solution = item.WorkspaceObject as Solution;
+            if (solution != null)
+            {
+                paths.Add(solution.BaseDirectory);
+                foreach (var solutionItem in solution.Items)
+                {
+                    if (!solutionItem.BaseDirectory.IsChildPathOf(solution.BaseDirectory))
+                    {
+                        paths.Add(solutionItem.BaseDirectory);
+                    }
+                }
+            }
+            else
+            {
+                var project = (Project)item.WorkspaceObject;
+                paths.Add(project.BaseDirectory);
+            }
+            return paths;
         }
 
         [CommandUpdateHandler(TFSCommands.ResolveConflicts)]

@@ -44,7 +44,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     public class ResolveConflictsView : AbstractXwtViewContent
     {
         private TFSRepository repository;
-        private VersionControlItem item;
+        private readonly List<FilePath> paths = new List<FilePath>();
         private readonly VBox view = new VBox();
         private readonly ListView listView = new ListView();
         private readonly DataField<Conflict> itemField = new DataField<Conflict>();
@@ -67,10 +67,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             BuildGui();
         }
 
-        private void SetData(TFSRepository repository, VersionControlItem item)
+        private void SetData(TFSRepository repository, List<FilePath> paths)
         {
             this.repository = repository;
-            this.item = item;
+            this.paths.Clear();
+            this.paths.AddRange(paths);
         }
 
         void BuildGui()
@@ -240,7 +241,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void EndMerging()
         {
             var conflict = listStore.GetValue(listView.SelectedRow, itemField);
-            this.repository.Resolve(conflict, ResolutionType.AcceptYours);
+            this.repository.Resolve(conflict, ResolutionType.AcceptMerge);
             LoadConflicts();
         }
 
@@ -251,32 +252,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             throw new NotSupportedException();
         }
 
-        private List<FilePath> GetWorkingPaths(VersionControlItem item)
-        {
-            List<FilePath> paths = new List<FilePath>();
-            var solution = item.WorkspaceObject as Solution;
-            if (solution != null)
-            {
-                paths.Add(solution.BaseDirectory);
-                foreach (var solutionItem in solution.Items)
-                {
-                    if (!solutionItem.BaseDirectory.IsChildPathOf(solution.BaseDirectory))
-                    {
-                        paths.Add(solutionItem.BaseDirectory);
-                    }
-                }
-            }
-            else
-            {
-                var project = (Project)item.WorkspaceObject;
-                paths.Add(project.BaseDirectory);
-            }
-            return paths;
-        }
-
         private void LoadConflicts()
         {
-            var paths = GetWorkingPaths(this.item);
             if (paths.Count == 0)
                 return;
             var conflicts = repository.GetConflicts(paths);
@@ -302,14 +279,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
         }
 
-        public static void Open(TFSRepository repository, VersionControlItem item)
+        public static void Open(TFSRepository repository, List<FilePath> paths)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var sourceDoc = view.GetContent<ResolveConflictsView>();
                 if (sourceDoc != null)
                 {
-                    sourceDoc.SetData(repository, item);
+                    sourceDoc.SetData(repository, paths);
                     sourceDoc.LoadConflicts();
                     view.Window.SelectWindow();
                     return;
@@ -317,7 +294,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             }
 
             ResolveConflictsView resolveConflictsView = new ResolveConflictsView();
-            resolveConflictsView.SetData(repository, item);
+            resolveConflictsView.SetData(repository, paths);
             resolveConflictsView.LoadConflicts();
             IdeApp.Workbench.OpenDocument(resolveConflictsView, true);
         }
