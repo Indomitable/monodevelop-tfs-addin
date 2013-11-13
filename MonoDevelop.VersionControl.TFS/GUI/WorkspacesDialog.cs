@@ -302,8 +302,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void FillFieldsDefault()
         {
             _nameEntry.Text = _computerEntry.Text = Environment.MachineName;
-            var credentials = CredentialsManager.LoadCredential(this.projectCollection.Server.Uri);
-            _ownerEntry.Text = credentials.UserName;
+            _ownerEntry.Text = this.projectCollection.Server.UserName;
         }
 
         private void FillFields()

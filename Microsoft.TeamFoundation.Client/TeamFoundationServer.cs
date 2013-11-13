@@ -43,11 +43,17 @@ namespace Microsoft.TeamFoundation.Client
             
         }
 
-        public TeamFoundationServer(Uri uri, string name, ICredentials creds)
+        public TeamFoundationServer(Uri uri, string name, string domain, string userName, string password)
         {
             this.Uri = uri;
             this.Name = name;
-            this.Credentials = creds;
+            this.Domain = domain;
+            this.UserName = userName;
+            IsPasswordSavedSecurely = password == null;
+            if (!IsPasswordSavedSecurely)
+            {
+                Password = password;
+            }
         }
 
         public void LoadProjectConnections()
@@ -56,29 +62,68 @@ namespace Microsoft.TeamFoundation.Client
             this.ProjectCollections = projectCollectionsService.GetProjectCollections();
         }
 
-        public static TeamFoundationServer FromLocalXml(ICredentials credentials, XElement element)
+        public static TeamFoundationServer FromLocalXml(XElement element, string password)
         {
-            TeamFoundationServer server = new TeamFoundationServer();
-            server.Name = element.Attribute("Name").Value;
-            server.Uri = new Uri(element.Attribute("Url").Value);
-            server.Credentials = credentials;
-            server.ProjectCollections = element.Elements("ProjectCollection").Select(x => ProjectCollection.FromLocalXml(server, x)).ToList();
-            return server;
+            try
+            {
+                TeamFoundationServer server = new TeamFoundationServer();
+                server.Name = element.Attribute("Name").Value;
+                server.Uri = new Uri(element.Attribute("Url").Value);
+                server.IsPasswordSavedSecurely = password != null;
+                if (server.IsPasswordSavedSecurely)
+                {
+                    server.Password = password;
+                }
+                else
+                {
+                    if (element.Attribute("Password") != null)
+                    {
+                        server.Password = element.Attribute("Password").Value;
+                    }
+                    else
+                    {
+                        throw new Exception("Could not load password!");
+                    }
+                }
+                server.Domain = element.Attribute("Domain").Value;
+                server.UserName = element.Attribute("UserName").Value;
+                server.ProjectCollections = element.Elements("ProjectCollection").Select(x => ProjectCollection.FromLocalXml(server, x)).ToList();
+                return server;
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         public XElement ToLocalXml()
         {
-            return new XElement("Server", 
-                new XAttribute("Name", this.Name),
-                new XAttribute("Url", this.Uri),
-                this.ProjectCollections.Select(p => p.ToLocalXml()));
+            var serverElement = new XElement("Server", 
+                                    new XAttribute("Name", this.Name),
+                                    new XAttribute("Url", this.Uri),
+                                    new XAttribute("Domain", this.Credentials.Domain),
+                                    new XAttribute("UserName", this.Credentials.UserName),
+                                    this.ProjectCollections.Select(p => p.ToLocalXml()));
+            if (!IsPasswordSavedSecurely)
+                serverElement.Add(new XAttribute("Password", this.Credentials.Password));
+            return serverElement;
         }
-        //        public void LoadProjectConnections(List<XElement> projectCollectionsIds)
-        //        {
-        //            var projectCollectionsService = new ProjectCollectionService(this);
-        //            this.ProjectCollections = projectCollectionsService.GetProjectCollections(projectCollectionsIds);
-        //        }
-        public ICredentials Credentials { get; private set; }
+
+        public NetworkCredential Credentials
+        { 
+            get
+            {
+                return new NetworkCredential(UserName, Password, Domain);
+            }
+        }
+
+        public bool IsPasswordSavedSecurely { get; set; }
+
+        public string Domain { get; set; }
+
+        public string UserName { get; set; }
+
+        public string Password { get; set; }
 
         public List<ProjectCollection> ProjectCollections { get; set; }
 

@@ -61,7 +61,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #region Workspaces
 
-        public Workspace QueryWorkspace(string workspaceName, string ownerName)
+        public Workspace QueryWorkspace(string ownerName, string workspaceName)
         {
             var invoker = new SoapInvoker(this);
             XElement msg = invoker.CreateEnvelope("QueryWorkspace");

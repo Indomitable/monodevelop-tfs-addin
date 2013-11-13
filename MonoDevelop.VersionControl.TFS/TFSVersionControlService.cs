@@ -84,8 +84,10 @@ namespace MonoDevelop.VersionControl.TFS
                     XDocument doc = XDocument.Load(file);
                     foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                     {
-                        var credentials = CredentialsManager.LoadCredential(new Uri(serverElement.Attribute("Url").Value));
-                        _registredServers.Add(TeamFoundationServer.FromLocalXml(credentials, serverElement));
+                        var password = CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
+                        var server = TeamFoundationServer.FromLocalXml(serverElement, password);
+                        if (server != null)
+                            _registredServers.Add(server);
                     }
                     foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
                     {

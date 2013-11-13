@@ -34,23 +34,20 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
     {
         public static List<Workspace> GetLocalWorkspaces(ProjectCollection collection)
         {
-            var credentials = CredentialsManager.LoadCredential(collection.Server.Uri);
             var versionControl = collection.GetService<RepositoryService>();
-            return versionControl.QueryWorkspaces(credentials.UserName, Environment.MachineName);
+            return versionControl.QueryWorkspaces(collection.Server.UserName, Environment.MachineName);
         }
 
         public static List<Workspace> GetRemoteWorkspaces(ProjectCollection collection)
         {
-            var credentials = CredentialsManager.LoadCredential(collection.Server.Uri);
             var versionControl = collection.GetService<RepositoryService>();
-            return versionControl.QueryWorkspaces(credentials.UserName, string.Empty);
+            return versionControl.QueryWorkspaces(collection.Server.UserName, string.Empty);
         }
 
         public static Workspace GetWorkspace(ProjectCollection collection, string name)
         {
-            var credentials = CredentialsManager.LoadCredential(collection.Server.Uri);
             var versionControl = collection.GetService<RepositoryService>();
-            return versionControl.QueryWorkspace(name, credentials.UserName);
+            return versionControl.QueryWorkspace(collection.Server.UserName, name);
         }
     }
 }
