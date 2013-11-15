@@ -273,7 +273,8 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var ws in GroupFilesPerWorkspace(localPaths))
             {
-                var operations = ws.Key.Undo(ws.ToList(), recurse ? RecursionType.Full : RecursionType.None);
+                var specs = ws.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None)).ToList();
+                var operations = ws.Key.Undo(specs);
                 FileService.NotifyFilesChanged(operations);
                 foreach (var item in operations)
                 {

@@ -46,12 +46,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.VersionSpec = versionSpec;
         }
 
-        public GetRequest(ItemSpec itemSpec, int changesetId)
-        {
-            this.ItemSpec = itemSpec;
-            this.VersionSpec = new ChangesetVersionSpec(changesetId);
-        }
-
         internal GetRequest(VersionSpec versionSpec)
         {
             this.VersionSpec = versionSpec;

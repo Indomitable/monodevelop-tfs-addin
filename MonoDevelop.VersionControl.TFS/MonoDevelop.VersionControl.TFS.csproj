@@ -68,6 +68,7 @@
     <Compile Include="GUI\ResolveConflictsView.cs" />
     <Compile Include="Infrastructure\MergeToolInfo.cs" />
     <Compile Include="GUI\MergeToolConfigDialog.cs" />
+    <Compile Include="GUI\GetSpecVersionDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

@@ -159,17 +159,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _treeView.Columns.Add("Folders", new ImageCellView(_iconTree), new TextCellView(_nameTree));
             _treeView.DataSource = _treeStore;
             _treeView.SelectionChanged += OnFolderChanged;
-            _treeView.ButtonPressed += (sender, e) =>
-            {
-                if (_treeView.SelectedRow != null && e.Button == PointerButton.Right)
-                {
-                    var menu = BuildPopupMenu(MenuInvoker.TreeView);
-                    if (menu.Items.Any())
-                        menu.Popup();
-                }
-            };
-            treeViewBox.WidthRequest = 50;
+            treeViewBox.WidthRequest = 80;
             treeViewBox.PackStart(_treeView, true, true);
+            mainBox.Panel1.Shrink = false;
             mainBox.Panel1.Content = treeViewBox;
 
 
@@ -184,14 +176,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             _listView.Columns.Add(new ListViewColumn("User", new TextCellView(_userList)));
             _listView.Columns.Add(new ListViewColumn("Latest", new TextCellView(_latestList)));
             _listView.Columns.Add(new ListViewColumn("Last Check-in", new TextCellView(_lastCheckinList)));
+            _listView.SelectionMode = SelectionMode.Multiple;
             _listView.RowActivated += OnListItemClicked;
             _listView.DataSource = _listStore;
 
             _listView.ButtonPressed += (sender, e) =>
             {
-                if (e.Button == PointerButton.Right && _listView.SelectedRow >= 0)
+                if (e.Button == PointerButton.Right && _listView.SelectedRows.Any())
                 {
-                    var menu = BuildPopupMenu(MenuInvoker.ListView);
+                    var menu = BuildPopupMenu();
                     if (menu.Items.Any())
                         menu.Popup();
                 }
@@ -272,7 +265,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 _listStore.SetValue(row, _itemList, item);
                 _listStore.SetValue(row, _typeList, item.ItemType.ToString());
                 _listStore.SetValue(row, _iconList, GetItemImage(item.ItemType));
-                _listStore.SetValue(row, _nameList, item.TargetServerItem);
+                _listStore.SetValue(row, _nameList, ((VersionControlPath)item.TargetServerItem).ItemName);
                 if (this._currentWorkspace != null)
                 {
                     if (item.ChangeType != ChangeType.None && !item.HasOtherPendingChange)
@@ -461,80 +454,95 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         #region Popup Menu
 
-        enum MenuInvoker
-        {
-            TreeView,
-            ListView
-        }
-
-        private Menu BuildPopupMenu(MenuInvoker invoker)
+        private Menu BuildPopupMenu()
         {
             Menu menu = new Menu();
-            IItem item = invoker == MenuInvoker.ListView ?
-                         (IItem)_listStore.GetValue(_listView.SelectedRow, _itemList) :
-                         (IItem)_treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree);
-
-            if (IsMapped(item.ServerPath))
+            var items = new List<ExtendedItem>();
+            foreach (var row in _listView.SelectedRows)
             {
-                MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
-                getLatestVersionItem.Clicked += (sender, e) => GetLatestVersion(item, invoker);
-                menu.Items.Add(getLatestVersionItem);
+                items.Add(_listStore.GetValue(row, _itemList));
+            }
 
-                MenuItem forceGetLatestVersionItem = new MenuItem(GettextCatalog.GetString("Force Get Latest Version"));
-                forceGetLatestVersionItem.Clicked += (sender, e) => ForceGetLatestVersion(item, invoker);
-                menu.Items.Add(forceGetLatestVersionItem);
-
-                if (invoker == MenuInvoker.ListView) //List Popup Menu
+            if (items.All(i => IsMapped(i.ServerPath)))
+            {
+                foreach (var item in GetGroup(items))
                 {
-                    var listItem = (ExtendedItem)item;
-                    if (listItem.ChangeType != ChangeType.None)
+                    menu.Items.Add(item);
+                }
+                var editGroup = EditGroup(items);
+                if (editGroup.Any())
+                {
+                    menu.Items.Add(new SeparatorMenuItem());
+                    foreach (var item in editGroup)
                     {
-                        MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
-                        revertItem.Clicked += (sender, e) => UndoChanges(listItem);
-                        menu.Items.Add(revertItem);
+                        menu.Items.Add(item);
                     }
                 }
             }
             return menu;
         }
 
-        private void GetLatestVersion(IItem item, MenuInvoker invoker)
+        private List<MenuItem> GetGroup(List<ExtendedItem> items)
         {
-            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
-            GetRequest request = new GetRequest(item.ServerPath, recursion, VersionSpec.Latest);
-            _currentWorkspace.Get(request, GetOptions.None);
-            //Refresh List
-            if (invoker == MenuInvoker.TreeView)
-            {
-                FillListView(item.ServerPath);
-            }
-            else
-            {
-                FillListView(item.ServerPath.ParentPath);
-            }
+            var groupItems = new List<MenuItem>();
+            MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
+            getLatestVersionItem.Clicked += (sender, e) => GetLatestVersion(items);
+            groupItems.Add(getLatestVersionItem);
+
+            MenuItem forceGetLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Specific Version"));
+            forceGetLatestVersionItem.Clicked += (sender, e) => ForceGetLatestVersion(items);
+            groupItems.Add(forceGetLatestVersionItem);
+            return groupItems;
         }
 
-        private void ForceGetLatestVersion(IItem item, MenuInvoker invoker)
+        private List<MenuItem> EditGroup(List<ExtendedItem> items)
         {
-            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
-            GetRequest request = new GetRequest(item.ServerPath, recursion, VersionSpec.Latest);
-            _currentWorkspace.Get(request, GetOptions.Overwrite);
-            //Refresh List
-            if (invoker == MenuInvoker.TreeView)
+            var groupItems = new List<MenuItem>();
+            var itemsWithChages = items.Where(i => i.ChangeType != ChangeType.None).ToList();
+            if (itemsWithChages.Any())
             {
-                FillListView(item.ServerPath);
+                MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
+                revertItem.Clicked += (sender, e) => UndoChanges(itemsWithChages);
+                groupItems.Add(revertItem);
             }
-            else
-            {
-                FillListView(item.ServerPath.ParentPath);
-            }
+            return groupItems;
         }
 
-        private void UndoChanges(ExtendedItem item)
+        private void RefreshList(List<ExtendedItem> items)
         {
-            RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
-            _currentWorkspace.Undo(new List<FilePath> { item.LocalItem }, recursion);
-            FillListView(item.ServerPath.ParentPath);
+            if (items.Any())
+                FillListView(items[0].ServerPath.ParentPath); 
+        }
+
+        private void GetLatestVersion(List<ExtendedItem> items)
+        {
+            List<GetRequest> requests = new List<GetRequest>();
+            foreach (var item in items)
+            {
+                RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;   
+                requests.Add(new GetRequest(item.ServerPath, recursion, VersionSpec.Latest)); 
+            }
+            _currentWorkspace.Get(requests, GetOptions.None);
+            RefreshList(items);
+        }
+
+        private void ForceGetLatestVersion(List<ExtendedItem> items)
+        {
+            using (var specVersionDialog = new GetSpecVersionDialog(_currentWorkspace))
+            {
+                specVersionDialog.AddItems(items);
+                if (specVersionDialog.Run(this.Widget.ParentWindow) == Command.Ok)
+                {
+                    RefreshList(items);
+                }
+            }               
+        }
+
+        private void UndoChanges(List<ExtendedItem> items)
+        {
+            var specs = items.Select(i => new ItemSpec(i.LocalItem, i.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full)).ToList();
+            _currentWorkspace.Undo(specs);
+            RefreshList(items);
         }
 
         #endregion

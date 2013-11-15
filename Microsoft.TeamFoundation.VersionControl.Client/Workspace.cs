@@ -186,8 +186,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public GetStatus Get(List<GetRequest> requests, GetOptions options)
         {
-            bool force = ((GetOptions.Overwrite & options) == GetOptions.Overwrite);
-            bool noGet = ((GetOptions.Preview & options) == GetOptions.Preview);
+            bool force = options.HasFlag(GetOptions.GetAll);
+            bool noGet = options.HasFlag(GetOptions.Preview);
 
             var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
             ProcessGetOperations(getOperations, ProcessType.Get);
@@ -412,17 +412,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             PendRename(oldPath, newPath, ItemType.Folder);
         }
 
-        public List<FilePath> Undo(List<FilePath> paths, RecursionType recursionType)
+        public List<FilePath> Undo(List<ItemSpec> items)
         {
-            if (paths.Count == 0)
-                return new List<FilePath>();
-            List<ItemSpec> specs = new List<ItemSpec>();
-
-            foreach (string path in paths)
-            {
-                specs.Add(new ItemSpec(path, recursionType));
-            }
-            var operations = this.VersionControlService.UndoPendChanges(this, specs);
+            var operations = this.VersionControlService.UndoPendChanges(this, items);
             ProcessGetOperations(operations, ProcessType.Undo);
             this.RefreshPendingChanges();
             List<FilePath> undoPaths = new List<FilePath>();
@@ -459,7 +451,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             var result = this.VersionControlService.Resolve(conflict, resolutionType);
             ProcessGetOperations(result.GetOperations, ProcessType.Get);
-            this.Undo(result.UndoOperations.Select(x => (FilePath)x.TargetLocalItem).ToList(), RecursionType.None);
+            this.Undo(result.UndoOperations.Select(x => new ItemSpec(x.TargetLocalItem, RecursionType.None)).ToList());
         }
 
         #endregion
