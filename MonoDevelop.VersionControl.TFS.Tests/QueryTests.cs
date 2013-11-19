@@ -43,7 +43,7 @@ WHERE
 AND [System.State] &lt;&gt; 'Closed' 
 AND [Microsoft.VSTS.Common.Issue] = 'Yes' 
 ORDER BY [Microsoft.VSTS.Common.Priority], [System.Id]</f>");
-            Parser parser = new Parser(el.Value);
+            var parser = new LexalParser(el.Value);
             var nodes = parser.Process();
 
             Assert.IsTrue(nodes[0].NodeType == NodeType.Field);
@@ -76,7 +76,7 @@ where ([System.State] = 'New'
     or [System.State] = 'Active') 
     and ([System.AssignedTo] = 'Ventsislav Mladenov' or [System.TeamProject] = @project) 
 order by [System.Id]</f>");
-            Parser parser = new Parser(el.Value);
+            var parser = new LexalParser(el.Value);
             var nodes = parser.Process();
             Assert.IsTrue(nodes[0].NodeType == NodeType.StartGroup);
 
@@ -101,6 +101,49 @@ order by [System.Id]</f>");
             Assert.IsTrue(nodes[17].NodeType == NodeType.Parameter);
             Assert.IsTrue(nodes[18].NodeType == NodeType.EndGroup);
         }
+
+        [Test]
+        public void Optimize1()
+        {
+            XElement el = XElement.Parse(@"<f>SELECT [System.Id], [System.WorkItemType], [Microsoft.VSTS.Common.Rank], [System.Title], [System.State], [System.AssignedTo], [Microsoft.VSTS.Common.RoughOrderOfMagnitude], [Microsoft.VSTS.Common.ExitCriteria], [System.Description] 
+FROM WorkItems 
+WHERE [System.TeamProject] = @project 
+  AND [System.WorkItemType] = 'Scenario' 
+  AND [System.State] = 'Active' 
+ORDER BY [Microsoft.VSTS.Common.Rank], [System.State], [System.Id]</f>");
+            var parser = new LexalParser(el.Value);
+            var nodes = parser.Process();
+            var output = NodeManager.Optimize(nodes);
+            Assert.IsTrue(output[0].NodeType == NodeType.Condition);
+            Assert.IsTrue(((ConditionalNode)output[0]).Right.NodeType == NodeType.Parameter);
+
+            Assert.IsTrue(output[1].NodeType == NodeType.Operator);
+
+            Assert.IsTrue(output[2].NodeType == NodeType.Condition);
+            Assert.IsTrue(((ConditionalNode)output[2]).Right.NodeType == NodeType.Constant);
+
+            Assert.IsTrue(output[3].NodeType == NodeType.Operator);
+
+            Assert.IsTrue(output[4].NodeType == NodeType.Condition);
+            Assert.IsTrue(((ConditionalNode)output[4]).Right.NodeType == NodeType.Constant);
+        }
+
+        [Test]
+        public void RPN1()
+        {
+            XElement el = XElement.Parse(@"<f>select [System.Id], [Phoenix.DueDate], [Phoenix.MagicDueDate], [System.WorkItemType], [System.State], [System.Title], [System.IterationPath] 
+from WorkItems 
+where ([System.State] = 'New' 
+    or [System.State] = 'Active') 
+    and ([System.AssignedTo] = 'Ventsislav Mladenov' or [System.TeamProject] = @project) 
+order by [System.Id]</f>");
+            var parser = new LexalParser(el.Value);
+            var nodes = parser.Process();
+            var output = NodeManager.Optimize(nodes);
+            var rpn = new RPNTransformer(output);
+            var res = rpn.ConvertToRPN();
+            var rpnToXml = new RPNToXml(res);
+            Console.WriteLine(rpnToXml.Process());
+        }
     }
 }
-

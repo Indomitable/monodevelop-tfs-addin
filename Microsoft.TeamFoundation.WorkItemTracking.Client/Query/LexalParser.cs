@@ -26,11 +26,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO.Pipes;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
-    public class Parser
+    public class LexalParser
     {
         private enum CursorState
         {
@@ -51,7 +50,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         CursorState prevState = CursorState.None;
         readonly List<Node> nodes = new List<Node>();
 
-        public Parser(string query)
+        public LexalParser(string query)
         {
             this.whereClause = query.Substring(query.IndexOf("where", StringComparison.OrdinalIgnoreCase) + 5).Trim();
             if (this.whereClause.IndexOf("order by", StringComparison.OrdinalIgnoreCase) > -1)
@@ -170,7 +169,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                             SetState(CursorState.IntValue);
                     }
 
-                    if (currentState == CursorState.None && currentChar == openBracket)
+                    if (currentChar == openBracket && currentState != CursorState.StrValue)
                     {
                         SetState(CursorState.OpenBracket);
                         SetState(CursorState.None);

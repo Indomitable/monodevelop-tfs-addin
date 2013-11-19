@@ -1,0 +1,59 @@
+1. where ([System.State] = 'New' 
+    or [System.State] = 'Active') 
+    and ([System.AssignedTo] = 'Ventsislav Mladenov' or [System.TeamProject] = @project) 
+
+Should be transformed to:
+<Query xmlns="" Product="http://phoenix5:8080/tfs/DefaultCollection/WorkItemTracking/v3.0/ClientService.asmx">
+    <Group GroupOperator="and">
+        <Group GroupOperator="or">
+            <Expression Column="System.State" FieldType="16" Operator="equals">
+                <String>New</String>
+            </Expression>
+            <Expression Column="System.State" FieldType="16" Operator="equals">
+                <String>Active</String>
+            </Expression>
+        </Group>
+        <Group GroupOperator="or">
+            <Expression Column="System.AssignedTo" FieldType="16" Operator="equals">
+                <String>Ventsislav Mladenov</String>
+            </Expression>
+            <Expression Column="System.AreaId" FieldType="272" Operator="under">
+                <Number>188</Number>
+            </Expression>
+        </Group>
+    </Group>
+</Query>
+
+2. where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'
+Should be transformed to:
+<Query xmlns="" Product="http://phoenix5:8080/tfs/DefaultCollection/WorkItemTracking/v3.0/ClientService.asmx">
+    <Group GroupOperator="or">
+        <Expression Column="Microsoft.VSTS.Common.ResolvedBy" FieldType="16" 
+                    Operator="equals">
+            <String>Ventsislav Mladenov</String>
+        </Expression>
+        <Expression Column="Microsoft.VSTS.Common.ClosedBy" FieldType="16" 
+                    Operator="equals">
+            <String>Ventsislav Mladenov</String>
+        </Expression>
+    </Group>
+</Query>
+
+
+3. where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' and [Microsoft.VSTS.CMMI.CalledBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'
+Should be transformed to:
+<Query xmlns="" Product="http://phoenix5:8080/tfs/DefaultCollection/WorkItemTracking/v3.0/ClientService.asmx">
+    <Group GroupOperator="or">
+        <Group GroupOperator="and">
+            <Expression Column="Microsoft.VSTS.Common.ResolvedBy" FieldType="16" Operator="equals">
+                <String>Ventsislav Mladenov</String>
+            </Expression>
+            <Expression Column="Microsoft.VSTS.CMMI.CalledBy" FieldType="16" Operator="equals">
+                <String>Ventsislav Mladenov</String>
+            </Expression>
+        </Group>
+        <Expression Column="Microsoft.VSTS.Common.ClosedBy" FieldType="16" Operator="equals">
+            <String>Ventsislav Mladenov</String>
+        </Expression>
+    </Group>
+</Query>

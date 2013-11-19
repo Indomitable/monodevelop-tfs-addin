@@ -52,8 +52,11 @@
     <Compile Include="Query\NodeGroup.cs" />
     <Compile Include="Query\Operator.cs" />
     <Compile Include="Query\Condition.cs" />
-    <Compile Include="Query\Parser.cs" />
     <Compile Include="Query\Nodes.cs" />
+    <Compile Include="Query\LexalParser.cs" />
+    <Compile Include="Query\NodeManager.cs" />
+    <Compile Include="Query\RPNTransformer.cs" />
+    <Compile Include="Query\RPNToXml.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
