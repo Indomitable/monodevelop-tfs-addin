@@ -141,8 +141,6 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
                 {
                     SaveToKWallet(url, password);//Use KDE Wallet should write code for Gnome Keyring.
                 }
-#else
-				return false;
 #endif
             }
         }
