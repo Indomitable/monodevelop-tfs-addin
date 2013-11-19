@@ -26,9 +26,7 @@
 using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
-using System.Security.Policy;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {

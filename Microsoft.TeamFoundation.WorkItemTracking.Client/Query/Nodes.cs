@@ -25,23 +25,9 @@
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System;
-using System.Collections.Generic;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
-    //    public class Node
-    //    {
-    //        public string FieldName { get; set; }
-    //
-    //        public Condition Condition { get; set; }
-    //
-    //        public object Value { get; set; }
-    //    }
-    //
-    //    public class ParemeteredNode
-    //    {
-    //        public string Parameter { get; set; }
-    //    }
     enum NodeType
     {
         Undefined,
@@ -184,16 +170,5 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
     {
         public override NodeType NodeType { get { return NodeType.EndGroup; } }
     }
-    //    class NodeGroup
-    //    {
-    //        public List<NodeGroup> Nodes { get; set; }
-    //    }
-    //
-    //    class NodeOperatorGroup
-    //    {
-    //        public OperatorNode Operator { get; set; }
-    //
-    //        public List<ConditionalNode> Nodes { get; set; }
-    //    }
 }
 
