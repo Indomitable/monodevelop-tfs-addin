@@ -27,6 +27,8 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Security.Policy;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
@@ -39,8 +41,94 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             this.nodes = nodes;
         }
 
-        public XElement Process()
+        class NodeHierarchy
         {
+            public NodeHierarchy(Node obj)
+            {
+                Children = new List<NodeHierarchy>();
+                Value = obj;
+            }
+
+            public NodeHierarchy Parent { get; set; }
+
+            public Node Value { get; set; }
+
+            public List<NodeHierarchy> Children { get; set; }
+        }
+
+        NodeHierarchy CreateHierarchy()
+        {
+            if (nodes.Count == 0)
+                return null;
+            if (nodes[0].NodeType != NodeType.Operator)
+                throw new Exception("Wrong RPN");
+            var linear = nodes.Select(x => new NodeHierarchy(x)).ToList();
+            var top = linear[0];
+            for (int i = 1; i < linear.Count; i++)
+            {
+                if (linear[i].Value.NodeType == NodeType.Operator)
+                {
+                    bool foundParent = false;
+                    for (int j = i; j > 0; j--)
+                    {
+                        if (linear[j].Value.NodeType == NodeType.Operator &&
+                            linear[j - 1].Value.NodeType == NodeType.Operator)
+                        {
+                            linear[i].Parent = linear[j - 1];
+                            linear[j - 1].Children.Add(linear[i]);
+                            foundParent = true;
+                            break;
+                        }
+                    }
+                    if (!foundParent)
+                    {
+                        linear[i].Parent = linear[0];
+                        linear[0].Children.Add(linear[i]);
+                    }
+                }
+                else
+                {
+                    for (int j = i - 1; j >= 0; j--)
+                    {
+                        if (linear[j].Value.NodeType == NodeType.Operator)
+                        {
+                            linear[i].Parent = linear[j];
+                            linear[j].Children.Add(linear[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+            return top;
+        }
+
+        internal XElement Process()
+        {
+            var hierarchy = CreateHierarchy();
+            var top = CreateGroupElement((OperatorNode)hierarchy.Value);
+            foreach (var child in hierarchy.Children)
+            {
+                ProcessChild(child, top);
+            }
+            return top;
+        }
+
+        void ProcessChild(NodeHierarchy element, XElement parent)
+        {
+            if (element.Value.NodeType == NodeType.Operator)
+            {
+                var @group = CreateGroupElement((OperatorNode)element.Value);
+                parent.Add(@group);
+                foreach (var child in element.Children)
+                {
+                    ProcessChild(child, @group);
+                }
+            }
+            else
+            {
+                var expression = CreateExpressionElement((ConditionalNode)element.Value);
+                parent.Add(expression);
+            }
         }
 
         XElement CreateGroupElement(OperatorNode node)

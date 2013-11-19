@@ -143,6 +143,33 @@ order by [System.Id]</f>");
             var rpn = new RPNTransformer(output);
             var res = rpn.ConvertToRPN();
             var rpnToXml = new RPNToXml(res);
+            var result = rpnToXml.Process();
+            Assert.AreEqual("<Group GroupOperator=\"and\">\r\n  <Group GroupOperator=\"or\">\r\n    <Expression Column=\"System.TeamProject\" FieldType=\"\" Operator=\"equals\">\r\n      <String>project</String>\r\n    </Expression>\r\n    <Expression Column=\"System.AssignedTo\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Ventsislav Mladenov</String>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"or\">\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Active</String>\r\n    </Expression>\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>New</String>\r\n    </Expression>\r\n  </Group>\r\n</Group>", result.ToString());
+        }
+
+        [Test]
+        public void RPN2()
+        {
+            string val = "where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'";
+            var parser = new LexalParser(val);
+            var nodes = parser.Process();
+            var output = NodeManager.Optimize(nodes);
+            var rpn = new RPNTransformer(output);
+            var res = rpn.ConvertToRPN();
+            var rpnToXml = new RPNToXml(res);
+            Console.WriteLine(rpnToXml.Process());
+        }
+
+        [Test]
+        public void RPN3()
+        {
+            string val = "where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' and [Microsoft.VSTS.CMMI.CalledBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'";
+            var parser = new LexalParser(val);
+            var nodes = parser.Process();
+            var output = NodeManager.Optimize(nodes);
+            var rpn = new RPNTransformer(output);
+            var res = rpn.ConvertToRPN();
+            var rpnToXml = new RPNToXml(res);
             Console.WriteLine(rpnToXml.Process());
         }
     }
