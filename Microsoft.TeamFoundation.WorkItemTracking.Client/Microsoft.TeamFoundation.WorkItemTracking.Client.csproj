@@ -49,6 +49,11 @@
     <Compile Include="Metadata\TableExtractor.cs" />
     <Compile Include="Metadata\TableFieldNameAttribute.cs" />
     <Compile Include="Objects\StoredQuery.cs" />
+    <Compile Include="Query\NodeGroup.cs" />
+    <Compile Include="Query\Operator.cs" />
+    <Compile Include="Query\Condition.cs" />
+    <Compile Include="Query\Parser.cs" />
+    <Compile Include="Query\Nodes.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -64,5 +69,6 @@
     <Folder Include="Enums\" />
     <Folder Include="Objects\" />
     <Folder Include="Metadata\" />
+    <Folder Include="Query\" />
   </ItemGroup>
 </Project>

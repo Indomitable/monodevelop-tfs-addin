@@ -51,6 +51,7 @@
     <Compile Include="OpenTF\MessageTests.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />
+    <Compile Include="QueryTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -65,6 +66,10 @@
     <ProjectReference Include="..\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
       <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj">
+      <Project>{D0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.WorkItemTracking.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
