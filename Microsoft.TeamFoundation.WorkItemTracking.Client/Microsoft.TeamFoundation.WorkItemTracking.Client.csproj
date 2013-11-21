@@ -55,8 +55,6 @@
     <Compile Include="Query\Nodes.cs" />
     <Compile Include="Query\LexalParser.cs" />
     <Compile Include="Query\NodeManager.cs" />
-    <Compile Include="Query\RPNTransformer.cs" />
-    <Compile Include="Query\RPNToXml.cs" />
     <Compile Include="Query\NodesToXml.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

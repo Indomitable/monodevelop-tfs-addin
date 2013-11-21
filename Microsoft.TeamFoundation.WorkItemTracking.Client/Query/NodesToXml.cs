@@ -73,7 +73,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = Encoding.UTF8;
             settings.Indent = true;
-            settings.NewLineChars = Environment.NewLine;
+            //settings.NewLineChars = Environment.NewLine;
             using (XmlWriter writer = XmlWriter.Create(builder, settings))
             {
                 if (this.nodes.Count == 1 && this.nodes[0].NodeType == NodeType.Condition)

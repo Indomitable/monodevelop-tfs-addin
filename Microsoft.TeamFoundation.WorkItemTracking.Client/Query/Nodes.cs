@@ -104,7 +104,10 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                             cNew.Left = condition.Left;
                             cNew.Right = value;
                             output.Add(cNew);
+
+                            output.Add(new OperatorNode("or"));
                         }
+                        output.RemoveAt(output.Count - 1); //Remove last or
                         output.Add(new CloseBracketNode());
                     }
                     else

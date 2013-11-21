@@ -141,12 +141,11 @@ order by [System.Id]</f>");
             var parser = new LexalParser(el.Value);
             var nodes = parser.Process();
             nodes.Optimize();
-            var rpn = new RPNTransformer(nodes);
-            var res = rpn.ConvertToRPN();
-            var rpnToXml = new RPNToXml(res);
-            var result = rpnToXml.Process();
+            nodes.ExtractOperatorForward();
+            var xmlTransformer = new NodesToXml(nodes);
+            var result = xmlTransformer.WriteXml();
             Console.WriteLine(result);
-            Assert.AreEqual("<Group GroupOperator=\"and\">\r\n  <Group GroupOperator=\"or\">\r\n    <Expression Column=\"System.TeamProject\" FieldType=\"\" Operator=\"equals\">\r\n      <String>project</String>\r\n    </Expression>\r\n    <Expression Column=\"System.AssignedTo\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Ventsislav Mladenov</String>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"or\">\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Active</String>\r\n    </Expression>\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>New</String>\r\n    </Expression>\r\n  </Group>\r\n</Group>", result.ToString());
+            Assert.AreEqual("<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<Group GroupOperator=\"And\">\n  <Group GroupOperator=\"Or\">\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\n      <String>New</String>\n    </Expression>\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\n      <String>Active</String>\n    </Expression>\n  </Group>\n  <Group GroupOperator=\"Or\">\n    <Expression Column=\"System.AssignedTo\" FieldType=\"\" Operator=\"equals\">\n      <String>Ventsislav Mladenov</String>\n    </Expression>\n    <Expression Column=\"System.TeamProject\" FieldType=\"\" Operator=\"equals\">\n      <String>project</String>\n    </Expression>\n  </Group>\n</Group>", result);
         }
 
         [Test]
@@ -156,10 +155,10 @@ order by [System.Id]</f>");
             var parser = new LexalParser(val);
             var nodes = parser.Process();
             nodes.Optimize();
-            var rpn = new RPNTransformer(nodes);
-            var res = rpn.ConvertToRPN();
-            var rpnToXml = new RPNToXml(res);
-            Console.WriteLine(rpnToXml.Process());
+            nodes.ExtractOperatorForward();
+            var xmlTransformer = new NodesToXml(nodes);
+            var result = xmlTransformer.WriteXml();
+            Console.WriteLine(result);
         }
 
         [Test]
@@ -169,10 +168,10 @@ order by [System.Id]</f>");
             var parser = new LexalParser(val);
             var nodes = parser.Process();
             nodes.Optimize();
-            var rpn = new RPNTransformer(nodes);
-            var res = rpn.ConvertToRPN();
-            var rpnToXml = new RPNToXml(res);
-            Console.WriteLine(rpnToXml.Process());
+            nodes.ExtractOperatorForward();
+            var xmlTransformer = new NodesToXml(nodes);
+            var result = xmlTransformer.WriteXml();
+            Console.WriteLine(result);
         }
 
         private void AssertNodesTypes(List<Node> nodes, params NodeType[] types)
@@ -238,16 +237,14 @@ and [Microsoft.VSTS.Common.ResolvedBy] = @me
 and [System.WorkItemType] in ('Bug', 'Task') 
 and [System.State] &lt;&gt; '' 
 order by [System.Id]</f>");
+
             var parser = new LexalParser(el.Value);
             var nodes = parser.Process();
             nodes.Optimize();
-            var xmlConverter = new NodesToXml(nodes);
-            Console.WriteLine(xmlConverter.WriteXml());
-//            var rpn = new RPNTransformer(output);
-//            var res = rpn.ConvertToRPN();
-//            var rpnToXml = new RPNToXml(res);
-//            var result = rpnToXml.Process();
-//            Console.WriteLine(result);
+            nodes.ExtractOperatorForward();
+            var xmlTransformer = new NodesToXml(nodes);
+            var result = xmlTransformer.WriteXml();
+            Console.WriteLine(result);
         }
     }
 }
