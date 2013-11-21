@@ -76,7 +76,4 @@
   <ItemGroup>
     <Folder Include="OpenTF\" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Conversation.txt" />
-  </ItemGroup>
 </Project>

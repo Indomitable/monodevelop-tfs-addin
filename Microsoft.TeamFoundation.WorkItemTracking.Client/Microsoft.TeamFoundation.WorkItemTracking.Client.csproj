@@ -54,7 +54,6 @@
     <Compile Include="Query\Condition.cs" />
     <Compile Include="Query\Nodes.cs" />
     <Compile Include="Query\LexalParser.cs" />
-    <Compile Include="Query\NodeManager.cs" />
     <Compile Include="Query\NodesToXml.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
