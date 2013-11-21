@@ -36,6 +36,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         Greater,
         LessOrEquals,
         GreaterOrEquals,
+        In
         //Not supported
         //Under,
         //In,

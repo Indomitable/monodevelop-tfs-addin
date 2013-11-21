@@ -25,6 +25,9 @@
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Mono.Security.X509;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
@@ -39,17 +42,209 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         Parameter,
         //'Active'
         Constant,
+        //In clause ('Project1', @project) Could contains Constants or Parameters.
+        ArrayOfValues,
         //AND,OR
         Operator,
         //(
-        StartGroup,
+        OpenBracket,
         //)
-        EndGroup
+        CloseBracket
     }
 
     class Node
     {
         public virtual NodeType NodeType { get { return NodeType.Undefined; } }
+    }
+
+    class NodeList : List<Node>
+    {
+        public void RemoveFieldsAndValues()
+        {
+            var output = new List<Node>();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var node = this[i];
+                if (node.NodeType != NodeType.Condition &&
+                    node.NodeType != NodeType.Field &&
+                    node.NodeType != NodeType.Constant &&
+                    node.NodeType != NodeType.Parameter &&
+                    node.NodeType != NodeType.ArrayOfValues)
+                {
+                    output.Add(node);
+                }
+                else if (node.NodeType == NodeType.Condition)
+                {
+                    var condition = (ConditionNode)node;
+                    condition.Left = this[i - 1];
+                    condition.Right = this[i + 1];
+                    output.Add(condition);
+                }
+            }
+            this.Clear();
+            this.AddRange(output);
+        }
+
+        public void ConvertInToOrs()
+        {
+            var output = new List<Node>();
+            for (int i = 0; i < this.Count; i++)
+            {
+                var node = this[i];
+                if (node.NodeType == NodeType.Condition)
+                {
+                    var condition = (ConditionNode)node;
+                    if (condition.Condition == Condition.In)
+                    {
+                        var array = (ArrayOfValues)condition.Right;
+                        output.Add(new OpenBracketNode());
+                        foreach (var value in array.Values)
+                        {
+                            var cNew = new ConditionNode("=");
+                            cNew.Left = condition.Left;
+                            cNew.Right = value;
+                            output.Add(cNew);
+                        }
+                        output.Add(new CloseBracketNode());
+                    }
+                    else
+                        output.Add(node);
+                }
+                else
+                    output.Add(node);
+            }
+            this.Clear();
+            this.AddRange(output);
+        }
+
+        public void Optimize()
+        {
+            RemoveFieldsAndValues();
+            ConvertInToOrs();
+            RemoveUnUsedBrackets();
+        }
+
+        private int FindMatchingCloseBracket(int openBracketIndex)
+        {
+            int bracketCount = 0;
+            for (int i = openBracketIndex; i < this.Count; i++)
+            {
+                var node = this[i];
+                if (node.NodeType == NodeType.OpenBracket)
+                    bracketCount++;
+                if (node.NodeType == NodeType.CloseBracket)
+                    bracketCount--;
+                if (bracketCount == 0)
+                {
+                    return i;
+                }
+            }
+            throw new Exception("Could not find Close Bracket");
+        }
+
+        public NodeList GetSubList(int openBracketIndex)
+        {
+            if (this[openBracketIndex].NodeType != NodeType.OpenBracket)
+                throw new Exception("Not an open bracket");
+            var subList = new NodeList();
+            var closeBracketIndex = FindMatchingCloseBracket(openBracketIndex);
+            //Do not add open and closed brackets.
+            for (int i = openBracketIndex + 1; i < closeBracketIndex; i++)
+            {
+                subList.Add(this[i]);
+            }
+            //Remove other inner brackets.
+            subList.RemoveUnUsedBrackets();
+            return subList;
+        }
+
+        public void RemoveUnUsedBrackets()
+        {
+            //Remove unused brackets (([a] = 2)) == [a] = 2
+            if (this[0].NodeType != NodeType.OpenBracket || this[this.Count - 1].NodeType != NodeType.CloseBracket)
+                return;
+            int brackCnt = 0;
+            for (int i = 1; i < this.Count - 1; i++)
+            {
+                var node = this[i];
+                if (node.NodeType == NodeType.OpenBracket)
+                    brackCnt++;
+                if (node.NodeType == NodeType.CloseBracket)
+                    brackCnt--;
+                if (brackCnt < 0) //Every open bracket should have close bracket , ([a] = 2) and ([b] = @p) 
+                    return; 
+            }
+            if (brackCnt == 0)
+            {
+                this.RemoveAt(this.Count - 1); //Remove last
+                this.RemoveAt(0); //Remove first.
+            }
+            RemoveUnUsedBrackets();
+        }
+
+        public void ExtractOperatorForward()
+        {
+            var newNodes = ExtractOperatorForward(0, this.Count);
+            this.Clear();
+            this.AddRange(newNodes);
+        }
+
+        private NodeList ExtractOperatorForward(int from, int to)
+        {
+            NodeList list = new NodeList();
+            Operator? currentOperator = null;
+            for (int i = from; i < to; i++)
+            {
+                var node = this[i];
+                if (node.NodeType == NodeType.OpenBracket)
+                {
+                    var closeBracket = FindMatchingCloseBracket(i);
+                    var newList = ExtractOperatorForward(i + 1, closeBracket);
+                    i = closeBracket;
+                    list.Add(new OpenBracketNode());
+                    list.AddRange(newList);
+                    list.Add(new CloseBracketNode());
+                    continue;
+                }
+                if (node.NodeType == NodeType.Operator)
+                {
+                    var operatorNode = ((OperatorNode)node);
+                    if (!currentOperator.HasValue)
+                    {
+                        currentOperator = operatorNode.Operator;
+                        list.Insert(0, operatorNode);
+                    }
+                    else
+                    {
+                        if (currentOperator == operatorNode.Operator)
+                            continue;
+                        list.Add(operatorNode);
+                    }
+                }
+                else
+                {
+                    list.Add(node);
+                }
+            }
+            //Analyze list if last is only one operator and condition, push operator forward and mark previous as group.
+            if (list.Count > 1)
+            {
+                if (list[list.Count - 1].NodeType == NodeType.Condition && list[list.Count - 2].NodeType == NodeType.Operator)
+                {
+                    var op = list[list.Count - 2];
+                    list.RemoveAt(list.Count - 2);
+                    list.Insert(0, op);
+                    list.Insert(1, new OpenBracketNode());
+                    list.Insert(list.Count - 1, new CloseBracketNode());
+                }
+            }
+            return list;
+        }
+
+        public override string ToString()
+        {
+            return string.Join(" ", this.Select(n => n.ToString()));
+        }
     }
 
     class FieldNode : Node
@@ -62,11 +257,16 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         public override NodeType NodeType { get { return NodeType.Field; } }
 
         public string Field { get; set; }
+
+        public override string ToString()
+        {
+            return "[" + Field + "]";
+        }
     }
 
-    class ConditionalNode : Node
+    class ConditionNode : Node
     {
-        public ConditionalNode(string condition)
+        public ConditionNode(string condition)
         {
             switch (condition)
             {
@@ -89,7 +289,10 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                     Condition = Condition.NotEquals;
                     break;
                 default:
-                    Condition = Condition.None;
+                    if (string.Equals(condition, "in", StringComparison.OrdinalIgnoreCase))
+                        Condition = Condition.In;
+                    else
+                        Condition = Condition.None;
                     break;
             }
         }
@@ -101,6 +304,47 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         public Condition Condition { get; set; }
 
         public Node Right { get; set; }
+
+        public override string ToString()
+        {
+            string val = string.Empty;
+            switch (Condition)
+            {
+                case Condition.Equals:
+                    val = "=";
+                    break;
+                case Condition.Greater:
+                    val = ">";
+                    break;
+                case Condition.GreaterOrEquals:
+                    val = ">=";
+                    break;
+                case Condition.In:
+                    val = "in";
+                    break;
+                case Condition.Less:
+                    val = "<";
+                    break;
+                case Condition.LessOrEquals:
+                    val = "<=";
+                    break;
+                case Condition.NotEquals:
+                    val = "<>";
+                    break;
+                default:
+                    val = "NONE";
+                    break;
+            }
+            if (Left != null && Right != null)
+                return Left + " " + val + " " + Right;
+            return val;
+        }
+    }
+
+    enum ValueDataType
+    {
+        String,
+        Number
     }
 
     class ConstantNode : Node
@@ -110,6 +354,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             if (value.StartsWith("'", StringComparison.Ordinal))
             {
                 Value = value.Trim('\'');
+                DataType = ValueDataType.String;
             }
             else
             {
@@ -121,12 +366,22 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                 {
                     Value = Convert.ToInt64(value);
                 }
+                DataType = ValueDataType.Number;
             }
         }
+
+        public ValueDataType DataType { get; private set; }
 
         public override NodeType NodeType { get { return NodeType.Constant; } }
 
         public object Value { get; set; }
+
+        public override string ToString()
+        {
+            if (DataType == ValueDataType.String)
+                return "'" + Value + "'";
+            return Convert.ToString(Value);
+        }
     }
 
     class ParameterNode : Node
@@ -139,6 +394,39 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         public override NodeType NodeType { get { return NodeType.Parameter; } }
 
         public string ParameterName { get; set; }
+
+        public override string ToString()
+        {
+            return "@" + ParameterName;
+        }
+    }
+
+    class ArrayOfValues : Node
+    {
+        public ArrayOfValues(string word)
+        {
+            Values = new List<Node>();
+            if (string.IsNullOrEmpty(word))
+                return;
+            var arrayOfWords = word.Split(new []{ ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var w in arrayOfWords)
+            {
+                var trimmedWord = w.Trim();
+                if (trimmedWord.StartsWith("@", StringComparison.Ordinal))
+                    Values.Add(new ParameterNode(trimmedWord));
+                else
+                    Values.Add(new ConstantNode(trimmedWord));
+            }
+        }
+
+        public override NodeType NodeType { get { return NodeType.ArrayOfValues; } }
+
+        public List<Node> Values { get; set; }
+
+        public override string ToString()
+        {
+            return "(" + string.Join(", ", Values.Select(n => n.ToString())) + ")";
+        }
     }
 
     class OperatorNode : Node
@@ -159,16 +447,31 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         public override NodeType NodeType { get { return NodeType.Operator; } }
 
         public Operator Operator { get; set; }
+
+        public override string ToString()
+        {
+            return Operator.ToString();
+        }
     }
 
     class OpenBracketNode : Node
     {
-        public override NodeType NodeType { get { return NodeType.StartGroup; } }
+        public override NodeType NodeType { get { return NodeType.OpenBracket; } }
+
+        public override string ToString()
+        {
+            return "(";
+        }
     }
 
     class CloseBracketNode : Node
     {
-        public override NodeType NodeType { get { return NodeType.EndGroup; } }
+        public override NodeType NodeType { get { return NodeType.CloseBracket; } }
+
+        public override string ToString()
+        {
+            return ")";
+        }
     }
 }
 

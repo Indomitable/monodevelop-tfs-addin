@@ -25,38 +25,12 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
     public static class NodeManager
     {
-        /// <summary>
-        /// Nodes are ordered field condition constant/parameter, optimize to one node condition with left and right set to field and constant/parameter
-        /// </summary>
-        /// <param name="input">Nodes.</param>
-        internal static List<Node> Optimize(List<Node> input)
-        {
-            List<Node> output = new List<Node>();
-            for (int i = 0; i < input.Count; i++)
-            {
-                var node = input[i];
-                if (node.NodeType != NodeType.Condition &&
-                    node.NodeType != NodeType.Field &&
-                    node.NodeType != NodeType.Constant &&
-                    node.NodeType != NodeType.Parameter)
-                {
-                    output.Add(node);
-                }
-                else if (node.NodeType == NodeType.Condition)
-                {
-                    var condition = (ConditionalNode)node;
-                    condition.Left = input[i - 1];
-                    condition.Right = input[i + 1];
-                    output.Add(condition);
-                }
-            }
-            return output;
-        }
     }
 }
 

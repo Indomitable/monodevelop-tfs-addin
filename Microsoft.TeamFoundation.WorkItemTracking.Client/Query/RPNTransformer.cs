@@ -49,9 +49,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                         type = OperandType.OR;
                     }
                 }
-                if (node.NodeType == NodeType.StartGroup)
+                if (node.NodeType == NodeType.OpenBracket)
                     type = OperandType.OpenBracket;
-                if (node.NodeType == NodeType.EndGroup)
+                if (node.NodeType == NodeType.CloseBracket)
                     type = OperandType.CloseBracket;
                 if (node.NodeType == NodeType.Condition)
                     type = OperandType.Operand;

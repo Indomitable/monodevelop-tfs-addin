@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using System.Globalization;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
@@ -108,7 +109,17 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             {
                 ProcessChild(child, top);
             }
+            RemoveEmptyGroups(top);
             return top;
+        }
+
+        void RemoveEmptyGroups(XElement top)
+        {
+            while (top.Descendants("Group").Any(g => !g.Elements("Expression").Any()))
+            {
+                var first = top.Descendants("Group").First(g => !g.Elements("Expression").Any());
+                first.Remove();
+            }
         }
 
         void ProcessChild(NodeHierarchy element, XElement parent)
@@ -124,8 +135,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             }
             else
             {
-                var expression = CreateExpressionElement((ConditionalNode)element.Value);
-                parent.Add(expression);
+                var expression = CreateExpressionElement((ConditionNode)element.Value);
+                if (expression != null)
+                    parent.Add(expression);
             }
         }
 
@@ -135,20 +147,26 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             return element; 
         }
 
-        XElement CreateExpressionElement(ConditionalNode conditionalNode)
+        XElement CreateExpressionElement(ConditionNode conditionalNode)
         {
             var column = ((FieldNode)conditionalNode.Left).Field;
-            var value = string.Empty;
-            if (conditionalNode.Right.NodeType == NodeType.Constant)
-                value = Convert.ToString(((ConstantNode)conditionalNode.Right).Value);
-            else //Should use parameter evaluator.
-                value = ((ParameterNode)conditionalNode.Right).ParameterName;
-
             var element = new XElement("Expression", new XAttribute("Column", column), 
                               new XAttribute("FieldType", ""), 
                               new XAttribute("Operator", conditionalNode.Condition.ToString().ToLowerInvariant()));
-            element.Add(new XElement("String", value));
 
+            if (conditionalNode.Right.NodeType == NodeType.Constant)
+            {
+                var constantNode = (ConstantNode)conditionalNode.Right;
+                var strValue = Convert.ToString(constantNode.Value, CultureInfo.InvariantCulture);
+                if (conditionalNode.Condition == Condition.NotEquals && string.IsNullOrEmpty(strValue))
+                    return null;
+                element.Add(new XElement(constantNode.DataType.ToString(), strValue));
+            }
+            else
+            {
+                var parameter = (ParameterNode)conditionalNode.Right;
+                element.Add(new XElement("String", parameter.ParameterName));
+            }
             return element;
         }
     }
