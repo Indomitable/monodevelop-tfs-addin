@@ -70,7 +70,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 
         public ProjectCollection Collection { get; set; }
 
-        public XElement GetQueryXml(ParameterContext context, List<Field> fields)
+        public XElement GetQueryXml(ParameterContext context, FieldList fields)
         {
             var parser = new LexalParser(this.QueryText);
             var nodes = parser.ProcessWherePart();

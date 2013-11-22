@@ -34,6 +34,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System.Linq;
+using System.IO;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
@@ -114,33 +115,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         public List<Hierarchy> GetHierarchy()
         {
-            var linearHierarchies = GetMetadata<Hierarchy>(MetadataRowSetNames.Hierarchy);
-            List<Hierarchy> hierarchies = new List<Hierarchy>();
-            for (int i = 0; i < linearHierarchies.Count; i++)
-            {
-                var hierarchy = linearHierarchies[i];
-                if (string.Equals(hierarchy.Name, "\\"))
-                {
-                    //Root
-                    hierarchy.Parent = null;
-                    hierarchies.Add(hierarchy);
-                }
-                else
-                {
-                    for (int j = i - 1; j >= 0; j--)
-                    {
-                        var prevHierchy = linearHierarchies[j];
-                        if (prevHierchy.AreaId == hierarchy.ParentId)
-                        {
-                            //Found Parent
-                            prevHierchy.Children.Add(hierarchy);
-                            hierarchy.Parent = prevHierchy;
-                            break;
-                        }
-                    }
-                }
-            }
-            return hierarchies;
+            return GetMetadata<Hierarchy>(MetadataRowSetNames.Hierarchy);
         }
 
         public List<Field> GetFields()
@@ -165,7 +140,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             return extractor.Extract();
         }
 
-        public List<int> GetWorkItemIds(StoredQuery query, List<Field> fields)
+        public List<int> GetWorkItemIds(StoredQuery query, FieldList fields)
         {
             ParameterContext context = new ParameterContext { ProjectId = query.ProjectId, Me = WorkItemsContext.WhoAmI };
 
@@ -239,8 +214,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             msg.Body.Add(new XElement(MessageNs + "ids", ids.Select(i => new XElement(MessageNs + "int", i))));
             var columns = query.GetSelectColumns();
             var fields = CachedMetaData.Instance.Fields.GetFieldsByNames(columns).ToArray();
-            msg.Body.Add(new XElement(MessageNs + "columns", fields.Where(f => !f.IsSupportsTextQuery).Select(c => new XElement(MessageNs + "string", c.ReferenceName))));
-            msg.Body.Add(new XElement(MessageNs + "longTextColumns", fields.Where(f => f.IsSupportsTextQuery).Select(c => new XElement(MessageNs + "int", c.Id))));
+            msg.Body.Add(new XElement(MessageNs + "columns", fields.Where(f => !f.IsLongField).Select(c => new XElement(MessageNs + "string", c.ReferenceName))));
+            msg.Body.Add(new XElement(MessageNs + "longTextColumns", fields.Where(f => f.IsLongField).Select(c => new XElement(MessageNs + "int", c.Id))));
             var response = invoker.InvokeResponse();
             var extractor = new TableDictionaryExtractor(response, "Items");
             return extractor.Extract();

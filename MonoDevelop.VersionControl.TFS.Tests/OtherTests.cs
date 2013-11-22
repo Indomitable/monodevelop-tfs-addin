@@ -1,5 +1,5 @@
 //
-// CachedMetaData.cs
+// OtherTests.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,46 +24,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
-using System.Linq;
+using NUnit.Framework;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
+namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    public class CachedMetaData
+    [TestFixtureAttribute]
+    public class OtherTests
     {
-        private static CachedMetaData instance;
-
-        public static CachedMetaData Instance
+        [Test]
+        public void FieldTypeTest()
         {
-            get
-            {
-                return instance ?? (instance = new CachedMetaData());
-            }
+            Console.WriteLine(288 & 0xF0);
         }
-
-        public void Init(ClientService clientService)
-        {
-            var hierarchy = clientService.GetHierarchy();
-            ExtractProjects(hierarchy);
-            this.Fields = new FieldList(clientService.GetFields());
-            this.Constants = clientService.GetConstants();
-        }
-
-        private void ExtractProjects(List<Hierarchy> hierarchy)
-        {
-            Projects = new List<Project>();
-            foreach (var item in hierarchy.Where(h => h.TypeId == -42 && !h.IsDeleted))
-            {
-                Projects.Add(new Project { Id = item.AreaId, Guid = item.Guid, Name = item.Name });
-            }
-        }
-
-        public FieldList Fields { get; set; }
-
-        public List<Constant> Constants { get; set; }
-
-        public List<Project> Projects { get; set; }
     }
 }
 

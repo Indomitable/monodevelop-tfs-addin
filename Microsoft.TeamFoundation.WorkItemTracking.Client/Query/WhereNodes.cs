@@ -285,19 +285,13 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                     if (condition.Right.NodeType == NodeType.Parameter)
                     {
                         var parameterNode = (ParameterNode)condition.Right;
-                        if (string.Equals(parameterNode.ParameterName, "project"))
-                        {
-                            FieldNode newField = new FieldNode("System.AreaId");
-                            condition.Left = newField;
-                            condition.Condition = Condition.Under;
-                        }
                         condition.Right = CreateConstantFromParameter(parameterNode, context);
                     }
                 }
             }
         }
 
-        public void FillFieldTypes(List<Field> fields)
+        public void FixFields(FieldList fields)
         {
             for (int i = 0; i < this.Count; i++)
             {
@@ -305,9 +299,33 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                 {
                     var condition = (ConditionNode)this[i];
                     var fieldNode = (FieldNode)condition.Left;
-                    var field = fields.FirstOrDefault(f => string.Equals(f.ReferenceName, fieldNode.Field));
-                    if (field == null)
-                        continue;
+                    var field = fields[fieldNode.Field];
+
+                    if (field.Id == -42 || field.Id == -12 || field.Id == -7) //Project/Area to AreaId
+                    {
+                        fieldNode.Field = fields[-2].ReferenceName;
+                    }
+                    if (field.Id == -105) //Iteration Path to Iteration Id
+                    {
+                        fieldNode.Field = fields[-104].ReferenceName;
+                    }
+                    if (field.Id == -1) //Authorized As to PersonId
+                    {
+                        fieldNode.Field = fields[-6].ReferenceName;
+                    }
+                }
+            }
+        }
+
+        public void FillFieldTypes(FieldList fields)
+        {
+            for (int i = 0; i < this.Count; i++)
+            {
+                if (this[i].NodeType == NodeType.Condition)
+                {
+                    var condition = (ConditionNode)this[i];
+                    var fieldNode = (FieldNode)condition.Left;
+                    var field = fields[fieldNode.Field];
                     fieldNode.FieldType = field.Type;
                 }
             }

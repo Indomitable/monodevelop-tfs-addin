@@ -42,7 +42,6 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ClientService.cs" />
     <Compile Include="InternalMessage.cs" />
-    <Compile Include="Project.cs" />
     <Compile Include="WorkItem.cs" />
     <Compile Include="WorkItemStore.cs" />
     <Compile Include="WorkItemType.cs" />
@@ -66,6 +65,8 @@
     <Compile Include="WorkItemsContext.cs" />
     <Compile Include="Metadata\CachedMetaData.cs" />
     <Compile Include="DataTypeConverter.cs" />
+    <Compile Include="Objects\Project.cs" />
+    <Compile Include="Objects\Iteration.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

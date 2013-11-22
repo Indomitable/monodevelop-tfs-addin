@@ -28,6 +28,21 @@ using System.Collections.Generic;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
+    public enum FieldType
+    {
+        None,
+        String,
+        Integer,
+        DateTime,
+        PlainText,
+        Html,
+        TreePath,
+        History,
+        Double,
+        Guid,
+        Bool
+    }
+
     public class Field
     {
         [TableFieldName("FldID")]
@@ -45,8 +60,50 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
         [TableFieldName("ReferenceName")]
         public string ReferenceName { get; set; }
 
-        [TableFieldName("fSupportsTextQuery")]
-        public bool IsSupportsTextQuery { get; set; }
+        public bool IsLongField
+        {
+            get
+            {
+                return (this.Type & 0xF0) == 64;
+            }
+        }
+
+        public FieldType FieldType
+        {
+            get
+            {     
+                switch (Type)
+                {
+                    case 16:
+                    case 24:
+                    case 160:
+                    case 528:
+                    case 784:
+                        return FieldType.String;
+                    case 272:
+                        return FieldType.TreePath;
+                    case 32:
+                    case 288:
+                        return FieldType.Integer;
+                    case 240:
+                        return FieldType.Double;
+                    case 48:
+                        return FieldType.DateTime;
+                    case 64:
+                        return FieldType.PlainText;
+                    case 320:
+                        return FieldType.History;
+                    case 576:
+                        return FieldType.Html;
+                    case 208:
+                        return FieldType.Guid;
+                    case 224:
+                        return FieldType.Bool;
+                    default:
+                        return FieldType.String;
+                }
+            }
+        }
     }
 
     public class FieldList : List<Field>
@@ -55,6 +112,14 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
             : base(fields)
         {
             
+        }
+
+        public new Field this [int id]
+        {
+            get
+            {
+                return this.Find(x => x.Id == id);
+            }
         }
 
         public Field this [string name]

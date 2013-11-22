@@ -54,6 +54,7 @@
     <Compile Include="QueryTests.cs" />
     <Compile Include="NodeListTests.cs" />
     <Compile Include="LexalParserTests.cs" />
+    <Compile Include="OtherTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

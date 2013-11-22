@@ -36,7 +36,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
     {
         private readonly ProjectCollection collection;
         private readonly ClientService clientService;
-        //        private string currentUserSid;
+
         public WorkItemManager(ProjectCollection collection)
         {
             this.collection = collection;
@@ -47,23 +47,6 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
         private void Init()
         {
             CachedMetaData.Instance.Init(this.clientService);
-            Projects = new List<Project>();
-            var hierarchy = CachedMetaData.Instance.Hierarchy;
-            if (hierarchy.Count > 0)
-            {
-                var top = hierarchy[0];
-                foreach (var item in top.Children)
-                {
-                    var project = new Project
-                    {
-                        Id = item.AreaId,
-                        Name = item.Name,
-                        Guid = item.Guid
-                    };
-                    Projects.Add(project);
-                }
-            }
-
             var constants = CachedMetaData.Instance.Constants;
             var userName = this.collection.Server.Credentials.Domain + "\\" + this.collection.Server.UserName;
             var me = constants.FirstOrDefault(c => string.Equals(c.Value, userName, StringComparison.OrdinalIgnoreCase));
@@ -74,11 +57,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             }
         }
 
-        public List<Project> Projects { get; set; }
-
         public Project GetByGuid(string guid)
         {
-            return Projects.SingleOrDefault(p => string.Equals(p.Guid, guid, StringComparison.OrdinalIgnoreCase));
+            return CachedMetaData.Instance.Projects.SingleOrDefault(p => string.Equals(p.Guid, guid, StringComparison.OrdinalIgnoreCase));
         }
 
         public List<StoredQuery> GetPublicQueries(Project project)
