@@ -135,9 +135,7 @@
     <Compile Include="RepositoryService.cs" />
     <Compile Include="Enums\DiffOptionFlags.cs" />
     <Compile Include="Enums\DiffOutputType.cs" />
-    <Compile Include="VersionControlPath.cs">
-      <DependentUpon>WorkingFolder.cs</DependentUpon>
-    </Compile>
+    <Compile Include="VersionControlPath.cs" />
     <Compile Include="DiffOptions.cs" />
     <Compile Include="RepositoryConstants.cs" />
     <Compile Include="Enums\ResolutionType.cs" />

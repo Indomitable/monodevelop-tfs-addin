@@ -35,75 +35,6 @@ namespace MonoDevelop.VersionControl.TFS.Tests
     public class QueryTests
     {
         [Test]
-        public void Parse1()
-        {
-            XElement el = XElement.Parse(@"<f>SELECT [System.Id], [System.WorkItemType], [System.AssignedTo], [System.CreatedBy], [Microsoft.VSTS.Common.Priority], [System.Title], [System.Description] 
-FROM WorkItems 
-WHERE 
-    [System.TeamProject] = @project 
-AND [System.State] &lt;&gt; 'Closed' 
-AND [Microsoft.VSTS.Common.Issue] = 'Yes' 
-ORDER BY [Microsoft.VSTS.Common.Priority], [System.Id]</f>");
-            var parser = new LexalParser(el.Value);
-            var nodes = parser.Process();
-
-            Assert.IsTrue(nodes[0].NodeType == NodeType.Field);
-            Assert.IsTrue(string.Equals(((FieldNode)nodes[0]).Field, "System.TeamProject"));
-
-            Assert.IsTrue(nodes[1].NodeType == NodeType.Condition);
-            Assert.IsTrue(((ConditionNode)nodes[1]).Condition == Condition.Equals);
-
-            Assert.IsTrue(nodes[2].NodeType == NodeType.Parameter);
-            Assert.IsTrue(string.Equals(((ParameterNode)nodes[2]).ParameterName, "project"));
-
-            Assert.IsTrue(nodes[3].NodeType == NodeType.Operator);
-            Assert.IsTrue(((OperatorNode)nodes[3]).Operator == Operator.And);
-
-            Assert.IsTrue(nodes[4].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[5].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[6].NodeType == NodeType.Constant);
-            Assert.IsTrue(nodes[7].NodeType == NodeType.Operator);
-            Assert.IsTrue(nodes[8].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[9].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[10].NodeType == NodeType.Constant);
-        }
-
-        [Test]
-        public void Parse2()
-        {
-            XElement el = XElement.Parse(@"<f>select [System.Id], [Phoenix.DueDate], [Phoenix.MagicDueDate], [System.WorkItemType], [System.State], [System.Title], [System.IterationPath] 
-from WorkItems 
-where ([System.State] = 'New' 
-    or [System.State] = 'Active') 
-    and ([System.AssignedTo] = 'Ventsislav Mladenov' or [System.TeamProject] = @project) 
-order by [System.Id]</f>");
-            var parser = new LexalParser(el.Value);
-            var nodes = parser.Process();
-            Assert.IsTrue(nodes[0].NodeType == NodeType.OpenBracket);
-
-            Assert.IsTrue(nodes[1].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[2].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[3].NodeType == NodeType.Constant);
-            Assert.IsTrue(nodes[4].NodeType == NodeType.Operator);
-            Assert.IsTrue(nodes[5].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[6].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[7].NodeType == NodeType.Constant);
-            Assert.IsTrue(nodes[8].NodeType == NodeType.CloseBracket);
-
-            Assert.IsTrue(nodes[9].NodeType == NodeType.Operator);
-
-            Assert.IsTrue(nodes[10].NodeType == NodeType.OpenBracket);
-            Assert.IsTrue(nodes[11].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[12].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[13].NodeType == NodeType.Constant);
-            Assert.IsTrue(nodes[14].NodeType == NodeType.Operator);
-            Assert.IsTrue(nodes[15].NodeType == NodeType.Field);
-            Assert.IsTrue(nodes[16].NodeType == NodeType.Condition);
-            Assert.IsTrue(nodes[17].NodeType == NodeType.Parameter);
-            Assert.IsTrue(nodes[18].NodeType == NodeType.CloseBracket);
-        }
-
-        [Test]
         public void Optimize1()
         {
             XElement el = XElement.Parse(@"<f>SELECT [System.Id], [System.WorkItemType], [Microsoft.VSTS.Common.Rank], [System.Title], [System.State], [System.AssignedTo], [Microsoft.VSTS.Common.RoughOrderOfMagnitude], [Microsoft.VSTS.Common.ExitCriteria], [System.Description] 
@@ -113,7 +44,7 @@ WHERE [System.TeamProject] = @project
   AND [System.State] = 'Active' 
 ORDER BY [Microsoft.VSTS.Common.Rank], [System.State], [System.Id]</f>");
             var parser = new LexalParser(el.Value);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Assert.IsTrue(nodes[0].NodeType == NodeType.Condition);
             Assert.IsTrue(((ConditionNode)nodes[0]).Right.NodeType == NodeType.Parameter);
@@ -139,13 +70,13 @@ where ([System.State] = 'New'
     and ([System.AssignedTo] = 'Ventsislav Mladenov' or [System.TeamProject] = @project) 
 order by [System.Id]</f>");
             var parser = new LexalParser(el.Value);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);
             var result = xmlTransformer.WriteXml();
             Console.WriteLine(result);
-            Assert.AreEqual("<?xml version=\"1.0\" encoding=\"utf-16\"?>\n<Group GroupOperator=\"And\">\n  <Group GroupOperator=\"Or\">\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\n      <String>New</String>\n    </Expression>\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\n      <String>Active</String>\n    </Expression>\n  </Group>\n  <Group GroupOperator=\"Or\">\n    <Expression Column=\"System.AssignedTo\" FieldType=\"\" Operator=\"equals\">\n      <String>Ventsislav Mladenov</String>\n    </Expression>\n    <Expression Column=\"System.TeamProject\" FieldType=\"\" Operator=\"equals\">\n      <String>project</String>\n    </Expression>\n  </Group>\n</Group>", result);
+            Assert.AreEqual("<Group GroupOperator=\"And\">\r\n  <Group GroupOperator=\"Or\">\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>New</String>\r\n    </Expression>\r\n    <Expression Column=\"System.State\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Active</String>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"Or\">\r\n    <Expression Column=\"System.AssignedTo\" FieldType=\"\" Operator=\"equals\">\r\n      <String>Ventsislav Mladenov</String>\r\n    </Expression>\r\n    <Expression Column=\"System.TeamProject\" FieldType=\"\" Operator=\"equals\">\r\n      <String>project</String>\r\n    </Expression>\r\n  </Group>\r\n</Group>", result);
         }
 
         [Test]
@@ -153,7 +84,7 @@ order by [System.Id]</f>");
         {
             string val = "where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);
@@ -166,7 +97,7 @@ order by [System.Id]</f>");
         {
             string val = "where [Microsoft.VSTS.Common.ResolvedBy] = 'Ventsislav Mladenov' and [Microsoft.VSTS.CMMI.CalledBy] = 'Ventsislav Mladenov' or [Microsoft.VSTS.Common.ClosedBy] = 'Ventsislav Mladenov'";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);
@@ -188,7 +119,7 @@ order by [System.Id]</f>");
         {
             string value = "select * from a where ([a]=10  and [c]<30)and([d] <> 3 or [e] >@s )";
             var parser = new LexalParser(value);
-            var nodes = parser.Process(); //or [h] in(10,20)
+            var nodes = parser.ProcessWherePart(); //or [h] in(10,20)
             AssertNodesTypes(nodes, NodeType.OpenBracket, NodeType.Field, NodeType.Condition, NodeType.Constant, NodeType.Operator,
                 NodeType.Field, NodeType.Condition, NodeType.Constant, NodeType.CloseBracket, NodeType.Operator,
                 NodeType.OpenBracket, NodeType.Field, NodeType.Condition, NodeType.Constant, NodeType.Operator, 
@@ -200,7 +131,7 @@ order by [System.Id]</f>");
         {
             string value = " where ( ([a] = '3' or [b]<@c) and [d]> 40 )";
             var parser = new LexalParser(value);
-            var nodes = parser.Process(); //or [h] in(10,20)
+            var nodes = parser.ProcessWherePart(); //or [h] in(10,20)
             AssertNodesTypes(nodes, NodeType.OpenBracket, NodeType.OpenBracket, NodeType.Field, NodeType.Condition, NodeType.Constant,
                 NodeType.Operator, NodeType.Field, NodeType.Condition, NodeType.Parameter, NodeType.CloseBracket, NodeType.Operator, 
                 NodeType.Field, NodeType.Condition, NodeType.Constant, NodeType.CloseBracket);
@@ -211,7 +142,7 @@ order by [System.Id]</f>");
         {
             string value = " where ([a] <> '')";
             var parser = new LexalParser(value);
-            var nodes = parser.Process(); 
+            var nodes = parser.ProcessWherePart(); 
             AssertNodesTypes(nodes, NodeType.OpenBracket, NodeType.Field, NodeType.Condition, NodeType.Constant, NodeType.CloseBracket);
         }
 
@@ -220,7 +151,7 @@ order by [System.Id]</f>");
         {
             string value = " where [a] = @me";
             var parser = new LexalParser(value);
-            var nodes = parser.Process(); 
+            var nodes = parser.ProcessWherePart(); 
             AssertNodesTypes(nodes, NodeType.Field, NodeType.Condition, NodeType.Parameter);
         }
 
@@ -239,7 +170,7 @@ and [System.State] &lt;&gt; ''
 order by [System.Id]</f>");
 
             var parser = new LexalParser(el.Value);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);

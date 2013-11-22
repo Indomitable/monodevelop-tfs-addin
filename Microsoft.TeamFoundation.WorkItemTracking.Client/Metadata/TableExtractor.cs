@@ -26,35 +26,42 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
-using System.Security.Policy;
 using System.Reflection;
 using System;
-using System.Globalization;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
 {
-    public class TableExtractor<T>
-        where T: class
+    public class BaseTableExtractor
     {
-        readonly XNamespace ns = "http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03";
-        readonly XElement response;
-        readonly string tableName;
+        protected readonly XNamespace ns = "http://schemas.microsoft.com/TeamFoundation/2005/06/WorkItemTracking/ClientServices/03";
+        protected readonly XElement response;
+        protected readonly string tableName;
 
-        public TableExtractor(XElement response, string tableName)
+        public BaseTableExtractor(XElement response, string tableName)
         {
             this.tableName = tableName;
             this.response = response;
         }
 
-        private XElement GetTable()
+        protected XElement GetTable()
         {
             var tables = response.Descendants(ns + "table");
             return tables.FirstOrDefault(t => string.Equals(t.Attribute("name").Value, tableName, System.StringComparison.OrdinalIgnoreCase));
         }
 
-        private XElement[] GetColumns(XElement table)
+        protected XElement[] GetColumns(XElement table)
         {
             return table.Element(ns + "columns").Elements(ns + "c").ToArray();
+        }
+    }
+
+    public class TableExtractor<T> : BaseTableExtractor
+        where T: class
+    {
+        public TableExtractor(XElement response, string tableName)
+            : base(response, tableName)
+        {
         }
 
         private string GetFieldName(PropertyInfo prop)
@@ -66,7 +73,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
                 return string.Empty;
         }
 
-        private Dictionary<int, Tuple<PropertyInfo, string>> BuildMapping(XElement table, XElement[] columns)
+        private Dictionary<int, Tuple<PropertyInfo, string>> BuildMapping(XElement[] columns)
         {
             var result = new Dictionary<int, Tuple<PropertyInfo, string>>();
             var properties = typeof(T).GetProperties();
@@ -88,23 +95,6 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
             return result;
         }
 
-        private object ConvertVal(string value, string type)
-        {
-            switch (type)
-            {
-                case "System.Int32":
-                    return Convert.ToInt32(value);
-                case "System.Boolean":
-                    return string.Equals(value.ToLowerInvariant(), "true");
-                case "System.Guid":
-                    return Guid.ParseExact(value, "N");
-                case "System.DateTime":
-                    return DateTime.Parse(value);
-                default:
-                    return value;
-            }
-        }
-
         public List<T> Extract()
         {
             var result = new List<T>();
@@ -112,7 +102,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
             if (table == null)
                 return result;
             var columns = GetColumns(table);
-            var mapping = BuildMapping(table, columns);
+            var mapping = BuildMapping(columns);
             var rows = table.Element(ns + "rows").Elements(ns + "r");
             foreach (var row in rows)
             {
@@ -130,7 +120,56 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
                         indexer++;
                         continue;
                     }
-                    map.Item1.SetValue(obj, ConvertVal(field.Value, map.Item2), new object[0]);
+                    map.Item1.SetValue(obj, DataTypeConverter.Convert(field.Value, map.Item2), new object[0]);
+                    indexer++;
+                }
+                result.Add(obj);
+            }
+            return result;
+        }
+    }
+
+    public class TableDictionaryExtractor : BaseTableExtractor
+    {
+        public TableDictionaryExtractor(XElement response, string tableName)
+            : base(response, tableName)
+        {
+        }
+
+        private Dictionary<int, Tuple<string,string>> BuildMapping(XElement[] columns)
+        {
+            var result = new Dictionary<int, Tuple<string,string>>();
+            for (int i = 0; i < columns.Length; i++)
+            {
+                var column = columns[i];
+                var columnName = column.Element(ns + "n").Value;
+                var columnType = column.Element(ns + "t").Value;
+                result.Add(i, new Tuple<string, string>(columnName, columnType));
+            }
+            return result;
+        }
+
+        public List<Dictionary<string, object>> Extract()
+        {
+            var result = new List<Dictionary<string, object>>();
+            var table = GetTable();
+            if (table == null)
+                return result;
+            var columns = GetColumns(table);
+            var mapping = BuildMapping(columns);
+            var rows = table.Element(ns + "rows").Elements(ns + "r");
+            foreach (var row in rows)
+            {
+                var fields = row.Elements(ns + "f").ToArray();
+                var obj = new Dictionary<string, object>();
+                var indexer = 0;
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    var field = fields[i];
+                    if (field.Attribute("k") != null)
+                        indexer = Convert.ToInt32(field.Attribute("k").Value);
+                    var map = mapping[indexer];
+                    obj[map.Item1] = DataTypeConverter.Convert(field.Value, map.Item2);
                     indexer++;
                 }
                 result.Add(obj);

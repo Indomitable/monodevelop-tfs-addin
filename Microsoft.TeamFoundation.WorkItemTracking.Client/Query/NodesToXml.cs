@@ -42,22 +42,15 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         private void WriteExpression(ConditionNode node, XmlWriter writer)
         {
             writer.WriteStartElement("Expression");
-            writer.WriteAttributeString("Column", ((FieldNode)node.Left).Field);
-            writer.WriteAttributeString("FieldType", "");
+            var fieldNode = ((FieldNode)node.Left);
+            writer.WriteAttributeString("Column", fieldNode.Field);
+            writer.WriteAttributeString("FieldType", fieldNode.FieldType.ToString());
             writer.WriteAttributeString("Operator", node.Condition.ToString().ToLowerInvariant());
-            if (node.Right.NodeType == NodeType.Constant)
-            {
-                var constantNode = (ConstantNode)node.Right;
-                var strValue = Convert.ToString(constantNode.Value, CultureInfo.InvariantCulture);
+            var constantNode = (ConstantNode)node.Right; //All Nodes to Right should be Constants.
+            var strValue = Convert.ToString(constantNode.Value, CultureInfo.InvariantCulture);
 //                if (node.Condition == Condition.NotEquals && string.IsNullOrEmpty(strValue))
 //                    return null;
-                writer.WriteElementString(constantNode.DataType.ToString(), strValue);
-            }
-            else
-            {
-                var parameter = (ParameterNode)node.Right;
-                writer.WriteElementString("String", parameter.ParameterName);
-            }
+            writer.WriteElementString(constantNode.DataType.ToString(), strValue);
             writer.WriteEndElement();
         }
 
@@ -73,6 +66,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             XmlWriterSettings settings = new XmlWriterSettings();
             settings.Encoding = Encoding.UTF8;
             settings.Indent = true;
+            settings.OmitXmlDeclaration = true;
             //settings.NewLineChars = Environment.NewLine;
             using (XmlWriter writer = XmlWriter.Create(builder, settings))
             {

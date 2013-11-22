@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// IParameterContext.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -27,20 +27,11 @@ using System;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
-    public enum Condition
+    public class ParameterContext
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        public int ProjectId { get; set; }
+
+        public string Me { get; set; }
     }
 }
 

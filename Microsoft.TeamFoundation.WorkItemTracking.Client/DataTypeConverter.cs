@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// DataTypeConverter.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -25,22 +25,26 @@
 // THE SOFTWARE.
 using System;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
-    public enum Condition
+    public static class DataTypeConverter
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        public static object Convert(string value, string type)
+        {
+            switch (type)
+            {
+                case "System.Int32":
+                    return System.Convert.ToInt32(value);
+                case "System.Boolean":
+                    return string.Equals(value.ToLowerInvariant(), "true");
+                case "System.Guid":
+                    return Guid.ParseExact(value, "N");
+                case "System.DateTime":
+                    return DateTime.Parse(value);
+                default:
+                    return value;
+            }
+        }
     }
 }
 

@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// CachedMetaData.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,23 +24,35 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
 {
-    public enum Condition
+    public class CachedMetaData
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        private static CachedMetaData instance;
+
+        public static CachedMetaData Instance
+        {
+            get
+            {
+                return instance ?? (instance = new CachedMetaData());
+            }
+        }
+
+        public void Init(ClientService clientService)
+        {
+            this.Hierarchy = clientService.GetHierarchy();
+            this.Fields = new FieldList(clientService.GetFields());
+            this.Constants = clientService.GetConstants();
+        }
+
+        public FieldList Fields { get; set; }
+
+        public List<Constant> Constants { get; set; }
+
+        public List<Hierarchy> Hierarchy { get; set; }
     }
 }
 

@@ -32,7 +32,8 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
-using System.Net;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
@@ -142,6 +143,16 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             return hierarchies;
         }
 
+        public List<Field> GetFields()
+        {
+            return this.GetMetadata<Field>(MetadataRowSetNames.Fields);
+        }
+
+        public List<Constant> GetConstants()
+        {
+            return this.GetMetadata<Constant>(MetadataRowSetNames.Constants);
+        }
+
         public List<StoredQuery> GetStoredQueries(Project project)
         {
             var invoker = new SoapInvoker(this);
@@ -151,6 +162,87 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             msg.Body.Add(new XElement(MessageNs + "projectId", project.Id));
             var response = invoker.InvokeResponse();
             var extractor = new TableExtractor<StoredQuery>(response, "StoredQueries");
+            return extractor.Extract();
+        }
+
+        public List<int> GetWorkItemIds(StoredQuery query, List<Field> fields)
+        {
+            ParameterContext context = new ParameterContext { ProjectId = query.ProjectId, Me = WorkItemsContext.WhoAmI };
+
+            var invoker = new SoapInvoker(this);
+            var envelope = invoker.CreateEnvelope("QueryWorkitems", headerName);
+            envelope.Header.Add(GetHeaderElement());
+            XNamespace queryNs = XNamespace.Get("");
+            envelope.Body.Add(new XElement(MessageNs + "psQuery",
+                new XElement(queryNs + "Query", new XAttribute("Product", this.Url.ToString()), query.GetQueryXml(context, fields))));
+
+            XElement sorting = query.GetSortingXml();
+            foreach (var items in sorting.DescendantsAndSelf())
+            {
+                items.Name = MessageNs + items.Name.LocalName;
+            }
+            envelope.Body.Add(sorting);
+            envelope.Body.Add(new XElement(MessageNs + "useMaster", "false"));
+            var response = invoker.InvokeResponse();
+
+            var queryIds = response.Element(MessageNs + "resultIds").Element("QueryIds");
+            if (queryIds == null)
+                return new List<int>();
+            var list = new List<int>();
+            foreach (var item in queryIds.Elements("id"))
+            {
+                var startId = item.Attribute("s");
+                if (startId == null)
+                    continue;
+                var s = Convert.ToInt32(startId.Value);
+                var endId = item.Attribute("e");
+                if (endId != null)
+                {
+                    var e = Convert.ToInt32(endId.Value);
+                    var range = Enumerable.Range(s, e - s + 1);
+                    list.AddRange(range);
+                }
+                else
+                {
+                    list.Add(s);
+                }
+            }
+            return list;
+        }
+
+        public WorkItem GetWorkItem(int id)
+        {
+            var invoker = new SoapInvoker(this);
+            var msg = invoker.CreateEnvelope("GetWorkItem", headerName);
+            msg.Header.Add(GetHeaderElement());
+            msg.Body.Add(new XElement(MessageNs + "workItemId", id));
+            var response = invoker.InvokeResponse();
+            var extractor = new TableDictionaryExtractor(response, "WorkItemInfo");
+            var workItem = new WorkItem();
+            workItem.Id = id;
+            var data = extractor.Extract().Single();
+            workItem.WorkItemInfo = new Dictionary<string, object>();
+            foreach (var item in data)
+            {
+                workItem.WorkItemInfo.Add(item.Key, item.Value);
+            }
+            return workItem;
+        }
+
+        public List<Dictionary<string, object>> PageWorkitemsByIds(StoredQuery query, List<int> ids)
+        {
+            if (ids.Count > 50)
+                throw new Exception("Page only by 50");
+            var invoker = new SoapInvoker(this);
+            var msg = invoker.CreateEnvelope("PageWorkitemsByIds", headerName);
+            msg.Header.Add(GetHeaderElement());
+            msg.Body.Add(new XElement(MessageNs + "ids", ids.Select(i => new XElement(MessageNs + "int", i))));
+            var columns = query.GetSelectColumns();
+            var fields = CachedMetaData.Instance.Fields.GetFieldsByNames(columns).ToArray();
+            msg.Body.Add(new XElement(MessageNs + "columns", fields.Where(f => !f.IsSupportsTextQuery).Select(c => new XElement(MessageNs + "string", c.ReferenceName))));
+            msg.Body.Add(new XElement(MessageNs + "longTextColumns", fields.Where(f => f.IsSupportsTextQuery).Select(c => new XElement(MessageNs + "int", c.Id))));
+            var response = invoker.InvokeResponse();
+            var extractor = new TableDictionaryExtractor(response, "Items");
             return extractor.Extract();
         }
     }

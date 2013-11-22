@@ -19,13 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("Development version")]
 [assembly: AssemblyCopyright("(c) 2007 Joel W. Reed")]
 [assembly: AssemblyTrademark("")]
-#if TARGET_JVM
 [assembly: CLSCompliant(false)]
-
-
-#else
-[assembly: CLSCompliant(true)]
-#endif
 [assembly: ComVisible(false)]
 [assembly: AssemblyDefaultAlias("Microsoft.TeamFoundation.WorkItemTracking.Client.dll")]
 [assembly: AssemblyInformationalVersion("0.0.0.1")]

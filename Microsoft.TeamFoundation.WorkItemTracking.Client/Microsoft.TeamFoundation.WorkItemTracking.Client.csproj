@@ -34,6 +34,9 @@
     <Reference Include="System.Xml" />
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="MonoDevelop.Core">
+      <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -52,9 +55,17 @@
     <Compile Include="Query\NodeGroup.cs" />
     <Compile Include="Query\Operator.cs" />
     <Compile Include="Query\Condition.cs" />
-    <Compile Include="Query\Nodes.cs" />
     <Compile Include="Query\LexalParser.cs" />
     <Compile Include="Query\NodesToXml.cs" />
+    <Compile Include="Objects\Field.cs" />
+    <Compile Include="Query\WhereNodes.cs" />
+    <Compile Include="Query\SelectNodes.cs" />
+    <Compile Include="Query\OrderByNodes.cs" />
+    <Compile Include="Query\ParameterContext.cs" />
+    <Compile Include="Objects\Constant.cs" />
+    <Compile Include="WorkItemsContext.cs" />
+    <Compile Include="Metadata\CachedMetaData.cs" />
+    <Compile Include="DataTypeConverter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

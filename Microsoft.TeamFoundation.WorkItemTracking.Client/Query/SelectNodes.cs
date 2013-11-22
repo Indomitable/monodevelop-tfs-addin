@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// SelectNodes.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,23 +24,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
-    public enum Condition
+    class SelectNode
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        public SelectNode(string item)
+        {
+            ColumnName = item.Trim().Trim('[', ']');
+        }
+
+        public string ColumnName { get; set; }
+    }
+
+    class SelectNodeList : List<SelectNode>
+    {
+        public override string ToString()
+        {
+            return string.Join(", ", this.Select(x => "[" + x.ColumnName + "]"));
+        }
     }
 }
 

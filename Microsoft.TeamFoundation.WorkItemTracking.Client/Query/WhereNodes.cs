@@ -28,6 +28,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Security.X509;
+using System.Security.Cryptography.X509Certificates;
+using System.Runtime.CompilerServices;
+using System.Web.Services.Protocols;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
@@ -244,6 +248,71 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             return list;
         }
 
+        private ConstantNode CreateConstantFromParameter(ParameterNode parameterNode, ParameterContext context)
+        {
+            if (string.Equals(parameterNode.ParameterName, "project"))
+            {
+                ConstantNode node = new ConstantNode(context.ProjectId.ToString());
+                node.DataType = ValueDataType.Number;
+                return node;
+            }
+            else if (string.Equals(parameterNode.ParameterName, "me"))
+            {
+                ConstantNode node = new ConstantNode("'" + context.Me + "'");
+                node.DataType = ValueDataType.String;
+                return node;
+            }
+            else if (parameterNode.ParameterName.IndexOf("today", StringComparison.OrdinalIgnoreCase) > -1)
+            {
+                //TODO: Do date time calc
+                ConstantNode node = new ConstantNode(DateTime.Now.ToString("s") + "Z");
+                node.DataType = ValueDataType.DateTime;
+                return node;
+            }
+            else
+            {
+                throw new Exception("Unknown parameter name");
+            }
+        }
+
+        public void ConvertAllParameters(ParameterContext context)
+        {
+            for (int i = 0; i < this.Count; i++)
+            {
+                if (this[i].NodeType == NodeType.Condition)
+                {
+                    var condition = (ConditionNode)this[i];
+                    if (condition.Right.NodeType == NodeType.Parameter)
+                    {
+                        var parameterNode = (ParameterNode)condition.Right;
+                        if (string.Equals(parameterNode.ParameterName, "project"))
+                        {
+                            FieldNode newField = new FieldNode("System.AreaId");
+                            condition.Left = newField;
+                            condition.Condition = Condition.Under;
+                        }
+                        condition.Right = CreateConstantFromParameter(parameterNode, context);
+                    }
+                }
+            }
+        }
+
+        public void FillFieldTypes(List<Field> fields)
+        {
+            for (int i = 0; i < this.Count; i++)
+            {
+                if (this[i].NodeType == NodeType.Condition)
+                {
+                    var condition = (ConditionNode)this[i];
+                    var fieldNode = (FieldNode)condition.Left;
+                    var field = fields.FirstOrDefault(f => string.Equals(f.ReferenceName, fieldNode.Field));
+                    if (field == null)
+                        continue;
+                    fieldNode.FieldType = field.Type;
+                }
+            }
+        }
+
         public override string ToString()
         {
             return string.Join(" ", this.Select(n => n.ToString()));
@@ -260,6 +329,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         public override NodeType NodeType { get { return NodeType.Field; } }
 
         public string Field { get; set; }
+
+        public int FieldType { get; set; }
 
         public override string ToString()
         {
@@ -294,6 +365,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                 default:
                     if (string.Equals(condition, "in", StringComparison.OrdinalIgnoreCase))
                         Condition = Condition.In;
+                    else if (string.Equals(condition, "under", StringComparison.OrdinalIgnoreCase))
+                        Condition = Condition.Under;
                     else
                         Condition = Condition.None;
                     break;
@@ -310,7 +383,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 
         public override string ToString()
         {
-            string val = string.Empty;
+            string val;
             switch (Condition)
             {
                 case Condition.Equals:
@@ -334,6 +407,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                 case Condition.NotEquals:
                     val = "<>";
                     break;
+                case Condition.Under:
+                    val = "Under";
+                    break;
                 default:
                     val = "NONE";
                     break;
@@ -347,7 +423,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
     enum ValueDataType
     {
         String,
-        Number
+        Number,
+        DateTime
     }
 
     class ConstantNode : Node
@@ -372,8 +449,12 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                 DataType = ValueDataType.Number;
             }
         }
-
-        public ValueDataType DataType { get; private set; }
+        //        public ConstantNode(object value, ValueDataType type)
+        //        {
+        //            this.Value = value;
+        //            this.DataType = type;
+        //        }
+        public ValueDataType DataType { get; set; }
 
         public override NodeType NodeType { get { return NodeType.Constant; } }
 

@@ -28,8 +28,7 @@ using Microsoft.TeamFoundation.Client;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
-using System.Security.Principal;
-using System.Net;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
@@ -47,8 +46,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         private void Init()
         {
+            CachedMetaData.Instance.Init(this.clientService);
             Projects = new List<Project>();
-            var hierarchy = clientService.GetHierarchy();
+            var hierarchy = CachedMetaData.Instance.Hierarchy;
             if (hierarchy.Count > 0)
             {
                 var top = hierarchy[0];
@@ -63,10 +63,15 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
                     Projects.Add(project);
                 }
             }
-//            var credentials = (NetworkCredential)collection.Server.Credentials;
-//            NTAccount account = new NTAccount(credentials.Domain, credentials.UserName);
-//            SecurityIdentifier s = (SecurityIdentifier)account.Translate(typeof(SecurityIdentifier));
-//            currentUserSid = s.ToString();
+
+            var constants = CachedMetaData.Instance.Constants;
+            var userName = this.collection.Server.Credentials.Domain + "\\" + this.collection.Server.UserName;
+            var me = constants.FirstOrDefault(c => string.Equals(c.Value, userName, StringComparison.OrdinalIgnoreCase));
+            if (me != null)
+            {
+                WorkItemsContext.WhoAmI = me.DisplayName;
+                WorkItemsContext.MySID = me.SID;
+            }
         }
 
         public List<Project> Projects { get; set; }
@@ -78,13 +83,16 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         public List<StoredQuery> GetPublicQueries(Project project)
         {
-            return clientService.GetStoredQueries(project).Where(q => q.IsPublic && !q.IsDeleted).OrderBy(q => q.QueryName).ToList();
+            var list = clientService.GetStoredQueries(project).Where(q => q.IsPublic && !q.IsDeleted).OrderBy(q => q.QueryName).ToList();
+            list.ForEach(sq => sq.Collection = this.collection);
+            return list;
         }
 
         public List<StoredQuery> GetMyQueries(Project project)
         {
-            return new List<StoredQuery>();
-            //return clientService.GetStoredQueries(project).Where(q => string.Equals(currentUserSid, q.Owner) && !q.IsDeleted).ToList();
+            var list = clientService.GetStoredQueries(project).Where(q => string.Equals(WorkItemsContext.MySID, q.Owner) && !q.IsDeleted).ToList();
+            list.ForEach(sq => sq.Collection = this.collection);
+            return list;
         }
     }
 }

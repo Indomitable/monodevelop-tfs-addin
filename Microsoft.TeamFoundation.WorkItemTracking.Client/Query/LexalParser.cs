@@ -24,9 +24,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Data;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {
@@ -54,19 +55,42 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         const char NullChar = '\0';
         readonly static char[] Brackets = { OpenBracket, CloseBracket };
         readonly static char[] NumberChars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '.' };
-        readonly string whereClause;
-        //     string word = string.Empty;
+        readonly string whereClause = string.Empty;
+        readonly string selectClause = string.Empty;
+        readonly string orderByClause = string.Empty;
         CursorState currentState = CursorState.None;
         readonly NodeList nodes = new NodeList();
+        const string SelectKeyWord = "select";
+        const string WhereKeyWord = "where";
+        const string OrderByKeyWord = "order by";
+        const string FromWord = "from";
 
         public LexalParser(string query)
         {
-            this.whereClause = query.Substring(query.IndexOf("where", StringComparison.OrdinalIgnoreCase) + 5);
-            if (this.whereClause.IndexOf("order by", StringComparison.OrdinalIgnoreCase) > -1)
+            int whereIndex = query.IndexOf(WhereKeyWord, StringComparison.OrdinalIgnoreCase);
+            int selectIndex = query.IndexOf(SelectKeyWord, StringComparison.OrdinalIgnoreCase);
+            int orderByIndex = query.LastIndexOf(OrderByKeyWord, StringComparison.OrdinalIgnoreCase);
+            int fromIndex = query.IndexOf(FromWord, StringComparison.OrdinalIgnoreCase);
+
+            if (selectIndex > -1) //Should have but for tests.
+                this.selectClause = query.Substring(selectIndex + SelectKeyWord.Length, fromIndex - selectIndex - SelectKeyWord.Length);
+            else
+                this.selectClause = string.Empty;
+
+            if (orderByIndex > -1)
             {
-                this.whereClause = this.whereClause.Substring(0, this.whereClause.IndexOf("order by", StringComparison.OrdinalIgnoreCase));
+                this.whereClause = query.Substring(whereIndex + WhereKeyWord.Length, orderByIndex - whereIndex - WhereKeyWord.Length);
+                this.orderByClause = query.Substring(orderByIndex + OrderByKeyWord.Length);
             }
+            else
+            {
+                this.whereClause = query.Substring(whereIndex + WhereKeyWord.Length);
+            }
+
+            this.selectClause = this.selectClause.Trim();
             this.whereClause = this.whereClause.Trim();
+            this.orderByClause = this.orderByClause.Trim();
+
         }
 
         private Node SetState(CursorState state, string word)
@@ -296,7 +320,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         {
             var word = GetNextWord(i);
 
-            if (string.Equals(word.Item1, "in", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(word.Item1, "in", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(word.Item1, "under", StringComparison.OrdinalIgnoreCase))
             {
                 i = word.Item2;
                 return word.Item1;
@@ -333,7 +358,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             return result;
         }
 
-        internal NodeList Process()
+        internal NodeList ProcessWherePart()
         {
             for (int i = 0; i < whereClause.Length; i++)
             {
@@ -401,6 +426,41 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 
             AnalyzeNodes();
             return nodes;
+        }
+
+        internal SelectNodeList ProcessSelect()
+        {
+            var list = new SelectNodeList(); 
+            if (!string.IsNullOrWhiteSpace(selectClause))
+            {
+                var columns = selectClause.Split(new [] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var item in columns)
+                {
+                    list.Add(new SelectNode(item));
+                }
+            }
+            return list;
+        }
+
+        internal OrderByList ProcessOrderBy()
+        {
+            var list = new OrderByList();
+            if (!string.IsNullOrWhiteSpace(orderByClause))
+            {
+                var orderByItems = orderByClause.Split(new [] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var item in orderByItems)
+                {
+                    var parts = item.Split(new [] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 1)
+                        list.Add(new OrderByNode(parts[0], Direction.Asc));
+                    if (parts.Length == 2)
+                    {
+                        var direction = string.Equals(parts[1], "desc", StringComparison.OrdinalIgnoreCase) ? Direction.Desc : Direction.Asc;
+                        list.Add(new OrderByNode(parts[0], direction));
+                    }
+                }
+            }
+            return list;
         }
 
         private void AnalyzeNodes()

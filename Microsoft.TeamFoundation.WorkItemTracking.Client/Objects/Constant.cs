@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// Constant.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,23 +24,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
-    public enum Condition
+    public class Constant
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        [TableFieldName("ConstID")]
+        public int Id { get; set; }
+
+        [TableFieldName("DisplayName")]
+        public string DisplayName { get; set; }
+
+        [TableFieldName("String")]
+        public string Value { get; set; }
+
+        [TableFieldName("fDeleted")]
+        public bool IsDeleted { get; set; }
+
+        [TableFieldName("Sid")]
+        public string SID { get; set; }
     }
 }
 

@@ -25,6 +25,11 @@
 // THE SOFTWARE.
 using System;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
+using Microsoft.TeamFoundation.Client;
+using System.Xml.Linq;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
@@ -62,5 +67,33 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 
         [TableFieldName("ParentID")]
         public Guid ParentId { get; set; }
+
+        public ProjectCollection Collection { get; set; }
+
+        public XElement GetQueryXml(ParameterContext context, List<Field> fields)
+        {
+            var parser = new LexalParser(this.QueryText);
+            var nodes = parser.ProcessWherePart();
+            nodes.Optimize();
+
+            nodes.ConvertAllParameters(context);
+            nodes.FillFieldTypes(fields);
+            nodes.ExtractOperatorForward();
+            var xmlTransformer = new NodesToXml(nodes);
+            return XElement.Parse(xmlTransformer.WriteXml());
+        }
+
+        public XElement GetSortingXml()
+        {
+            var parser = new LexalParser(this.QueryText);
+            var sortList = parser.ProcessOrderBy();
+            return XElement.Parse(sortList.WriteToXml());
+        }
+
+        public List<string> GetSelectColumns()
+        {
+            var parser = new LexalParser(this.QueryText);
+            return parser.ProcessSelect().Select(x => x.ColumnName).ToList();
+        }
     }
 }

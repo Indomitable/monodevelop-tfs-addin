@@ -33,8 +33,6 @@ using MonoDevelop.Projects;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.IO;
-using GLib;
-using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using System.Diagnostics;
 using MonoDevelop.VersionControl.TFS.Infrastructure;

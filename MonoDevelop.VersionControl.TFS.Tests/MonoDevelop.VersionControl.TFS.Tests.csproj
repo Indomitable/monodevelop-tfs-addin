@@ -53,6 +53,7 @@
     <Compile Include="LocationServiceChecker.cs" />
     <Compile Include="QueryTests.cs" />
     <Compile Include="NodeListTests.cs" />
+    <Compile Include="LexalParserTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

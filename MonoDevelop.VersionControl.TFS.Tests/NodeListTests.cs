@@ -37,7 +37,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([a] = 2))";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
             Assert.AreEqual("[a] = 2", nodes.ToString());
@@ -48,7 +48,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([a] = 2) and [b] = @p)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
             Assert.AreEqual("( [a] = 2 ) And [b] = @p", nodes.ToString());
@@ -59,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([a] = 2) and ([b] = @p)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
             Assert.AreEqual("( [a] = 2 ) And ( [b] = @p )", nodes.ToString());
@@ -70,7 +70,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([a] = 2) and (([b] = @p)))";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
             Assert.AreEqual("( [a] = 2 ) And ( ( [b] = @p ) )", nodes.ToString());
@@ -81,7 +81,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([a] = 2) and ([b] = @p)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             var list = nodes.GetSubList(0);
             Console.WriteLine(list);
             Assert.AreEqual("[a] = 2", list.ToString());
@@ -92,7 +92,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([a] = 2) and [b] = @p)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             var list = nodes.GetSubList(0);
             Console.WriteLine(list);
             Assert.AreEqual("( [a] = 2 ) And [b] = @p", list.ToString());
@@ -161,7 +161,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where [a] = 2 and [b] = 3 and [c] = 4 or [d] = 5";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -173,7 +173,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([f] = 2 and [a] = 2 or [s] = 1) and [b] = 3";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -185,7 +185,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([f] = 2 and [a] = 2 or [s] = 1) and ([b] = 3 or [x] = 1 and [s] = 3)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -197,7 +197,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([f] = 2 and [a] = 2) or [s] = 1) and ([b] = 3 or ([x] = 1 and [s] = 3))";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -209,7 +209,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([f] = 2 and [a] = 2) or ([b] = 3 and [x] = 1)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -221,7 +221,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where [f] = 2";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
@@ -233,16 +233,13 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where [f] = 2";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);
             var output = xmlTransformer.WriteXml();
             Console.WriteLine(output);
-            Assert.AreEqual(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<Expression Column=""f"" FieldType="""" Operator=""equals"">
-  <Number>2</Number>
-</Expression>", output);
+            Assert.AreEqual("<Expression Column=\"f\" FieldType=\"\" Operator=\"equals\">\r\n  <Number>2</Number>\r\n</Expression>", output);
         }
 
         [Test]
@@ -250,31 +247,13 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where ([f] = 2 and [a] = 2) or ([b] = 3 and [x] = 1)";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);
             var output = xmlTransformer.WriteXml();
             Console.WriteLine(output);
-            Assert.AreEqual(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<Group GroupOperator=""Or"">
-  <Group GroupOperator=""And"">
-    <Expression Column=""f"" FieldType="""" Operator=""equals"">
-      <Number>2</Number>
-    </Expression>
-    <Expression Column=""a"" FieldType="""" Operator=""equals"">
-      <Number>2</Number>
-    </Expression>
-  </Group>
-  <Group GroupOperator=""And"">
-    <Expression Column=""b"" FieldType="""" Operator=""equals"">
-      <Number>3</Number>
-    </Expression>
-    <Expression Column=""x"" FieldType="""" Operator=""equals"">
-      <Number>1</Number>
-    </Expression>
-  </Group>
-</Group>", output);
+            Assert.AreEqual("<Group GroupOperator=\"Or\">\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"f\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n    <Expression Column=\"a\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"b\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>3</Number>\r\n    </Expression>\r\n    <Expression Column=\"x\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>1</Number>\r\n    </Expression>\r\n  </Group>\r\n</Group>", output);
         }
 
         [Test]
@@ -282,7 +261,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         {
             string val = "where (([f] = 2 and [a] = 2) or [s] = 1) and ([b] = 3 or ([x] = 1 and [s] = 3))";
             var parser = new LexalParser(val);
-            var nodes = parser.Process();
+            var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             var xmlTransformer = new NodesToXml(nodes);

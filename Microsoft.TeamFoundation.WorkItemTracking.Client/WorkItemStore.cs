@@ -24,20 +24,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data;
-using System.IO;
-using System.Net;
-using System.Xml;
-using System.Web.Services;
-using Microsoft.TeamFoundation.Client;
-using Microsoft.TeamFoundation;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
+using MonoDevelop.Core;
+using System;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
     public sealed class WorkItemStore
     {
+        readonly StoredQuery query;
+        readonly ClientService clientService;
+
+        public WorkItemStore(StoredQuery query)
+        {
+            this.clientService = query.Collection.GetService<ClientService>();
+            this.query = query;
+        }
+
+        public List<WorkItem> LoadByWorkItem(IProgressMonitor progress)
+        {
+            var ids = this.clientService.GetWorkItemIds(this.query, CachedMetaData.Instance.Fields);
+            var list = new List<WorkItem>();
+            progress.BeginTask("Loading WorkItems", ids.Count);
+            foreach (var id in ids)
+            {
+                list.Add(clientService.GetWorkItem(id));
+                progress.Step(1);
+            }
+            progress.EndTask();
+            return list;
+        }
+
+        public List<Dictionary<string, object>> LoadByPage(IProgressMonitor progress)
+        {
+            var ids = this.clientService.GetWorkItemIds(this.query, CachedMetaData.Instance.Fields);
+            int pages = (int)Math.Ceiling((double)ids.Count / (double)50);
+            var result = new List<Dictionary<string, object>>();
+            progress.BeginTask("Loading WorkItems", pages);
+            for (int i = 0; i < pages; i++)
+            {
+                var idList = new List<int>(ids.Skip(i * 50).Take(50));
+                var items = this.clientService.PageWorkitemsByIds(this.query, idList);
+                result.AddRange(items);
+                progress.Step(1);
+            }
+            progress.EndTask();
+            return result;
+        }
     }
 }

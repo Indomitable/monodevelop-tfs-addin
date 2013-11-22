@@ -26,40 +26,14 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Xml;
-using System.Web.Services;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
-	public sealed class WorkItem
-	{
-		private int id;
-		private int revision;
-		private WorkItemType workItemType;
+    public sealed class WorkItem
+    {
+        public int Id { get; set; }
 
-		public WorkItem (WorkItemType workItemType)
-		{
-			this.workItemType = workItemType;
-		}
-
-		public int Id 
-		{
-			get { return id; }
-		}
-
-		public int Revision
-		{
-			get { return revision; }
-		}
-
-		public WorkItemType Type 
-		{ 
-			get { return workItemType; }
-			}
-	}
+        public Dictionary<string, object> WorkItemInfo { get; set; }
+    }
 }

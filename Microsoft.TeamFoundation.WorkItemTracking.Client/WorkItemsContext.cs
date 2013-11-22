@@ -1,5 +1,5 @@
 //
-// Operators.cs
+// WorkItemsContext.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -25,22 +25,13 @@
 // THE SOFTWARE.
 using System;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
-    public enum Condition
+    public static class WorkItemsContext
     {
-        None,
-        Equals,
-        NotEquals,
-        Less,
-        Greater,
-        LessOrEquals,
-        GreaterOrEquals,
-        In,
-        //Only for Project Id
-        Under
-        //Not supported
-        //Contains,
+        public static string WhoAmI { get; set; }
+
+        public static string MySID { get; set; }
     }
 }
 
