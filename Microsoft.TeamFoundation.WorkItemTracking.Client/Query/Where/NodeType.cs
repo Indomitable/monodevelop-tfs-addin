@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// NodeType.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    enum NodeType
     {
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-
-        public Project Project { get; set; }
+        Undefined,
+        //System.State
+        Field,
+        //=,<,>,<=,>=,<>
+        Condition,
+        //@project
+        Parameter,
+        //'Active'
+        Constant,
+        //In clause ('Project1', @project) Could contains Constants or Parameters.
+        ArrayOfValues,
+        //AND,OR
+        Operator,
+        //(
+        OpenBracket,
+        //)
+        CloseBracket
     }
 }
-

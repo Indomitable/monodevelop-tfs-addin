@@ -70,15 +70,18 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 
         public ProjectCollection Collection { get; set; }
 
-        public XElement GetQueryXml(ParameterContext context, FieldList fields)
+        public XElement GetQueryXml(WorkItemContext context, FieldList fields)
         {
             var parser = new LexalParser(this.QueryText);
             var nodes = parser.ProcessWherePart();
             nodes.Optimize();
-
-            nodes.ConvertAllParameters(context);
-            nodes.FillFieldTypes(fields);
             nodes.ExtractOperatorForward();
+            nodes.FixFields(fields);
+            nodes.FillFieldTypes(fields);
+
+            var manager = new ParameterManager(context);
+            manager.EvalParameters(nodes);
+
             var xmlTransformer = new NodesToXml(nodes);
             return XElement.Parse(xmlTransformer.WriteXml());
         }

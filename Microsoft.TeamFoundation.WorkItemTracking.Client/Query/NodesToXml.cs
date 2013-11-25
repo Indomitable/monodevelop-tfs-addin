@@ -27,6 +27,7 @@ using System;
 using System.Xml;
 using System.Text;
 using System.Globalization;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {

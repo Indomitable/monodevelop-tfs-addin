@@ -52,10 +52,27 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
 
         private void ExtractProjects(List<Hierarchy> hierarchy)
         {
+            const int projectType = -42;
+            const int iterationType = -44;
             Projects = new List<Project>();
-            foreach (var item in hierarchy.Where(h => h.TypeId == -42 && !h.IsDeleted))
+
+            foreach (var item in hierarchy.Where(h => h.TypeId == projectType && !h.IsDeleted))
             {
                 Projects.Add(new Project { Id = item.AreaId, Guid = item.Guid, Name = item.Name });
+            }
+
+            Iterations = new List<Iteration>();
+            foreach (var item in hierarchy.Where(h => h.TypeId == iterationType && !h.IsDeleted))
+            {
+                var iteration = new Iteration { Id = item.AreaId, Name = item.Name };
+                var item1 = item;
+                var parent = hierarchy.Single(h => h.AreaId == item1.ParentId);
+                while (parent.TypeId != projectType)
+                {
+                    parent = hierarchy.Single(h => h.AreaId == parent.ParentId);
+                }
+                iteration.Project = Projects.Single(p => p.Id == parent.AreaId);
+                Iterations.Add(iteration);
             }
         }
 
@@ -64,6 +81,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
         public List<Constant> Constants { get; set; }
 
         public List<Project> Projects { get; set; }
+
+        public List<Iteration> Iterations { get; set; }
     }
 }
 

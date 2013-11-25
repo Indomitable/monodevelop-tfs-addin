@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// ParameterNode.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,22 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    class ParameterNode : Node
     {
-        public int Id { get; set; }
+        public ParameterNode(string parameter)
+        {
+            this.ParameterName = parameter.TrimStart('@');
+        }
 
-        public string Name { get; set; }
+        public override NodeType NodeType { get { return NodeType.Parameter; } }
 
-        public Project Project { get; set; }
+        public string ParameterName { get; set; }
+
+        public override string ToString()
+        {
+            return "@" + ParameterName;
+        }
     }
 }
-

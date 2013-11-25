@@ -1,5 +1,5 @@
 //
-// NodeGroup.cs
+// OpenBracketNode.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,18 +23,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
-using System.Collections.Generic;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    //    public class NodeGroup
-    //    {
-    //        public Operator Operator { get; set; }
-    //
-    //        List<Node> NodeList { get; set; }
-    //
-    //        List<NodeGroup> SubGroups { get; set; }
-    //    }
-}
+    class OpenBracketNode : Node
+    {
+        public override NodeType NodeType { get { return NodeType.OpenBracket; } }
 
+        public override string ToString()
+        {
+            return "(";
+        }
+    }
+}

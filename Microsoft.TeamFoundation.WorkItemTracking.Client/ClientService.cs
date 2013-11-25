@@ -142,7 +142,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         public List<int> GetWorkItemIds(StoredQuery query, FieldList fields)
         {
-            ParameterContext context = new ParameterContext { ProjectId = query.ProjectId, Me = WorkItemsContext.WhoAmI };
+            WorkItemContext context = new WorkItemContext { ProjectId = query.ProjectId, Me = WorkItemsContext.WhoAmI };
 
             var invoker = new SoapInvoker(this);
             var envelope = invoker.CreateEnvelope("QueryWorkitems", headerName);

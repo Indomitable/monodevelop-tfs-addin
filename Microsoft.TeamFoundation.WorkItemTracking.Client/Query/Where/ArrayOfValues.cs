@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// ArrayOfValues.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,38 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    class ArrayOfValues : Node
     {
-        public int Id { get; set; }
+        public ArrayOfValues(string word)
+        {
+            Values = new List<Node>();
+            if (string.IsNullOrEmpty(word))
+                return;
+            var arrayOfWords = word.Split(new []{ ',' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var w in arrayOfWords)
+            {
+                var trimmedWord = w.Trim();
+                if (trimmedWord.StartsWith("@", StringComparison.Ordinal))
+                    Values.Add(new ParameterNode(trimmedWord));
+                else
+                    Values.Add(new ConstantNode(trimmedWord));
+            }
+        }
 
-        public string Name { get; set; }
+        public override NodeType NodeType { get { return NodeType.ArrayOfValues; } }
 
-        public Project Project { get; set; }
+        public List<Node> Values { get; set; }
+
+        public override string ToString()
+        {
+            return "(" + string.Join(", ", Values.Select(n => n.ToString())) + ")";
+        }
     }
 }
-

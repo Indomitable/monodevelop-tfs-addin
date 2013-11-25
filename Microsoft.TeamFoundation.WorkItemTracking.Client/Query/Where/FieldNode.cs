@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// FieldNode.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    class FieldNode : Node
     {
-        public int Id { get; set; }
+        public FieldNode(string field)
+        {
+            this.Field = field.Trim('[', ']');
+        }
 
-        public string Name { get; set; }
+        public override NodeType NodeType { get { return NodeType.Field; } }
 
-        public Project Project { get; set; }
+        public string Field { get; set; }
+
+        public int FieldType { get; set; }
+
+        public override string ToString()
+        {
+            return "[" + Field + "]";
+        }
     }
 }
-

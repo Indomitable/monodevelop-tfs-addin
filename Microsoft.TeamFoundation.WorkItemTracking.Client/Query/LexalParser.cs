@@ -26,8 +26,7 @@
 using System;
 using System.Linq;
 using System.Text;
-using System.Data;
-using System.Runtime.InteropServices;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
 {

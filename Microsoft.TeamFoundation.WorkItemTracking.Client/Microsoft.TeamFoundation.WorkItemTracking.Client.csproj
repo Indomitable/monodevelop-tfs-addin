@@ -51,22 +51,33 @@
     <Compile Include="Metadata\TableExtractor.cs" />
     <Compile Include="Metadata\TableFieldNameAttribute.cs" />
     <Compile Include="Objects\StoredQuery.cs" />
-    <Compile Include="Query\NodeGroup.cs" />
-    <Compile Include="Query\Operator.cs" />
-    <Compile Include="Query\Condition.cs" />
     <Compile Include="Query\LexalParser.cs" />
     <Compile Include="Query\NodesToXml.cs" />
     <Compile Include="Objects\Field.cs" />
-    <Compile Include="Query\WhereNodes.cs" />
     <Compile Include="Query\SelectNodes.cs" />
     <Compile Include="Query\OrderByNodes.cs" />
-    <Compile Include="Query\ParameterContext.cs" />
     <Compile Include="Objects\Constant.cs" />
     <Compile Include="WorkItemsContext.cs" />
     <Compile Include="Metadata\CachedMetaData.cs" />
     <Compile Include="DataTypeConverter.cs" />
     <Compile Include="Objects\Project.cs" />
     <Compile Include="Objects\Iteration.cs" />
+    <Compile Include="Query\Where\NodeType.cs" />
+    <Compile Include="Query\Where\Node.cs" />
+    <Compile Include="Query\Where\NodeList.cs" />
+    <Compile Include="Query\Where\FieldNode.cs" />
+    <Compile Include="Query\Where\ConditionNode.cs" />
+    <Compile Include="Query\Where\Condition.cs" />
+    <Compile Include="Query\Where\ValueDataType.cs" />
+    <Compile Include="Query\Where\ConstantNode.cs" />
+    <Compile Include="Query\Where\ParameterNode.cs" />
+    <Compile Include="Query\Where\ArrayOfValues.cs" />
+    <Compile Include="Query\Where\OperatorNode.cs" />
+    <Compile Include="Query\Where\Operator.cs" />
+    <Compile Include="Query\Where\OpenBracketNode.cs" />
+    <Compile Include="Query\Where\CloseBracketNode.cs" />
+    <Compile Include="Query\ParameterManager.cs" />
+    <Compile Include="Query\WorkItemContext.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -83,5 +94,6 @@
     <Folder Include="Objects\" />
     <Folder Include="Metadata\" />
     <Folder Include="Query\" />
+    <Folder Include="Query\Where\" />
   </ItemGroup>
 </Project>

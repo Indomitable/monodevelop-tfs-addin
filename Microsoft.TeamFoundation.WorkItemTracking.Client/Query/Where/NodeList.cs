@@ -1,5 +1,5 @@
 //
-// Node.cs
+// NodeList.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,44 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Mono.Security.X509;
-using System.Security.Cryptography.X509Certificates;
-using System.Runtime.CompilerServices;
-using System.Web.Services.Protocols;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    enum NodeType
-    {
-        Undefined,
-        //System.State
-        Field,
-        //=,<,>,<=,>=,<>
-        Condition,
-        //@project
-        Parameter,
-        //'Active'
-        Constant,
-        //In clause ('Project1', @project) Could contains Constants or Parameters.
-        ArrayOfValues,
-        //AND,OR
-        Operator,
-        //(
-        OpenBracket,
-        //)
-        CloseBracket
-    }
-
-    class Node
-    {
-        public virtual NodeType NodeType { get { return NodeType.Undefined; } }
-    }
-
     class NodeList : List<Node>
     {
         public void RemoveFieldsAndValues()
@@ -248,49 +219,10 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             return list;
         }
 
-        private ConstantNode CreateConstantFromParameter(ParameterNode parameterNode, ParameterContext context)
-        {
-            if (string.Equals(parameterNode.ParameterName, "project"))
-            {
-                ConstantNode node = new ConstantNode(context.ProjectId.ToString());
-                node.DataType = ValueDataType.Number;
-                return node;
-            }
-            else if (string.Equals(parameterNode.ParameterName, "me"))
-            {
-                ConstantNode node = new ConstantNode("'" + context.Me + "'");
-                node.DataType = ValueDataType.String;
-                return node;
-            }
-            else if (parameterNode.ParameterName.IndexOf("today", StringComparison.OrdinalIgnoreCase) > -1)
-            {
-                //TODO: Do date time calc
-                ConstantNode node = new ConstantNode(DateTime.Now.ToString("s") + "Z");
-                node.DataType = ValueDataType.DateTime;
-                return node;
-            }
-            else
-            {
-                throw new Exception("Unknown parameter name");
-            }
-        }
-
-        public void ConvertAllParameters(ParameterContext context)
-        {
-            for (int i = 0; i < this.Count; i++)
-            {
-                if (this[i].NodeType == NodeType.Condition)
-                {
-                    var condition = (ConditionNode)this[i];
-                    if (condition.Right.NodeType == NodeType.Parameter)
-                    {
-                        var parameterNode = (ParameterNode)condition.Right;
-                        condition.Right = CreateConstantFromParameter(parameterNode, context);
-                    }
-                }
-            }
-        }
-
+        /// <summary>
+        /// Projects and Iterations are passed by Id not by Name.
+        /// </summary>
+        /// <param name="fields">Fields.</param>
         public void FixFields(FieldList fields)
         {
             for (int i = 0; i < this.Count; i++)
@@ -304,15 +236,47 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
                     if (field.Id == -42 || field.Id == -12 || field.Id == -7) //Project/Area to AreaId
                     {
                         fieldNode.Field = fields[-2].ReferenceName;
+                        condition.Condition = Condition.Under;
+                        //Fix Project Name to Project Id
+                        if (condition.Right.NodeType == NodeType.Constant)
+                        {
+                            var rightNode = (ConstantNode)condition.Right;
+                            if (rightNode.DataType == ValueDataType.String)
+                            {
+                                var project = CachedMetaData.Instance.Projects.FirstOrDefault(pr => string.Equals(pr.Name, Convert.ToString(rightNode.Value), StringComparison.OrdinalIgnoreCase));
+                                if (project != null)
+                                {
+                                    rightNode.DataType = ValueDataType.Number;
+                                    rightNode.Value = project.Id;
+                                }
+                            }
+                        }
+                        continue;
                     }
                     if (field.Id == -105) //Iteration Path to Iteration Id
                     {
                         fieldNode.Field = fields[-104].ReferenceName;
+                        condition.Condition = Condition.Under;
+                        //Fix Iteration Name to Iteration Id
+                        if (condition.Right.NodeType == NodeType.Constant)
+                        {
+                            var rightNode = (ConstantNode)condition.Right;
+                            if (rightNode.DataType == ValueDataType.String)
+                            {
+                                var iteration = CachedMetaData.Instance.Iterations.FirstOrDefault(it => string.Equals(it.Project.Name + '\\' + it.Name, Convert.ToString(rightNode.Value), StringComparison.OrdinalIgnoreCase));
+                                if (iteration != null)
+                                {
+                                    rightNode.DataType = ValueDataType.Number;
+                                    rightNode.Value = iteration.Id;
+                                }
+                            }
+                        }
+                        continue;
                     }
-                    if (field.Id == -1) //Authorized As to PersonId
-                    {
-                        fieldNode.Field = fields[-6].ReferenceName;
-                    }
+//                    if (field.Id == -1) //Authorized As to PersonId
+//                    {
+//                        fieldNode.Field = fields[-6].ReferenceName;
+//                    }
                 }
             }
         }
@@ -336,244 +300,4 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             return string.Join(" ", this.Select(n => n.ToString()));
         }
     }
-
-    class FieldNode : Node
-    {
-        public FieldNode(string field)
-        {
-            this.Field = field.Trim('[', ']');
-        }
-
-        public override NodeType NodeType { get { return NodeType.Field; } }
-
-        public string Field { get; set; }
-
-        public int FieldType { get; set; }
-
-        public override string ToString()
-        {
-            return "[" + Field + "]";
-        }
-    }
-
-    class ConditionNode : Node
-    {
-        public ConditionNode(string condition)
-        {
-            switch (condition)
-            {
-                case "=":
-                    Condition = Condition.Equals;
-                    break;
-                case "<":
-                    Condition = Condition.Less;
-                    break;
-                case "<=":
-                    Condition = Condition.LessOrEquals;
-                    break;
-                case ">":
-                    Condition = Condition.Greater;
-                    break;
-                case ">=":
-                    Condition = Condition.GreaterOrEquals;
-                    break;
-                case "<>":
-                    Condition = Condition.NotEquals;
-                    break;
-                default:
-                    if (string.Equals(condition, "in", StringComparison.OrdinalIgnoreCase))
-                        Condition = Condition.In;
-                    else if (string.Equals(condition, "under", StringComparison.OrdinalIgnoreCase))
-                        Condition = Condition.Under;
-                    else
-                        Condition = Condition.None;
-                    break;
-            }
-        }
-
-        public override NodeType NodeType { get { return NodeType.Condition; } }
-
-        public Node Left { get; set; }
-
-        public Condition Condition { get; set; }
-
-        public Node Right { get; set; }
-
-        public override string ToString()
-        {
-            string val;
-            switch (Condition)
-            {
-                case Condition.Equals:
-                    val = "=";
-                    break;
-                case Condition.Greater:
-                    val = ">";
-                    break;
-                case Condition.GreaterOrEquals:
-                    val = ">=";
-                    break;
-                case Condition.In:
-                    val = "in";
-                    break;
-                case Condition.Less:
-                    val = "<";
-                    break;
-                case Condition.LessOrEquals:
-                    val = "<=";
-                    break;
-                case Condition.NotEquals:
-                    val = "<>";
-                    break;
-                case Condition.Under:
-                    val = "Under";
-                    break;
-                default:
-                    val = "NONE";
-                    break;
-            }
-            if (Left != null && Right != null)
-                return Left + " " + val + " " + Right;
-            return val;
-        }
-    }
-
-    enum ValueDataType
-    {
-        String,
-        Number,
-        DateTime
-    }
-
-    class ConstantNode : Node
-    {
-        public ConstantNode(string value)
-        {
-            if (value.StartsWith("'", StringComparison.Ordinal))
-            {
-                Value = value.Trim('\'');
-                DataType = ValueDataType.String;
-            }
-            else
-            {
-                if (value.IndexOf(".", StringComparison.Ordinal) > -1)
-                {
-                    Value = Convert.ToDouble(value);
-                }
-                else
-                {
-                    Value = Convert.ToInt64(value);
-                }
-                DataType = ValueDataType.Number;
-            }
-        }
-        //        public ConstantNode(object value, ValueDataType type)
-        //        {
-        //            this.Value = value;
-        //            this.DataType = type;
-        //        }
-        public ValueDataType DataType { get; set; }
-
-        public override NodeType NodeType { get { return NodeType.Constant; } }
-
-        public object Value { get; set; }
-
-        public override string ToString()
-        {
-            if (DataType == ValueDataType.String)
-                return "'" + Value + "'";
-            return Convert.ToString(Value);
-        }
-    }
-
-    class ParameterNode : Node
-    {
-        public ParameterNode(string parameter)
-        {
-            this.ParameterName = parameter.TrimStart('@');
-        }
-
-        public override NodeType NodeType { get { return NodeType.Parameter; } }
-
-        public string ParameterName { get; set; }
-
-        public override string ToString()
-        {
-            return "@" + ParameterName;
-        }
-    }
-
-    class ArrayOfValues : Node
-    {
-        public ArrayOfValues(string word)
-        {
-            Values = new List<Node>();
-            if (string.IsNullOrEmpty(word))
-                return;
-            var arrayOfWords = word.Split(new []{ ',' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var w in arrayOfWords)
-            {
-                var trimmedWord = w.Trim();
-                if (trimmedWord.StartsWith("@", StringComparison.Ordinal))
-                    Values.Add(new ParameterNode(trimmedWord));
-                else
-                    Values.Add(new ConstantNode(trimmedWord));
-            }
-        }
-
-        public override NodeType NodeType { get { return NodeType.ArrayOfValues; } }
-
-        public List<Node> Values { get; set; }
-
-        public override string ToString()
-        {
-            return "(" + string.Join(", ", Values.Select(n => n.ToString())) + ")";
-        }
-    }
-
-    class OperatorNode : Node
-    {
-        public OperatorNode(string word)
-        {
-            switch (word.ToLowerInvariant())
-            {
-                case "and":
-                    Operator = Operator.And;
-                    break;
-                case "or":
-                    Operator = Operator.Or;
-                    break;
-            }
-        }
-
-        public override NodeType NodeType { get { return NodeType.Operator; } }
-
-        public Operator Operator { get; set; }
-
-        public override string ToString()
-        {
-            return Operator.ToString();
-        }
-    }
-
-    class OpenBracketNode : Node
-    {
-        public override NodeType NodeType { get { return NodeType.OpenBracket; } }
-
-        public override string ToString()
-        {
-            return "(";
-        }
-    }
-
-    class CloseBracketNode : Node
-    {
-        public override NodeType NodeType { get { return NodeType.CloseBracket; } }
-
-        public override string ToString()
-        {
-            return ")";
-        }
-    }
 }
-

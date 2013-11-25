@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// OperatorNode.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    class OperatorNode : Node
     {
-        public int Id { get; set; }
+        public OperatorNode(string word)
+        {
+            switch (word.ToLowerInvariant())
+            {
+                case "and":
+                    Operator = Operator.And;
+                    break;
+                case "or":
+                    Operator = Operator.Or;
+                    break;
+            }
+        }
 
-        public string Name { get; set; }
+        public override NodeType NodeType { get { return NodeType.Operator; } }
 
-        public Project Project { get; set; }
+        public Operator Operator { get; set; }
+
+        public override string ToString()
+        {
+            return Operator.ToString();
+        }
     }
 }
-

@@ -28,6 +28,7 @@ using NUnit.Framework;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System.Collections.Generic;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {

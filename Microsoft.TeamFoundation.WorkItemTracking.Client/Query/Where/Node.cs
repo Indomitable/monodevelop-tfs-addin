@@ -1,5 +1,5 @@
 //
-// Iteration.cs
+// Node.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,15 +24,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
 {
-    public class Iteration
+    class Node
     {
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-
-        public Project Project { get; set; }
+        public virtual NodeType NodeType { get { return NodeType.Undefined; } }
     }
 }
-
