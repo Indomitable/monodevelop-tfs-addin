@@ -415,7 +415,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("CheckIn");
@@ -430,14 +430,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 new XElement(MessageNs + "CheckinNote", string.Empty),
                 new XElement(MessageNs + "PolicyOverride", string.Empty)));
 
-            if (workItems != null && workItems.Count > 0)
-            {
-                msg.Add(new XElement(MessageNs + "checkinNotificationInfo",
-                    new XElement(MessageNs + "WorkItemInfo",
-                        workItems.Select(wi => new XElement(MessageNs + "CheckinNotificationWorkItemInfo", 
-                            new XElement(MessageNs + "Id", wi.Key), 
-                            new XElement(MessageNs + "CheckinAction", wi.Value))))));
-            }
             var response = invoker.InvokeResponse();
             //var result = invoker.MethodResultExtractor(response);
             var failures = FailuresExtractor(response);

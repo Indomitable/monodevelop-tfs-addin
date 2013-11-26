@@ -36,23 +36,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     public class WorkItemListWidget : VBox
     {
         private readonly ListView listView = new ListView();
-        private DataField<WorkItem> workItemField;
 
         public WorkItemListWidget()
         {
             this.PackStart(listView, true, true);
-            listView.RowActivated += OnWorkItemClicked;
         }
 
-        void OnWorkItemClicked(object sender, ListViewRowEventArgs e)
-        {
-            var store = (ListStore)listView.DataSource;
-            var workItem = store.GetValue(e.RowIndex, workItemField);
-            if (OnSelectWorkItem != null)
-                OnSelectWorkItem(workItem);
-        }
-
-        public void LoadQuery(StoredQuery query)
+        public void LoadQueryByPage(StoredQuery query)
         {
             listView.Columns.Clear();
             using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
@@ -65,7 +55,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     var firstItem = data[0];
                     List<IDataField> dataFields = new List<IDataField>();
                     var mapping = new Dictionary<Field, IDataField<object>>();
-                    foreach (var item in firstItem.WorkItemInfo.Keys)
+                    foreach (var item in firstItem.Keys)
                     {
                         var field = fields[item];
                         var dataField = new DataField<object>();
@@ -75,8 +65,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
                     if (dataFields.Any())
                     {
-                        workItemField = new DataField<WorkItem>();
-                        dataFields.Insert(0, workItemField);
                         var listStore = new ListStore(dataFields.ToArray());
                         foreach (var map in mapping)
                         {
@@ -86,11 +74,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         foreach (var workItem in data)
                         {
                             var row = listStore.AddRow();
-                            listStore.SetValue(row, workItemField, workItem);
+
                             foreach (var map in mapping)
                             {
                                 object value;
-                                if (workItem.WorkItemInfo.TryGetValue(map.Key.ReferenceName, out value))
+                                if (workItem.TryGetValue(map.Key.ReferenceName, out value))
                                 {
                                     listStore.SetValue(row, map.Value, value);
                                 }
@@ -104,9 +92,5 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 }
             }
         }
-
-        public delegate void WorkItemSelectedEventHandler(WorkItem workItem);
-
-        public event WorkItemSelectedEventHandler OnSelectWorkItem;
     }
 }

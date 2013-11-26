@@ -71,9 +71,6 @@
     <Compile Include="GUI\GetSpecVersionDialog.cs" />
     <Compile Include="GUI\WorkItemsView.cs" />
     <Compile Include="GUI\WorkItemListWidget.cs" />
-    <Compile Include="GUI\SelectWorkItemDialog.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetXwt.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetGtk.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

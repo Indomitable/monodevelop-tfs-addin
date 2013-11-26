@@ -42,7 +42,9 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="ClientService.cs" />
     <Compile Include="InternalMessage.cs" />
+    <Compile Include="WorkItem.cs" />
     <Compile Include="WorkItemStore.cs" />
+    <Compile Include="WorkItemType.cs" />
     <Compile Include="Enums\MetadataRowSetNames.cs" />
     <Compile Include="Objects\Hierarchy.cs" />
     <Compile Include="WorkItemManager.cs" />
@@ -76,9 +78,6 @@
     <Compile Include="Query\Where\CloseBracketNode.cs" />
     <Compile Include="Query\ParameterManager.cs" />
     <Compile Include="Query\WorkItemContext.cs" />
-    <Compile Include="Objects\WorkItemType.cs" />
-    <Compile Include="Objects\Action.cs" />
-    <Compile Include="Objects\WorkItem.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
