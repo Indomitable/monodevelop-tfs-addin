@@ -1,5 +1,5 @@
 //
-// TFSCommitDialogExtension.cs
+// WorkItemType.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,45 +23,25 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Xwt;
-using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using System;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
-    public class TFSCommitDialogExtension: CommitDialogExtension
+    public class WorkItemType
     {
-        TFSCommitDialogExtensionWidgetGtk widget;
+        [TableFieldName("WorkItemTypeID")]
+        public int Id { get; set; }
 
-        public TFSCommitDialogExtension()
-        {
-        }
-
-        public override bool Initialize(ChangeSet changeSet)
-        {
-            if (changeSet.Repository is TFSRepository)
-            {
-                widget = new TFSCommitDialogExtensionWidgetGtk();
-                this.Add(widget);
-                widget.Show();
-                this.Show();
-                return true;
-            }
-            else
-                return false;
-        }
-
-        public override bool OnBeginCommit(ChangeSet changeSet)
-        {
-
-            changeSet.ExtendedProperties["TFS.WorkItems"] = widget.WorkItems;
-            return true;
-        }
-
-        public override void OnEndCommit(ChangeSet changeSet, bool success)
-        {
-            base.OnEndCommit(changeSet, success);
-        }
+        [TableFieldName("NameConstantID")]
+        public int NameConstantId { get; set; }
+        //public Constant Name { get; set; }
+        [TableFieldName("ProjectID")]
+        public int ProjectId { get; set; }
+        //public Project Project { get; set; }
+        [TableFieldName("fDeleted")]
+        public bool IsDeleted { get; set; }
     }
 }
 

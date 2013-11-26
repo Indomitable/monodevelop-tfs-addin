@@ -1,5 +1,5 @@
 //
-// TFSCommitDialogExtension.cs
+// Action.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,45 +23,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Xwt;
-using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using System;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
-    public class TFSCommitDialogExtension: CommitDialogExtension
+    public class Action
     {
-        TFSCommitDialogExtensionWidgetGtk widget;
+        [TableFieldName("ActionID")]
+        public int Id { get; set; }
 
-        public TFSCommitDialogExtension()
-        {
-        }
+        [TableFieldName("Name")]
+        public string Name { get; set; }
 
-        public override bool Initialize(ChangeSet changeSet)
-        {
-            if (changeSet.Repository is TFSRepository)
-            {
-                widget = new TFSCommitDialogExtensionWidgetGtk();
-                this.Add(widget);
-                widget.Show();
-                this.Show();
-                return true;
-            }
-            else
-                return false;
-        }
-
-        public override bool OnBeginCommit(ChangeSet changeSet)
-        {
-
-            changeSet.ExtendedProperties["TFS.WorkItems"] = widget.WorkItems;
-            return true;
-        }
-
-        public override void OnEndCommit(ChangeSet changeSet, bool success)
-        {
-            base.OnEndCommit(changeSet, success);
-        }
+        [TableFieldName("WorkItemTypeID")]
+        public int WorkItemTypeId { get; set; }
+        //public WorkItemType WorkItemType { get; set; }
+        [TableFieldName("FromStateConstID")]
+        public int FromStateId { get; set; }
+        //public Constant FromState { get; set; }
+        [TableFieldName("ToStateConstID")]
+        public int ToStateId { get; set; }
+        //public Constant ToState { get; set; }
+        [TableFieldName("fDeleted")]
+        public bool IsDeleted { get; set; }
     }
 }
-

@@ -49,7 +49,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void Load(StoredQuery query)
         {
             this.ContentName = GettextCatalog.GetString("Work Items: " + query.QueryName);
-            widget.LoadQueryByPage(query);
+            widget.LoadQuery(query);
         }
 
         public override Widget Widget

@@ -87,14 +87,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public List<Failure> CheckIn(List<PendingChange> changes, string comment)
+        public List<Failure> CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             foreach (var change in changes)
             {
                 this.VersionControlService.UploadFile(this, change);
             }
 
-            var failures = this.VersionControlService.CheckIn(this, changes, comment);
+            var failures = this.VersionControlService.CheckIn(this, changes, comment, workItems);
             this.RefreshPendingChanges();
             return failures;
         }

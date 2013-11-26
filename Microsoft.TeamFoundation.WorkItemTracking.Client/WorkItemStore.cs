@@ -58,11 +58,11 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             return list;
         }
 
-        public List<Dictionary<string, object>> LoadByPage(IProgressMonitor progress)
+        public List<WorkItem> LoadByPage(IProgressMonitor progress)
         {
             var ids = this.clientService.GetWorkItemIds(this.query, CachedMetaData.Instance.Fields);
             int pages = (int)Math.Ceiling((double)ids.Count / (double)50);
-            var result = new List<Dictionary<string, object>>();
+            var result = new List<WorkItem>();
             progress.BeginTask("Loading WorkItems", pages);
             for (int i = 0; i < pages; i++)
             {
