@@ -115,7 +115,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         public List<Hierarchy> GetHierarchy()
         {
-            return GetMetadata<Hierarchy>(MetadataRowSetNames.Hierarchy);
+            return GetMetadata<Hierarchy>(MetadataRowSetNames.Hierarchy).Where(h => !h.IsDeleted).ToList();
         }
 
         public List<Field> GetFields()
@@ -125,7 +125,17 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 
         public List<Constant> GetConstants()
         {
-            return this.GetMetadata<Constant>(MetadataRowSetNames.Constants);
+            return this.GetMetadata<Constant>(MetadataRowSetNames.Constants).Where(c => !c.IsDeleted).ToList();
+        }
+
+        public List<WorkItemType> GetWorkItemTypes()
+        {
+            return this.GetMetadata<WorkItemType>(MetadataRowSetNames.WorkItemTypes).Where(t => !t.IsDeleted).ToList();
+        }
+
+        public List<Objects.Action> GetActions()
+        {
+            return this.GetMetadata<Objects.Action>(MetadataRowSetNames.Actions).Where(t => !t.IsDeleted).ToList();
         }
 
         public List<StoredQuery> GetStoredQueries(Project project)
@@ -194,7 +204,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             var response = invoker.InvokeResponse();
             var extractor = new TableDictionaryExtractor(response, "WorkItemInfo");
             var workItem = new WorkItem();
-            workItem.Id = id;
+            //workItem.Id = id;
             var data = extractor.Extract().Single();
             workItem.WorkItemInfo = new Dictionary<string, object>();
             foreach (var item in data)
@@ -204,7 +214,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             return workItem;
         }
 
-        public List<Dictionary<string, object>> PageWorkitemsByIds(StoredQuery query, List<int> ids)
+        public List<WorkItem> PageWorkitemsByIds(StoredQuery query, List<int> ids)
         {
             if (ids.Count > 50)
                 throw new Exception("Page only by 50");
@@ -213,12 +223,22 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             msg.Header.Add(GetHeaderElement());
             msg.Body.Add(new XElement(MessageNs + "ids", ids.Select(i => new XElement(MessageNs + "int", i))));
             var columns = query.GetSelectColumns();
-            var fields = CachedMetaData.Instance.Fields.GetFieldsByNames(columns).ToArray();
+            var fields = CachedMetaData.Instance.Fields.GetFieldsByNames(columns);
+            if (fields["System.Id"] == null) //If No id Exists add it
+            {
+                fields.Insert(0, CachedMetaData.Instance.Fields["System.Id"]);
+            }
             msg.Body.Add(new XElement(MessageNs + "columns", fields.Where(f => !f.IsLongField).Select(c => new XElement(MessageNs + "string", c.ReferenceName))));
             msg.Body.Add(new XElement(MessageNs + "longTextColumns", fields.Where(f => f.IsLongField).Select(c => new XElement(MessageNs + "int", c.Id))));
             var response = invoker.InvokeResponse();
             var extractor = new TableDictionaryExtractor(response, "Items");
-            return extractor.Extract();
+            var data = extractor.Extract();
+            List<WorkItem> list = new List<WorkItem>();
+            foreach (var item in data)
+            {
+                list.Add(new WorkItem { WorkItemInfo = item });
+            }
+            return list;
         }
     }
 }

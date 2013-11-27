@@ -140,6 +140,7 @@
     <Compile Include="RepositoryConstants.cs" />
     <Compile Include="Enums\ResolutionType.cs" />
     <Compile Include="Objects\ResolveResult.cs" />
+    <Compile Include="Enums\WorkItemCheckinAction.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

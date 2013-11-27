@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
 {
@@ -130,12 +131,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Objects
             }
         }
 
-        public IEnumerable<Field> GetFieldsByNames(List<string> names)
+        public FieldList GetFieldsByNames(List<string> names)
         {
-            foreach (var name in names)
-            {
-                yield return this[name];
-            }
+            return new FieldList(names.Select(n => this[n]));
         }
     }
 }

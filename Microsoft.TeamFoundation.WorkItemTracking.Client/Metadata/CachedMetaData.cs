@@ -48,6 +48,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
             ExtractProjects(hierarchy);
             this.Fields = new FieldList(clientService.GetFields());
             this.Constants = clientService.GetConstants();
+            ExtractWorkItemTypes(clientService);
+            ExtractActions(clientService);
         }
 
         private void ExtractProjects(List<Hierarchy> hierarchy)
@@ -76,6 +78,31 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
             }
         }
 
+        private void ExtractWorkItemTypes(ClientService clientService)
+        {
+            var types = clientService.GetWorkItemTypes();
+//            foreach (var type in types)
+//            {
+//                var type1 = type;
+//                type.Project = this.Projects.Single(p => p.Id == type1.ProjectId);
+//                type.Name = this.Constants.Single(c => c.Id == type1.NameConstantId);
+//            }
+            WorkItemTypes = types;
+        }
+
+        private void ExtractActions(ClientService clientService)
+        {
+            var actions = clientService.GetActions();
+//            foreach (var action in actions)
+//            {
+//                var action1 = action;
+//                action.WorkItemType = this.WorkItemTypes.Single(t => t.Id == action1.WorkItemTypeId);
+//                action.FromState = this.Constants.Single(c => c.Id == action1.FromStateId);
+//                action.ToState = this.Constants.Single(c => c.Id == action1.ToStateId);
+//            }
+            Actions = actions;
+        }
+
         public FieldList Fields { get; set; }
 
         public List<Constant> Constants { get; set; }
@@ -83,6 +110,10 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata
         public List<Project> Projects { get; set; }
 
         public List<Iteration> Iterations { get; set; }
+
+        public List<WorkItemType> WorkItemTypes { get; set; }
+
+        public List<Microsoft.TeamFoundation.WorkItemTracking.Client.Objects.Action> Actions { get; set; }
     }
 }
 

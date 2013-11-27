@@ -252,7 +252,10 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 var workspace1 = workspace;
                 var changes = workspace.Key.PendingChanges.Where(pc => workspace1.Any(wi => string.Equals(pc.LocalItem, wi.LocalPath))).ToList();
-                var failures = workspace.Key.CheckIn(changes, changeSet.GlobalComment);
+                Dictionary<int, WorkItemCheckinAction> workItems = null;
+                if (changeSet.ExtendedProperties.Contains("TFS.WorkItems"))
+                    workItems = (Dictionary<int, WorkItemCheckinAction>)changeSet.ExtendedProperties["TFS.WorkItems"];
+                var failures = workspace.Key.CheckIn(changes, changeSet.GlobalComment, workItems);
                 if (failures.Any())
                 {
                     MessageService.ShowError("Commit failed!", string.Join(Environment.NewLine, failures.Select(f => f.Message)));
