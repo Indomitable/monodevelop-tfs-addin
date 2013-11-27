@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.0</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
@@ -11,37 +11,10 @@
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
     <ReleaseVersion>0.8</ReleaseVersion>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
-      </CustomCommands>
-    </CustomCommands>
-    <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DBus</DefineConstants>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
+    <Optimize>true</Optimize>
+    <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
-    <DefineConstants>DBus</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug - No Dbus|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
-      </CustomCommands>
-    </CustomCommands>
-    <ConsolePause>false</ConsolePause>
-    <DefineConstants>NoDBus</DefineConstants>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -83,43 +56,30 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Core">
-      <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="MonoDevelop.Ide">
-      <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Ide.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="MonoDevelop.VersionControl">
-      <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <Package>monodevelop-core-addins</Package>
     </Reference>
-    <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="gtk-sharp" />
+    <Reference Include="glib-sharp" />
+    <Reference Include="atk-sharp" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xwt">
-      <HintPath>..\External\monodevelop\main\build\bin\Xwt.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory">
-      <HintPath>..\External\monodevelop\main\build\bin\ICSharpCode.NRefactory.dll</HintPath>
+      <Package>monodevelop</Package>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="gdk-sharp" />
     <Reference Include="Mono.TextEditor">
-      <HintPath>..\External\monodevelop\main\build\bin\Mono.TextEditor.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup Condition=" '$(DefineConstants)' == 'DBus' ">
-    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5">
-      <Private>False</Private>
+      <Package>monodevelop</Package>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -130,12 +90,6 @@
     <Folder Include="Infrastructure\Objects\" />
     <Folder Include="Icons\" />
   </ItemGroup>
-  <Target Name="AfterBuild">
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.VersionControl.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\Microsoft.TeamFoundation.WorkItemTracking.Client.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
-  </Target>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
