@@ -2,6 +2,6 @@
 	<Project>
 		<AddinFile>Output/MonoDevelop.VersionControl.TFS.dll</AddinFile>
 		<BuildFile>MonoDevelop.VersionControl.TFS.sln</BuildFile>
-		<BuildConfiguration>Debug</BuildConfiguration>
+		<BuildConfiguration>Release</BuildConfiguration>
 	</Project>
 </AddinProject>
