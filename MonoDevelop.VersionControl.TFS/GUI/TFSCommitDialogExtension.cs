@@ -31,30 +31,27 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public class TFSCommitDialogExtension: CommitDialogExtension
     {
-        TFSCommitDialogExtensionWidgetGtk widget;
-
+        //        TFSCommitDialogExtensionWidgetGtk widget;
         public TFSCommitDialogExtension()
         {
         }
-
-        public override bool Initialize(ChangeSet changeSet)
-        {
-            if (changeSet.Repository is TFSRepository)
-            {
-                widget = new TFSCommitDialogExtensionWidgetGtk();
-                this.Add(widget);
-                widget.Show();
-                this.Show();
-                return true;
-            }
-            else
-                return false;
-        }
-
+        //        public override bool Initialize(ChangeSet changeSet)
+        //        {
+        //            if (changeSet.Repository is TFSRepository)
+        //            {
+        //                widget = new TFSCommitDialogExtensionWidgetGtk();
+        //                this.Add(widget);
+        //                widget.Show();
+        //                this.Show();
+        //                return true;
+        //            }
+        //            else
+        //                return false;
+        //        }
         public override bool OnBeginCommit(ChangeSet changeSet)
         {
 
-            changeSet.ExtendedProperties["TFS.WorkItems"] = widget.WorkItems;
+//            changeSet.ExtendedProperties["TFS.WorkItems"] = widget.WorkItems;
             return true;
         }
 
