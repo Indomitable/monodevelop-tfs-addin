@@ -118,8 +118,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("DeleteWorkspace");
-            msg.Add(new XElement("workspaceName", workspaceName));
-            msg.Add(new XElement("ownerName", ownerName));
+            msg.Add(new XElement(MessageNs + "workspaceName", workspaceName));
+            msg.Add(new XElement(MessageNs + "ownerName", ownerName));
             invoker.InvokeResult();
         }
 
