@@ -32,7 +32,7 @@ using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class VersionControlPath
+    public sealed class VersionControlPath : IEquatable<VersionControlPath>, IComparable<VersionControlPath>
     {
         public const string RootFolder = "$/";
         public const char Separator = '/';
@@ -94,5 +94,58 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             return this.path;
         }
+
+        #region Equal
+
+        #region IComparable<VersionControlPath> Members
+
+        public int CompareTo(VersionControlPath other)
+        {
+            return string.Compare(path, other.path, StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
+
+        #region IEquatable<VersionControlPath> Members
+
+        public bool Equals(VersionControlPath other)
+        {
+            if (ReferenceEquals(null, other))
+                return false;
+            if (ReferenceEquals(this, other))
+                return true;
+            return string.Equals(other.path, path, StringComparison.OrdinalIgnoreCase);
+        }
+
+        #endregion
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj))
+                return false;
+            if (ReferenceEquals(this, obj))
+                return true;
+            VersionControlPath cast = obj as VersionControlPath;
+            if (cast == null)
+                return false;
+            return Equals(cast);
+        }
+
+        public override int GetHashCode()
+        {
+            return path.GetHashCode();
+        }
+
+        public static bool operator ==(VersionControlPath left, VersionControlPath right)
+        {
+            return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
+        }
+
+        public static bool operator !=(VersionControlPath left, VersionControlPath right)
+        {
+            return !(left == right);
+        }
+
+        #endregion Equal
     }
 }

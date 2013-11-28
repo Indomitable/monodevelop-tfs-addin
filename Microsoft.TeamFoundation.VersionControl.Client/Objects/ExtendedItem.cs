@@ -35,7 +35,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class ExtendedItem : IItem
+    public sealed class ExtendedItem : BaseItem
     {
         //          <ExtendedItem lver="int" did="int" latest="int" type="Any or Folder or File" enc="int" itemid="int" local="string" titem="string" sitem="string" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" chgEx="int" ochg="boolean" lock="None or Checkin or CheckOut or Unchanged" lowner="string" lownerdisp="string" date="dateTime">
         //            <IsBranch>boolean</IsBranch>
@@ -155,8 +155,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public LockLevel LockStatus { get; private set; }
 
-        public ItemType ItemType { get; private set; }
-
         public ChangeType ChangeType { get; private set; }
 
         public int DeletionId { get; private set; }
@@ -181,7 +179,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public DateTime CheckinDate { get; private set; }
 
-        public VersionControlPath ServerPath { get { return TargetServerItem; } }
+        public override VersionControlPath ServerPath { get { return TargetServerItem; } }
 
         public bool IsBranch { get; private set; }
     }

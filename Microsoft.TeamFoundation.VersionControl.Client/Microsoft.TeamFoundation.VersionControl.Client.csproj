@@ -116,7 +116,6 @@
     <Compile Include="Enums\ItemType.cs" />
     <Compile Include="Objects\ExtendedItem.cs" />
     <Compile Include="Objects\ItemSpec.cs" />
-    <Compile Include="Objects\IItem.cs" />
     <Compile Include="Objects\Item.cs" />
     <Compile Include="Objects\ItemSet.cs" />
     <Compile Include="Objects\LabelItemSpec.cs" />
@@ -141,6 +140,7 @@
     <Compile Include="Enums\ResolutionType.cs" />
     <Compile Include="Objects\ResolveResult.cs" />
     <Compile Include="Enums\WorkItemCheckinAction.cs" />
+    <Compile Include="Objects\BaseItem.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

@@ -163,7 +163,7 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        private VersionInfo[] GetItemsVersionInfo(FilePath[] paths, bool getRemoteStatus, RecursionType recursive)
+        private VersionInfo[] GetItemsVersionInfo(List<FilePath> paths, bool getRemoteStatus, RecursionType recursive)
         {
             List<VersionInfo> infos = new List<VersionInfo>();
             Dictionary<Workspace, List<ItemSpec>> workspaceItems = new Dictionary<Workspace, List<ItemSpec>>();
@@ -184,7 +184,7 @@ namespace MonoDevelop.VersionControl.TFS
                 }
             }
             var items = workspaceItems.SelectMany(x => x.Key.GetExtendedItems(x.Value, DeletedState.Any, ItemType.Any)).ToArray();
-            foreach (var item in items.Where(i => i.IsInWorkspace))
+            foreach (var item in items.Where(i => i.IsInWorkspace).Distinct())
             {
                 infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
             }
@@ -218,13 +218,22 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override IEnumerable<VersionInfo> OnGetVersionInfo(IEnumerable<FilePath> paths, bool getRemoteStatus)
         {
-            return GetItemsVersionInfo(paths.ToArray(), getRemoteStatus, RecursionType.None);
+            return GetItemsVersionInfo(paths.ToList(), getRemoteStatus, RecursionType.None);
         }
 
         protected override VersionInfo[] OnGetDirectoryVersionInfo(FilePath localDirectory, bool getRemoteStatus, bool recursive)
         {
+            var solutions = IdeApp.Workspace.GetAllSolutions().Where(s => s.BaseDirectory.IsChildPathOf(localDirectory) || s.BaseDirectory == localDirectory);
+            List<FilePath> paths = new List<FilePath>();
+            paths.Add(localDirectory);
+            foreach (var solution in solutions)
+            {
+                var sfiles = solution.GetItemFiles(true);
+                paths.AddRange(sfiles.Where(f => f != localDirectory));
+            }
+
             RecursionType recursionType = recursive ? RecursionType.Full : RecursionType.OneLevel;
-            return GetItemsVersionInfo(new [] { localDirectory }, getRemoteStatus, recursionType);
+            return GetItemsVersionInfo(paths, getRemoteStatus, recursionType);
         }
 
         protected override Repository OnPublish(string serverPath, FilePath localPath, FilePath[] files, string message, IProgressMonitor monitor)

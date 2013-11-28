@@ -35,7 +35,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class Item: IEquatable<Item>, IComparable<Item>, IItem
+    public sealed class Item: BaseItem
     {
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
@@ -107,8 +107,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public int ContentLength { get; private set; }
 
-        public ItemType ItemType { get; private set; }
-
         public DateTime CheckinDate { get; private set; }
 
         public int ChangesetId { get; private set; }
@@ -125,7 +123,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public string ServerItem { get; private set; }
 
-        public VersionControlPath ServerPath { get { return ServerItem; } }
+        public override VersionControlPath ServerPath { get { return ServerItem; } }
 
         public string ShortName
         {
@@ -136,60 +134,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         }
 
         public bool IsBranch { get; private set; }
-
-        #region Equal
-
-        #region IComparable<Item> Members
-
-        public int CompareTo(Item other)
-        {
-            return string.Compare(ServerItem, other.ServerItem, StringComparison.Ordinal);
-        }
-
-        #endregion
-
-        #region IEquatable<Item> Members
-
-        public bool Equals(Item other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return string.Equals(other.ServerItem, ServerItem, StringComparison.OrdinalIgnoreCase);
-        }
-
-        #endregion
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            Item cast = obj as Item;
-            if (cast == null)
-                return false;
-            return Equals(cast);
-        }
-
-        public override int GetHashCode()
-        {
-            return ServerItem.GetHashCode();
-        }
-
-        public static bool operator ==(Item left, Item right)
-        {
-            return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
-        }
-
-        public static bool operator !=(Item left, Item right)
-        {
-            return !(left == right);
-        }
-
-        #endregion Equal
-
     }
 }
 
