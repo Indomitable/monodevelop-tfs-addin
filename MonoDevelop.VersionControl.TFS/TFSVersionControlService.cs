@@ -87,8 +87,11 @@ namespace MonoDevelop.VersionControl.TFS
                     XDocument doc = XDocument.Load(file);
                     foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                     {
-                        var password = CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
-                        var server = TeamFoundationServer.FromLocalXml(serverElement, password);
+                        var isPasswordSavedInXml = serverElement.Attribute("Password") != null;
+                        var password = isPasswordSavedInXml ? serverElement.Attribute("Password").Value : CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
+                        if (password == null)
+                            throw new Exception("TFS Addin: No Password found for TFS server: " + serverElement.Attribute("Name").Value);
+                        var server = TeamFoundationServer.FromLocalXml(serverElement, password, isPasswordSavedInXml);
                         if (server != null)
                             _registredServers.Add(server);
                     }
@@ -151,7 +154,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public event Action OnServersChange;
 
-        private void RaiseServersChange()
+        public void RaiseServersChange()
         {
             if (OnServersChange != null)
             {

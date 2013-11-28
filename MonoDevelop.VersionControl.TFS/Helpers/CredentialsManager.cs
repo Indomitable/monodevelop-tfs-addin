@@ -147,18 +147,25 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
 
         public static string GetPassword(Uri url)
         {
-            if (Platform.IsMac || Platform.IsWindows)
+            try
             {
-                return PasswordService.GetWebPassword(url);
-            }
-            else //If Linux
-            {
-#if DBus
-                if (IsRunningKDE)
+                if (Platform.IsMac || Platform.IsWindows)
                 {
-                    return LoadFromKWallet(url);
+                    return PasswordService.GetWebPassword(url);
                 }
+                else //If Linux
+                {
+#if DBus
+                    if (IsRunningKDE)
+                    {
+                        return LoadFromKWallet(url);
+                    }
 #endif
+                }
+            }
+            catch
+            {
+                return null;
             }
             return null;
         }
