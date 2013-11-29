@@ -42,7 +42,6 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
     {
         private class ClientServiceResolver : IServiceResolver
         {
-
             #region IServiceResolver implementation
 
             public string Id
@@ -62,7 +61,6 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             }
 
             #endregion
-
         }
 
         #region implemented abstract members of TFSService
@@ -239,6 +237,38 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
                 list.Add(new WorkItem { WorkItemInfo = item });
             }
             return list;
+        }
+
+        public void Associate(int workItemId, int changeSet, string comment)
+        {
+            var workItem = GetWorkItem(workItemId);
+            var revision = Convert.ToInt32(workItem.WorkItemInfo["System.Rev"]);
+            string historyMsg = string.Format("Associated with changeset {0}.", changeSet);
+            string changeSetLink = "vstfs:///VersionControl/Changeset/" + changeSet;
+            string oneLineComment = comment.Replace(Environment.NewLine, " ").Substring(0, 120);
+
+            var invoker = new SoapInvoker(this);
+            var msg = invoker.CreateEnvelope("Update", headerName);
+            msg.Header.Add(GetHeaderElement());
+
+            XNamespace packageNs = XNamespace.Get("");
+            msg.Body.Add(new XElement(MessageNs + "package",
+                new XElement(packageNs + "Package", new XAttribute("Product", this.Url.ToString()),
+                    new XElement("UpdateWorkItem", new XAttribute("ObjectType", "WorkItem"), new XAttribute("Revision", revision), new XAttribute("WorkItemID", workItemId),
+                        new XElement("ComputedColumns", 
+                            new XElement("ComputedColumn", new XAttribute("Column", "System.RevisedDate")),
+                            new XElement("ComputedColumn", new XAttribute("Column", "System.ChangedDate")),
+                            new XElement("ComputedColumn", new XAttribute("Column", "System.PersonId")),
+                            new XElement("ComputedColumn", new XAttribute("Column", "System.AuthorizedDate"))),
+                        new XElement("InsertText", new XAttribute("FieldDisplayName", "History"), new XAttribute("FieldName", "System.History"), historyMsg),
+                        new XElement("InsertResourceLink", new XAttribute("Comment", oneLineComment), new XAttribute("FieldName", "System.BISLinks"), new XAttribute("LinkType", "Fixed in Changeset"), new XAttribute("Location", changeSetLink))
+                    ))));
+            invoker.InvokeResponse();
+        }
+
+        public void Resolve(int workItemId, int changeSet, string comment)
+        {
+            throw new NotImplementedException();
         }
     }
 }

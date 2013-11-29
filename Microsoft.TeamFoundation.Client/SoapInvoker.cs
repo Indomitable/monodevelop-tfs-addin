@@ -102,19 +102,34 @@ namespace Microsoft.TeamFoundation.Client
             request.ContentType = "text/xml; charset=utf-8";
             request.Headers["SOAPAction"] = messagegNs.NamespaceName.TrimEnd('/') + '/' + this.methodName;
             this.document.Save(request.GetRequestStream());
-            using (var response = (HttpWebResponse)request.GetResponse())
+            try
             {
-                if (response.StatusCode != HttpStatusCode.OK)
+                using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    using (StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding(false), false))
+                    if (response.StatusCode != HttpStatusCode.OK)
                     {
-                        throw new Exception("Error!!!\n" + sr.ReadToEnd());
+                        using (StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding(false), false))
+                        {
+                            throw new Exception("Error!!!\n" + sr.ReadToEnd());
+                        }
                     }
+                    else
+                    {
+                        var resultDocument = XDocument.Load(response.GetResponseStream());
+                        return resultDocument.Root.Element(soapNs + "Body").Element(this.messagegNs + (this.methodName + "Response"));
+                    }
+                }
+            }
+            catch (WebException wex)
+            {
+                if (wex.Response.ContentType.IndexOf("xml", StringComparison.OrdinalIgnoreCase) > -1)
+                {
+                    XDocument doc = XDocument.Load(wex.Response.GetResponseStream());
+                    throw new Exception(doc.ToString()); 
                 }
                 else
                 {
-                    var resultDocument = XDocument.Load(response.GetResponseStream());
-                    return resultDocument.Root.Element(soapNs + "Body").Element(this.messagegNs + (this.methodName + "Response"));
+                    throw;
                 }
             }
         }

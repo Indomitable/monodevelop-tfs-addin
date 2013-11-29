@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
@@ -74,6 +75,24 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             var list = clientService.GetStoredQueries(project).Where(q => string.Equals(WorkItemsContext.MySID, q.Owner) && !q.IsDeleted).ToList();
             list.ForEach(sq => sq.Collection = this.collection);
             return list;
+        }
+
+        public void UpdateWorkItems(int changeSet, Dictionary<int, WorkItemCheckinAction> workItems, string comment)
+        {
+            foreach (var workItem in workItems)
+            {
+                switch (workItem.Value)
+                {
+                    case WorkItemCheckinAction.Associate:
+                        this.clientService.Associate(workItem.Key, changeSet, comment);
+                        break;
+                    case WorkItemCheckinAction.Resolve:
+                        this.clientService.Resolve(workItem.Key, changeSet, comment);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
     }
 }

@@ -139,8 +139,8 @@
     <Compile Include="RepositoryConstants.cs" />
     <Compile Include="Enums\ResolutionType.cs" />
     <Compile Include="Objects\ResolveResult.cs" />
-    <Compile Include="Enums\WorkItemCheckinAction.cs" />
     <Compile Include="Objects\BaseItem.cs" />
+    <Compile Include="Objects\CheckInResult.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
@@ -150,6 +150,10 @@
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
       <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
       <Name>Microsoft.TeamFoundation.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj">
+      <Project>{D0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
+      <Name>Microsoft.TeamFoundation.WorkItemTracking.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -34,7 +34,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class VersionControlPath : IEquatable<VersionControlPath>, IComparable<VersionControlPath>
     {
-        public const string RootFolder = "$/";
+        public static readonly string RootFolder = "$/";
         public const char Separator = '/';
         private readonly string[] pathParts;
         private readonly string path;
@@ -42,7 +42,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public VersionControlPath ParentPath
         { 
             get
-            { 
+            {
+                if (this == RootFolder)
+                    return null;
                 string[] parentPath = new string[pathParts.Length - 1]; 
                 Array.Copy(pathParts, 0, parentPath, 0, pathParts.Length - 1);
                 return RootFolder + string.Join(Separator.ToString(), parentPath); 
@@ -54,7 +56,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             if (!IsServerItem(path))
                 throw new Exception("Not a server path");
             this.path = path;
-            this.pathParts = path.Split(Separator).Skip(1).ToArray();
+            if (!string.Equals(path, RootFolder, StringComparison.Ordinal))
+                this.pathParts = path.Split(Separator).Skip(1).ToArray();
+            else
+                this.pathParts = new string[0];
         }
 
         public string ItemName
@@ -99,6 +104,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             if (other == null)
                 return false;
+            if (other == RootFolder)
+                return true;
             if (other == this)
                 return true;
             bool isChild = true;

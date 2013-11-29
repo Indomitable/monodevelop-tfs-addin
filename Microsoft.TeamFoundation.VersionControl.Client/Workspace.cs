@@ -37,6 +37,8 @@ using MonoDevelop.Core;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
+using Microsoft.TeamFoundation.WorkItemTracking.Client;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -86,16 +88,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        public List<Failure> CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             foreach (var change in changes)
             {
                 this.VersionControlService.UploadFile(this, change);
             }
-
-            var failures = this.VersionControlService.CheckIn(this, changes, comment, workItems);
+            var result = this.VersionControlService.CheckIn(this, changes, comment, workItems);
+            WorkItemManager wm = new WorkItemManager(this.ProjectCollection);
+            wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
             this.RefreshPendingChanges();
-            return failures;
+            ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
+            foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
+            {
+                MakeFileReadOnly(file);
+            }
+            return result;
         }
 
         #region Pending Changes
@@ -500,12 +508,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         internal void MakeFileReadOnly(string path)
         {
-            File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.ReadOnly);
+            if (File.Exists(path))
+                File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.ReadOnly);
         }
 
         internal void MakeFileWritable(string path)
         {
-            File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
+            if (File.Exists(path))
+                File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
         }
 
         internal void UnsetDirectoryAttributes(string path)

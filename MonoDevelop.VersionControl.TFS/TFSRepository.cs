@@ -35,6 +35,7 @@ using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -264,10 +265,10 @@ namespace MonoDevelop.VersionControl.TFS
                 Dictionary<int, WorkItemCheckinAction> workItems = null;
                 if (changeSet.ExtendedProperties.Contains("TFS.WorkItems"))
                     workItems = (Dictionary<int, WorkItemCheckinAction>)changeSet.ExtendedProperties["TFS.WorkItems"];
-                var failures = workspace.Key.CheckIn(changes, changeSet.GlobalComment, workItems);
-                if (failures.Any())
+                var result = workspace.Key.CheckIn(changes, changeSet.GlobalComment, workItems);
+                if (result.Failures != null && result.Failures.Any())
                 {
-                    MessageService.ShowError("Commit failed!", string.Join(Environment.NewLine, failures.Select(f => f.Message)));
+                    MessageService.ShowError("Commit failed!", string.Join(Environment.NewLine, result.Failures.Select(f => f.Message)));
                     ResolveConflictsView.Open(this, workspace1.Select(w => w.LocalPath).ToList());
                     return;
                 }

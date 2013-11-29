@@ -26,9 +26,9 @@
 using System;
 using Gtk;
 using MonoDevelop.Core;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
 using System.Collections.Generic;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -67,11 +67,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             cellAction.Editable = true;
             cellAction.Model = checkinActions;
             cellAction.TextColumn = 0;
-            cellAction.HasEntry = true;
+            cellAction.HasEntry = false;
             cellAction.Edited += OnActionChanged;
-            checkinActions.AppendValues(WorkItemCheckinAction.None.ToString());
+            //checkinActions.AppendValues(WorkItemCheckinAction.None.ToString());
             checkinActions.AppendValues(WorkItemCheckinAction.Associate.ToString());
-            checkinActions.AppendValues(WorkItemCheckinAction.Resolve.ToString());
+            //checkinActions.AppendValues(WorkItemCheckinAction.Resolve.ToString());
 
             workItemsView.AppendColumn(idColumn);
             workItemsView.AppendColumn(titleColumn);
@@ -127,7 +127,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     {
                         title = Convert.ToString(workItem.WorkItemInfo["System.Title"]);
                     }
-                    workItemStore.AppendValues(workItem.Id, title, "Resolve");
+                    workItemStore.AppendValues(workItem.Id, title, "Associate");
                     removeButton.Sensitive = true;
                 };
                 selectWorkItemDialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow));

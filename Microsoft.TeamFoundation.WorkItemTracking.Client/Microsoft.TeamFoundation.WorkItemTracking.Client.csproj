@@ -79,6 +79,7 @@
     <Compile Include="Objects\WorkItemType.cs" />
     <Compile Include="Objects\Action.cs" />
     <Compile Include="Objects\WorkItem.cs" />
+    <Compile Include="Enums\WorkItemCheckinAction.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

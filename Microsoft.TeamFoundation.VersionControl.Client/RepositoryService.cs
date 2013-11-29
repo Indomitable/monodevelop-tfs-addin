@@ -33,6 +33,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using SoapInvoker = Microsoft.TeamFoundation.Client.SoapInvoker;
 using Microsoft.TeamFoundation.Client.Services;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -414,7 +415,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        internal CheckInResult CheckIn(Workspace workspace, List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("CheckIn");
@@ -438,9 +439,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                             new XElement(MessageNs + "CheckinAction", wi.Value))))));
             }
             var response = invoker.InvokeResponse();
-            //var result = invoker.MethodResultExtractor(response);
-            var failures = FailuresExtractor(response);
-            return failures;
+            var resultElement = invoker.MethodResultExtractor(response);
+
+            var result = CheckInResult.FromXml(resultElement);
+            result.Failures = FailuresExtractor(response);
+            return result;
         }
 
         internal List<Conflict> QueryConflicts(Workspace workspace, List<ItemSpec> items)
