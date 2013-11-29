@@ -31,9 +31,9 @@ using System.Xml.Linq;
 using System;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using System.Net;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -70,6 +70,7 @@ namespace MonoDevelop.VersionControl.TFS
                 doc.Root.Add(new XElement("Workspaces", _activeWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
                 if (this.MergeToolInfo != null)
                     doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
+                doc.Root.Add(new XElement("CheckOutLockLevel", (int)CheckOutLockLevel));
                 doc.Save(file);
                 file.Close();
             }
@@ -107,6 +108,14 @@ namespace MonoDevelop.VersionControl.TFS
                             CommandName = mergeToolElement.Attribute("Command").Value,
                             Arguments = mergeToolElement.Attribute("Arguments").Value,
                         };
+                    }
+                    if (doc.Root.Element("CheckOutLockLevel") == null)
+                    {
+                        checkOutLockLevel = CheckOutLockLevel.None;
+                    }
+                    else
+                    {
+                        checkOutLockLevel = (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
                     }
                     file.Close();
                 }
@@ -176,5 +185,17 @@ namespace MonoDevelop.VersionControl.TFS
         }
 
         public MergeToolInfo MergeToolInfo { get; set; }
+
+        private CheckOutLockLevel checkOutLockLevel;
+
+        public CheckOutLockLevel CheckOutLockLevel
+        {
+            get { return checkOutLockLevel; }
+            set
+            {
+                checkOutLockLevel = value;
+                StorePrefs();
+            }
+        }
     }
 }

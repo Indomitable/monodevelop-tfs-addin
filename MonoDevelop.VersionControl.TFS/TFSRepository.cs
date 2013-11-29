@@ -36,6 +36,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -518,7 +519,8 @@ namespace MonoDevelop.VersionControl.TFS
             this.ClearCachedVersionInfo(path);
             var workspace = this.GetWorkspaceByLocalPath(path);
             workspace.Get(new GetRequest(path, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);
-            workspace.PendEdit(new List<FilePath> { path }, RecursionType.None);
+            var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
+            FailuresDisplayDialog.ShowFailures(failures);
             MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, path, false));
             FileService.NotifyFileChanged(path);
         }

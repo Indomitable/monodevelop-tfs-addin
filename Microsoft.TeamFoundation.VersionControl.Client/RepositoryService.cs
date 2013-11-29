@@ -317,14 +317,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //          </PropertyValues>
         //        </GetOperation>
         //      </PendChangesResult>
-        internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest)
+        internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest, out List<Failure> failures)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("PendChanges");
             msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
             msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
             msg.Add(new XElement(MessageNs + "changes", changeRequest.Select(x => x.ToXml(MessageNs))));
-            var result = invoker.InvokeResult();
+            var response = invoker.InvokeResponse();
+            failures = FailuresExtractor(response);
+            var result = invoker.MethodResultExtractor(response);
             return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
         }
 

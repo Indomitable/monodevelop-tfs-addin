@@ -79,6 +79,9 @@
     <Compile Include="GUI\VersionControl\MergeToolConfigDialog.cs" />
     <Compile Include="GUI\VersionControl\ResolveConflictsView.cs" />
     <Compile Include="GUI\VersionControl\SourceControlExplorerView.cs" />
+    <Compile Include="GUI\TFSOptionsPanel.cs" />
+    <Compile Include="GUI\TFSOptionsWidget.cs" />
+    <Compile Include="GUI\VersionControl\FailuresDisplayDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

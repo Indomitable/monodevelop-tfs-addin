@@ -339,7 +339,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                     CollectPaths(path, changes);
                 }
             }
-            var operations = this.VersionControlService.PendChanges(this, changes);
+            List<Failure> failures;
+            var operations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(operations, ProcessType.Get);
             this.RefreshPendingChanges();
             return operations.Count;
@@ -351,65 +352,38 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return;
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, p.IsDirectory ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
-            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            List<Failure> failures;
+            this.VersionControlService.PendChanges(this, changes, out failures);
             this.RefreshPendingChanges();
-//            UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-//
-//            // first delete all files
-//            foreach (GetOperation operation in operations)
-//            {
-//                if (operation.ItemType != ItemType.File)
-//                    continue;
-//                if (!File.Exists(operation.SourceLocalItem))
-//                    continue;
-//
-//                UnsetFileAttributes(operation.SourceLocalItem);
-//                File.Delete(operation.SourceLocalItem);
-//                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
-//            }
-//
-//            // then any directories
-//            foreach (GetOperation operation in operations)
-//            {
-//                if (operation.ItemType != ItemType.Folder)
-//                    continue;
-//                if (!Directory.Exists(operation.SourceLocalItem))
-//                    continue;
-//
-//                //DirectoryInfo dir = new DirectoryInfo(operation.SourceLocalItem);
-//                //FileInfo[] localFiles = dir.GetFiles("*", SearchOption.AllDirectories);
-//                //foreach (FileInfo file in localFiles)
-//                //	UnsetFileAttributes(file.FullName);
-//
-//                Directory.Delete(operation.SourceLocalItem, true);
-//                updates.QueueUpdate(operation.ItemId, null, operation.VersionServer);
-//            }
-//
-//            updates.Flush();
-//            return operations.Length;
         }
 
-        public void PendEdit(List<FilePath> paths, RecursionType recursionType)
+        public List<Failure> PendEdit(List<FilePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
         {
             if (paths.Count == 0)
-                return;
-
-            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
-            var getOperations = this.VersionControlService.PendChanges(this, changes);
+                return new List<Failure>();
+            LockLevel lockLevel = LockLevel.None;
+            if (checkOutlockLevel == CheckOutLockLevel.CheckOut)
+                lockLevel = LockLevel.CheckOut;
+            else if (checkOutlockLevel == CheckOutLockLevel.CheckIn)
+                lockLevel = LockLevel.Checkin;
+            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, lockLevel, VersionSpec.Latest)).ToList();
+            List<Failure> failures;
+            var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
             foreach (GetOperation getOperation in getOperations)
             {
                 MakeFileWritable(getOperation.TargetLocalItem);
             }
             this.RefreshPendingChanges();
+            return failures;
         }
 
         private void PendRename(string oldPath, string newPath, ItemType itemType)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
             changes.Add(new ChangeRequest(oldPath, newPath, RequestType.Rename, itemType));
-
-            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            List<Failure> failures;
+            var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
         }
@@ -448,7 +422,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return;
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, p.IsDirectory ? ItemType.Folder : ItemType.File, recursion, lockLevel, VersionSpec.Latest)).ToList();
-            var getOperations = this.VersionControlService.PendChanges(this, changes);
+            List<Failure> failures;
+            var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
         }

@@ -68,6 +68,11 @@
 	<Extension path = "/MonoDevelop/VersionControl/CommitDialogExtensions">
 		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
 	</Extension>
+
+    <Extension path = "/MonoDevelop/Ide/GlobalOptionsDialog/VersionControl">
+        <Section id = "TFS" _label = "TFS" class = "MonoDevelop.VersionControl.TFS.GUI.TFSOptionsPanel" />
+    </Extension>
+
 <!--
     <Extension path = "/MonoDevelop/Core/StockIcons">
         <StockIcon stockid = "vc-repository" file = "Icons/repository.png" size="Menu" />
