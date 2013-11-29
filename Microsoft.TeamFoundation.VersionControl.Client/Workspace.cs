@@ -102,6 +102,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
             {
                 MakeFileReadOnly(file);
+                FileService.NotifyFileChanged(file);
             }
             return result;
         }
