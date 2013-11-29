@@ -10,7 +10,7 @@
     <RootNamespace>MonoDevelop.VersionControl.TFS.Tests</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS.Tests</AssemblyName>
     <UseMSBuildEngine>False</UseMSBuildEngine>
-    <ReleaseVersion>0.8</ReleaseVersion>
+    <ReleaseVersion>0.9</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -32,9 +32,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="nunit.framework">
-      <Private>False</Private>
-    </Reference>
+    <Reference Include="nunit.framework" />
     <Reference Include="MonoDevelop.VersionControl">
       <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
