@@ -197,11 +197,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void FillWorkspaces()
         {
+            string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(projectCollection);
+            _workspaceComboBox.SelectionChanged -= OnChangeActiveWorkspaces;
             _workspaceStore.Clear();
             _workspaces.Clear();
             _workspaces.AddRange(WorkspaceHelper.GetLocalWorkspaces(projectCollection));
             int activeWorkspaceRow = -1;
-            string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(projectCollection);
             foreach (var workspace in _workspaces)
             {
                 var row = _workspaceStore.AddRow();
@@ -211,6 +212,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     activeWorkspaceRow = row;
                 }
             }
+            _workspaceComboBox.SelectionChanged += OnChangeActiveWorkspaces;
             if (_workspaces.Count > 0)
             {
                 if (activeWorkspaceRow > -1)
@@ -218,6 +220,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 else
                     _workspaceComboBox.SelectedIndex = 0;
             }
+
         }
 
         private Image GetRepositoryImage()
@@ -290,7 +293,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         _listStore.SetValue(row, _userList, string.Join(", ", userNames));
                     }
                 }
-                if (!IsMapped(serverPath))
+                if (!IsMapped(item.ServerPath))
                 {
                     _listStore.SetValue(row, _latestList, "Not mapped");
                 }
@@ -306,22 +309,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     }
                 }
                 _listStore.SetValue(row, _lastCheckinList, item.CheckinDate);
-            }
-        }
-
-        private void OnChangeActiveWorkspaces(object sender, EventArgs ev)
-        {
-            if (_workspaceComboBox.SelectedIndex > -1)
-            {
-                var name = _workspaceStore.GetValue(_workspaceComboBox.SelectedIndex, _workspaceName);
-                _currentWorkspace = _workspaces.Single(ws => string.Equals(ws.Name, name, StringComparison.Ordinal));
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, name);
-                if (_treeView.SelectedRow != null)
-                    ShowMappingPath(_treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree).ServerItem);
-            }
-            else
-            {
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, string.Empty);
             }
         }
 
@@ -389,24 +376,44 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             return _currentWorkspace.IsServerPathMapped(serverPath);
         }
 
-        private void ShowMappingPath(string serverPath)
+        private void ShowMappingPath(VersionControlPath serverPath)
         {
             if (!IsMapped(serverPath))
             {
                 _localFolder.Text = GettextCatalog.GetString("Not Mapped");
                 return;
             }
-            var mappedFolder = _currentWorkspace.Folders.First(f => serverPath.StartsWith(f.ServerItem, StringComparison.Ordinal));
+            var mappedFolder = _currentWorkspace.Folders.First(f => serverPath.IsChildOrEqualTo(f.ServerItem));
             if (string.Equals(serverPath, mappedFolder.ServerItem, StringComparison.Ordinal))
                 _localFolder.Text = mappedFolder.LocalItem;
             else
             {
-                string rest = serverPath.Substring(mappedFolder.ServerItem.Length + 1);
+                string rest = serverPath.ChildPart(mappedFolder.ServerItem); //serverPath.Substring(mappedFolder.ServerItem.Length + 1);
                 _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
 
         #region Events
+
+        private void OnChangeActiveWorkspaces(object sender, EventArgs ev)
+        {
+            if (_workspaceComboBox.SelectedIndex > -1)
+            {
+                var name = _workspaceStore.GetValue(_workspaceComboBox.SelectedIndex, _workspaceName);
+                _currentWorkspace = _workspaces.Single(ws => string.Equals(ws.Name, name, StringComparison.Ordinal));
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, name);
+                if (_treeView.SelectedRow != null)
+                {
+                    var currentItem = _treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree).ServerItem;
+                    ShowMappingPath(currentItem);
+                    FillListView(currentItem);
+                }
+            }
+            else
+            {
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, string.Empty);
+            }
+        }
 
         private void OnFolderChanged(object sender, EventArgs e)
         {
@@ -479,6 +486,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     }
                 }
             }
+            else
+            {
+                foreach (var item in NotMappedMenu(items))
+                {
+                    menu.Items.Add(item);
+                }
+            }
             return menu;
         }
 
@@ -506,6 +520,30 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 groupItems.Add(revertItem);
             }
             return groupItems;
+        }
+
+        private List<MenuItem> NotMappedMenu(List<ExtendedItem> items)
+        {
+            MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
+            mapItem.Clicked += (sender, e) => MapItem(items);
+            return new List<MenuItem> { mapItem };
+        }
+
+        private void MapItem(List<ExtendedItem> items)
+        {
+            var item = items.FirstOrDefault(i => i.ItemType == ItemType.Folder);
+            if (_currentWorkspace == null || item == null)
+                return;
+            using (SelectFolderDialog folderSelect = new SelectFolderDialog("Browse For Folder"))
+            {
+                folderSelect.Multiselect = false;
+                folderSelect.CanCreateFolders = true;
+                if (folderSelect.Run())
+                {
+                    _currentWorkspace.Map(item.ServerPath, folderSelect.Folder);
+                }
+                RefreshList(items);
+            }
         }
 
         private void RefreshList(List<ExtendedItem> items)

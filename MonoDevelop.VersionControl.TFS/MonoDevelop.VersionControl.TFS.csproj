@@ -48,15 +48,12 @@
     <Compile Include="TFSClient.cs" />
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
-    <Compile Include="GUI\SourceControlExplorerView.cs" />
     <Compile Include="Commands\ConnectToServerHandler.cs" />
-    <Compile Include="GUI\ConnectToServerDialog.cs" />
     <Compile Include="Helpers\CredentialsManager.cs" />
     <Compile Include="TFSVersionControlService.cs" />
     <Compile Include="Commands\InitHandler.cs" />
     <Compile Include="GUI\TeamExplorerPad.cs" />
     <Compile Include="Infrastructure\Objects\HierarchyItem.cs" />
-    <Compile Include="GUI\WorkspacesDialog.cs" />
     <Compile Include="Helpers\WorkspaceHelper.cs" />
     <Compile Include="GUI\Constants.cs" />
     <Compile Include="Commands\TeamExplorerHandler.cs" />
@@ -65,18 +62,23 @@
     <Compile Include="GUI\TFSCommitDialogExtension.cs" />
     <Compile Include="Infrastructure\TFSNodeExtension.cs" />
     <Compile Include="Infrastructure\Objects\TFSRevision.cs" />
-    <Compile Include="GUI\ResolveConflictsView.cs" />
     <Compile Include="Infrastructure\MergeToolInfo.cs" />
-    <Compile Include="GUI\MergeToolConfigDialog.cs" />
-    <Compile Include="GUI\GetSpecVersionDialog.cs" />
-    <Compile Include="GUI\WorkItemsView.cs" />
-    <Compile Include="GUI\WorkItemListWidget.cs" />
-    <Compile Include="GUI\SelectWorkItemDialog.cs" />
     <Compile Include="GUI\TFSCommitDialogExtensionWidgetXwt.cs" />
     <Compile Include="GUI\TFSCommitDialogExtensionWidgetGtk.cs" />
-    <Compile Include="GUI\ChooseProjectsDialog.cs" />
-    <Compile Include="GUI\CredentialsDialog.cs" />
-    <Compile Include="GUI\AddServerDialog.cs" />
+    <Compile Include="GUI\Workspace\ProjectSelectDialog.cs" />
+    <Compile Include="GUI\Workspace\WorkspaceAddEditDialog.cs" />
+    <Compile Include="GUI\Workspace\WorkspacesDialog.cs" />
+    <Compile Include="GUI\Server\AddServerDialog.cs" />
+    <Compile Include="GUI\Server\ChooseProjectsDialog.cs" />
+    <Compile Include="GUI\Server\ConnectToServerDialog.cs" />
+    <Compile Include="GUI\Server\CredentialsDialog.cs" />
+    <Compile Include="GUI\WorkItems\WorkItemsView.cs" />
+    <Compile Include="GUI\WorkItems\WorkItemListWidget.cs" />
+    <Compile Include="GUI\WorkItems\SelectWorkItemDialog.cs" />
+    <Compile Include="GUI\VersionControl\GetSpecVersionDialog.cs" />
+    <Compile Include="GUI\VersionControl\MergeToolConfigDialog.cs" />
+    <Compile Include="GUI\VersionControl\ResolveConflictsView.cs" />
+    <Compile Include="GUI\VersionControl\SourceControlExplorerView.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -122,6 +124,10 @@
     <Folder Include="Infrastructure\" />
     <Folder Include="Infrastructure\Objects\" />
     <Folder Include="Icons\" />
+    <Folder Include="GUI\Workspace\" />
+    <Folder Include="GUI\Server\" />
+    <Folder Include="GUI\WorkItems\" />
+    <Folder Include="GUI\VersionControl\" />
   </ItemGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />

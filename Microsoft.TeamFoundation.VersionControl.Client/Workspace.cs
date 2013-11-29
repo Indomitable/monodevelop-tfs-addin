@@ -42,12 +42,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
     {
-
         #region Constructors
 
         private Workspace(string name, 
                           string ownerName, string comment, 
-                          WorkingFolder[] folders, string computer)
+                          List<WorkingFolder> folders, string computer)
         {
             this.Name = name;
             this.OwnerName = ownerName;
@@ -59,7 +58,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public Workspace(RepositoryService versionControl, string name, 
                          string ownerName, string comment, 
-                         WorkingFolder[] folders, string computer) 
+                         List<WorkingFolder>  folders, string computer) 
             : this(name, ownerName, comment, folders, computer)
         {
             this.ProjectCollection = versionControl.Collection;
@@ -68,7 +67,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public Workspace(Microsoft.TeamFoundation.Client.ProjectCollection collection, string name, 
                          string ownerName, string comment, 
-                         WorkingFolder[] folders, string computer)
+                         List<WorkingFolder>  folders, string computer)
             : this(name, ownerName, comment, folders, computer)
         {
             this.ProjectCollection = collection;
@@ -76,12 +75,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         }
 
         public Workspace(RepositoryService versionControl, WorkspaceData workspaceData) 
-            : this(versionControl, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
+            : this(versionControl, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders, workspaceData.Computer)
         {
         }
 
         public Workspace(Microsoft.TeamFoundation.Client.ProjectCollection collection, WorkspaceData workspaceData) 
-            : this(collection, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders.ToArray(), workspaceData.Computer)
+            : this(collection, workspaceData.Name, workspaceData.Owner, workspaceData.Comment, workspaceData.WorkingFolders, workspaceData.Computer)
         {
         }
 
@@ -233,9 +232,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return Folders.Any(f => localPath.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
         }
 
-        public bool IsServerPathMapped(string serverPath)
+        public bool IsServerPathMapped(VersionControlPath serverPath)
         {
-            return Folders.Any(f => serverPath.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
+            return Folders.Any(f => serverPath.IsChildOrEqualTo(f.ServerItem));
         }
 
         public VersionControlPath TryGetServerItemForLocalItem(string localItem)
@@ -252,16 +251,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public string TryGetLocalItemForServerItem(string serverItem)
+        public string TryGetLocalItemForServerItem(VersionControlPath serverItem)
         {
-            var mappedFolder = Folders.FirstOrDefault(f => serverItem.StartsWith(f.ServerItem, StringComparison.OrdinalIgnoreCase));
+            var mappedFolder = Folders.FirstOrDefault(f => serverItem.IsChildOrEqualTo(f.ServerItem));
             if (mappedFolder == null)
                 return null;
-            if (string.Equals(serverItem, mappedFolder.ServerItem, StringComparison.OrdinalIgnoreCase))
+            if (serverItem == mappedFolder.ServerItem)
                 return mappedFolder.LocalItem;
             else
             {
-                string rest = TfsPath.ServerToLocalPath(serverItem.Substring(mappedFolder.ServerItem.Length + 1));
+                //string rest = TfsPath.ServerToLocalPath(serverItem.ToString().Substring(mappedFolder.ServerItem.ToString().Length + 1));
+                string rest = TfsPath.ServerToLocalPath(serverItem.ChildPart(mappedFolder.ServerItem));
                 return Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
@@ -286,12 +286,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return workingFolder;
         }
 
-        public void Map(string teamProject, string sourceProject)
+        public void Map(string serverPath, string localPath)
         {
-            throw new NotImplementedException();
-//            WorkingFolder[] folders = new WorkingFolder[1];
-//            folders[0] = new WorkingFolder(sourceProject, teamProject);
-//            Update(Name, OwnerName, folders);
+            this.Folders.Add(new WorkingFolder(serverPath, localPath));
+            this.Update();
+        }
+
+        private void Update()
+        {
+            this.VersionControlService.UpdateWorkspace(this.Name, this.OwnerName, this);
         }
 
         #region Version Control Operations
@@ -471,23 +474,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                                          .Elements(XmlNamespaces.GetMessageElementName("WorkingFolder"))
                                                          .Select(el => WorkingFolder.FromXml(el)));
 
-            return new Workspace(versionControl, name, owner, comment, folders.ToArray(), computer)
+            return new Workspace(versionControl, name, owner, comment, folders, computer)
             { 
                 LastAccessDate = lastAccessDate 
             };
         }
 
-        internal XElement ToXml(string elementName)
+        internal XElement ToXml(XName elementName)
         {
-            XElement element = new XElement(XmlNamespaces.GetMessageElementName(elementName), 
+            var ns = elementName.Namespace;
+            XElement element = new XElement(elementName, 
                                    new XAttribute("computer", Computer), 
                                    new XAttribute("name", Name),
                                    new XAttribute("owner", OwnerName), 
-                                   new XElement(XmlNamespaces.GetMessageElementName("Comment"), Comment));
+                                   new XElement(ns + "Comment", Comment));
 
             if (Folders != null)
             {
-                element.Add(new XElement(XmlNamespaces.GetMessageElementName("Folders"), Folders.Select(f => f.ToXml())));
+                element.Add(new XElement(ns + "Folders", Folders.Select(f => f.ToXml(ns))));
             }
             return element;
         }
@@ -770,7 +774,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public string Computer { get; private set; }
 
-        public WorkingFolder[] Folders { get; private set; }
+        public List<WorkingFolder> Folders { get; private set; }
 
         public string Name { get; private set; }
 

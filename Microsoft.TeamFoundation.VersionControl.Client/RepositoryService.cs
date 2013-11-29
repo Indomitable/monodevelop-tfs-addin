@@ -38,7 +38,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     public sealed class RepositoryService : TFSCollectionService
     {
-
         #region TfsService
 
         public override XNamespace MessageNs
@@ -96,7 +95,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             msg.Add(new XElement(MessageNs + "oldWorkspaceName", oldWorkspaceName));
             msg.Add(new XElement(MessageNs + "ownerName", ownerName));
-            msg.Add(newWorkspace.ToXml("newWorkspace"));
+            msg.Add(newWorkspace.ToXml(MessageNs + "newWorkspace"));
 
             XElement result = invoker.InvokeResult();
             return Workspace.FromXml(this, result);
@@ -106,7 +105,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             var invoker = new SoapInvoker(this);
             XElement msg = invoker.CreateEnvelope("CreateWorkspace");
-            msg.Add(workspace.ToXml("workspace"));
+            msg.Add(workspace.ToXml(MessageNs + "workspace"));
             XElement result = invoker.InvokeResult();
             return Workspace.FromXml(this, result);
         }
