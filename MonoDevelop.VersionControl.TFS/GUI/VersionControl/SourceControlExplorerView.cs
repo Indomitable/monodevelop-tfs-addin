@@ -37,6 +37,7 @@ using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Xwt.Drawing;
+using MonoDevelop.Ide.Desktop;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -485,6 +486,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         menu.Items.Add(item);
                     }
                 }
+                if (items.Count == 1 && items[0].ItemType == ItemType.Folder)
+                {
+                    menu.Items.Add(new SeparatorMenuItem());
+                    menu.Items.Add(CreateOpenFolderMenuItem(items[0]));
+                }
             }
             else
             {
@@ -527,6 +533,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
             mapItem.Clicked += (sender, e) => MapItem(items);
             return new List<MenuItem> { mapItem };
+        }
+
+        private MenuItem CreateOpenFolderMenuItem(ExtendedItem item)
+        {
+            MenuItem openFolder = new MenuItem(GettextCatalog.GetString("Open mapped folder"));
+            openFolder.Clicked += (sender, e) =>
+            {
+                var path = item.LocalItem;
+                if (string.IsNullOrEmpty(path))
+                    path = _currentWorkspace.TryGetLocalItemForServerItem(item.ServerPath);
+                DesktopService.OpenFolder(path);
+            };
+            return openFolder;
         }
 
         private void MapItem(List<ExtendedItem> items)
