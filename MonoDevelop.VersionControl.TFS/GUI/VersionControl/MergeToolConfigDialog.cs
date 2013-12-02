@@ -42,6 +42,16 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             BuildGui();
         }
 
+        public MergeToolConfigDialog(MergeToolInfo mergeInfo)
+            : this()
+        {
+            if (mergeInfo != null)
+            {
+                this.commandNameEntry.Text = mergeInfo.CommandName;
+                this.argumentsEntry.Text = mergeInfo.Arguments;
+            }
+        }
+
         void BuildGui()
         {
             this.Title = GettextCatalog.GetString("Merge Tool Config");

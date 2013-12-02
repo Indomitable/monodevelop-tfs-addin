@@ -48,6 +48,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             lockLevelBox.Items.Add(2, "Check In");
             lockLevelBox.SelectedItem = (int)TFSVersionControlService.Instance.CheckOutLockLevel;
             this.PackStart(lockLevelBox);
+
+            var mergeToolButton = new Button(GettextCatalog.GetString("Config merge tool"));
+            mergeToolButton.Clicked += OnConfigMergeTool;
+            this.PackStart(mergeToolButton);
+        }
+
+        void OnConfigMergeTool(object sender, EventArgs e)
+        {
+            using (var mergeToolDialog = new MergeToolConfigDialog(TFSVersionControlService.Instance.MergeToolInfo))
+            {
+                if (mergeToolDialog.Run(this.ParentWindow) == Command.Ok)
+                {
+                    TFSVersionControlService.Instance.MergeToolInfo = mergeToolDialog.MergeToolInfo;
+                    TFSVersionControlService.Instance.StorePrefs();
+                }
+            }
         }
 
         public void ApplyChanges()
