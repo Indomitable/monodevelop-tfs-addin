@@ -72,5 +72,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         public string Item { get; set; }
 
         public RecursionType RecursionType { get; set; }
+
+        public override string ToString()
+        {
+            return string.Format("Item: {0}, Recursion: {1}", Item, RecursionType);
+        }
     }
 }

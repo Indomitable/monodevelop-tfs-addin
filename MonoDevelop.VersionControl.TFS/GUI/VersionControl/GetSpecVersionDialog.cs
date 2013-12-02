@@ -137,7 +137,16 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 option |= GetOptions.GetAll;
 //            if (overrideGet.State == CheckBoxState.On)
 //                option |= GetOptions.Overwrite;
-            workspace.Get(requests, option);
+            using (var progress = VersionControlService.GetProgressMonitor("Get", VersionControlOperationType.Pull))
+            {
+                progress.Log.WriteLine("Start downloading items. GetOption: " + option);
+                foreach (var request in requests)
+                {
+                    progress.Log.WriteLine(request);
+                }
+                workspace.Get(requests, option, progress);
+                progress.ReportSuccess("Finish Downloading.");
+            }
             Respond(Command.Ok);
         }
     }

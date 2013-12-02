@@ -579,7 +579,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;   
                 requests.Add(new GetRequest(item.ServerPath, recursion, VersionSpec.Latest)); 
             }
-            _currentWorkspace.Get(requests, GetOptions.None);
+            using (var progress = VersionControlService.GetProgressMonitor("Get", VersionControlOperationType.Pull))
+            {
+                var option = GetOptions.None;
+                progress.Log.WriteLine("Start downloading items. GetOption: " + option);
+                foreach (var request in requests)
+                {
+                    progress.Log.WriteLine(request);
+                }
+                _currentWorkspace.Get(requests, option, progress);
+                progress.ReportSuccess("Finish Downloading.");
+            }
             RefreshList(items);
         }
 

@@ -63,5 +63,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             result.Add(VersionSpec.ToXml(ns + "VersionSpec"));
             return result;
         }
+
+        public override string ToString()
+        {
+            return string.Format("[GetRequest: ItemSpec={0}, VersionSpec={1}]", ItemSpec, VersionSpec);
+        }
     }
 }

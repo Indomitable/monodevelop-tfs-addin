@@ -102,7 +102,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
             {
                 MakeFileReadOnly(file);
-                FileService.NotifyFileChanged(file);
             }
             return result;
         }
@@ -157,49 +156,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             ItemSpec[] items = { new ItemSpec(item, recurse) };
             return this.VersionControlService.QueryPendingSets(this.Name, this.OwnerName, string.Empty, string.Empty, items, false);
-        }
-
-        #endregion
-
-        #region Get
-
-        public GetStatus Get()
-        {
-            return Get(VersionSpec.Latest, GetOptions.None);
-        }
-
-        public GetStatus Get(VersionSpec versionSpec, GetOptions options)
-        {
-            GetRequest request = new GetRequest(versionSpec);
-            return Get(request, options);
-        }
-
-        public GetStatus Get(GetRequest request, GetOptions options)
-        {
-            var requests = new List<GetRequest> { request };
-            return Get(requests, options);
-        }
-
-        public GetStatus Get(string[] items, VersionSpec version,
-                             RecursionType recursion, GetOptions options)
-        {
-            List<GetRequest> requests = new List<GetRequest>();
-            foreach (string item in items)
-            {
-                requests.Add(new GetRequest(item, recursion, version));
-            }
-						
-            return Get(requests, options); 
-        }
-
-        public GetStatus Get(List<GetRequest> requests, GetOptions options)
-        {
-            bool force = options.HasFlag(GetOptions.GetAll);
-            bool noGet = options.HasFlag(GetOptions.Preview);
-
-            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
-            ProcessGetOperations(getOperations, ProcessType.Get);
-            return new GetStatus(getOperations.Count);
         }
 
         #endregion
@@ -308,6 +264,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #region Version Control Operations
 
+        public GetStatus Get(GetRequest request, GetOptions options, IProgressMonitor monitor = null)
+        {
+            var requests = new List<GetRequest> { request };
+            return Get(requests, options, monitor);
+        }
+
+        public GetStatus Get(List<GetRequest> requests, GetOptions options, IProgressMonitor monitor = null)
+        {
+            bool force = options.HasFlag(GetOptions.GetAll);
+            bool noGet = options.HasFlag(GetOptions.Preview);
+
+            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
+            ProcessGetOperations(getOperations, ProcessType.Get, monitor);
+            return new GetStatus(getOperations.Count);
+        }
+
         private void CollectPaths(FilePath root, List<ChangeRequest> paths)
         {
             if (!root.IsDirectory)
@@ -398,10 +370,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             PendRename(oldPath, newPath, ItemType.Folder);
         }
 
-        public List<FilePath> Undo(List<ItemSpec> items)
+        public List<FilePath> Undo(List<ItemSpec> items, IProgressMonitor monitor = null)
         {
             var operations = this.VersionControlService.UndoPendChanges(this, items);
-            ProcessGetOperations(operations, ProcessType.Undo);
+            ProcessGetOperations(operations, ProcessType.Undo, monitor);
             this.RefreshPendingChanges();
             List<FilePath> undoPaths = new List<FilePath>();
             foreach (var oper in operations)
@@ -606,7 +578,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 var update = ProcessGet(operation, downloadService);
                 var filePath = (FilePath)operation.TargetLocalItem;
-                var projects = MonoDevelop.Ide.IdeApp.Workspace.GetAllProjects();
+                var projects = IdeApp.Workspace.GetAllProjects();
                 foreach (var project in projects)
                 {
                     if (filePath.IsChildPathOf(project.BaseDirectory))
@@ -691,52 +663,67 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Undo,
         }
 
-        private IEnumerable<UpdateLocalVersion> InternalProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
+        private IEnumerable<UpdateLocalVersion> InternalProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor)
         {
             var downloadService = this.VersionControlService.Collection.GetService<VersionControlDownloadService>();
             foreach (var operation in getOperations)
             {
-                if (operation.ChangeType.HasFlag(ChangeType.Add))
+                try
                 {
-                    continue; //Noting to process
+                    string stepName = operation.ChangeType == ChangeType.None ? "Get" : operation.ChangeType.ToString();
+                    monitor.BeginTask(stepName + ": " + operation.TargetLocalItem, 1);
+                    if (operation.ChangeType.HasFlag(ChangeType.Add))
+                    {
+                        continue; //Noting to process
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Edit))
+                    {
+                        yield return ProcessEdit(operation, downloadService, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
+                    {
+                        yield return ProcessDelete(operation, downloadService, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.Rename))
+                    {
+                        yield return ProcessRename(operation, processType);
+                        continue;
+                    }
+                    if (operation.ChangeType.HasFlag(ChangeType.None))
+                    {
+                        yield return ProcessGet(operation, downloadService);
+                    }
                 }
-                if (operation.ChangeType.HasFlag(ChangeType.Edit))
+                finally
                 {
-                    yield return ProcessEdit(operation, downloadService, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.Delete) || operation.DeletionId > 0)
-                {
-                    yield return ProcessDelete(operation, downloadService, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.Rename))
-                {
-                    yield return ProcessRename(operation, processType);
-                    continue;
-                }
-                if (operation.ChangeType.HasFlag(ChangeType.None))
-                {
-                    yield return ProcessGet(operation, downloadService);
+                    monitor.EndTask();
                 }
             }
         }
 
-        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
+        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor = null)
         {
             if (getOperations == null || getOperations.Count == 0)
                 return;
-            using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false))
+            IProgressMonitor progress = monitor ?? new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
+            try
             {
                 progress.BeginTask("Process", getOperations.Count);
                 UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
-                foreach (var update in InternalProcessGetOperations(getOperations, processType))
+                foreach (var update in InternalProcessGetOperations(getOperations, processType, progress))
                 {
                     updates.QueueUpdate(update);
                     progress.Step(1);
                 }
                 updates.Flush();
                 progress.EndTask();
+            }
+            finally
+            {
+                if (monitor == null && progress != null)
+                    progress.Dispose();
             }
         }
 
