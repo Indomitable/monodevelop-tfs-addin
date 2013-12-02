@@ -23,40 +23,46 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Xwt;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using System.Collections.Generic;
 using MonoDevelop.Core;
+using Gtk;
+using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class FailuresDisplayDialog : Dialog
     {
-        readonly ListView failuresView = new ListView();
-        readonly DataField<string> codeField = new DataField<string>();
-        readonly DataField<string> messageField = new DataField<string>();
-        readonly DataField<Failure> failureField = new DataField<Failure>();
+        readonly TreeView failuresView = new TreeView();
         readonly ListStore failuresStore;
+
+        protected FailuresDisplayDialog(System.IntPtr raw)
+            : base(raw)
+        {
+            
+        }
 
         private FailuresDisplayDialog()
         {
-            failuresStore = new ListStore(codeField, messageField, failureField);
+            failuresStore = new ListStore(typeof(string), typeof(string), typeof(Failure));
             BuildGui();
         }
 
         void BuildGui()
         {
             var content = new VBox();
-            this.Title = GettextCatalog.GetString("Failures");
+            this.Title = GettextCatalog.GetString("Messages");
             content.PackStart(new Label(this.Title + ":"));
             failuresView.WidthRequest = 300;
             failuresView.HeightRequest = 200;
-            failuresView.Columns.Add(new ListViewColumn("Code", new TextCellView(codeField)));
-            failuresView.Columns.Add(new ListViewColumn("Message", new TextCellView(messageField)));
-            failuresView.DataSource = failuresStore;
-            this.Buttons.Add(Command.Ok);
-            content.PackStart(failuresView);
-            this.Content = content;
+            failuresView.AppendColumn("Type", new CellRendererText(), "text", 0);
+            failuresView.AppendColumn("Message", new CellRendererText(), "text", 1);
+            failuresView.HasTooltip = true;
+            failuresView.QueryTooltip += OnQueryTooltip;
+            failuresView.Model = failuresStore;
+            this.VBox.PackStart(failuresView, true, true, 0);
+            this.AddButton(Stock.Ok, ResponseType.Ok);
+            this.ShowAll();
         }
 
         void FillData(List<Failure> failures)
@@ -64,10 +70,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             failuresStore.Clear();
             foreach (var item in failures)
             {
-                var row = failuresStore.AddRow();
-                failuresStore.SetValue(row, codeField, item.Code);
-                failuresStore.SetValue(row, messageField, item.Message);
-                failuresStore.SetValue(row, failureField, item);
+                failuresStore.AppendValues(item.SeverityType.ToString(), item.Message, item);
+            }
+        }
+
+        void OnQueryTooltip(object o, QueryTooltipArgs args)
+        {
+            int binX;
+            int binY;
+            failuresView.ConvertWidgetToBinWindowCoords(args.X, args.Y, out binX, out binY);
+            TreePath path;
+            TreeIter iter;
+            if (failuresView.GetPathAtPos(binX, binY, out path) && failuresStore.GetIter(out iter, path))
+            {
+                string message = (string)failuresStore.GetValue(iter, 1);
+                args.Tooltip.Text = message;
+                args.RetVal = true;
             }
         }
 
@@ -75,11 +93,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             if (failures == null || failures.Count == 0)
                 return;
-            using (var dialog = new FailuresDisplayDialog())
-            {
-                dialog.FillData(failures);
-                dialog.Run();
-            }
+            var dialog = new FailuresDisplayDialog();
+            dialog.FillData(failures);
+            //Leave Destroy to Message Service.
+            MessageService.ShowCustomDialog(dialog);
         }
     }
 }
