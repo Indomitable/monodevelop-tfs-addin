@@ -324,7 +324,14 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnRevertToRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
         {
-            throw new NotImplementedException();
+            var spec = new ItemSpec(localPath, localPath.IsDirectory ? RecursionType.Full : RecursionType.None);
+            var rev = (TFSRevision)revision;
+            var request = new GetRequest(spec, new ChangesetVersionSpec(rev.Version));
+            var workspace = GetWorkspaceByLocalPath(localPath);
+            if (workspace != null)
+            {
+                workspace.Get(request, GetOptions.None, monitor);
+            }
         }
 
         protected override void OnAdd(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
