@@ -532,43 +532,47 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #region Process Get Operations
 
-        private void DownloadFile(GetOperation operation, VersionControlDownloadService downloadService)
+        private string DownloadFile(GetOperation operation, VersionControlDownloadService downloadService)
         {
             string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
-            if (operation.ItemType == ItemType.Folder && !Directory.Exists(path))
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+            if (operation.ItemType == ItemType.Folder)
             {
-                Directory.CreateDirectory(path);
-            }
-            if (operation.ItemType == ItemType.File && !Directory.Exists(Path.GetDirectoryName(path)))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(path));
+                if (!Directory.Exists(path))
+                    Directory.CreateDirectory(path);
+                return path;
             }
             if (operation.ItemType == ItemType.File)
             {
-                downloadService.Download(path, operation.ArtifactUri);
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                return downloadService.Download(path, operation.ArtifactUri);
             }
+            return string.Empty;
         }
 
         private UpdateLocalVersion ProcessEdit(GetOperation operation, VersionControlDownloadService downloadService, ProcessType processType)
         {
             if (processType == ProcessType.Undo)
             {
-                DownloadFile(operation, downloadService);
+                var path = DownloadFile(operation, downloadService);
                 if (operation.ItemType == ItemType.File)
-                    MakeFileReadOnly(operation.TargetLocalItem);
+                    MakeFileReadOnly(path);
             }
             else
             {
-                MakeFileWritable(operation.TargetLocalItem);
+                string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
+                MakeFileWritable(path);
             }
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }
 
         private UpdateLocalVersion ProcessGet(GetOperation operation, VersionControlDownloadService downloadService)
         {
-            DownloadFile(operation, downloadService);
+            var path = DownloadFile(operation, downloadService);
             if (operation.ItemType == ItemType.File)
-                MakeFileReadOnly(operation.TargetLocalItem);
+                MakeFileReadOnly(path);
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }
 
@@ -671,6 +675,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 try
                 {
                     string stepName = operation.ChangeType == ChangeType.None ? "Get" : operation.ChangeType.ToString();
+                    if (monitor.IsCancelRequested)
+                        yield break;
                     monitor.BeginTask(stepName + ": " + operation.TargetLocalItem, 1);
                     if (operation.ChangeType.HasFlag(ChangeType.Add))
                     {

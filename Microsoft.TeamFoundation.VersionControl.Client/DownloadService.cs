@@ -73,13 +73,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
+        readonly Random random = new Random();
+
         public string DownloadToTemp(string artifactUri)
         {
             try
             {
                 WebClient client = new WebClient();
                 client.Credentials = this.Collection.Server.Credentials;
-                string tempFileName = Path.GetTempFileName();
+                var num = random.Next();
+                var tempDir = Path.Combine(Path.GetTempPath(), "TfSAddinDownload");
+                if (!Directory.Exists(tempDir))
+                    Directory.CreateDirectory(tempDir);
+                string tempFileName = Path.Combine(tempDir, "tfsTemp" + num.ToString("X") + ".gz");// Files are gzipped
                 UriBuilder bulder = new UriBuilder(this.Url);
                 bulder.Query = artifactUri;
                 client.DownloadFile(bulder.Uri, tempFileName);
@@ -111,11 +117,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public void Download(string path, string artifactUri)
+        public string Download(string path, string artifactUri)
         {
             var tempPath = this.DownloadToTemp(artifactUri);
             if (string.IsNullOrEmpty(tempPath))
-                return;
+                return string.Empty;
 
             if (File.Exists(path))
             {
@@ -125,6 +131,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             File.Copy(tempPath, path);
             File.Delete(tempPath);
+            return path;
         }
     }
 }
