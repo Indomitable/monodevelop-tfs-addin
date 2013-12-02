@@ -23,16 +23,14 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
 using Xwt;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using System.Linq;
 using MonoDevelop.Core;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
     public class SelectWorkItemDialog : Dialog
     {

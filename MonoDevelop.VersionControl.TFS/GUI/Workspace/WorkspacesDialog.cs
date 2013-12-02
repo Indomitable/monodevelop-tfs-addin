@@ -31,7 +31,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Collections.Generic;
 using MonoDevelop.Ide;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.Workspace
 {
     public class WorkspacesDialog : Dialog
     {
@@ -138,7 +138,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         private void ShowDialog(DialogAction action)
         {
-            Workspace workspace = null;
+            Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace = null;
             if (action == DialogAction.Edit)
             {
                 string workspaceName = _listStore.GetValue(_listView.SelectedRow, _name);

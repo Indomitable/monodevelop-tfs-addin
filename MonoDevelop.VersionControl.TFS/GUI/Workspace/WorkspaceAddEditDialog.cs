@@ -30,12 +30,12 @@ using MonoDevelop.Core;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.Ide;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.Workspace
 {
     public class WorkspaceAddEditDialog : Dialog
     {
         private readonly DialogAction _action;
-        private readonly Workspace _workspace;
+        private readonly Microsoft.TeamFoundation.VersionControl.Client.Workspace _workspace;
         private readonly TextEntry _nameEntry = new TextEntry();
         private readonly TextEntry _ownerEntry = new TextEntry();
         private readonly TextEntry _computerEntry = new TextEntry();
@@ -47,7 +47,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly ListStore _workingFoldersStore;
         private readonly Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
 
-        public WorkspaceAddEditDialog(Workspace workspace, Microsoft.TeamFoundation.Client.ProjectCollection projectCollection)
+        public WorkspaceAddEditDialog(Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace, Microsoft.TeamFoundation.Client.ProjectCollection projectCollection)
         {
             this.projectCollection = projectCollection;
             if (workspace == null)
@@ -222,10 +222,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 switch (_action)
                 {
                     case DialogAction.Create:
-                        versionControl.CreateWorkspace(new Workspace(versionControl, BuildWorkspace()));
+                        versionControl.CreateWorkspace(new Microsoft.TeamFoundation.VersionControl.Client.Workspace(versionControl, BuildWorkspace()));
                         break;
                     case DialogAction.Edit:
-                        versionControl.UpdateWorkspace(_workspace.Name, _workspace.OwnerName, new Workspace(versionControl, BuildWorkspace()));
+                        versionControl.UpdateWorkspace(_workspace.Name, _workspace.OwnerName, new Microsoft.TeamFoundation.VersionControl.Client.Workspace(versionControl, BuildWorkspace()));
                         break;
                 }
             }

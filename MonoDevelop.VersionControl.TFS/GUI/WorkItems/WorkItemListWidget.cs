@@ -31,7 +31,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
     public class WorkItemListWidget : VBox
     {

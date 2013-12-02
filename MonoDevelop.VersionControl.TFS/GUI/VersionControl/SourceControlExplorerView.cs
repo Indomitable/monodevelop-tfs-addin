@@ -37,9 +37,9 @@ using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Xwt.Drawing;
-using MonoDevelop.Ide.Desktop;
+using MonoDevelop.VersionControl.TFS.GUI.Workspace;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class SourceControlExplorerView : AbstractXwtViewContent
     {
@@ -81,8 +81,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         #endregion
 
         private Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
-        private readonly List<Workspace> _workspaces = new List<Workspace>();
-        private Workspace _currentWorkspace = null;
+        private readonly List<Microsoft.TeamFoundation.VersionControl.Client.Workspace> _workspaces = new List<Microsoft.TeamFoundation.VersionControl.Client.Workspace>();
+        private Microsoft.TeamFoundation.VersionControl.Client.Workspace _currentWorkspace = null;
 
         public SourceControlExplorerView()
         {

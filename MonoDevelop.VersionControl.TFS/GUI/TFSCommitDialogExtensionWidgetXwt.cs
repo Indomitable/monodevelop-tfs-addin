@@ -27,6 +27,7 @@ using System;
 using Xwt;
 using MonoDevelop.Core;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
+using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {

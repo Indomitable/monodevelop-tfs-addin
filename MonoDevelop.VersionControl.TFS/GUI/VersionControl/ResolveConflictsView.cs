@@ -37,7 +37,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using System.Diagnostics;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class ResolveConflictsView : AbstractXwtViewContent
     {

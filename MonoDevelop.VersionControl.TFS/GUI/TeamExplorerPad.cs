@@ -33,6 +33,8 @@ using System.Linq;
 using System;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -199,7 +201,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         }
 
         #endregion
-
     }
 }
 

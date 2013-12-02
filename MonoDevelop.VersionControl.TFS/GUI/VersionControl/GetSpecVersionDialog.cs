@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using System;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class GetSpecVersionDialog : Dialog
     {
@@ -45,9 +45,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         readonly CheckBox forceGet = new CheckBox(GettextCatalog.GetString("Force get of file versions already in workspace"));
         //readonly CheckBox overrideGet = new CheckBox(GettextCatalog.GetString("Overwrite writeable files that are not checked out"));
         readonly SpinButton changeSetNumber = new SpinButton();
-        readonly Workspace workspace;
+        readonly Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace;
 
-        public GetSpecVersionDialog(Workspace workspace)
+        public GetSpecVersionDialog(Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
         {
             this.workspace = workspace;
             BuildGui();

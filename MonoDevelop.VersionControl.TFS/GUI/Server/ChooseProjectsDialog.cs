@@ -31,7 +31,7 @@ using Microsoft.TeamFoundation.Client;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class ChooseProjectsDialog : Dialog
     {

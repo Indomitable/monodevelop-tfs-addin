@@ -28,7 +28,7 @@ using Xwt;
 using MonoDevelop.Core;
 using System.Net;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class CredentialsDialog : Dialog
     {

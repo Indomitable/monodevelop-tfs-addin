@@ -32,7 +32,7 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.Workspace
 {
     public class ProjectSelectDialog : Dialog
     {

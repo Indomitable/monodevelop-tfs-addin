@@ -29,9 +29,9 @@ using MonoDevelop.Projects;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide.Gui.Pads.ProjectPad;
-using MonoDevelop.VersionControl.TFS.GUI;
 using MonoDevelop.Core;
 using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
