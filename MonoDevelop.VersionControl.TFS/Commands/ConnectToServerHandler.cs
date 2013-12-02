@@ -24,8 +24,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using MonoDevelop.Components.Commands;
-using MonoDevelop.VersionControl.TFS.GUI;
 using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.GUI.Server;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
@@ -41,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS.Commands
 
         protected override void Update(CommandInfo info)
         {
-            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            if (VersionControlService.IsGloballyDisabled)
             {
                 info.Enabled = false;
                 return;

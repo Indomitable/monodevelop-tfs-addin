@@ -82,6 +82,8 @@
     <Compile Include="GUI\TFSOptionsPanel.cs" />
     <Compile Include="GUI\TFSOptionsWidget.cs" />
     <Compile Include="GUI\VersionControl\FailuresDisplayDialog.cs" />
+    <Compile Include="GUI\Server\TFSRepositoryEditor.cs" />
+    <Compile Include="GUI\Server\AddServerWidget.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

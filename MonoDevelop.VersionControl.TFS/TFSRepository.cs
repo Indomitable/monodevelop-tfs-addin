@@ -37,6 +37,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -278,9 +279,23 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnCheckout(FilePath targetLocalPath, Revision rev, bool recurse, IProgressMonitor monitor)
         {
-//            SourceControlExplorerView view = new SourceControlExplorerView(monitor);
-//            view.Load(Url);
-//            IdeApp.Workbench.OpenDocument(view, true);
+            var ws = WorkspaceHelper.GetLocalWorkspaces(this.VersionControlService.Collection);
+            if (ws.Count == 0)
+            {
+                Workspace newWorkspace = new Workspace(this.VersionControlService, 
+                                             Environment.MachineName + ".WS", this.VersionControlService.Collection.Server.UserName, "Auto created", 
+                                             new List<WorkingFolder> { new WorkingFolder(VersionControlPath.RootFolder, targetLocalPath) }, Environment.MachineName);
+                var workspace = this.VersionControlService.CreateWorkspace(newWorkspace);
+                workspace.Get(new GetRequest(VersionControlPath.RootFolder, RecursionType.Full, VersionSpec.Latest), GetOptions.None);
+            }
+            else
+            {
+                this.workspaces.AddRange(ws);
+                var workspace = GetWorkspaceByLocalPath(targetLocalPath);
+                if (workspace == null)
+                    return;
+                workspace.Get(new GetRequest(workspace.TryGetServerItemForLocalItem(targetLocalPath), RecursionType.Full, VersionSpec.Latest), GetOptions.None);
+            }
         }
 
         protected override void OnRevert(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)

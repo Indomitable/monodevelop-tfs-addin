@@ -29,9 +29,9 @@ using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Collections.Generic;
 using MonoDevelop.Core;
-using MonoDevelop.Ide;
 using System.IO;
 using System;
+using MonoDevelop.VersionControl.TFS.GUI.Server;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -41,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public TFSClient()
         {
-            if (MonoDevelop.VersionControl.VersionControlService.IsGloballyDisabled)
+            if (VersionControlService.IsGloballyDisabled)
             {
                 var pad = MonoDevelop.Ide.IdeApp.Workbench.GetPad<MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad>();
                 if (pad != null)
@@ -55,12 +55,12 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override Repository OnCreateRepositoryInstance()
         {
-            return null;
+            return new TFSRepository(null);
         }
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
         {
-            return null;//new UrlBasedRepositoryEditor((TFSRepository)repo);
+            return new TFSRepositoryEditor((TFSRepository)repo);
         }
 
         public override string Name { get { return "TFS"; } }
