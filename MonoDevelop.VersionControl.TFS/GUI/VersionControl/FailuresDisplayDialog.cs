@@ -50,9 +50,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         void BuildGui()
         {
-            var content = new VBox();
             this.Title = GettextCatalog.GetString("Messages");
-            content.PackStart(new Label(this.Title + ":"));
+            var lbl = new Label(this.Title + ":");
+            var align = new Alignment(0, 0, 0, 0);
+            lbl.Justify = Justification.Left;
+            align.Add(lbl);
+            this.VBox.PackStart(align, false, false, 0);
             failuresView.WidthRequest = 300;
             failuresView.HeightRequest = 200;
             failuresView.AppendColumn("Type", new CellRendererText(), "text", 0);
