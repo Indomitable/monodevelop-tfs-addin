@@ -80,7 +80,7 @@ namespace MonoDevelop.VersionControl.TFS
                 if (repo != null)
                     return repo;
                 else
-                    FindByPath(path);
+                    return FindByPath(path);
             }
             else
             {
