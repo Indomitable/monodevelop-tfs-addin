@@ -37,13 +37,13 @@
 		</Category>
 	</Extension>
 
-	<Extension path = "/MonoDevelop/Ide/MainMenu">
+<!--	<Extension path = "/MonoDevelop/Ide/MainMenu">
 		<ItemSet id = "TeamFoundation" _label = "Team" insertafter = "VersionControl" >
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
 			<SeparatorItem/>
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
 		</ItemSet>
-	</Extension>
+	</Extension>-->
 
 	<Extension path = "/MonoDevelop/Ide/Pads/ProjectPad">
 		<NodeBuilder class = "MonoDevelop.VersionControl.TFS.Infrastructure.TFSNodeExtension"/>
