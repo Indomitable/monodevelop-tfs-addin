@@ -329,6 +329,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.RefreshPendingChanges();
         }
 
+        public List<Failure> PendEdit(FilePath path, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
+        {
+            return this.PendEdit(new List<FilePath> { path }, recursionType, checkOutlockLevel);
+        }
+
         public List<Failure> PendEdit(List<FilePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
         {
             if (paths.Count == 0)

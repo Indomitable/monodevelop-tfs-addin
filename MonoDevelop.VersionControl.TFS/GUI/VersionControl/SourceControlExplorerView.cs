@@ -566,7 +566,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             var groupItems = new List<MenuItem>();
             var itemsWithChages = items.Where(i => i.ChangeType != ChangeType.None).ToList();
-            if (itemsWithChages.Any())
+            if (itemsWithChages.Count == 0)
+            {
+                MenuItem checkOutItem = new MenuItem(GettextCatalog.GetString("Check out items"));
+                checkOutItem.Clicked += (sender, e) => CheckOutDialog.Open(items, _currentWorkspace);
+                groupItems.Add(checkOutItem);
+            }
+            //Undo
+            if (itemsWithChages.Count > 0)
             {
                 MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
                 revertItem.Clicked += (sender, e) => UndoChanges(itemsWithChages);

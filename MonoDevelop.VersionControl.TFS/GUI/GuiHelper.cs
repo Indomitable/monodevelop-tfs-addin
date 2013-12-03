@@ -1,5 +1,5 @@
 ﻿//
-// TFSOptionsWidget.cs
+// GuiHelper.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -24,47 +24,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using MonoDevelop.Core;
 using Xwt;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
-    public class TFSOptionsWidget : VBox
+    public static class GuiHelper
     {
-        readonly ComboBox lockLevelBox = GuiHelper.GetLockLevelComboBox();
-
-        public TFSOptionsWidget()
+        public static ComboBox GetLockLevelComboBox()
         {
-            BuildGui();
-        }
+            ComboBox lockLevelBox = new ComboBox();
+            lockLevelBox.WidthRequest = 150;
 
-        void BuildGui()
-        {
-            this.PackStart(new Label(GettextCatalog.GetString("Lock Level:")));
-            this.PackStart(lockLevelBox);
-
-            var mergeToolButton = new Button(GettextCatalog.GetString("Config merge tool"));
-            mergeToolButton.Clicked += OnConfigMergeTool;
-            this.PackStart(mergeToolButton);
-        }
-
-        void OnConfigMergeTool(object sender, EventArgs e)
-        {
-            using (var mergeToolDialog = new MergeToolConfigDialog(TFSVersionControlService.Instance.MergeToolInfo))
-            {
-                if (mergeToolDialog.Run(this.ParentWindow) == Command.Ok)
-                {
-                    TFSVersionControlService.Instance.MergeToolInfo = mergeToolDialog.MergeToolInfo;
-                    TFSVersionControlService.Instance.StorePrefs();
-                }
-            }
-        }
-
-        public void ApplyChanges()
-        {
-            TFSVersionControlService.Instance.CheckOutLockLevel = (CheckOutLockLevel)lockLevelBox.SelectedItem;
+            lockLevelBox.Items.Add(CheckOutLockLevel.None, "None");
+            lockLevelBox.Items.Add(CheckOutLockLevel.CheckOut, "Check Out");
+            lockLevelBox.Items.Add(CheckOutLockLevel.CheckIn, "Check In");
+            lockLevelBox.SelectedItem = TFSVersionControlService.Instance.CheckOutLockLevel;
+            return lockLevelBox;
         }
     }
 }
