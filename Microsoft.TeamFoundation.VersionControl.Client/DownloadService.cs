@@ -75,24 +75,29 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         readonly Random random = new Random();
 
+        private string GetTempFileName(string extension)
+        {
+            var num = random.Next();
+            var tempDir = Path.Combine(Path.GetTempPath(), "TfSAddinDownload");
+            if (!Directory.Exists(tempDir))
+                Directory.CreateDirectory(tempDir);
+            return Path.Combine(tempDir, "tfsTemp" + num.ToString("X") + extension);// Files are gzipped
+        }
+
         public string DownloadToTemp(string artifactUri)
         {
             try
             {
                 WebClient client = new WebClient();
                 client.Credentials = this.Collection.Server.Credentials;
-                var num = random.Next();
-                var tempDir = Path.Combine(Path.GetTempPath(), "TfSAddinDownload");
-                if (!Directory.Exists(tempDir))
-                    Directory.CreateDirectory(tempDir);
-                string tempFileName = Path.Combine(tempDir, "tfsTemp" + num.ToString("X") + ".gz");// Files are gzipped
+                var tempFileName = this.GetTempFileName(".gz");
                 UriBuilder bulder = new UriBuilder(this.Url);
                 bulder.Query = artifactUri;
                 client.DownloadFile(bulder.Uri, tempFileName);
 
                 if (string.Equals(client.ResponseHeaders[HttpResponseHeader.ContentType], "application/gzip"))
                 {
-                    string newTempFileName = Path.GetTempFileName();
+                    string newTempFileName = this.GetTempFileName(".tmp");
                     using (var inStream = new GZipStream(File.OpenRead(tempFileName), CompressionMode.Decompress))
                     {
                         using (var outStream = File.Create(newTempFileName))
@@ -115,6 +120,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 return string.Empty;
             }
+        }
+
+        public string DownloadToTempWithName(string downloadUri, string fileName)
+        {
+            var path = this.DownloadToTemp(downloadUri);
+            if (File.Exists(path))
+            {
+                var name = Path.GetFileName(fileName);
+                var newName = Path.Combine(Path.GetDirectoryName(path), name);
+                File.Move(path, newName);
+                return newName;
+            }
+            return string.Empty;
         }
 
         public string Download(string path, string artifactUri)

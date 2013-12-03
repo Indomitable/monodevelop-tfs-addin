@@ -37,7 +37,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class RepositoryService : TFSCollectionService
+    public class RepositoryService : TFSCollectionService
     {
         #region TfsService
 

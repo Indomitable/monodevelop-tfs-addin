@@ -1,5 +1,5 @@
-//
-// TFSCommands.cs
+﻿//
+// SourceControlExplorerMenuHandler.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,18 +23,29 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
+using MonoDevelop.Components.Commands;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using System.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
-    public enum TFSCommands
+    public class SourceControlExplorerMenuHandler : CommandHandler
     {
-        ConnectToServer,
-        TeamExplorer,
-        SourceControlExplorer,
-        Checkout,
-        ResolveConflicts,
-        ResolveConflictsMenu,
-        SourceControlExplorerMenu
+        protected override void Update(CommandInfo info)
+        {
+            var collectionsCount = TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).Count();
+            if (collectionsCount != 1)
+            {
+                info.Visible = false;
+                return;
+            }
+        }
+
+        protected override void Run()
+        {
+            SourceControlExplorerView.Open(TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).Single());
+        }
     }
 }
 

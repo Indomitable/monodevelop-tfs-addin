@@ -109,12 +109,14 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             var solution = item.WorkspaceObject as Solution;
             if (solution != null)
             {
+                //Add Solution
                 paths.Add(solution.BaseDirectory);
-                foreach (var solutionItem in solution.Items)
+                //Add linked files.
+                foreach (var path in solution.GetItemFiles(true))
                 {
-                    if (!solutionItem.BaseDirectory.IsChildPathOf(solution.BaseDirectory))
+                    if (!path.IsChildPathOf(solution.BaseDirectory))
                     {
-                        paths.Add(solutionItem.BaseDirectory);
+                        paths.Add(path);
                     }
                 }
             }

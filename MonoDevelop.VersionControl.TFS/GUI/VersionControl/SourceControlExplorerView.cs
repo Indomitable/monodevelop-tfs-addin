@@ -38,6 +38,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Xwt.Drawing;
 using MonoDevelop.VersionControl.TFS.GUI.Workspace;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
@@ -113,18 +114,43 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
+        public static void Open(ProjectCollection collection)
+        {
+            foreach (var view in IdeApp.Workbench.Documents)
+            {
+                var sourceDoc = view.GetContent<SourceControlExplorerView>();
+                if (sourceDoc != null)
+                {
+                    sourceDoc.Load(collection);
+                    sourceDoc.ExpandPath(VersionControlPath.RootFolder);
+                    view.Window.SelectWindow();
+                    return;
+                }
+            }
+
+            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
+            sourceControlExplorerView.Load(collection);
+            sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder);
+            IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
+        }
+
         public override void Load(string fileName)
         {
             throw new NotSupportedException();
         }
 
-        public void Load(Microsoft.TeamFoundation.Client.ProjectInfo project)
+        private void Load(ProjectInfo project)
         {
-            if (this.projectCollection != null && string.Equals(project.Collection.Id, this.projectCollection.Id, StringComparison.OrdinalIgnoreCase))
+            Load(project.Collection);
+        }
+
+        private void Load(ProjectCollection collection)
+        {
+            if (this.projectCollection != null && string.Equals(collection.Id, this.projectCollection.Id, StringComparison.OrdinalIgnoreCase))
             {
                 return;
             }
-            projectCollection = project.Collection;
+            projectCollection = collection;
             ContentName = GettextCatalog.GetString("Source Explorer") + " - " + projectCollection.Server.Name + " - " + projectCollection.Name;
             using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
             {
@@ -447,13 +473,34 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 ExpandPath(item.TargetServerItem);
             if (item.ItemType == ItemType.File && IsMapped(item.ServerPath))
             {
-                if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalItem))
+                if (item.IsInWorkspace)
                 {
-                    IdeApp.Workspace.OpenWorkspaceItem(item.LocalItem, true);
+                    if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalItem))
+                    {
+                        IdeApp.Workspace.OpenWorkspaceItem(item.LocalItem, true);
+                    }
+                    else
+                    {
+                        IdeApp.Workbench.OpenDocument(item.LocalItem, null, true);
+                    }
                 }
                 else
                 {
-                    IdeApp.Workbench.OpenDocument(item.LocalItem, null, true);
+                    var dowloadService = this.projectCollection.GetService<VersionControlDownloadService>();
+                    var item1 = _currentWorkspace.GetItem(item.ServerPath, ItemType.File, true);
+                    var futureLocalPath = _currentWorkspace.TryGetLocalItemForServerItem(item.ServerPath);
+                    var filePath = dowloadService.DownloadToTempWithName(item1.ArtifactUri, futureLocalPath);
+                    if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(filePath))
+                    {
+                        var parentFolder = _currentWorkspace.GetExtendedItem(item.ServerPath.ParentPath, ItemType.Folder);
+                        if (parentFolder == null)
+                            return;
+                        GetLatestVersion(new List<ExtendedItem> { parentFolder });
+
+                        IdeApp.Workspace.OpenWorkspaceItem(futureLocalPath, true);
+                    }
+                    if (File.Exists(filePath))
+                        File.Delete(filePath);
                 }
             }
         }

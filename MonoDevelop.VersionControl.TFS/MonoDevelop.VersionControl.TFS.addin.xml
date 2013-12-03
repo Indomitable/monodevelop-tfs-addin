@@ -34,16 +34,27 @@
             <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
                 _label = "_Resolve Conflicts"
                 description = "Resolve Conflicts."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu"
+                _label = "_Resolve Conflicts"
+                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ResolveConflictsHandler"
+                description = "Resolve Conflicts."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu"
+                _label = "_Source Control Explorer"
+                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerMenuHandler"
+                description = "Source Control Explorer."/>
 		</Category>
 	</Extension>
 
-<!--	<Extension path = "/MonoDevelop/Ide/MainMenu">
-		<ItemSet id = "TeamFoundation" _label = "Team" insertafter = "VersionControl" >
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
-			<SeparatorItem/>
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
-		</ItemSet>
-	</Extension>-->
+    <Extension path = "/MonoDevelop/Ide/MainMenu/VersionControl">
+        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.Annotate"/>
+        <ItemSet id = "TeamFoundation" _label = "TFS"  autohide="true" >
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu" />
+            <SeparatorItem/>
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu" />
+        </ItemSet>
+    </Extension>
 
 	<Extension path = "/MonoDevelop/Ide/Pads/ProjectPad">
 		<NodeBuilder class = "MonoDevelop.VersionControl.TFS.Infrastructure.TFSNodeExtension"/>

@@ -86,7 +86,6 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 return FindByPath(path);
             }
-            return null;
         }
 
         private Repository FindBySolution(FilePath solutionPath)
