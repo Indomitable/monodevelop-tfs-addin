@@ -27,7 +27,6 @@ using System;
 using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.Ide.Gui;
-using Xwt;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using MonoDevelop.Ide;
@@ -36,65 +35,35 @@ using System.Linq;
 using System.IO;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using Xwt.Drawing;
 using MonoDevelop.VersionControl.TFS.GUI.Workspace;
 using Microsoft.TeamFoundation.Client;
+using Gtk;
+using Gdk;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
-    public class SourceControlExplorerView : AbstractXwtViewContent
+    public class SourceControlExplorerView : AbstractViewContent
     {
         private readonly VBox _view = new VBox();
-        //private readonly Menu _menu = new Menu();
-
-        #region File/Folders ListView
-
         private readonly Label _localFolder = new Label();
-        private readonly ListView _listView = new ListView();
-        private readonly DataField<Image> _iconList = new DataField<Image>();
-        private readonly DataField<ExtendedItem> _itemList = new DataField<ExtendedItem>();
-        private readonly DataField<string> _typeList = new DataField<string>();
-        private readonly DataField<string> _nameList = new DataField<string>();
-        private readonly DataField<string> _changeList = new DataField<string>();
-        private readonly DataField<string> _userList = new DataField<string>();
-        private readonly DataField<string> _latestList = new DataField<string>();
-        private readonly DataField<DateTime> _lastCheckinList = new DataField<DateTime>();
-        private readonly ListStore _listStore;
-
-        #endregion
-
-        #region Workspaces ComboBox
-
+        private readonly TreeView _listView = new TreeView();
+        private readonly ListStore _listStore = new ListStore(typeof(ExtendedItem), typeof(Pixbuf), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
         private readonly ComboBox _workspaceComboBox = new ComboBox();
-        private readonly DataField<string> _workspaceName = new DataField<string>();
-        private readonly ListStore _workspaceStore;
-
-        #endregion
-
-        #region Folders TreeView
-
-        private readonly DataField<Image> _iconTree = new DataField<Image>();
-        private readonly DataField<Item> _itemTree = new DataField<Item>();
-        private readonly DataField<string> _nameTree = new DataField<string>();
+        private readonly ListStore _workspaceStore = new ListStore(typeof(Microsoft.TeamFoundation.VersionControl.Client.Workspace), typeof(string));
+        private readonly Button manageButton = new Button(GettextCatalog.GetString("Manage"));
         private readonly TreeView _treeView = new TreeView();
-        private readonly TreeStore _treeStore;
-
-        #endregion
-
-        private Microsoft.TeamFoundation.Client.ProjectCollection projectCollection;
+        private readonly TreeStore _treeStore = new TreeStore(typeof(Microsoft.TeamFoundation.VersionControl.Client.Objects.Item), typeof(Pixbuf), typeof(string));
+        private ProjectCollection projectCollection;
         private readonly List<Microsoft.TeamFoundation.VersionControl.Client.Workspace> _workspaces = new List<Microsoft.TeamFoundation.VersionControl.Client.Workspace>();
-        private Microsoft.TeamFoundation.VersionControl.Client.Workspace _currentWorkspace = null;
+        private Microsoft.TeamFoundation.VersionControl.Client.Workspace _currentWorkspace;
 
         public SourceControlExplorerView()
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
-            _workspaceStore = new ListStore(_workspaceName);
-            _listStore = new ListStore(_typeList, _iconList, _itemList, _nameList, _changeList, _userList, _latestList, _lastCheckinList);
-            _treeStore = new TreeStore(_iconTree, _itemTree, _nameTree);
             BuildGui();
         }
 
-        public static void Open(Microsoft.TeamFoundation.Client.ProjectInfo project)
+        public static void Open(ProjectInfo project)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
@@ -108,7 +77,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 }
             }
 
-            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
+            var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(project);
             sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder + project.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
@@ -128,7 +97,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 }
             }
 
-            SourceControlExplorerView sourceControlExplorerView = new SourceControlExplorerView();
+            var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
             sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
@@ -162,98 +131,116 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        public override Widget Widget { get { return _view; } }
+        public override Widget Control { get { return _view; } }
 
         private void BuildGui()
         {
             HBox headerBox = new HBox();
-            headerBox.HeightRequest = 25;
+            headerBox.PackStart(new Label(GettextCatalog.GetString("Workspace") + ":"), false, false, 0);
 
-            headerBox.PackStart(new Label(GettextCatalog.GetString("Workspace") + ":"));
-            _workspaceComboBox.ItemsSource = _workspaceStore;
-            _workspaceComboBox.Views.Add(new TextCellView(_workspaceName));
-            _workspaceComboBox.SelectionChanged += OnChangeActiveWorkspaces;
-            headerBox.PackStart(_workspaceComboBox);
-            Button button = new Button(GettextCatalog.GetString("Manage"));
-            button.Clicked += OnManageWorkspaces;
-            headerBox.PackStart(button);
-            _view.PackStart(headerBox);
+            _workspaceComboBox.Model = _workspaceStore;
+            var workspaceTextRenderer = new CellRendererText();
+            _workspaceComboBox.PackStart(workspaceTextRenderer, true);
+            _workspaceComboBox.SetAttributes(workspaceTextRenderer, "text", 1);
+
+            headerBox.PackStart(_workspaceComboBox, false, false, 0);
+            headerBox.PackStart(manageButton, false, false, 0);
+            _view.PackStart(headerBox, false, false, 0);
 
             HPaned mainBox = new HPaned();
 
             VBox treeViewBox = new VBox();
 
-            _treeView.Columns.Add("Folders", new ImageCellView(_iconTree), new TextCellView(_nameTree));
-            _treeView.DataSource = _treeStore;
-            _treeView.SelectionChanged += OnFolderChanged;
-            treeViewBox.WidthRequest = 80;
-            treeViewBox.PackStart(_treeView, true, true);
-            mainBox.Panel1.Shrink = false;
-            mainBox.Panel1.Content = treeViewBox;
+            TreeViewColumn treeColumn = new TreeViewColumn();
+            treeColumn.Title = "Folders";
+            var repoImageRenderer = new CellRendererPixbuf();
+            treeColumn.PackStart(repoImageRenderer, false);
+            treeColumn.SetAttributes(repoImageRenderer, "pixbuf", 1);
+            var folderTextRenderer = new CellRendererText();
+            treeColumn.PackStart(folderTextRenderer, true);
+            treeColumn.SetAttributes(folderTextRenderer, "text", 2);
+            _treeView.AppendColumn(treeColumn);
+
+            treeViewBox.WidthRequest = 100;
+            ScrolledWindow scrollContainer = new ScrolledWindow();
+            scrollContainer.Add(_treeView);
+            treeViewBox.PackStart(scrollContainer, true, true, 0);
+            mainBox.Pack1(treeViewBox, true, false);
 
 
             VBox rightBox = new VBox();
             HBox headerRightBox = new HBox();
-            headerRightBox.PackStart(new Label(GettextCatalog.GetString("Local Path") + ":"));
-            headerRightBox.PackStart(_localFolder);
-            rightBox.PackStart(headerRightBox);
-            //_listView.Columns.Add(new ListViewColumn("Type", new TextCellView(_typeList)));
-            _listView.Columns.Add("Name", new ImageCellView(_iconList), new TextCellView(_nameList));
-            _listView.Columns.Add(new ListViewColumn("Pending Change", new TextCellView(_changeList)));
-            _listView.Columns.Add(new ListViewColumn("User", new TextCellView(_userList)));
-            _listView.Columns.Add(new ListViewColumn("Latest", new TextCellView(_latestList)));
-            _listView.Columns.Add(new ListViewColumn("Last Check-in", new TextCellView(_lastCheckinList)));
-            _listView.SelectionMode = SelectionMode.Multiple;
+            headerRightBox.PackStart(new Label(GettextCatalog.GetString("Local Path") + ":"), false, false, 0);
+            Alignment leftAlign = new Alignment(0, 0, 0, 0);
+            _localFolder.Justify = Justification.Left;
+            leftAlign.Add(_localFolder);
+            headerRightBox.PackStart(leftAlign);
+            rightBox.PackStart(headerRightBox, false, false, 0);
+
+            var itemNameColumn = new TreeViewColumn();
+            itemNameColumn.Title = "Name";
+            var itemIconRenderer = new CellRendererPixbuf();
+            itemNameColumn.PackStart(itemIconRenderer, false);
+            itemNameColumn.SetAttributes(itemIconRenderer, "pixbuf", 1);
+            var itemNameRenderer = new CellRendererText();
+            itemNameColumn.PackStart(itemNameRenderer, true);
+            itemNameColumn.SetAttributes(itemNameRenderer, "text", 2);
+            _listView.AppendColumn(itemNameColumn);
+
+            _listView.AppendColumn("Pending Change", new CellRendererText(), "text", 3);
+            _listView.AppendColumn("User", new CellRendererText(), "text", 4);
+            _listView.AppendColumn("Latest", new CellRendererText(), "text", 5);
+            _listView.AppendColumn("Last Check-in", new CellRendererText(), "text", 6);
+
+            _listView.Selection.Mode = SelectionMode.Multiple;
+            _listView.Model = _listStore;
+            var listViewScollWindow = new ScrolledWindow();
+            listViewScollWindow.Add(_listView);
+            rightBox.PackStart(listViewScollWindow, true, true, 0);
+            mainBox.Pack2(rightBox, true, true);
+            _view.PackStart(mainBox, true, true, 0);
+            AttachEvents();
+            _view.ShowAll();
+        }
+
+        private void AttachEvents()
+        {
+            _workspaceComboBox.Changed += OnChangeActiveWorkspaces;
+            manageButton.Clicked += OnManageWorkspaces;
+            _treeView.Selection.Changed += OnFolderChanged;
             _listView.RowActivated += OnListItemClicked;
-            _listView.DataSource = _listStore;
-
-            _listView.ButtonPressed += (sender, e) =>
-            {
-                if (e.Button == PointerButton.Right && _listView.SelectedRows.Any())
-                {
-                    var menu = BuildPopupMenu();
-                    if (menu.Items.Any())
-                        menu.Popup();
-                }
-            };
-            rightBox.PackStart(_listView, true, true);
-            mainBox.Panel2.Content = rightBox;
-
-            _view.PackStart(mainBox, true, true);
+            _listView.ButtonPressEvent += OnListViewMouseClick;
         }
 
         private void FillWorkspaces()
         {
             string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(projectCollection);
-            _workspaceComboBox.SelectionChanged -= OnChangeActiveWorkspaces;
+            _workspaceComboBox.Changed -= OnChangeActiveWorkspaces;
             _workspaceStore.Clear();
             _workspaces.Clear();
             _workspaces.AddRange(WorkspaceHelper.GetLocalWorkspaces(projectCollection));
-            int activeWorkspaceRow = -1;
+            TreeIter activeWorkspaceRow = TreeIter.Zero;
             foreach (var workspace in _workspaces)
             {
-                var row = _workspaceStore.AddRow();
-                _workspaceStore.SetValue(row, _workspaceName, workspace.Name);
+                var iter = _workspaceStore.AppendValues(workspace, workspace.Name);
                 if (string.Equals(workspace.Name, activeWorkspace, StringComparison.Ordinal))
                 {
-                    activeWorkspaceRow = row;
+                    activeWorkspaceRow = iter;
                 }
             }
-            _workspaceComboBox.SelectionChanged += OnChangeActiveWorkspaces;
+            _workspaceComboBox.Changed += OnChangeActiveWorkspaces;
             if (_workspaces.Count > 0)
             {
-                if (activeWorkspaceRow > -1)
-                    _workspaceComboBox.SelectedIndex = activeWorkspaceRow;
+                if (!activeWorkspaceRow.Equals(TreeIter.Zero))
+                    _workspaceComboBox.SetActiveIter(activeWorkspaceRow);
                 else
-                    _workspaceComboBox.SelectedIndex = 0;
+                    _workspaceComboBox.Active = 0;
             }
-
         }
 
-        private Image GetRepositoryImage()
+        private static Pixbuf GetRepositoryImage()
         {
-            var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.repository.png");
-            return image.Scale(0.6);
+            return new Pixbuf(System.Reflection.Assembly.GetCallingAssembly(), "MonoDevelop.VersionControl.TFS.Icons.repository.png", 16, 16);
         }
 
         private void FillTreeView()
@@ -263,23 +250,46 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
-            var node = _treeStore.AddNode().SetValue(_iconTree, GetRepositoryImage()).SetValue(_nameTree, root.Name).SetValue(_itemTree, root.Item);
+            var node = _treeStore.AppendNode();
+            _treeStore.SetValues(node, root.Item, GetRepositoryImage(), root.Name);
             AddChilds(node, root.Children);
-            var topNode = _treeStore.GetFirstNode();
-            _treeView.ExpandRow(topNode.CurrentPosition, false);
+            TreeIter firstNode;
+            if (_treeStore.GetIterFirst(out firstNode))
+            {
+                _treeView.ExpandRow(_treeStore.GetPath(firstNode), false);
+                _treeView.Selection.SelectIter(firstNode);
+            }
+            _treeView.Model = _treeStore;
         }
 
-        private Image GetItemImage(ItemType itemType)
+        int treeLevel;
+
+        private void AddChilds(TreeIter node, List<HierarchyItem> children)
+        {
+            treeLevel++;
+            foreach (var child in children)
+            {
+                var childNode = _treeStore.AppendNode(node);
+                _treeStore.SetValue(childNode, 0, child.Item);
+                _treeStore.SetValue(childNode, 2, child.Name);
+                if (treeLevel == 1)
+                    _treeStore.SetValue(childNode, 1, GetRepositoryImage());
+                else
+                    _treeStore.SetValue(childNode, 1, GetItemImage(ItemType.Folder));
+                AddChilds(childNode, child.Children);
+            }
+            treeLevel--;
+        }
+
+        private static Pixbuf GetItemImage(ItemType itemType)
         {
             if (itemType == ItemType.File)
             {
-                var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.text-file-16.png");
-                return image;
+                return new Pixbuf(System.Reflection.Assembly.GetCallingAssembly(), "MonoDevelop.VersionControl.TFS.Icons.text-file-16.png");
             }
             else
             {
-                var image = Image.FromResource("MonoDevelop.VersionControl.TFS.Icons.open-folder-16.png");
-                return image;
+                return new Pixbuf(System.Reflection.Assembly.GetCallingAssembly(), "MonoDevelop.VersionControl.TFS.Icons.open-folder-16.png");
             }
         }
 
@@ -291,17 +301,16 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var itemSet = versionControl.QueryItemsExtended(this._currentWorkspace, new ItemSpec(serverPath, RecursionType.OneLevel), DeletedState.NonDeleted, ItemType.Any);
             foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {
-                var row = _listStore.AddRow();
-                _listStore.SetValue(row, _itemList, item);
-                _listStore.SetValue(row, _typeList, item.ItemType.ToString());
-                _listStore.SetValue(row, _iconList, GetItemImage(item.ItemType));
-                _listStore.SetValue(row, _nameList, ((VersionControlPath)item.TargetServerItem).ItemName);
+                var row = _listStore.Append();
+                _listStore.SetValue(row, 0, item);
+                _listStore.SetValue(row, 1, GetItemImage(item.ItemType));
+                _listStore.SetValue(row, 2, item.ServerPath.ItemName);
                 if (this._currentWorkspace != null)
                 {
                     if (item.ChangeType != ChangeType.None && !item.HasOtherPendingChange)
                     {
-                        _listStore.SetValue(row, _changeList, item.ChangeType.ToString());
-                        _listStore.SetValue(row, _userList, this._currentWorkspace.OwnerName);
+                        _listStore.SetValue(row, 3, item.ChangeType.ToString());
+                        _listStore.SetValue(row, 4, this._currentWorkspace.OwnerName);
                     }
                     if (item.HasOtherPendingChange)
                     {
@@ -316,84 +325,50 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             changeNames.Add(pChange.ChangeType.ToString());
                             userNames.Add(remoteChange.Owner);
                         }
-                        _listStore.SetValue(row, _changeList, string.Join(", ", changeNames));
-                        _listStore.SetValue(row, _userList, string.Join(", ", userNames));
+                        _listStore.SetValue(row, 3, string.Join(", ", changeNames));
+                        _listStore.SetValue(row, 4, string.Join(", ", userNames));
                     }
                 }
                 if (!IsMapped(item.ServerPath))
                 {
-                    _listStore.SetValue(row, _latestList, "Not mapped");
+                    _listStore.SetValue(row, 5, "Not mapped");
                 }
                 else
                 {
                     if (!item.IsInWorkspace)
                     {
-                        _listStore.SetValue(row, _latestList, "Not downloaded");
+                        _listStore.SetValue(row, 5, "Not downloaded");
                     }
                     else
                     {
-                        _listStore.SetValue(row, _latestList, item.IsLatest ? "Yes" : "No");
+                        _listStore.SetValue(row, 5, item.IsLatest ? "Yes" : "No");
                     }
                 }
-                _listStore.SetValue(row, _lastCheckinList, item.CheckinDate);
+                _listStore.SetValue(row, 6, item.CheckinDate.ToString("yyyy-MM-dd HH:mm"));
             }
-        }
-
-        int treeLevel = 0;
-
-        private void AddChilds(TreeNavigator node, List<HierarchyItem> children)
-        {
-            treeLevel++;
-            foreach (var child in children)
-            {
-                var childNode = node.AddChild().SetValue(_nameTree, child.Name).SetValue(_itemTree, child.Item);
-                if (treeLevel == 1)
-                    childNode.SetValue(_iconTree, GetRepositoryImage());
-                else
-                    childNode.SetValue(_iconTree, GetItemImage(ItemType.Folder));
-                AddChilds(node, child.Children);
-                node.MoveToParent();
-            }
-            treeLevel--;
         }
 
         private void ExpandPath(string path)
         {
             if (string.IsNullOrEmpty(path))
                 return;
-            var node = _treeStore.GetFirstNode();
-            node = FindTreeItem(node, path);
-            if (node == null)
-                return;
-            var copyPosition = node.CurrentPosition;
-            while (node.MoveToParent())
-                _treeView.ExpandRow(node.CurrentPosition, false);
-            _treeView.ExpandRow(copyPosition, false);
-            _treeView.ScrollToRow(copyPosition);
-            _treeView.SelectRow(copyPosition);
-        }
-
-        private TreeNavigator FindTreeItem(TreeNavigator navigator, string path)
-        {
-            if (string.Equals(navigator.GetValue(_itemTree).ServerItem, path, StringComparison.OrdinalIgnoreCase))
-                return navigator;
-            if (navigator.MoveToChild())
+            TreeIter iter = TreeIter.Zero;
+            _treeStore.Foreach((m, p, i) =>
             {
-                return FindTreeItem(navigator, path);
-            }
-            else
-            {
-                if (!navigator.MoveNext())
+                var item = ((Microsoft.TeamFoundation.VersionControl.Client.Objects.Item)m.GetValue(i, 0));
+                if (string.Equals(item.ServerPath, path, StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!navigator.MoveToParent())
-                        return null;
-                    while (!navigator.MoveNext())
-                    {
-                        navigator.MoveToParent();
-                    }
+                    iter = i;
+                    return true;
                 }
-                return FindTreeItem(navigator, path);
-            }
+                return false;
+            });
+
+            if (iter.Equals(TreeIter.Zero))
+                return;
+            _treeView.CollapseAll();
+            _treeView.ExpandToPath(_treeStore.GetPath(iter));
+            _treeView.Selection.SelectIter(iter);
         }
 
         private bool IsMapped(string serverPath)
@@ -415,7 +390,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 _localFolder.Text = mappedFolder.LocalItem;
             else
             {
-                string rest = serverPath.ChildPart(mappedFolder.ServerItem); //serverPath.Substring(mappedFolder.ServerItem.Length + 1);
+                string rest = serverPath.ChildPart(mappedFolder.ServerItem);
                 _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
@@ -424,16 +399,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void OnChangeActiveWorkspaces(object sender, EventArgs ev)
         {
-            if (_workspaceComboBox.SelectedIndex > -1)
+            TreeIter workspaceIter;
+            if (_workspaceComboBox.GetActiveIter(out workspaceIter))
             {
-                var name = _workspaceStore.GetValue(_workspaceComboBox.SelectedIndex, _workspaceName);
-                _currentWorkspace = _workspaces.Single(ws => string.Equals(ws.Name, name, StringComparison.Ordinal));
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, name);
-                if (_treeView.SelectedRow != null)
+                var workspace = (Microsoft.TeamFoundation.VersionControl.Client.Workspace)_workspaceStore.GetValue(workspaceIter, 0);
+                _currentWorkspace = workspace;
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspace.Name);
+                TreeIter treeIter;
+                if (_treeView.Selection.GetSelected(out treeIter))
                 {
-                    var currentItem = _treeStore.GetNavigatorAt(_treeView.SelectedRow).GetValue(_itemTree).ServerItem;
-                    ShowMappingPath(currentItem);
-                    FillListView(currentItem);
+                    var currentItem = (Microsoft.TeamFoundation.VersionControl.Client.Objects.Item)_treeStore.GetValue(treeIter, 0);
+                    ShowMappingPath(currentItem.ServerPath);
+                    FillListView(currentItem.ServerPath);
                 }
             }
             else
@@ -444,11 +421,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void OnFolderChanged(object sender, EventArgs e)
         {
-            if (_treeView.SelectedRow == null)
+            TreeIter iter;
+            if (!_treeView.Selection.GetSelected(out iter))
                 return;
-
-            var navigator = _treeStore.GetNavigatorAt(_treeView.SelectedRow);
-            var item = navigator.GetValue(_itemTree);
+        
+            var item = (Microsoft.TeamFoundation.VersionControl.Client.Objects.Item)_treeStore.GetValue(iter, 0);
             FillListView(item.ServerItem);
             ShowMappingPath(item.ServerItem);
         }
@@ -457,18 +434,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             using (var dialog = new WorkspacesDialog(projectCollection))
             {
-                if (dialog.Run(this.Widget.ParentWindow) == Command.Close)
+                if (dialog.Run() == Xwt.Command.Close)
                 {
                     FillWorkspaces();
                 }
             }
         }
 
-        private void OnListItemClicked(object sender, ListViewRowEventArgs e)
+        private void OnListItemClicked(object sender, RowActivatedArgs e)
         {
-            if (e.RowIndex < 0)
+            TreeIter iter;
+            if (!_listStore.GetIter(out iter, e.Path))
                 return;
-            var item = _listStore.GetValue(e.RowIndex, _itemList);
+
+            var item = (ExtendedItem)_listStore.GetValue(iter, 0);
             if (item.ItemType == ItemType.Folder)
                 ExpandPath(item.TargetServerItem);
             if (item.ItemType == ItemType.File && IsMapped(item.ServerPath))
@@ -496,7 +475,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                         if (parentFolder == null)
                             return;
                         GetLatestVersion(new List<ExtendedItem> { parentFolder });
-
+        
                         IdeApp.Workspace.OpenWorkspaceItem(futureLocalPath, true);
                     }
                     if (File.Exists(filePath))
@@ -509,43 +488,58 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         #region Popup Menu
 
+        [GLib.ConnectBefore]
+        private void OnListViewMouseClick(object o, ButtonPressEventArgs args)
+        {
+            if (args.Event.Button == 3 && _listView.Selection.GetSelectedRows().Any())
+            {
+                var menu = BuildPopupMenu();
+                if (menu.Children.Length > 0)
+                    menu.Popup();
+                args.RetVal = true;
+            }
+        }
+
         private Menu BuildPopupMenu()
         {
             Menu menu = new Menu();
             var items = new List<ExtendedItem>();
-            foreach (var row in _listView.SelectedRows)
+            foreach (var path in _listView.Selection.GetSelectedRows())
             {
-                items.Add(_listStore.GetValue(row, _itemList));
+                TreeIter iter;
+                _listStore.GetIter(out iter, path);
+                items.Add((ExtendedItem)_listStore.GetValue(iter, 0));
             }
-
+        
             if (items.All(i => IsMapped(i.ServerPath)))
             {
                 foreach (var item in GetGroup(items))
                 {
-                    menu.Items.Add(item);
+                    menu.Add(item);
                 }
                 var editGroup = EditGroup(items);
                 if (editGroup.Any())
                 {
-                    menu.Items.Add(new SeparatorMenuItem());
+                    menu.Add(new SeparatorMenuItem());
                     foreach (var item in editGroup)
                     {
-                        menu.Items.Add(item);
+                        menu.Add(item);
                     }
                 }
                 if (items.Count == 1 && items[0].ItemType == ItemType.Folder)
                 {
-                    menu.Items.Add(new SeparatorMenuItem());
-                    menu.Items.Add(CreateOpenFolderMenuItem(items[0]));
+                    menu.Add(new SeparatorMenuItem());
+                    menu.Add(CreateOpenFolderMenuItem(items[0]));
                 }
             }
             else
             {
                 foreach (var item in NotMappedMenu(items))
                 {
-                    menu.Items.Add(item);
+                    menu.Add(item);
                 }
             }
+            menu.ShowAll();
             return menu;
         }
 
@@ -553,11 +547,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             var groupItems = new List<MenuItem>();
             MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
-            getLatestVersionItem.Clicked += (sender, e) => GetLatestVersion(items);
+            getLatestVersionItem.Activated += (sender, e) => GetLatestVersion(items);
             groupItems.Add(getLatestVersionItem);
-
+        
             MenuItem forceGetLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Specific Version"));
-            forceGetLatestVersionItem.Clicked += (sender, e) => ForceGetLatestVersion(items);
+            forceGetLatestVersionItem.Activated += (sender, e) => ForceGetLatestVersion(items);
             groupItems.Add(forceGetLatestVersionItem);
             return groupItems;
         }
@@ -565,18 +559,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private List<MenuItem> EditGroup(List<ExtendedItem> items)
         {
             var groupItems = new List<MenuItem>();
-            var itemsWithChages = items.Where(i => i.ChangeType != ChangeType.None).ToList();
-            if (itemsWithChages.Count == 0)
+            //Check Out
+            var checkOutItems = items.Where(i => i.ChangeType == ChangeType.None || i.ItemType == ItemType.Folder).ToList();
+            if (checkOutItems.Any())
             {
                 MenuItem checkOutItem = new MenuItem(GettextCatalog.GetString("Check out items"));
-                checkOutItem.Clicked += (sender, e) => CheckOutDialog.Open(items, _currentWorkspace);
+                checkOutItem.Activated += (sender, e) => CheckOutDialog.Open(checkOutItems, _currentWorkspace);
                 groupItems.Add(checkOutItem);
             }
             //Undo
-            if (itemsWithChages.Count > 0)
+            var undoItems = items.Where(i => i.ChangeType != ChangeType.None || i.ItemType == ItemType.Folder).ToList();
+            if (undoItems.Any())
             {
                 MenuItem revertItem = new MenuItem(GettextCatalog.GetString("Undo Changes"));
-                revertItem.Clicked += (sender, e) => UndoChanges(itemsWithChages);
+                revertItem.Activated += (sender, e) => UndoChanges(undoItems);
                 groupItems.Add(revertItem);
             }
             return groupItems;
@@ -585,14 +581,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private List<MenuItem> NotMappedMenu(List<ExtendedItem> items)
         {
             MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
-            mapItem.Clicked += (sender, e) => MapItem(items);
+            mapItem.Activated += (sender, e) => MapItem(items);
             return new List<MenuItem> { mapItem };
         }
 
         private MenuItem CreateOpenFolderMenuItem(ExtendedItem item)
         {
             MenuItem openFolder = new MenuItem(GettextCatalog.GetString("Open mapped folder"));
-            openFolder.Clicked += (sender, e) =>
+            openFolder.Activated += (sender, e) =>
             {
                 var path = item.LocalItem;
                 if (string.IsNullOrEmpty(path))
@@ -607,7 +603,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var item = items.FirstOrDefault(i => i.ItemType == ItemType.Folder);
             if (_currentWorkspace == null || item == null)
                 return;
-            using (SelectFolderDialog folderSelect = new SelectFolderDialog("Browse For Folder"))
+            using (Xwt.SelectFolderDialog folderSelect = new Xwt.SelectFolderDialog("Browse For Folder"))
             {
                 folderSelect.Multiselect = false;
                 folderSelect.CanCreateFolders = true;
@@ -622,7 +618,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void RefreshList(List<ExtendedItem> items)
         {
             if (items.Any())
-                FillListView(items[0].ServerPath.ParentPath); 
+                FillListView(items[0].ServerPath.ParentPath);
         }
 
         private void GetLatestVersion(List<ExtendedItem> items)
@@ -630,8 +626,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             List<GetRequest> requests = new List<GetRequest>();
             foreach (var item in items)
             {
-                RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;   
-                requests.Add(new GetRequest(item.ServerPath, recursion, VersionSpec.Latest)); 
+                RecursionType recursion = item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full;
+                requests.Add(new GetRequest(item.ServerPath, recursion, VersionSpec.Latest));
             }
             using (var progress = VersionControlService.GetProgressMonitor("Get", VersionControlOperationType.Pull))
             {
@@ -652,11 +648,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             using (var specVersionDialog = new GetSpecVersionDialog(_currentWorkspace))
             {
                 specVersionDialog.AddItems(items);
-                if (specVersionDialog.Run(this.Widget.ParentWindow) == Command.Ok)
+                if (specVersionDialog.Run() == Xwt.Command.Ok)
                 {
                     RefreshList(items);
                 }
-            }               
+            }
         }
 
         private void UndoChanges(List<ExtendedItem> items)
@@ -667,19 +663,5 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         }
 
         #endregion
-
-        public override void Dispose()
-        {
-            base.Dispose();
-            _listView.Dispose();
-            _treeStore.Dispose();
-            _treeView.SelectionChanged -= OnFolderChanged;
-            _treeView.Dispose();
-
-            _workspaceComboBox.Dispose();
-            _workspaceStore.Dispose();
-
-            _view.Dispose();
-        }
     }
 }
