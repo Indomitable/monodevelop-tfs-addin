@@ -34,7 +34,6 @@ using Mono.TextEditor;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using MonoDevelop.VersionControl.TFS.GUI;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.Helpers;
@@ -347,7 +346,15 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var ws in GroupFilesPerWorkspace(localPaths))
             {
-                ws.Key.PendDelete(ws.ToList(), RecursionType.None);
+                List<Failure> failures;
+                ws.Key.PendDelete(ws.ToList(), RecursionType.None, out failures);
+                if (failures.Any(f => f.SeverityType == SeverityType.Error))
+                {
+                    foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                    {
+                        monitor.ReportError(failure.Code, new Exception(failure.Message));
+                    }
+                }
             }
             FileService.NotifyFilesChanged(localPaths);
         }
@@ -356,7 +363,15 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var ws in GroupFilesPerWorkspace(localPaths))
             {
-                ws.Key.PendDelete(ws.ToList(), RecursionType.Full);
+                List<Failure> failures;
+                ws.Key.PendDelete(ws.ToList(), RecursionType.Full, out failures);
+                if (failures.Any(f => f.SeverityType == SeverityType.Error))
+                {
+                    foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                    {
+                        monitor.ReportError(failure.Code, new Exception(failure.Message));
+                    }
+                }
             }
             FileService.NotifyFilesChanged(localPaths);
         }
@@ -451,14 +466,18 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnMoveFile(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             var workspace = GetWorkspaceByLocalPath(localSrcPath);
-            workspace.PendRenameFile(localSrcPath, localDestPath);
+            List<Failure> failures;
+            workspace.PendRenameFile(localSrcPath, localDestPath, out failures);
+            FailuresDisplayDialog.ShowFailures(failures);
             base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
         }
 
         protected override void OnMoveDirectory(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             var workspace = GetWorkspaceByLocalPath(localSrcPath);
-            workspace.PendRenameFolder(localSrcPath, localDestPath);
+            List<Failure> failures;
+            workspace.PendRenameFolder(localSrcPath, localDestPath, out failures);
+            FailuresDisplayDialog.ShowFailures(failures);
             base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
         }
 

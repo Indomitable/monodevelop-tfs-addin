@@ -152,6 +152,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return this.VersionControlService.QueryPendingChangesForWorkspace(this, itemSpecs, includeDownloadInfo);
         }
 
+        public List<PendingChange> GetPendingChanges(List<ExtendedItem> items)
+        {
+            List<ItemSpec> itemSpecs = new List<ItemSpec>();
+            foreach (var item in items)
+            {
+                itemSpecs.Add(new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
+            }
+            return this.VersionControlService.QueryPendingChangesForWorkspace(this, itemSpecs, false);
+        }
+
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
         {
             ItemSpec[] items = { new ItemSpec(item, recurse) };
@@ -318,14 +328,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return operations.Count;
         }
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(List<FilePath> paths, RecursionType recursionType)
+        public void PendDelete(List<FilePath> paths, RecursionType recursionType, out List<Failure> failures)
         {
             if (paths.Count == 0)
+            {
+                failures = new List<Failure>();
                 return;
+            }
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, p.IsDirectory ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
-            List<Failure> failures;
-            this.VersionControlService.PendChanges(this, changes, out failures);
+            var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
+            ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
         }
 
@@ -355,24 +368,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return failures;
         }
 
-        private void PendRename(string oldPath, string newPath, ItemType itemType)
+        private void PendRename(string oldPath, string newPath, ItemType itemType, out List<Failure> failures)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
             changes.Add(new ChangeRequest(oldPath, newPath, RequestType.Rename, itemType));
-            List<Failure> failures;
             var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
         }
 
-        public void PendRenameFile(string oldPath, string newPath)
+        public void PendRenameFile(string oldPath, string newPath, out List<Failure> failures)
         {
-            PendRename(oldPath, newPath, ItemType.File);
+            PendRename(oldPath, newPath, ItemType.File, out failures);
         }
 
-        public void PendRenameFolder(string oldPath, string newPath)
+        public void PendRenameFolder(string oldPath, string newPath, out List<Failure> failures)
         {
-            PendRename(oldPath, newPath, ItemType.Folder);
+            PendRename(oldPath, newPath, ItemType.Folder, out failures);
         }
 
         public List<FilePath> Undo(List<ItemSpec> items, IProgressMonitor monitor = null)

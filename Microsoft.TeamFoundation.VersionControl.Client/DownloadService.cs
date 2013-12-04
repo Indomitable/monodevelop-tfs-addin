@@ -129,6 +129,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 var name = Path.GetFileName(fileName);
                 var newName = Path.Combine(Path.GetDirectoryName(path), name);
+                if (File.Exists(newName))
+                    File.Delete(newName);
                 File.Move(path, newName);
                 return newName;
             }

@@ -31,8 +31,9 @@ using MonoDevelop.Core;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
+using MonoDevelop.Ide;
 
-namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
     public class CheckOutDialog : Dialog
     {
@@ -116,13 +117,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             using (var dialog = new CheckOutDialog())
             {
                 dialog.FillStore(items);
-                if (dialog.Run() == Command.Ok)
+                if (dialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow)) == Command.Ok)
                 {
                     var itemsToCheckOut = dialog.SelectedItems;
                     using (var progress = VersionControlService.GetProgressMonitor("Check Out", VersionControlOperationType.Pull))
                     {
                         progress.BeginTask("Check Out", itemsToCheckOut.Count);
-                        progress.Log.WriteLine("Start Check Out");
                         foreach (var item in itemsToCheckOut)
                         {
                             var path = item.IsInWorkspace ? item.LocalItem : workspace.TryGetLocalItemForServerItem(item.ServerPath);

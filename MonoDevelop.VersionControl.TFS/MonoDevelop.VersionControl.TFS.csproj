@@ -86,8 +86,10 @@
     <Compile Include="GUI\Server\AddServerWidget.cs" />
     <Compile Include="Commands\ResolveConflictsHandler.cs" />
     <Compile Include="Commands\SourceControlExplorerMenuHandler.cs" />
-    <Compile Include="GUI\VersionControl\CheckOutDialog.cs" />
     <Compile Include="GUI\GuiHelper.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\CheckOutDialog.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\UndoDialog.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\RenameDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -137,6 +139,7 @@
     <Folder Include="GUI\Server\" />
     <Folder Include="GUI\WorkItems\" />
     <Folder Include="GUI\VersionControl\" />
+    <Folder Include="GUI\VersionControl\Dialogs\" />
   </ItemGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />

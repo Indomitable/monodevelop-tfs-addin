@@ -31,6 +31,7 @@ using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using System.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Workspace
 {

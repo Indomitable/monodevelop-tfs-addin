@@ -402,7 +402,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             var failures = response.Element(MessageNs + "failures");
             if (failures != null)
                 return failures.Elements(MessageNs + "Failure").Select(x => Failure.FromXml(x)).ToList();
-            return null;
+            return new List<Failure>();
         }
 
         private List<GetOperation> GetOperationExtractor(XElement element)
