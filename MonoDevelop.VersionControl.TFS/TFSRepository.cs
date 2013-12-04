@@ -37,6 +37,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.Components.DockToolbars;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -72,7 +73,7 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (item == null)
                 return VersionStatus.Unversioned;
-            var workspace = this.GetWorkspaceByLocalPath(item.LocalItem);
+            var workspace = this.GetWorkspaceByServerPath(item.ServerPath);
             if (workspace == null)
                 return VersionStatus.Unversioned;
             var status = VersionStatus.Versioned;
@@ -85,7 +86,7 @@ namespace MonoDevelop.VersionControl.TFS
                     status |= VersionStatus.LockOwned; //Locked by me
             }
 
-            var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.LocalItem, item.LocalItem, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
+            var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.ServerItem, item.ServerPath, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
 
             if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0))
             {
@@ -160,7 +161,13 @@ namespace MonoDevelop.VersionControl.TFS
                 var localRevision = GetLocalRevision(item);
                 var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
                 var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
-                yield return new VersionInfo(item.LocalItem, item.ServerPath, item.ItemType == ItemType.Folder, 
+                var path = item.LocalItem;
+                if (string.IsNullOrEmpty(path))
+                {
+                    var workspace = this.GetWorkspaceByServerPath(item.ServerPath);
+                    path = workspace.TryGetLocalItemForServerItem(item.ServerPath);
+                }
+                yield return new VersionInfo(path, item.ServerPath, item.ItemType == ItemType.Folder, 
                     localStatus, localRevision, remoteStatus, remoteRevision);
             }
         }
@@ -185,12 +192,16 @@ namespace MonoDevelop.VersionControl.TFS
                     workspaceItems.Add(workspace, new List<ItemSpec> { item });
                 }
             }
-            var items = workspaceItems.SelectMany(x => x.Key.GetExtendedItems(x.Value, DeletedState.Any, ItemType.Any)).ToArray();
+            var items = workspaceItems.SelectMany(x => x.Key.GetExtendedItems(x.Value, DeletedState.NonDeleted, ItemType.Any)).ToArray();
             foreach (var item in items.Where(i => i.IsInWorkspace).Distinct())
             {
                 infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
             }
-            infos.AddRange(paths.Where(p => infos.All(i => p.CanonicalPath != i.LocalPath.CanonicalPath)).Select(p => VersionInfo.CreateUnversioned(p, p.IsDirectory)));
+            foreach (var item in items.Where(i => !i.IsInWorkspace && i.ChangeType.HasFlag(ChangeType.Delete)).Distinct())
+            {
+                infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
+            }
+            infos.AddRange(paths.Where(p => infos.All(i => !i.LocalPath.IsNullOrEmpty && p.CanonicalPath != i.LocalPath.CanonicalPath)).Select(p => VersionInfo.CreateUnversioned(p, Directory.Exists(p))));
             return infos.ToArray();
         }
 
@@ -433,22 +444,26 @@ namespace MonoDevelop.VersionControl.TFS
 
         public override DiffInfo GenerateDiff(FilePath baseLocalPath, VersionInfo versionInfo)
         {
-            if (versionInfo.LocalPath.IsDirectory)
+            if (Directory.Exists(versionInfo.LocalPath))
                 return null;
             string text;
             if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd) || versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
             {
-                var lines = File.ReadAllLines(versionInfo.LocalPath);
                 if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd))
                 {
+                    var lines = File.ReadAllLines(versionInfo.LocalPath);
                     text = string.Join(Environment.NewLine, lines.Select(l => "+" + l));
                     return new DiffInfo(baseLocalPath, versionInfo.LocalPath, text);
                 }
-                //if (versionInfo.Status == VersionStatus.ScheduledDelete)
-                //{
-                text = string.Join(Environment.NewLine, lines.Select(l => "-" + l));
-                return new DiffInfo(baseLocalPath, versionInfo.LocalPath, text);
-                //}
+                if (versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
+                {
+                    var workspace = this.GetWorkspaceByServerPath(versionInfo.RepositoryPath);
+                    var item = workspace.GetItem(versionInfo.RepositoryPath, ItemType.File, true);
+                    var lines = workspace.GetItemContent(item).Split(new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    text = string.Join(Environment.NewLine, lines.Select(l => "-" + l));
+                    return new DiffInfo(baseLocalPath, versionInfo.LocalPath, text);
+                }
+                return null;
             }
             else
             {

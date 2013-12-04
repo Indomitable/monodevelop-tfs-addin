@@ -161,7 +161,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public bool HasOtherPendingChange { get; private set; }
 
-        public bool IsInWorkspace { get { return (!string.IsNullOrEmpty(LocalItem)); } }
+        public bool IsInWorkspace { get { return !string.IsNullOrEmpty(LocalItem); } }
 
         public bool IsLatest { get { return VersionLatest == VersionLocal; } }
 
