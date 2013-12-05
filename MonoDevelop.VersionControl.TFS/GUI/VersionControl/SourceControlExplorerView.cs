@@ -606,7 +606,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             var groupItems = new List<MenuItem>();
             //Check Out
-            var checkOutItems = items.Where(i => i.ChangeType.HasFlag(ChangeType.None) || i.ItemType == ItemType.Folder).ToList();
+            var checkOutItems = items.Where(i => i.ChangeType == ChangeType.None || i.ChangeType == ChangeType.Lock || i.ItemType == ItemType.Folder).ToList();
             if (checkOutItems.Any())
             {
                 MenuItem checkOutItem = new MenuItem(GettextCatalog.GetString("Check out items"));
@@ -616,6 +616,33 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     RefreshList(items);
                 };
                 groupItems.Add(checkOutItem);
+            }
+            //Lock
+            var lockItems = items.Where(i => !i.IsLocked).ToList();
+            if (lockItems.Any())
+            {
+                MenuItem lockItem = new MenuItem(GettextCatalog.GetString("Lock"));
+                lockItem.Activated += (sender, e) =>
+                {
+                    LockDialog.Open(lockItems, _currentWorkspace);
+                    RefreshList(items);
+                };
+                groupItems.Add(lockItem);
+            }
+            //UnLock
+            var unLockItems = items.Where(i => i.IsLocked && !i.HasOtherPendingChange).ToList();
+            if (unLockItems.Any())
+            {
+                MenuItem unLockItem = new MenuItem(GettextCatalog.GetString("UnLock"));
+                unLockItem.Activated += (sender, e) =>
+                {
+                    var folders = new List<string>(unLockItems.Where(i => i.ItemType == ItemType.Folder).Select(i => (string)i.ServerPath));
+                    var files = new List<string>(unLockItems.Where(i => i.ItemType == ItemType.File).Select(i => (string)i.ServerPath));
+                    _currentWorkspace.LockFolders(folders, LockLevel.None);
+                    _currentWorkspace.LockFiles(files, LockLevel.None);
+                    RefreshList(items);
+                };
+                groupItems.Add(unLockItem);
             }
             //Rename
             var ableToRename = items.FirstOrDefault(i => !i.ChangeType.HasFlag(ChangeType.Delete));

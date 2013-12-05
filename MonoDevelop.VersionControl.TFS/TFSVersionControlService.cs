@@ -111,7 +111,7 @@ namespace MonoDevelop.VersionControl.TFS
                     }
                     if (doc.Root.Element("CheckOutLockLevel") == null)
                     {
-                        checkOutLockLevel = CheckOutLockLevel.None;
+                        checkOutLockLevel = CheckOutLockLevel.Unchanged;
                     }
                     else
                     {

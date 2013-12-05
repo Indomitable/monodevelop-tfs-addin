@@ -395,17 +395,22 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return undoPaths;
         }
 
-        public void LockFiles(List<FilePath> paths, LockLevel lockLevel)
+        public void LockFiles(List<string> paths, LockLevel lockLevel)
         {
-            SetLock(paths, lockLevel, RecursionType.None);
+            SetLock(paths, ItemType.File, lockLevel, RecursionType.None);
         }
 
-        public void SetLock(List<FilePath> paths, LockLevel lockLevel, RecursionType recursion)
+        public void LockFolders(List<string> paths, LockLevel lockLevel)
+        {
+            SetLock(paths, ItemType.File, lockLevel, RecursionType.Full);
+        }
+
+        private void SetLock(List<string> paths, ItemType itemType, LockLevel lockLevel, RecursionType recursion)
         {
             if (paths.Count == 0)
                 return;
 
-            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, p.IsDirectory ? ItemType.Folder : ItemType.File, recursion, lockLevel, VersionSpec.Latest)).ToList();
+            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, itemType, recursion, lockLevel, VersionSpec.Latest)).ToList();
             List<Failure> failures;
             var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);

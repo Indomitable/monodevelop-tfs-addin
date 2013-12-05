@@ -89,6 +89,7 @@
     <Compile Include="GUI\VersionControl\Dialogs\UndoDialog.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\RenameDialog.cs" />
     <Compile Include="GUI\TFSCommitDialogExtensionWidget.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\LockDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

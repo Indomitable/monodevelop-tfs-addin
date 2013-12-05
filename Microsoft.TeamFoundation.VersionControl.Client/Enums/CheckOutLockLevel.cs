@@ -29,7 +29,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
     public enum CheckOutLockLevel
     {
-        None = 0,
+        Unchanged = 0,
         CheckOut = 1,
         CheckIn = 2
     }

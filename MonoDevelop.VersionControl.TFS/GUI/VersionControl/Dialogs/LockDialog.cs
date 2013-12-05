@@ -1,5 +1,5 @@
 ﻿//
-// CheckOutDialog.cs
+// LockDialog.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -26,16 +26,16 @@
 using System;
 using Xwt;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using System.Collections.Generic;
 using MonoDevelop.Core;
+using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
-using MonoDevelop.Ide;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
-    public class CheckOutDialog : Dialog
+    public class LockDialog : Dialog
     {
         readonly ListView fileView = new ListView();
         readonly DataField<bool> isCheckedField = new DataField<bool>();
@@ -43,9 +43,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         readonly DataField<string> folderField = new DataField<string>();
         readonly DataField<ExtendedItem> itemField = new DataField<ExtendedItem>();
         readonly ListStore fileStore;
-        readonly ComboBox lockLevelBox = GuiHelper.GetLockLevelComboBox();
+        readonly ComboBox lockLevelBox = GuiHelper.GetLockLevelComboBox(true);
 
-        public CheckOutDialog()
+        public LockDialog()
         {
             fileStore = new ListStore(isCheckedField, nameField, folderField, itemField);
             BuildGui();
@@ -53,7 +53,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 
         void BuildGui()
         {
-            this.Title = GettextCatalog.GetString("Check Out");
+            this.Title = GettextCatalog.GetString("Lock Files");
             this.Resizable = false;
             var content = new VBox();
             content.PackStart(new Label(GettextCatalog.GetString("Files") + ":"));
@@ -104,49 +104,37 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal CheckOutLockLevel LockLevel
+        internal LockLevel LockLevel
         {
             get
             {
-                return (CheckOutLockLevel)lockLevelBox.SelectedItem;
+                var checkOutLockLevel = (CheckOutLockLevel)lockLevelBox.SelectedItem;
+                if (checkOutLockLevel == CheckOutLockLevel.CheckOut)
+                    return LockLevel.CheckOut;
+                else
+                    return LockLevel.Checkin;
             }
         }
 
         internal static void Open(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
         {
-            using (var dialog = new CheckOutDialog())
+            using (var dialog = new LockDialog())
             {
                 dialog.FillStore(items);
-                if (dialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow)) == Command.Ok)
+                if (dialog.Run(Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow)) == Command.Ok)
                 {
-                    var itemsToCheckOut = dialog.SelectedItems;
-                    using (var progress = VersionControlService.GetProgressMonitor("Check Out", VersionControlOperationType.Pull))
+                    var itemsToLock = dialog.SelectedItems;
+                    var lockLevel = dialog.LockLevel;
+
+                    using (var progress = VersionControlService.GetProgressMonitor("Lock Files", VersionControlOperationType.Pull))
                     {
-                        progress.BeginTask("Check Out", itemsToCheckOut.Count);
-                        foreach (var item in itemsToCheckOut)
-                        {
-                            var path = item.IsInWorkspace ? item.LocalItem : workspace.GetLocalItemForServerItem(item.ServerPath);
-                            workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None, progress);
-                            progress.Log.WriteLine("Check out item: " + item.ServerPath);
-                            var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.Full, dialog.LockLevel);
-                            if (failures != null && failures.Any())
-                            {
-                                if (failures.Any(f => f.SeverityType == SeverityType.Error))
-                                {
-                                    foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
-                                    {
-                                        progress.ReportError(failure.Code, new Exception(failure.Message));
-                                    }
-                                    break;
-                                }
-                                foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Warning))
-                                {
-                                    progress.ReportWarning(failure.Message);
-                                }
-                            }
-                        }
+                        progress.BeginTask("Lock Files", itemsToLock.Count);
+                        var folders = new List<string>(itemsToLock.Where(i => i.ItemType == ItemType.Folder).Select(i => (string)i.ServerPath));
+                        var files = new List<string>(itemsToLock.Where(i => i.ItemType == ItemType.File).Select(i => (string)i.ServerPath));
+                        workspace.LockFolders(folders, lockLevel);
+                        workspace.LockFiles(files, lockLevel);
                         progress.EndTask();
-                        progress.ReportSuccess("Finish Check Out.");
+                        progress.ReportSuccess("Finish locking.");
                     }
                 }
             }

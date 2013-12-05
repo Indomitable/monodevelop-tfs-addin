@@ -491,10 +491,22 @@ namespace MonoDevelop.VersionControl.TFS
             supportedOperations &= ~VersionControlOperation.Annotate; //Annotated is not supported yet.
             if (vinfo.Status.HasFlag(VersionStatus.ScheduledAdd))
                 supportedOperations &= ~VersionControlOperation.Log;
+
+            //Remove Base Lock Settings
+            supportedOperations &= ~VersionControlOperation.Lock;
+            supportedOperations &= ~VersionControlOperation.Unlock;
+
             if (vinfo.Status.HasFlag(VersionStatus.Locked))
             {
-                supportedOperations &= ~VersionControlOperation.Lock;
                 supportedOperations &= ~VersionControlOperation.Remove;
+            }
+
+            if (vinfo.Status.HasFlag(VersionStatus.LockOwned))
+                supportedOperations |= VersionControlOperation.Unlock;
+            if (!vinfo.Status.HasFlag(VersionStatus.LockOwned) &&
+                !vinfo.Status.HasFlag(VersionStatus.Locked))
+            {
+                supportedOperations |= VersionControlOperation.Lock;
             }
             return supportedOperations;
         }
@@ -547,7 +559,7 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var item in GroupFilesPerWorkspace(localPaths))
             {
-                item.Key.LockFiles(item.ToList(), LockLevel.CheckOut);
+                item.Key.LockFiles(item.Select(f => (string)f).ToList(), LockLevel.CheckOut);
             }
         }
 
@@ -555,7 +567,7 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var item in GroupFilesPerWorkspace(localPaths))
             {
-                item.Key.LockFiles(item.ToList(), LockLevel.None);
+                item.Key.LockFiles(item.Select(f => (string)f).ToList(), LockLevel.None);
             }
         }
 

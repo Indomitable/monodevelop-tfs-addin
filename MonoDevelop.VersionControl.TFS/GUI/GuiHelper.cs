@@ -31,17 +31,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public static class GuiHelper
     {
-        public static ComboBox GetLockLevelComboBox()
+        public static ComboBox GetLockLevelComboBox(bool forceLock = false)
         {
             ComboBox lockLevelBox = new ComboBox();
             lockLevelBox.WidthRequest = 150;
 
-            lockLevelBox.Items.Add(CheckOutLockLevel.None, "None");
-            lockLevelBox.Items.Add(CheckOutLockLevel.CheckOut, "Check Out");
-            lockLevelBox.Items.Add(CheckOutLockLevel.CheckIn, "Check In");
-            lockLevelBox.SelectedItem = TFSVersionControlService.Instance.CheckOutLockLevel;
+            if (!forceLock)
+                lockLevelBox.Items.Add(CheckOutLockLevel.Unchanged, "Unchanged - Keep any existing lock.");
+            lockLevelBox.Items.Add(CheckOutLockLevel.CheckOut, "Check Out - Prevent other users from checking out and checking in");
+            lockLevelBox.Items.Add(CheckOutLockLevel.CheckIn, "Check In - Prevent other users from checking in but allow checking out");
+            if (forceLock && TFSVersionControlService.Instance.CheckOutLockLevel == CheckOutLockLevel.Unchanged)
+                lockLevelBox.SelectedItem = CheckOutLockLevel.CheckOut;
+            else
+                lockLevelBox.SelectedItem = TFSVersionControlService.Instance.CheckOutLockLevel;
             return lockLevelBox;
         }
     }
 }
-

@@ -56,7 +56,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             this.Resizable = false;
             var content = new VBox();
             content.PackStart(new Label(GettextCatalog.GetString("Files") + ":"));
-            fileView.WidthRequest = 300;
+            fileView.WidthRequest = 500;
             fileView.HeightRequest = 150;
             var checkView = new CheckBoxCellView(isCheckedField);
             checkView.Editable = true;
