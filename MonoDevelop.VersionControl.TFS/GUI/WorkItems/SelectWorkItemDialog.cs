@@ -34,6 +34,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
     public class SelectWorkItemDialog : Dialog
     {
+        private readonly TFSRepository repo;
         private readonly TreeView queryView = new TreeView();
         private readonly DataField<string> titleField = new DataField<string>();
         private readonly DataField<StoredQuery> queryField = new DataField<StoredQuery>();
@@ -48,8 +49,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             }
         }
 
-        public SelectWorkItemDialog()
+        public SelectWorkItemDialog(TFSRepository repo)
         {
+            this.repo = repo;
             queryStore = new TreeStore(titleField, queryField);
             BuildGui();
         }
@@ -128,8 +130,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                         }
                         node.MoveToParent();
                     }
+                    queryView.ExpandRow(node.CurrentPosition, true);
                 }
             }
+            var cursor = queryStore.GetFirstNode();
+            if (cursor.MoveToChild()) //Move to Project Collections
+                queryView.ExpandToRow(cursor.CurrentPosition);
         }
 
         void AttachEvents()

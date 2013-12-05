@@ -63,8 +63,6 @@
     <Compile Include="Infrastructure\TFSNodeExtension.cs" />
     <Compile Include="Infrastructure\Objects\TFSRevision.cs" />
     <Compile Include="Infrastructure\MergeToolInfo.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetXwt.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetGtk.cs" />
     <Compile Include="GUI\Workspace\ProjectSelectDialog.cs" />
     <Compile Include="GUI\Workspace\WorkspaceAddEditDialog.cs" />
     <Compile Include="GUI\Workspace\WorkspacesDialog.cs" />
@@ -90,6 +88,7 @@
     <Compile Include="GUI\VersionControl\Dialogs\CheckOutDialog.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\UndoDialog.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\RenameDialog.cs" />
+    <Compile Include="GUI\TFSCommitDialogExtensionWidget.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

@@ -28,7 +28,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public class TFSCommitDialogExtension: CommitDialogExtension
     {
-        TFSCommitDialogExtensionWidgetGtk widget;
+        TFSCommitDialogExtensionWidget widget;
 
         public TFSCommitDialogExtension()
         {
@@ -36,9 +36,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         public override bool Initialize(ChangeSet changeSet)
         {
-            if (changeSet.Repository is TFSRepository)
+            var repo = changeSet.Repository as TFSRepository;
+            if (repo != null)
             {
-                widget = new TFSCommitDialogExtensionWidgetGtk();
+                widget = new TFSCommitDialogExtensionWidget(repo);
                 this.Add(widget);
                 widget.Show();
                 this.Show();

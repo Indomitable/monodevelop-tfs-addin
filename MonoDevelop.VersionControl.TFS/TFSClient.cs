@@ -55,7 +55,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override Repository OnCreateRepositoryInstance()
         {
-            return new TFSRepository(null);
+            return new TFSRepository(null, null);
         }
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
@@ -129,7 +129,7 @@ namespace MonoDevelop.VersionControl.TFS
                 var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
                 if (workspace != null)
                 {
-                    var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService));
+                    var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService, path));
                     result.AttachWorkspace(workspace);
                     return result;
                 }

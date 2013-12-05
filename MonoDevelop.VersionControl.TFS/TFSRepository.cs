@@ -45,9 +45,10 @@ namespace MonoDevelop.VersionControl.TFS
     {
         private readonly List<Workspace> workspaces = new List<Workspace>();
 
-        internal TFSRepository(RepositoryService versionControlService)
+        internal TFSRepository(RepositoryService versionControlService, string rootPath)
         {
             this.VersionControlService = versionControlService;
+            this.RootPath = rootPath;
         }
 
         private Workspace GetWorkspaceByLocalPath(FilePath path)

@@ -33,15 +33,17 @@ using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
-    public class TFSCommitDialogExtensionWidgetGtk : HBox
+    public class TFSCommitDialogExtensionWidget : HBox
     {
+        readonly TFSRepository repo;
         readonly TreeView workItemsView = new TreeView();
         readonly ListStore workItemStore = new ListStore(typeof(int), typeof(string), typeof(string));
         readonly ListStore checkinActions = new ListStore(typeof(string));
         readonly Button removeButton = new Button();
 
-        public TFSCommitDialogExtensionWidgetGtk()
+        public TFSCommitDialogExtensionWidget(TFSRepository repo)
         {
+            this.repo = repo;
             BuildGui();
         }
 
@@ -56,9 +58,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             CellRendererText cellTitle = new CellRendererText();
             TreeViewColumn titleColumn = new TreeViewColumn();
             titleColumn.Title = "Title";
+            titleColumn.Expand = true;
+            titleColumn.Sizing = TreeViewColumnSizing.Fixed;
             titleColumn.PackStart(cellTitle, true);
             titleColumn.AddAttribute(cellTitle, "text", 1);
-            //titleColumn.Width = 150;
 
             CellRendererCombo cellAction = new CellRendererCombo();
             TreeViewColumn actionColumn = new TreeViewColumn();
@@ -80,7 +83,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
             workItemsView.Model = workItemStore;
             workItemsView.WidthRequest = 300;
-            workItemsView.HeightRequest = 300;
+            workItemsView.HeightRequest = 120;
 
             this.PackStart(workItemsView, true, true, 3);
 
@@ -117,7 +120,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         void OnAddWorkItem(object sender, EventArgs e)
         {
-            using (var selectWorkItemDialog = new SelectWorkItemDialog())
+            using (var selectWorkItemDialog = new SelectWorkItemDialog(repo))
             {
                 selectWorkItemDialog.WorkItemList.OnSelectWorkItem += (workItem) =>
                 {
