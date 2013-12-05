@@ -492,21 +492,10 @@ namespace MonoDevelop.VersionControl.TFS
             if (vinfo.Status.HasFlag(VersionStatus.ScheduledAdd))
                 supportedOperations &= ~VersionControlOperation.Log;
 
-            //Remove Base Lock Settings
-            supportedOperations &= ~VersionControlOperation.Lock;
-            supportedOperations &= ~VersionControlOperation.Unlock;
-
             if (vinfo.Status.HasFlag(VersionStatus.Locked))
             {
+                supportedOperations &= ~VersionControlOperation.Lock;
                 supportedOperations &= ~VersionControlOperation.Remove;
-            }
-
-            if (vinfo.Status.HasFlag(VersionStatus.LockOwned))
-                supportedOperations |= VersionControlOperation.Unlock;
-            if (!vinfo.Status.HasFlag(VersionStatus.LockOwned) &&
-                !vinfo.Status.HasFlag(VersionStatus.Locked))
-            {
-                supportedOperations |= VersionControlOperation.Lock;
             }
             return supportedOperations;
         }
