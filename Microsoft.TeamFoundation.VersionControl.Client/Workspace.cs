@@ -39,6 +39,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
+using MonoDevelop.Projects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -651,33 +652,104 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
         }
 
+        private void ProjectMoveFile(MonoDevelop.Projects.Project project, FilePath source, string destination)
+        {
+            foreach (var file in project.Files)
+            {
+                if (file.FilePath == source)
+                {
+                    project.Files.Remove(file);
+                    break;
+                }
+            }
+            project.AddFile(destination);
+        }
+
+        private Project FindProjectContainingFolder(FilePath folder)
+        {
+            MonoDevelop.Projects.Project project = null;
+            foreach (var prj in IdeApp.Workspace.GetAllProjects())
+            {
+                foreach (var file in prj.Files)
+                {
+                    if (file.Subtype == Subtype.Directory && file.FilePath == folder)
+                    {
+                        project = prj;
+                        break;
+                    }
+                    if (file.Subtype == Subtype.Code && file.FilePath.IsChildPathOf(folder))
+                    {
+                        project = prj;
+                        break;
+                    }
+                }
+            }
+            return project;
+        }
+
+        private void ProjectMoveFolder(Project project, FilePath source, FilePath destination)
+        {
+            var filesToMove = new List<ProjectFile>();
+            ProjectFile folderFile = null;
+            foreach (var file in project.Files)
+            {
+                if (file.FilePath == source)
+                {
+                    folderFile = file;
+                }
+                if (file.FilePath.IsChildPathOf(source))
+                {
+                    filesToMove.Add(file);
+                }
+            }
+            if (folderFile != null)
+                project.Files.Remove(folderFile);
+
+            var relativePath = destination.ToRelative(project.BaseDirectory);
+            project.AddDirectory(relativePath);
+            foreach (var file in filesToMove)
+            {
+                project.Files.Remove(file);
+                var fileRelativePath = file.FilePath.ToRelative(source);
+                var fileToAdd = Path.Combine(destination, fileRelativePath);
+                if (FileHelper.HasFolder(fileToAdd))
+                {
+                    fileRelativePath = ((FilePath)fileToAdd).ToRelative(project.BaseDirectory);
+                    project.AddDirectory(fileRelativePath);
+                }
+                else
+                    project.AddFile(fileToAdd);
+            }
+        }
+
         private UpdateLocalVersion ProcessRename(GetOperation operation, ProcessDirection processDirection, IProgressMonitor monitor)
         {
+            //If the operation is called by Repository OnMoveFile or OnMoveDirectory file/folder is moved before this method.
+            //When is called by Source Exporer or By Revert command file is not moved
             bool hasBeenMoved = !FileHelper.Exists(operation.SourceLocalItem) && FileHelper.Exists(operation.TargetLocalItem);
             if (!hasBeenMoved)
             {
-                var filePath = (FilePath)operation.SourceLocalItem;
-                var projects = IdeApp.Workspace.GetAllProjects();
                 var found = false;
-                foreach (var project in projects)
+                if (operation.ItemType == ItemType.File)
                 {
-                    if (filePath.IsChildPathOf(project.BaseDirectory))
+                    var project = IdeApp.Workspace.GetProjectContainingFile(operation.SourceLocalItem);
+                    if (project != null)
                     {
                         found = true;
-                        project.Files.Remove(operation.SourceLocalItem);
-                        //Move file only on undo, let Ide do Get Process Type
-                        if (operation.ItemType == ItemType.File)
-                        {
-                            FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                            project.AddFile(operation.TargetLocalItem);
-                        }
-                        else if (operation.ItemType == ItemType.Folder)
-                        {
-                            FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                            project.AddDirectory(operation.TargetLocalItem.Substring(((string)project.BaseDirectory).Length + 1));
-                        }
+                        FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
+                        this.ProjectMoveFile(project, operation.SourceLocalItem, operation.TargetLocalItem);
                         project.Save(monitor);
-                        break;
+                    }
+                }
+                else
+                {
+                    var project = FindProjectContainingFolder(operation.SourceLocalItem);
+                    if (project != null)
+                    {
+                        found = true;
+                        FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
+                        this.ProjectMoveFolder(project, operation.SourceLocalItem, operation.TargetLocalItem);
+                        project.Save(monitor);
                     }
                 }
                 if (!found)

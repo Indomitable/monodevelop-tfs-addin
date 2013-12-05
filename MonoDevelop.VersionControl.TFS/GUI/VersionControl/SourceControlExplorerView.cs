@@ -72,7 +72,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 var sourceDoc = view.GetContent<SourceControlExplorerView>();
                 if (sourceDoc != null)
                 {
-                    sourceDoc.Load(project);
+                    sourceDoc.Load(project.Collection);
                     sourceDoc.ExpandPath(VersionControlPath.RootFolder + project.Name);
                     view.Window.SelectWindow();
                     return;
@@ -80,12 +80,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
 
             var sourceControlExplorerView = new SourceControlExplorerView();
-            sourceControlExplorerView.Load(project);
+            sourceControlExplorerView.Load(project.Collection);
             sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder + project.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         public static void Open(ProjectCollection collection)
+        {
+            Open(collection, VersionControlPath.RootFolder, null);
+        }
+
+        public static void Open(ProjectCollection collection, string path, string fileName)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
@@ -93,7 +98,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(collection);
-                    sourceDoc.ExpandPath(VersionControlPath.RootFolder);
+                    sourceDoc.ExpandPath(path);
+                    sourceDoc.FindListItem(fileName);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -101,18 +107,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
             var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
-            sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder);
+            sourceControlExplorerView.ExpandPath(path);
+            sourceControlExplorerView.FindListItem(fileName);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         public override void Load(string fileName)
         {
             throw new NotSupportedException();
-        }
-
-        private void Load(ProjectInfo project)
-        {
-            Load(project.Collection);
         }
 
         private void Load(ProjectCollection collection)
@@ -380,6 +382,28 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             _treeView.CollapseAll();
             _treeView.ExpandToPath(_treeStore.GetPath(iter));
             _treeView.Selection.SelectIter(iter);
+        }
+
+        private void FindListItem(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                return;
+            TreeIter iter = TreeIter.Zero;
+            _listStore.Foreach((model, path, it) =>
+            {
+                var item = ((BaseItem)model.GetValue(it, 0));
+                if (string.Equals(item.ServerPath.ItemName, name, StringComparison.OrdinalIgnoreCase))
+                {
+                    iter = it;
+                    return true;
+                }
+                return false;
+            });
+            if (iter.Equals(TreeIter.Zero))
+                return;
+            _listView.Selection.SelectIter(iter);
+            var treePath = _listStore.GetPath(iter);
+            _listView.ScrollToCell(treePath, _listView.Columns[0], false, 0, 0);
         }
 
         private bool IsMapped(string serverPath)

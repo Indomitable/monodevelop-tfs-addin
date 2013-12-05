@@ -34,7 +34,8 @@ namespace MonoDevelop.VersionControl.TFS.Commands
         Checkout,
         ResolveConflicts,
         ResolveConflictsMenu,
-        SourceControlExplorerMenu
+        SourceControlExplorerMenu,
+        LocateInSourceExplorer
     }
 }
 

@@ -32,6 +32,7 @@ using MonoDevelop.Ide.Gui.Pads.ProjectPad;
 using MonoDevelop.Core;
 using System.Collections.Generic;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.Ide.CodeTemplates;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -150,6 +151,55 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return;
             }
             commandInfo.Visible = true;
+        }
+
+        [CommandHandler(TFSCommands.LocateInSourceExplorer)]
+        protected void OnLocateInSourceExplorer()
+        {
+            var item = base.GetItems(false)[0];
+            var repo = (TFSRepository)item.Repository;
+            var path = item.Path;
+            string fileName = null;
+            if (!item.IsDirectory)
+            {
+                fileName = path.FileName;
+                path = path.ParentDirectory;
+            }
+            var workspace = repo.GetWorkspaceByLocalPath(path);
+            if (workspace == null)
+                return;
+            var serverPath = workspace.GetServerItemForLocalItem(path);
+            SourceControlExplorerView.Open(workspace.ProjectCollection, serverPath, fileName);
+        }
+
+        [CommandUpdateHandler(TFSCommands.LocateInSourceExplorer)]
+        protected void UpdateLocateInSourceExplorer(CommandInfo commandInfo)
+        {
+            if (VersionControlService.IsGloballyDisabled)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            var items = base.GetItems(false);
+            if (items.Count != 1)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            foreach (var item in items)
+            {
+                var repo = item.Repository as TFSRepository;
+                if (repo == null)
+                {
+                    commandInfo.Visible = false;
+                    return;
+                }
+                if (!item.VersionInfo.IsVersioned)
+                {
+                    commandInfo.Visible = false;
+                    return;
+                }
+            }
         }
     }
 }

@@ -31,6 +31,9 @@
 			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
 				_label = "_Check Out"
 				description = "Check Out File."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"
+                _label = "_Locate in source explorer"
+                description = "Locate in source explorer."/>
             <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
                 _label = "_Resolve Conflicts"
                 description = "Resolve Conflicts."/>
@@ -68,6 +71,10 @@
         <Condition id="ItemType" value="Solution|Project">
             <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" 
             insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
+        </Condition>
+        <Condition id="ItemType" value="IFileItem|IFolderItem">
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer" 
+            insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"/>
         </Condition>
 	</Extension>
 	

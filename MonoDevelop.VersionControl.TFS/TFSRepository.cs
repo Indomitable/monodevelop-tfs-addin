@@ -51,7 +51,7 @@ namespace MonoDevelop.VersionControl.TFS
             this.RootPath = rootPath;
         }
 
-        private Workspace GetWorkspaceByLocalPath(FilePath path)
+        internal Workspace GetWorkspaceByLocalPath(FilePath path)
         {
             return workspaces.SingleOrDefault(x => x.IsLocalPathMapped(path));
         }
