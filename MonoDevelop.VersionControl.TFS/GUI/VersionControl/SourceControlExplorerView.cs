@@ -507,7 +507,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             if (parentFolder == null)
                                 return;
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });
-                            var futurePath = _currentWorkspace.TryGetLocalItemForServerItem(item.ServerPath);
+                            var futurePath = _currentWorkspace.GetLocalItemForServerItem(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
                         }
                         FileHelper.FileDelete(filePath);
@@ -666,7 +666,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var path = item.LocalItem;
                 if (string.IsNullOrEmpty(path))
-                    path = _currentWorkspace.TryGetLocalItemForServerItem(item.ServerPath);
+                    path = _currentWorkspace.GetLocalItemForServerItem(item.ServerPath);
                 DesktopService.OpenFolder(path);
             };
             return openFolder;

@@ -74,7 +74,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         private void FillStore(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
         {
             fileStore.Clear();
-            var pendingChanges = workspace.GetPendingChanges(items);
+            List<ItemSpec> itemSpecs = new List<ItemSpec>();
+            foreach (var item in items)
+            {
+                itemSpecs.Add(new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
+            }
+            var pendingChanges = workspace.GetPendingChanges(itemSpecs);
             foreach (var pendingChange in pendingChanges)
             {
                 var row = fileStore.AddRow();
@@ -107,7 +112,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             using (var dialog = new UndoDialog())
             {
                 dialog.FillStore(items, workspace);
-                if (dialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow)) == Command.Ok)
+                if (dialog.Run(Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow)) == Command.Ok)
                 {
                     var changesToUndo = dialog.SelectedItems;
                     using (var progress = VersionControlService.GetProgressMonitor("Undo", VersionControlOperationType.Pull))

@@ -152,14 +152,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return this.VersionControlService.QueryPendingChangesForWorkspace(this, itemSpecs, includeDownloadInfo);
         }
 
-        public List<PendingChange> GetPendingChanges(List<ExtendedItem> items)
+        public List<PendingChange> GetPendingChanges(List<ItemSpec> items)
         {
-            List<ItemSpec> itemSpecs = new List<ItemSpec>();
-            foreach (var item in items)
-            {
-                itemSpecs.Add(new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
-            }
-            return this.VersionControlService.QueryPendingChangesForWorkspace(this, itemSpecs, false);
+            return this.VersionControlService.QueryPendingChangesForWorkspace(this, items, false);
         }
 
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
@@ -212,7 +207,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return Folders.Any(f => serverPath.IsChildOrEqualTo(f.ServerItem));
         }
 
-        public VersionControlPath TryGetServerItemForLocalItem(string localItem)
+        public VersionControlPath GetServerItemForLocalItem(string localItem)
         {
             var mappedFolder = Folders.FirstOrDefault(f => localItem.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
             if (mappedFolder == null)
@@ -226,7 +221,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public string TryGetLocalItemForServerItem(VersionControlPath serverItem)
+        public string GetLocalItemForServerItem(VersionControlPath serverItem)
         {
             var mappedFolder = Folders.FirstOrDefault(f => serverItem.IsChildOrEqualTo(f.ServerItem));
             if (mappedFolder == null)
@@ -241,7 +236,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public WorkingFolder TryGetWorkingFolderForServerItem(string serverItem)
+        public WorkingFolder GetWorkingFolderForServerItem(string serverItem)
         {
             int maxPath = 0;
             WorkingFolder workingFolder = null;
