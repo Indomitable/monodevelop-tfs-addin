@@ -467,20 +467,20 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnMoveFile(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
+            base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
             var workspace = GetWorkspaceByLocalPath(localSrcPath);
             List<Failure> failures;
             workspace.PendRenameFile(localSrcPath, localDestPath, out failures);
             FailuresDisplayDialog.ShowFailures(failures);
-            base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
         }
 
         protected override void OnMoveDirectory(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
+            base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
             var workspace = GetWorkspaceByLocalPath(localSrcPath);
             List<Failure> failures;
             workspace.PendRenameFolder(localSrcPath, localDestPath, out failures);
             FailuresDisplayDialog.ShowFailures(failures);
-            base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
         }
 
         protected override VersionControlOperation GetSupportedOperations(VersionInfo vinfo)

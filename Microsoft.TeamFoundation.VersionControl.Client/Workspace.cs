@@ -653,7 +653,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         private UpdateLocalVersion ProcessRename(GetOperation operation, ProcessDirection processDirection, IProgressMonitor monitor)
         {
-            if (processDirection == ProcessDirection.Undo)
+            bool hasBeenMoved = !FileHelper.Exists(operation.SourceLocalItem) && FileHelper.Exists(operation.TargetLocalItem);
+            if (!hasBeenMoved)
             {
                 var filePath = (FilePath)operation.SourceLocalItem;
                 var projects = IdeApp.Workspace.GetAllProjects();
