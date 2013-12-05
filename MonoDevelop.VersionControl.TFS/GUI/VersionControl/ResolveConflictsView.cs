@@ -142,11 +142,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var fileName = downloadService.DownloadToTemp(conflict.BaseDowloadUrl);
             var doc = IdeApp.Workbench.OpenDocument(fileName, (Project)null);
             doc.Window.ViewContent.ContentName = Path.GetFileName(conflict.TargetLocalItem) + " - v" + conflict.BaseVersion;
-            doc.Closed += (o, e) =>
-            {
-                if (File.Exists(fileName))
-                    File.Delete(fileName);
-            };
+            doc.Closed += (o, e) => FileHelper.FileDelete(fileName);
         }
 
         private void ViewTheirClicked()
@@ -156,11 +152,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var fileName = downloadService.DownloadToTemp(conflict.TheirDowloadUrl);
             var doc = IdeApp.Workbench.OpenDocument(fileName, (Project)null);
             doc.Window.ViewContent.ContentName = Path.GetFileName(conflict.TargetLocalItem) + " - v" + conflict.TheirVersion;
-            doc.Closed += (o, e) =>
-            {
-                if (File.Exists(fileName))
-                    File.Delete(fileName);
-            };
+            doc.Closed += (o, e) => FileHelper.FileDelete(fileName);
         }
 
         private void AcceptYoursClicked()
@@ -223,16 +215,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var process = System.Diagnostics.Process.Start(info);
             process.WaitForExit();
             //Move merged base file to target.
-            if (File.Exists(conflict.TargetLocalItem))
-                File.Delete(conflict.TargetLocalItem);
-
-            File.Move(baseFile, conflict.TargetLocalItem);
-
-            if (File.Exists(theirsFile))
-                File.Delete(theirsFile);
-
-            FileService.NotifyFileChanged(conflict.TargetLocalItem);
-
+            FileHelper.FileMove(baseFile, conflict.TargetLocalItem, true);
+            FileHelper.FileDelete(theirsFile);
             EndMerging();
         }
 

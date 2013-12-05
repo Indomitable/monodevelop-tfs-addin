@@ -158,42 +158,42 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public bool IsAdd
         {
-            get { return (ChangeType & ChangeType.Add) == ChangeType.Add; }
+            get { return ChangeType.HasFlag(ChangeType.Add); }
         }
 
         public bool IsBranch
         {
-            get { return (ChangeType & ChangeType.Branch) == ChangeType.Branch; }
+            get { return ChangeType.HasFlag(ChangeType.Branch); }
         }
 
         public bool IsDelete
         {
-            get { return (ChangeType & ChangeType.Delete) == ChangeType.Delete; }
+            get { return ChangeType.HasFlag(ChangeType.Delete); }
         }
 
         public bool IsEdit
         {
-            get { return (ChangeType & ChangeType.Edit) == ChangeType.Edit; }
+            get { return ChangeType.HasFlag(ChangeType.Edit); }
         }
 
         public bool IsEncoding
         {
-            get { return (ChangeType & ChangeType.Encoding) == ChangeType.Encoding; }
+            get { return ChangeType.HasFlag(ChangeType.Encoding); }
         }
 
         public bool IsLock
         {
-            get { return (ChangeType & ChangeType.Lock) == ChangeType.Lock; }
+            get { return ChangeType.HasFlag(ChangeType.Lock); }
         }
 
         public bool IsMerge
         {
-            get { return (ChangeType & ChangeType.Merge) == ChangeType.Merge; }
+            get { return ChangeType.HasFlag(ChangeType.Merge); }
         }
 
         public bool IsRename
         {
-            get { return (ChangeType & ChangeType.Rename) == ChangeType.Rename; }
+            get { return ChangeType.HasFlag(ChangeType.Rename); }
         }
 
         public ChangeType ChangeType { get; private set; }

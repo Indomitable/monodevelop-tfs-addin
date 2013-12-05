@@ -510,8 +510,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             var futurePath = _currentWorkspace.TryGetLocalItemForServerItem(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
                         }
-                        if (File.Exists(filePath))
-                            File.Delete(filePath);
+                        FileHelper.FileDelete(filePath);
                     }
                 }
                 else

@@ -108,7 +108,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         }
                         inStream.Close();
                     }
-                    File.Delete(tempFileName); //Delete zipped tmp.
+                    FileHelper.FileDelete(tempFileName); //Delete zipped tmp.
                     return newTempFileName;
                 }
                 else
@@ -129,10 +129,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             {
                 var name = Path.GetFileName(fileName);
                 var newName = Path.Combine(Path.GetDirectoryName(path), name);
-                if (File.Exists(newName))
-                    File.Delete(newName);
-                File.Move(path, newName);
-                return newName;
+                if (FileHelper.FileMove(path, newName, true))
+                    return newName;
+                else
+                    return string.Empty;
             }
             return string.Empty;
         }
@@ -140,17 +140,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         public string Download(string path, string artifactUri)
         {
             var tempPath = this.DownloadToTemp(artifactUri);
-            if (string.IsNullOrEmpty(tempPath))
+            if (string.IsNullOrEmpty(tempPath) || !FileHelper.FileMove(tempPath, path, true))
                 return string.Empty;
-
-            if (File.Exists(path))
-            {
-                File.SetAttributes(path, FileAttributes.Normal);
-                File.Delete(path);
-            }
-
-            File.Copy(tempPath, path);
-            File.Delete(tempPath);
             return path;
         }
     }

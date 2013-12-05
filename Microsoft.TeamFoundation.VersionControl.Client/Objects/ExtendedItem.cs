@@ -155,6 +155,14 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public LockLevel LockStatus { get; private set; }
 
+        public bool IsLocked
+        {
+            get
+            {
+                return LockStatus.HasFlag(LockLevel.CheckOut) || LockStatus.HasFlag(LockLevel.Checkin);
+            }
+        }
+
         public ChangeType ChangeType { get; private set; }
 
         public int DeletionId { get; private set; }

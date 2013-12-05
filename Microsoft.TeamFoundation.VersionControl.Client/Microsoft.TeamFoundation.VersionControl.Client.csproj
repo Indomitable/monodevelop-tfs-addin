@@ -142,6 +142,7 @@
     <Compile Include="Objects\BaseItem.cs" />
     <Compile Include="Objects\CheckInResult.cs" />
     <Compile Include="Enums\CheckOutLockLevel.cs" />
+    <Compile Include="FileHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

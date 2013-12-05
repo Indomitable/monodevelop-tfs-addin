@@ -163,19 +163,30 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             return sb.ToString();
         }
+
+        public bool IsAdd
+        {
+            get { return ChangeType.HasFlag(ChangeType.Add); }
+        }
+
+        public bool IsDelete
+        {
+            get { return ChangeType.HasFlag(ChangeType.Delete); }
+        }
+
+        public bool IsEdit
+        {
+            get { return ChangeType.HasFlag(ChangeType.Edit); }
+        }
+
+        public bool IsEncoding
+        {
+            get { return ChangeType.HasFlag(ChangeType.Encoding); }
+        }
+
+        public bool IsRename
+        {
+            get { return ChangeType.HasFlag(ChangeType.Rename); }
+        }
     }
 }
-// 			if (getOperation.did != 0) getOperation.chg = ChangeType.Delete;
-// 			//else if (getOperation.sver == 0) getOperation.chg = ChangeType.None;
-// 			else
-// 				{
-// 					if (String.IsNullOrEmpty(getOperation.slocal))
-// 						getOperation.chg = ChangeType.Add;
-// 					else
-// 						{
-// 							// seems to be only way to tell if this is a rename operation
-// 							if ((!String.IsNullOrEmpty(getOperation.tlocal))&&
-// 									(getOperation.slocal != getOperation.tlocal))
-// 								getOperation.chg = ChangeType.Rename;
-// 						}
-// 				}

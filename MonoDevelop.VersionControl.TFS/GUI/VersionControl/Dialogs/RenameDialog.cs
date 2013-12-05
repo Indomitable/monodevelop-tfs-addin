@@ -92,13 +92,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                             }
                             return string.Empty;
                         }
-                        else
-                        {
-                            if (item.ItemType == Microsoft.TeamFoundation.VersionControl.Client.Enums.ItemType.File)
-                                File.Move(item.LocalItem, dialog.NewPath);
-                            else
-                                Directory.Move(item.LocalItem, dialog.NewPath);
-                        }
                         progress.EndTask();
                         progress.ReportSuccess("Finish Undo");
                         return dialog.NewPath;

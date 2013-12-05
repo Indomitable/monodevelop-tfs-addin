@@ -37,7 +37,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using MonoDevelop.Components.DockToolbars;
+using MonoDevelop.Ide.Gui;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -78,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS
                 return VersionStatus.Unversioned;
             var status = VersionStatus.Versioned;
 
-            if (item.LockStatus.HasFlag(LockLevel.CheckOut) || item.LockStatus.HasFlag(LockLevel.Checkin)) //Locked
+            if (item.IsLocked) //Locked
             {
                 if (item.HasOtherPendingChange)//Locked by someone else
                     status |= VersionStatus.Locked;
@@ -86,29 +86,24 @@ namespace MonoDevelop.VersionControl.TFS
                     status |= VersionStatus.LockOwned; //Locked by me
             }
 
-            var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.ServerItem, item.ServerPath, StringComparison.OrdinalIgnoreCase)).ToList(); //ch.ItemId == item.ItemId
+            var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.ServerItem, item.ServerPath, StringComparison.OrdinalIgnoreCase)).ToList();
 
-            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Add) && change.Version == 0))
+            if (changes.Any(change => change.IsAdd || change.Version == 0))
             {
                 status |= VersionStatus.ScheduledAdd;
                 return status;
             }
-            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Delete)))
+            if (changes.Any(change => change.IsDelete))
             {
                 status |= VersionStatus.ScheduledDelete;
                 return status;
             }
-//            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Rename)))
-//            {
-//                status = status | VersionStatus.ScheduledReplace;
-//                return status;
-//            }
-//            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Merge)))
-//            {
-//                status = status | VersionStatus.Conflicted;
-//                return status;
-//            }
-            if (changes.Any(change => change.ChangeType.HasFlag(ChangeType.Edit)))
+            if (changes.Any(change => change.IsRename))
+            {
+                status = status | VersionStatus.ScheduledAdd;
+                return status;
+            }
+            if (changes.Any(change => change.IsEdit || change.IsEncoding))
             {
                 status = status | VersionStatus.Modified;
                 return status;
@@ -121,7 +116,7 @@ namespace MonoDevelop.VersionControl.TFS
             if (item == null)
                 return VersionStatus.Unversioned;
             var status = VersionStatus.Versioned;
-            if (item.LockStatus.HasFlag(LockLevel.Checkin) || item.LockStatus.HasFlag(LockLevel.CheckOut))
+            if (item.IsLocked)
                 status = status | VersionStatus.Locked;
             if (item.DeletionId > 0)
                 return status | VersionStatus.Missing;
@@ -143,33 +138,33 @@ namespace MonoDevelop.VersionControl.TFS
 
         private IEnumerable<VersionInfo> GetItemVersionInfo(ExtendedItem item, bool getRemoteStatus)
         {
-            if (item.ChangeType.HasFlag(ChangeType.Rename))
+//            if (item.ChangeType.HasFlag(ChangeType.Rename))
+//            {
+//                var deleteWorkspace = GetWorkspaceByServerPath(item.SourceServerItem);
+//                var deletePath = deleteWorkspace.TryGetLocalItemForServerItem(item.SourceServerItem);
+//                yield return new VersionInfo(deletePath, item.SourceServerItem, item.ItemType == ItemType.Folder, VersionStatus.Versioned | VersionStatus.ScheduledDelete,
+//                    GetLocalRevision(item), VersionStatus.Versioned | VersionStatus.ScheduledDelete, GetServerRevision(item));
+//
+//                var addWorkspace = GetWorkspaceByServerPath(item.TargetServerItem);
+//                var addPath = addWorkspace.TryGetLocalItemForServerItem(item.TargetServerItem);
+//                yield return new VersionInfo(addPath, item.TargetServerItem, item.ItemType == ItemType.Folder, VersionStatus.Versioned | VersionStatus.ScheduledAdd,
+//                    GetLocalRevision(item), VersionStatus.Versioned | VersionStatus.ScheduledAdd, GetServerRevision(item));
+//            }
+//            else
+//            {
+            var localStatus = GetLocalVersionStatus(item);
+            var localRevision = GetLocalRevision(item);
+            var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
+            var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
+            var path = item.LocalItem;
+            if (string.IsNullOrEmpty(path)) //Pending for delete.
             {
-                var deleteWorkspace = GetWorkspaceByServerPath(item.SourceServerItem);
-                var deletePath = deleteWorkspace.TryGetLocalItemForServerItem(item.SourceServerItem);
-                yield return new VersionInfo(deletePath, item.SourceServerItem, item.ItemType == ItemType.Folder, VersionStatus.Versioned | VersionStatus.ScheduledDelete,
-                    GetLocalRevision(item), VersionStatus.Versioned | VersionStatus.ScheduledDelete, GetServerRevision(item));
-
-                var addWorkspace = GetWorkspaceByServerPath(item.TargetServerItem);
-                var addPath = addWorkspace.TryGetLocalItemForServerItem(item.TargetServerItem);
-                yield return new VersionInfo(addPath, item.TargetServerItem, item.ItemType == ItemType.Folder, VersionStatus.Versioned | VersionStatus.ScheduledAdd,
-                    GetLocalRevision(item), VersionStatus.Versioned | VersionStatus.ScheduledAdd, GetServerRevision(item));
+                var workspace = this.GetWorkspaceByServerPath(item.ServerPath);
+                path = workspace.TryGetLocalItemForServerItem(item.ServerPath);
             }
-            else
-            {
-                var localStatus = GetLocalVersionStatus(item);
-                var localRevision = GetLocalRevision(item);
-                var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
-                var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
-                var path = item.LocalItem;
-                if (string.IsNullOrEmpty(path))
-                {
-                    var workspace = this.GetWorkspaceByServerPath(item.ServerPath);
-                    path = workspace.TryGetLocalItemForServerItem(item.ServerPath);
-                }
-                yield return new VersionInfo(path, item.ServerPath, item.ItemType == ItemType.Folder, 
-                    localStatus, localRevision, remoteStatus, remoteRevision);
-            }
+            yield return new VersionInfo(path, item.ServerPath, item.ItemType == ItemType.Folder, 
+                localStatus, localRevision, remoteStatus, remoteRevision);
+//            }
         }
 
         private VersionInfo[] GetItemsVersionInfo(List<FilePath> paths, bool getRemoteStatus, RecursionType recursive)
@@ -319,12 +314,12 @@ namespace MonoDevelop.VersionControl.TFS
                 var specs = ws.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None)).ToList();
                 var operations = ws.Key.Undo(specs, monitor);
                 FileService.NotifyFilesChanged(operations);
-                foreach (var item in operations)
+                foreach (var item in operations.Where(x => FileHelper.Exists(x)))
                 {
-                    MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, item, item.IsDirectory));
+                    MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, item, FileHelper.HasFolder(item)));
                 }
             }
-            FileService.NotifyFilesRemoved(localPaths.Where(x => !File.Exists(x)));
+            FileService.NotifyFilesRemoved(localPaths.Where(x => !FileHelper.HasFile(x)));
         }
 
         protected override void OnRevertRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
