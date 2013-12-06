@@ -102,51 +102,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("ExtendedItem instance ");
-            sb.Append(GetHashCode());
-
-            sb.Append("\n	 LockOwner: ");
-            sb.Append(LockOwner);
-
-            sb.Append("\n	 HasOtherPendingChange: ");
-            sb.Append(HasOtherPendingChange);
-
-            sb.Append("\n	 ChangeType: ");
-            sb.Append(ChangeType);
-
-            sb.Append("\n	 LockStatus: ");
-            sb.Append(LockStatus.ToString());
-
-            sb.Append("\n	 VersionLocal: ");
-            sb.Append(VersionLocal);
-
-            sb.Append("\n	 VersionLatest: ");
-            sb.Append(VersionLatest);
-
-            sb.Append("\n	 Encoding: ");
-            sb.Append(Encoding);
-
-            sb.Append("\n	 LocalItem: ");
-            sb.Append(LocalItem);
-
-            sb.Append("\n	 TargetServerItem: ");
-            sb.Append(TargetServerItem);
-
-            sb.Append("\n	 SourceServerItem: ");
-            sb.Append(SourceServerItem);
-
-            sb.Append("\n	 ItemId: ");
-            sb.Append(ItemId);
-
-            sb.Append("\n	 ItemType: ");
-            sb.Append(ItemType);
-
-            sb.Append("\n	 DeletionId: ");
-            sb.Append(DeletionId);
-
-            return sb.ToString();
+            return TargetServerItem;
         }
 
         public int VersionLatest { get; private set; }
