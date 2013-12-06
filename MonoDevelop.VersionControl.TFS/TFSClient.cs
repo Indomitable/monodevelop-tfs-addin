@@ -37,8 +37,7 @@ namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSClient : VersionControlSystem
     {
-        private TFSRepository repository;
-
+        private readonly Dictionary<FilePath, TFSRepository> repositoriesCache = new Dictionary<FilePath, TFSRepository>();
         public TFSClient()
         {
             if (VersionControlService.IsGloballyDisabled)
@@ -73,6 +72,28 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (path.IsNullOrEmpty)
                 return null;
+            foreach (var repo in repositoriesCache)
+            {
+                if (repo.Key == path || path.IsChildPathOf(repo.Key))
+                {
+                    repo.Value.Refresh();
+                    return repo.Value;
+                }
+                if (repo.Key.IsChildPathOf(path))
+                {
+                    repositoriesCache.Remove(repo.Key);
+                    var repo1 = GetRepository(path, id);
+                    repositoriesCache.Add(path, repo1);
+                    return repo1;
+                }
+            }
+            var repository = GetRepository(path, id);
+            repositoriesCache.Add(path, repository);
+            return repository;
+        }
+
+        private TFSRepository GetRepository(FilePath path, string id)
+        {
             var solutionPath = Path.ChangeExtension(Path.Combine(path, id), "sln");
             if (File.Exists(solutionPath)) //Read Solution
             {
@@ -88,7 +109,7 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        private Repository FindBySolution(FilePath solutionPath)
+        private TFSRepository FindBySolution(FilePath solutionPath)
         {
             var content = File.ReadAllLines(solutionPath);
             var line = content.FirstOrDefault(x => x.IndexOf("SccTeamFoundationServer", System.StringComparison.OrdinalIgnoreCase) > -1);
@@ -110,7 +131,7 @@ namespace MonoDevelop.VersionControl.TFS
             return null;
         }
 
-        private Repository FindByPath(FilePath path)
+        private TFSRepository FindByPath(FilePath path)
         {
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
@@ -121,7 +142,7 @@ namespace MonoDevelop.VersionControl.TFS
             return null;
         }
 
-        private Repository GetRepoFromServer(TeamFoundationServer server, FilePath path)
+        private TFSRepository GetRepoFromServer(TeamFoundationServer server, FilePath path)
         {
             foreach (var collection in server.ProjectCollections)
             {
@@ -129,12 +150,21 @@ namespace MonoDevelop.VersionControl.TFS
                 var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
                 if (workspace != null)
                 {
-                    var result = repository ?? (repository = new TFSRepository(workspace.VersionControlService, path));
+                    var result = new TFSRepository(workspace.VersionControlService, path);
                     result.AttachWorkspace(workspace);
+
                     return result;
                 }
             }
             return null;
+        }
+
+        internal void RefreshRepositories()
+        {
+            foreach (var repo in repositoriesCache)
+            {
+                repo.Value.Refresh();
+            }
         }
     }
 }
