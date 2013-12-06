@@ -168,7 +168,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             var workspace = repo.GetWorkspaceByLocalPath(path);
             if (workspace == null)
                 return;
-            var serverPath = workspace.GetServerItemForLocalItem(path);
+            var serverPath = workspace.GetServerPathForLocalPath(path);
             SourceControlExplorerView.Open(workspace.ProjectCollection, serverPath, fileName);
         }
 

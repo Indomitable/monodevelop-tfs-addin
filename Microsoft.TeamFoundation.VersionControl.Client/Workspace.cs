@@ -208,7 +208,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return Folders.Any(f => serverPath.IsChildOrEqualTo(f.ServerItem));
         }
 
-        public VersionControlPath GetServerItemForLocalItem(string localItem)
+        public VersionControlPath GetServerPathForLocalPath(string localItem)
         {
             var mappedFolder = Folders.FirstOrDefault(f => localItem.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
             if (mappedFolder == null)
@@ -222,7 +222,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             }
         }
 
-        public string GetLocalItemForServerItem(VersionControlPath serverItem)
+        public string GetLocalPathForServerPath(VersionControlPath serverItem)
         {
             var mappedFolder = Folders.FirstOrDefault(f => serverItem.IsChildOrEqualTo(f.ServerItem));
             if (mappedFolder == null)
