@@ -356,10 +356,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             List<Failure> failures;
             var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Edit);
-            foreach (GetOperation getOperation in getOperations)
-            {
-                MakeFileWritable(getOperation.TargetLocalItem);
-            }
             this.RefreshPendingChanges();
             return failures;
         }

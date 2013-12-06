@@ -172,10 +172,6 @@ namespace MonoDevelop.VersionControl.TFS
                 else
                     workspaceItems.Add(workspace, new List<ItemSpec> { item });
             }
-            foreach (var workspace in workspaceItems.Keys)
-            {
-                workspace.RefreshPendingChanges();
-            }
             var items = workspaceItems.SelectMany(x => x.Key.GetExtendedItems(x.Value, DeletedState.NonDeleted, ItemType.Any)).ToArray();
             foreach (var item in items.Where(i => i.IsInWorkspace || (!i.IsInWorkspace && i.ChangeType.HasFlag(ChangeType.Delete))).Distinct())
             {
@@ -502,29 +498,32 @@ namespace MonoDevelop.VersionControl.TFS
 
         public override bool RequestFileWritePermission(FilePath path)
         {
-            if (!File.Exists(path))
+            if (!File.Exists(path) || !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
                 return true;
-            if (!File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
-                return true;
-            try
+
+            using (var progress = MonoDevelop.VersionControl.VersionControlService.GetProgressMonitor("Edit"))
             {
-                var doc = IdeApp.Workbench.ActiveDocument;
-                DocumentLocation location = default(DocumentLocation);
-                if (doc != null && doc.FileName == path && doc.Editor != null)
+                progress.Log.WriteLine("Start editing item: " + path);
+                try
                 {
-                    location = doc.Editor.Caret.Location;
+                    var workspace = this.GetWorkspaceByLocalPath(path);
+                    var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
+                    if (failures.Any(f => f.SeverityType == SeverityType.Error))
+                    {
+                        foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                        {
+                            progress.ReportError(failure.Code, new Exception(failure.Message));
+                        }
+                    }
+                    else
+                        progress.ReportSuccess("Finish editing item.");
                 }
-                this.CheckoutFile(path);
-                if (!location.IsEmpty)
+                catch (Exception ex)
                 {
-                    doc.Editor.SetCaretTo(location.Line, location.Column, false);
+                    progress.ReportError(ex.Message, ex);
+                    return false;
                 }
             }
-            catch
-            {
-                return false;
-            }
-            MonoDevelop.VersionControl.VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(this, path, false));
             return true;
         }
 

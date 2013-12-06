@@ -64,17 +64,15 @@
 	</Extension>
 
 	<Extension path = "/MonoDevelop/Ide/ContextMenu/ProjectPad/VersionControl">
+        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.SolutionStatus"/>
 		<Condition id="ItemType" value="IFileItem">
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" 
-			insertbefore="MonoDevelop.VersionControl.Commands.ResolveConflicts"/>
+			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
 		</Condition>
         <Condition id="ItemType" value="Solution|Project">
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" 
-            insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" />
         </Condition>
         <Condition id="ItemType" value="IFileItem|IFolderItem">
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer" 
-            insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"/>
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"/>
         </Condition>
 	</Extension>
 	

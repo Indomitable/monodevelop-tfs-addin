@@ -32,7 +32,6 @@ using MonoDevelop.Ide.Gui.Pads.ProjectPad;
 using MonoDevelop.Core;
 using System.Collections.Generic;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
-using MonoDevelop.Ide.CodeTemplates;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -42,7 +41,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             return typeof(ProjectFile).IsAssignableFrom(dataType)
             || typeof(SystemFile).IsAssignableFrom(dataType)
-            || typeof(IWorkspaceFileObject).IsAssignableFrom(dataType);
+            || typeof(IFolderItem).IsAssignableFrom(dataType)
+            || typeof(IWorkspaceObject).IsAssignableFrom(dataType);
         }
 
         public override Type CommandHandlerType
@@ -78,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     commandInfo.Visible = false;
                     return;
                 }
-
+    
                 var repo = item.Repository as TFSRepository;
                 if (repo == null)
                 {
