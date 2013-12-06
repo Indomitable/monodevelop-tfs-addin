@@ -197,5 +197,17 @@ namespace MonoDevelop.VersionControl.TFS
                 StorePrefs();
             }
         }
+
+        public void RefreshWorkingRepositories()
+        {
+            foreach(var system in VersionControlService.GetVersionControlSystems())
+            {
+                var tfsSystem = system as TFSClient;
+                if (tfsSystem != null)
+                {
+                    tfsSystem.RefreshRepositories();
+                }
+            }
+        }
     }
 }

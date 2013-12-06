@@ -531,7 +531,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             if (parentFolder == null)
                                 return;
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });
-                            var futurePath = _currentWorkspace.GetLocalItemForServerItem(item.ServerPath);
+                            var futurePath = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
                         }
                         FileHelper.FileDelete(filePath);
@@ -637,6 +637,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 checkOutItem.Activated += (sender, e) =>
                 {
                     CheckOutDialog.Open(checkOutItems, _currentWorkspace);
+                    FireFilesChanged(checkOutItems);
                     RefreshList(items);
                 };
                 groupItems.Add(checkOutItem);
@@ -649,6 +650,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 lockItem.Activated += (sender, e) =>
                 {
                     LockDialog.Open(lockItems, _currentWorkspace);
+                    FireFilesChanged(lockItems);
                     RefreshList(items);
                 };
                 groupItems.Add(lockItem);
@@ -664,6 +666,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     var files = new List<string>(unLockItems.Where(i => i.ItemType == ItemType.File).Select(i => (string)i.ServerPath));
                     _currentWorkspace.LockFolders(folders, LockLevel.None);
                     _currentWorkspace.LockFiles(files, LockLevel.None);
+                    FireFilesChanged(unLockItems);
                     RefreshList(items);
                 };
                 groupItems.Add(unLockItem);
@@ -676,6 +679,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 renameItem.Activated += (sender, e) =>
                 {
                     RenameDialog.Open(ableToRename, _currentWorkspace);
+                    FireFilesChanged(new List<ExtendedItem> { ableToRename });
                     RefreshList(items);
                 };
                 groupItems.Add(renameItem);
@@ -696,6 +700,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 revertItem.Activated += (sender, e) =>
                 {
                     UndoDialog.Open(undoItems, _currentWorkspace);
+                    FireFilesChanged(undoItems);
                     RefreshList(items);
                 };
                 groupItems.Add(revertItem);
@@ -717,7 +722,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var path = item.LocalItem;
                 if (string.IsNullOrEmpty(path))
-                    path = _currentWorkspace.GetLocalItemForServerItem(item.ServerPath);
+                    path = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
                 DesktopService.OpenFolder(path);
             };
             return openFolder;
@@ -738,6 +743,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 }
                 RefreshList(items);
             }
+        }
+
+        private void FireFilesChanged(List<ExtendedItem> items)
+        {
+            TFSVersionControlService.Instance.RefreshWorkingRepositories();
+            FileService.NotifyFilesChanged(items.Select(i => (FilePath)_currentWorkspace.GetLocalPathForServerPath(i.ServerPath)), true);
+        }
+
+        private void FireFilesRemoved(List<ExtendedItem> items)
+        {
+            TFSVersionControlService.Instance.RefreshWorkingRepositories();
+            FileService.NotifyFilesRemoved(items.Select(i => (FilePath)_currentWorkspace.GetLocalPathForServerPath(i.ServerPath)));
         }
 
         private void RefreshList(List<ExtendedItem> items)
@@ -786,6 +803,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             _currentWorkspace.PendDelete(items.Select(x => (FilePath)x.LocalItem).ToList(), RecursionType.Full, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 FailuresDisplayDialog.ShowFailures(failures);
+            FireFilesRemoved(items);
             RefreshList(items);
         }
 
