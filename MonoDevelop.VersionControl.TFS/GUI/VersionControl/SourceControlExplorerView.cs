@@ -533,8 +533,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });
                             var futurePath = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
+                            FileHelper.FileDelete(filePath);
                         }
-                        FileHelper.FileDelete(filePath);
+                        else
+                        {
+                            IdeApp.Workbench.OpenDocument(filePath, null, null);
+                        }
                     }
                 }
                 else
