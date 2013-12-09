@@ -30,6 +30,7 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
@@ -41,7 +42,35 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         public WorkItemListWidget()
         {
             this.PackStart(listView, true, true);
+            listView.SelectionMode = SelectionMode.Multiple;
             listView.RowActivated += OnWorkItemClicked;
+            listView.KeyPressed += OnWorkItemKeyPressed;
+        }
+
+        void OnWorkItemKeyPressed (object sender, KeyEventArgs e)
+        {
+            if (e.Modifiers == ModifierKeys.Control && (e.Key == Key.c || e.Key == Key.C))
+            {
+                CopySelectedToClipBoard();
+            }
+        }
+
+        private void CopySelectedToClipBoard()
+        {
+            var store = (ListStore)listView.DataSource;
+            StringBuilder builder = new StringBuilder();
+            foreach (var row in listView.SelectedRows)
+            {
+                List<string> rowValues = new List<string>();
+                foreach (var column in listView.Columns)
+                {
+                    var field = ((TextCellView)column.Views[0]).TextField as IDataField<object>;
+                    var val = Convert.ToString(store.GetValue(row, field));
+                    rowValues.Add(val);
+                }
+                builder.AppendLine(string.Join("\t", rowValues));
+            }
+            Clipboard.SetText(builder.ToString());
         }
 
         void OnWorkItemClicked(object sender, ListViewRowEventArgs e)
