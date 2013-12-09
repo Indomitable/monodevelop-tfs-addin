@@ -35,15 +35,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 {
     public class TFSCommitDialogExtensionWidget : HBox
     {
-        readonly TFSRepository repo;
         readonly TreeView workItemsView = new TreeView();
         readonly ListStore workItemStore = new ListStore(typeof(int), typeof(string), typeof(string));
         readonly ListStore checkinActions = new ListStore(typeof(string));
         readonly Button removeButton = new Button();
 
-        public TFSCommitDialogExtensionWidget(TFSRepository repo)
+        public TFSCommitDialogExtensionWidget()
         {
-            this.repo = repo;
             BuildGui();
         }
 
@@ -120,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         void OnAddWorkItem(object sender, EventArgs e)
         {
-            using (var selectWorkItemDialog = new SelectWorkItemDialog(repo))
+            using (var selectWorkItemDialog = new SelectWorkItemDialog())
             {
                 selectWorkItemDialog.WorkItemList.OnSelectWorkItem += (workItem) =>
                 {

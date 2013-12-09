@@ -333,11 +333,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             changeNames.Add(pChange.ChangeType.ToString());
                             userNames.Add(remoteChange.Owner);
                         }
-                        if (!item.ChangeType.HasFlag(ChangeType.None))
-                        {
-                            userNames.Insert(0, this._currentWorkspace.OwnerName);
-                            changeNames.Insert(0, item.ChangeType.ToString());
-                        }
                         _listStore.SetValue(row, 3, string.Join(", ", changeNames));
                         _listStore.SetValue(row, 4, string.Join(", ", userNames));
                     }
@@ -708,6 +703,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     RefreshList(items);
                 };
                 groupItems.Add(revertItem);
+
+                MenuItem checkinItem = new MenuItem(GettextCatalog.GetString("Check In pending changes"));
+                checkinItem.Activated += (sender, e) =>
+                {
+                    CheckInDialog.Open(undoItems, _currentWorkspace);
+                    FireFilesChanged(undoItems);
+                    RefreshList(items);
+                };
+                groupItems.Add(checkinItem);
             }
             return groupItems;
         }

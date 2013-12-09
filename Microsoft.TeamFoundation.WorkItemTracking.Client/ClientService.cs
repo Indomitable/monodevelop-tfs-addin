@@ -245,7 +245,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
             var revision = Convert.ToInt32(workItem.WorkItemInfo["System.Rev"]);
             string historyMsg = string.Format("Associated with changeset {0}.", changeSet);
             string changeSetLink = "vstfs:///VersionControl/Changeset/" + changeSet;
-            string oneLineComment = comment.Replace(Environment.NewLine, " ").Substring(0, 120);
+            string oneLineComment = comment.Replace(Environment.NewLine, " ");
+            oneLineComment = oneLineComment.Substring(0, Math.Min(oneLineComment.Length, 120));
 
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("Update", headerName);

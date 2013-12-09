@@ -96,8 +96,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 this.VersionControlService.UploadFile(this, change);
             }
             var result = this.VersionControlService.CheckIn(this, changes, comment, workItems);
-            WorkItemManager wm = new WorkItemManager(this.ProjectCollection);
-            wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
+            if (result.ChangeSet > 0)
+            {
+                WorkItemManager wm = new WorkItemManager(this.ProjectCollection);
+                wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
+            }
             this.RefreshPendingChanges();
             ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
             foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())

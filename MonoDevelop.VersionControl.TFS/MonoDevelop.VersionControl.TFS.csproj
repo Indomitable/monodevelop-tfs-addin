@@ -91,6 +91,7 @@
     <Compile Include="GUI\TFSCommitDialogExtensionWidget.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\LockDialog.cs" />
     <Compile Include="Infrastructure\RepositoryCache.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\CheckInDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

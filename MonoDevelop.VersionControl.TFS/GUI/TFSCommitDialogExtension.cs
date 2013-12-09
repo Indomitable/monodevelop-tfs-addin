@@ -39,7 +39,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var repo = changeSet.Repository as TFSRepository;
             if (repo != null)
             {
-                widget = new TFSCommitDialogExtensionWidget(repo);
+                widget = new TFSCommitDialogExtensionWidget();
                 this.Add(widget);
                 widget.Show();
                 this.Show();
