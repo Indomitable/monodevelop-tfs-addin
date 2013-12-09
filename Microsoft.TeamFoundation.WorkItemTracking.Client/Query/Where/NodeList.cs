@@ -263,7 +263,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
                             var rightNode = (ConstantNode)condition.Right;
                             if (rightNode.DataType == ValueDataType.String)
                             {
-                                var iteration = CachedMetaData.Instance.Iterations.FirstOrDefault(it => string.Equals(it.Project.Name + '\\' + it.Name, Convert.ToString(rightNode.Value), StringComparison.OrdinalIgnoreCase));
+                                var iteration = CachedMetaData.Instance.Iterations.LocateIteration(Convert.ToString(rightNode.Value));
                                 if (iteration != null)
                                 {
                                     rightNode.DataType = ValueDataType.Number;
