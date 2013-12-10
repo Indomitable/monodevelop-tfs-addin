@@ -221,7 +221,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             else
             {
                 string rest = TfsPath.LocalToServerPath(localItem.Substring(mappedFolder.LocalItem.Length));
-                return mappedFolder.ServerItem + rest;
+                if (mappedFolder.ServerItem == VersionControlPath.RootFolder)
+                    return "$" + rest;
+                else
+                    return mappedFolder.ServerItem + rest;
             }
         }
 
@@ -860,12 +863,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         progress.BeginTask(stepName + " " + operation.TargetLocalItem, 1);
                         UpdateLocalVersion update = null;
 
+                        if (operation.IsAdd)
+                        {
+                            update = ProcessAdd(operation, ProcessDirection.Undo);
+                            if (update != null)
+                                updates.QueueUpdate(update);
+                            continue;
+                        }
+
                         if (operation.IsDelete)
                         {
                             update = ProcessDelete(operation, downloadService, ProcessDirection.Undo);
                             if (update != null)
                                 updates.QueueUpdate(update);
                         }
+
                         if (operation.IsRename)
                         {
                             update = ProcessRename(operation, ProcessDirection.Undo, progress);
@@ -879,12 +891,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                 updates.QueueUpdate(update);
                         }
 
-                        if (operation.IsAdd)
-                        {
-                            update = ProcessAdd(operation, ProcessDirection.Undo);
-                            if (update != null)
-                                updates.QueueUpdate(update);
-                        }
+
                     }
                     finally
                     {
