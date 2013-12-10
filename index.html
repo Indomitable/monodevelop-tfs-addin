@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>MonoDevelop TFS addin</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/ui-darkness/jquery-ui.min.css">
+	<style type="text/css">
+		body
+		{
+			color: #fff;
+			background-color: #000;
+		}
+	</style>
+	<script type="text/javascript">
+		$(function() {
+			$("#instructions").accordion({
+		      collapsible: true
+		    });
+		});
+	</script>
+</head>
+<body class="ui-widget">
+	<h2>Welcome to Monodevelop / Xamarin Studio TFS addin</h2>
+	This addin works on MonoDevelop version 4.1.11+, but recomended version is 4.2
+	<div id="instructions">
+		<h2>How to Install</h2>
+		<div>
+			<ol>
+				<li>Go to Addin Manager</li>
+				<li>Open Repository drop down and click "Manage Repositories..."</li>
+				<li>Add <a href="http://indomitable.github.io/monodevelop-tfs-addin/4.2/">http://indomitable.github.io/monodevelop-tfs-addin/4.2/</a> in Url text entry <br/>
+					<img src="Images/RepoAdd.png" />
+				</li>
+				<li>On Version Control section select "TFS Support" and click Install <br/>
+					<img src="Images/AddinInstall.png">
+				</li>
+				<li>It's recomended to restart MonoDevelop after installation has finished.</li>
+			</ol>
+		</div>
+		<h2>Usage</h2>
+		<div>
+			<p>
+				In Menu -> Version Control section you will find the TFS menu at the bottom. To start click either on Team Explorer or Connect to Server.
+				<br/><img src="Images/ConnectToServerDialogEmpty.png" /> <br />
+				Click Add and enter server details:
+				<br /> <img src="Images/AddServerDialog.png"/><br />
+				Enter you credentials:
+				<br /> <img src="Images/Credentials.png"/><br />
+				Choose projects you want to be connected to:
+				<br /> <img src="Images/ConnectToProject.png"/><br />
+				You could edit your projects when double clicks on server entry.<br />
+				Close "Connect to server" dialgo and open "Team Explorer" from Menu -> Version Control -> TFS -> Team Explorer.
+				<br /> <img src="Images/TeamExplorer.png"/><br />
+				Click on Source Control to open source explorer view.
+				<br /> <img src="Images/SourceExplorer.png"/><br />
+				This is a newly created project in Codeplex and we have to configure a workspace to work and to add some source files.<br />
+				Click on "Manage" button to create a new workspace.
+				<br /> <img src="Images/WorkspaceManage.png"/><br />
+			    Click "Add" and enter workspace details. Add a working folder.
+			    <br /> <img src="Images/WorkspaceManageFilled.png"/><br />
+			    Now when there is a mapping click "Get Latest version" on project in list view to create project folder.
+			    <br /> <img src="Images/GetLatestVersionProject.png"/><br />
+			    Let's create a new project and commit it to Code Plex.
+			    <br /> <img src="Images/CreateProject.png"/><br />
+			    The files of the new project are not controled by version control yet and we need to add them.
+			    <br /> <img src="Images/NewProject.png"/><br />
+			    Select solution and click "Add" from version control menu.
+			    <br /> <img src="Images/NewProjectAdded.png"/><br />
+			    Then click on "Review solution and commit" from version control menu. All files will be selected, remove bin and obj files.
+			    <br /> <img src="Images/ReviewAndCommit.png"/><br />
+			    Click commit to send files to server.
+			    <br /> <img src="Images/CommitDialog.png"/><br />
+			    Click revert on files which we don't want to be versioned (bin and obj)
+			    <br /> <img src="Images/ReviewRevert.png"/><br />
+			</p>
+		</div>
+	</div>
+</body>
+</html>
