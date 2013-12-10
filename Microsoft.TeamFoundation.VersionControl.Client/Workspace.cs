@@ -860,18 +860,31 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                         progress.BeginTask(stepName + " " + operation.TargetLocalItem, 1);
                         UpdateLocalVersion update = null;
 
-                        if (operation.IsAdd)
-                            update = ProcessAdd(operation, ProcessDirection.Undo);
-                        else if (operation.IsDelete)
+                        if (operation.IsDelete)
+                        {
                             update = ProcessDelete(operation, downloadService, ProcessDirection.Undo);
-                        else if (operation.IsEdit || operation.IsEncoding)
-                            update = ProcessEdit(operation, downloadService, ProcessDirection.Undo);
-                        else if (operation.IsRename)
+                            if (update != null)
+                                updates.QueueUpdate(update);
+                        }
+                        if (operation.IsRename)
+                        {
                             update = ProcessRename(operation, ProcessDirection.Undo, progress);
-                        else
-                            update = ProcessGet(operation, downloadService, ProcessDirection.Undo);
-                        if (update != null)
-                            updates.QueueUpdate(update);
+                            if (update != null)
+                                updates.QueueUpdate(update);
+                        }
+                        if (operation.IsEdit || operation.IsEncoding)
+                        {
+                            update = ProcessEdit(operation, downloadService, ProcessDirection.Undo);
+                            if (update != null)
+                                updates.QueueUpdate(update);
+                        }
+
+                        if (operation.IsAdd)
+                        {
+                            update = ProcessAdd(operation, ProcessDirection.Undo);
+                            if (update != null)
+                                updates.QueueUpdate(update);
+                        }
                     }
                     finally
                     {
