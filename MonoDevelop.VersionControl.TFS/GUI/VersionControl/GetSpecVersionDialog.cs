@@ -127,14 +127,20 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 if (isChecked)
                 {
                     var item = listStore.GetValue(row, itemField);
-                    var spec = new ItemSpec(item.LocalItem, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full);
+                    var spec = new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full);
                     var version = (int)versionBox.SelectedItem == 0 ? new ChangesetVersionSpec(Convert.ToInt32(changeSetNumber.Value)) : VersionSpec.Latest;
                     requests.Add(new GetRequest(spec, version));
+                    if (forceGet.State == CheckBoxState.On)
+                    {
+                        workspace.ResetDownloadStatus(item.ItemId);
+                    }
                 }
             }
             var option = GetOptions.None;
             if (forceGet.State == CheckBoxState.On)
+            {
                 option |= GetOptions.GetAll;
+            }
 //            if (overrideGet.State == CheckBoxState.On)
 //                option |= GetOptions.Overwrite;
             using (var progress = VersionControlService.GetProgressMonitor("Get", VersionControlOperationType.Pull))

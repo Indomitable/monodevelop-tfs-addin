@@ -274,6 +274,15 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.VersionControlService.UpdateWorkspace(this.Name, this.OwnerName, this);
         }
 
+
+        public void ResetDownloadStatus(int itemId)
+        {
+            var updateVer = new UpdateLocalVersion(itemId, string.Empty, 0);
+            var queue = new UpdateLocalVersionQueue(this);
+            queue.QueueUpdate(updateVer);
+            queue.Flush();
+        }
+
         #region Version Control Operations
 
         public GetStatus Get(GetRequest request, GetOptions options, IProgressMonitor monitor = null)
@@ -287,7 +296,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             bool force = options.HasFlag(GetOptions.GetAll);
             bool noGet = options.HasFlag(GetOptions.Preview);
 
-            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);           
+            var getOperations = this.VersionControlService.Get(this, requests, force, noGet);   
             ProcessGetOperations(getOperations, ProcessType.Get, monitor);
             return new GetStatus(getOperations.Count);
         }
@@ -604,7 +613,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 var path = DownloadFile(operation, downloadService);
                 if (operation.ItemType == ItemType.File)
                     MakeFileReadOnly(path);
-                return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
+                return new UpdateLocalVersion(operation.ItemId, path, operation.VersionServer);
             }
             return null;
         }
@@ -654,7 +663,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
         }
 
-        private void ProjectMoveFile(MonoDevelop.Projects.Project project, FilePath source, string destination)
+        private void ProjectMoveFile(Project project, FilePath source, string destination)
         {
             foreach (var file in project.Files)
             {
@@ -669,7 +678,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         private Project FindProjectContainingFolder(FilePath folder)
         {
-            MonoDevelop.Projects.Project project = null;
+            Project project = null;
             foreach (var prj in IdeApp.Workspace.GetAllProjects())
             {
                 foreach (var file in prj.Files)

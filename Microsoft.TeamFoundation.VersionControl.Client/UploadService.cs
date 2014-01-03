@@ -39,6 +39,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     {
         const string NewLine = "\r\n";
         const string Boundary = "----------------------------8e5m2D6l5Q4h6";
+        const int ChunkSize = 512 * 1024; //Chunk Size 512 K
         private static readonly string uncompressedContentType = "application/octet-stream";
         private static readonly string compressedContentType = "application/gzip";
 
@@ -81,39 +82,74 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
+        private void CopyStream(Stream source, Stream destination)
+        {
+            byte[] buffer = new byte[ChunkSize];
+            int cnt;
+            while((cnt = source.Read(buffer, 0, ChunkSize)) > 0)
+            {
+                destination.Write(buffer, 0, cnt);
+            }
+            destination.Flush();
+        }
+
+        private void CopyBytes(byte[] source, Stream destination)
+        {
+            using (var memorySource = new MemoryStream(source))
+            {
+                CopyStream(memorySource, destination);
+            }
+        }
+
         public void UploadFile(string workspaceName, string workspaceOwner, PendingChange change)
+        {
+            var fileContent = File.ReadAllBytes(change.LocalItem);
+            var fileHash = Hash(fileContent);
+            string contentType = uncompressedContentType;
+
+            using (var memory = new MemoryStream(fileContent))
+            {
+                byte[] buffer = new byte[ChunkSize];
+                int cnt;
+                while((cnt = memory.Read(buffer, 0, ChunkSize)) > 0)
+                {
+                    var range = GetRange(memory.Position - cnt, memory.Position, fileContent.Length);
+                    UploadPart(change.ServerItem, workspaceName, workspaceOwner, fileContent.Length, fileHash, range, contentType, buffer, cnt);
+                }
+            }
+        }
+
+        private void UploadPart(string fileName, string workspaceName, string workspaceOwner, int fileSize, string fileHash, string range, string contentType, byte[] bytes, int copyBytes)
         {
             var request = (HttpWebRequest)WebRequest.Create(this.Url);
             request.Method = "POST";
+
             request.Credentials = this.Collection.Server.Credentials;
             request.AllowWriteStreamBuffering = true;
             request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
 
-            var fileContent = File.ReadAllBytes(change.LocalItem);
-            var fileHash = Hash(fileContent);
             var template = GetTemplate();
-            var content = string.Format(template, change.ServerItem, workspaceName, workspaceOwner, fileContent.Length, fileHash, GetRange(fileContent.Length), "item", uncompressedContentType);
+            var content = string.Format(template, fileName, workspaceName, workspaceOwner, fileSize, fileHash, range, "item", contentType);
             var contentBytes = Encoding.UTF8.GetBytes(content.Replace(Environment.NewLine, NewLine));
+
             using (var stream = new MemoryStream())
             {
                 stream.Write(contentBytes, 0, contentBytes.Length);
-                stream.Write(fileContent, 0, fileContent.Length);
+                stream.Write(bytes, 0, copyBytes);
                 var footContent = Encoding.UTF8.GetBytes(NewLine + Boundary + "--" + NewLine);
                 stream.Write(footContent, 0, footContent.Length);
                 stream.Flush();
                 contentBytes = stream.ToArray();
             }
 
-            request.ContentLength = contentBytes.Length;
+            //request.ContentLength = contentBytes.Length;
 
             using (var requestStream = request.GetRequestStream())
             {
-                requestStream.Write(contentBytes, 0, contentBytes.Length);
-                requestStream.Close();
+                CopyBytes(contentBytes, requestStream);
             }
-
+                           
             request.GetResponse();
-
         }
 
         private string GetTemplate()
@@ -200,13 +236,13 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         }
 
-        private string GetRange(int length)
+        private string GetRange(long start, long end, long length)
         {
             var builder = new StringBuilder(100);
             builder.Append("bytes=");
-            builder.Append(0);
+            builder.Append(start);
             builder.Append('-');
-            builder.Append(length - 1);
+            builder.Append(end - 1);
             builder.Append('/');
             builder.Append(length);
             builder.AppendLine();
