@@ -34,3 +34,6 @@ http://indomitable.github.io/monodevelop-tfs-addin/4.2/
       Drop and create the workspaces using this addin (Note all pending changes will be lost).
     </li>
  </ol>    
+
+<h5>More Info</h5>
+	Visit: <a href="http://indomitable.github.io/monodevelop-tfs-addin/">Addin Home Page</a>
