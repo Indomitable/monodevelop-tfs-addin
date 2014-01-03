@@ -14,9 +14,7 @@
 	</style>
 	<script type="text/javascript">
 		$(function() {
-			$("#instructions").accordion({
-		      collapsible: true
-		    });
+			$("#instructions").tabs();
 		});
 	</script>
 </head>
@@ -24,8 +22,13 @@
 	<h2>Welcome to Monodevelop / Xamarin Studio TFS addin</h2>
 	This addin works on MonoDevelop version 4.1.11+, but recomended version is 4.2
 	<div id="instructions">
-		<h2>How to Install</h2>
-		<div>
+		<ul>
+			<li><a href="#tab-install">How to Install</a></li>
+			<li><a href="#tab-usage">Usage</a></li>
+			<li><a href="#tab-change-log">Change Log</a></li>
+			<li><a href="#tab-debugging">Debugging</a></li>
+		</ul>
+		<div id="tab-install">
 			<ol>
 				<li>Go to Addin Manager</li>
 				<li>Open Repository drop down and click "Manage Repositories..."</li>
@@ -38,8 +41,7 @@
 				<li>It's recomended to restart MonoDevelop after installation has finished.</li>
 			</ol>
 		</div>
-		<h2>Usage</h2>
-		<div>
+		<div id="tab-usage">
 			<p>
 				In Menu -> Version Control section you will find the TFS menu at the bottom. To start click either on Team Explorer or Connect to Server.
 				<br/><img src="Images/ConnectToServerDialogEmpty.png" /> <br />
@@ -74,6 +76,62 @@
 			    Click revert on files which we don't want to be versioned (bin and obj)
 			    <br /> <img src="Images/ReviewRevert.png"/><br />
 			</p>
+		</div>
+		<div id="tab-change-log">
+			<ul style="list-style-type: none; padding: 0; margin: 0;">
+				<li>
+					<h3>1.2</h3>
+					<ol>
+						<li>
+							Upload files on chunks - enable to upload big files.
+						</li>
+					</ol>
+				</li>
+			</ul>
+		</div>
+		<div id="tab-debugging">
+			<h1>How to track bugs</h1>
+			<h3>The best way to track bugs is using debugging.</h3>
+			<ol>
+				<li>
+					Go to <a href="https://github.com/Indomitable/monodevelop-tfs-addin">monodevelop-tfs-addin</a> and click on <strong>Fork</strong> button.
+					<br /> <img src="Images/ForkRepository.png"/>
+				</li>
+				<li>
+					Open the terminal and type <code>git clone url_to_you_repository</code>.
+				</li>
+				<li>
+					<code>cd monodevelop-tfs-addin</code>
+				</li>
+				<li>
+					Download monodevelop and its submodules <code>git submodule update --init --recursive</code> - this will take some time.
+				</li>
+				<li>
+					Create new branch where to debug and fix the problem: <code>git checkout -b BranchName</code>
+				</li>
+				<li>
+					Open <strong>MonoDevelop.VersionControl.TFS.sln</strong> file using <a href="http://xamarin.com/studio" title="Xamarin Studio">XamarinStudio</a> or 
+					<a href="http://monodevelop.com/">MonoDevelop</a>. 
+				</li>
+				<li>
+					For <strong>Mac</strong> and <strong>Windows</strong> select <em>Project -&gt; Solution Options -&gt; Build -&gt; Configurations -&gt; Configuration Mappings</em> 
+					then for MonoDevelop.VersionControl.TFS project select configuration <strong>Debug No-DBus</strong>. 
+					
+					I use DBus under <strong>Linux/KDE</strong> for talking with KWallet, but for Mac and Windows I use stardard <a href="http://monodevelop.com/">MonoDevelop</a> 
+					function for storing password securely.
+				</li>
+				<li>
+					Build Solutuion.
+				</li>
+				<li>
+					Before starting debug you have to build MonoDevelop: go to <a href="http://monodevelop.com/">MonoDevelop</a> folder 
+					<code>cd External/monodevelop/</code> and type <code>./configure &amp;&amp; make</code> this will create <a href="http://monodevelop.com/">MonoDevelop</a> binaries.
+				</li>
+				<li>
+					Finally from the menu select <code>Run -&gt; Debug Application...</code> choose <em>External/monodevelop/main/build/bin/</em> folder and select <strong>MonoDevelop.exe</strong>
+				</li>
+			</ol>
+			<p>Happy debugging... :)</p>
 		</div>
 	</div>
 </body>
