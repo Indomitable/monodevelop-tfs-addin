@@ -36,4 +36,4 @@ http://indomitable.github.io/monodevelop-tfs-addin/4.2/
  </ol>    
 
 <h5>More Info</h5>
-	Visit: <a href="http://indomitable.github.io/monodevelop-tfs-addin/">Addin Home Page</a>
+Visit: <a href="http://indomitable.github.io/monodevelop-tfs-addin/">Addin Home Page</a>
