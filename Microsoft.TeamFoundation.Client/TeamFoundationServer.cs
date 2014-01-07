@@ -114,6 +114,8 @@ namespace Microsoft.TeamFoundation.Client
 
         public Uri Uri { get; private set; }
 
+        public bool IsDebuMode { get; set;}
+
         #region Equal
 
         #region IComparable<TeamFoundationServer> Members

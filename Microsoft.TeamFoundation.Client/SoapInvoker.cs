@@ -45,6 +45,9 @@ namespace Microsoft.TeamFoundation.Client
         readonly XNamespace xsiNs = XmlSchema.InstanceNamespace;
         readonly XNamespace xsdNs = XmlSchema.Namespace;
         readonly XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
+        readonly static object locker = new object();
+
+        readonly TFSService service;
         readonly XNamespace messagegNs;
         readonly Uri url;
         readonly ICredentials credentials;
@@ -53,6 +56,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public SoapInvoker(TFSService service)
         {
+            this.service = service;
             this.url = service.Url;
             this.credentials = service.Server.Credentials;
             this.messagegNs = service.MessageNs;
@@ -93,43 +97,92 @@ namespace Microsoft.TeamFoundation.Client
             return MethodResultExtractor(responseElement);
         }
 
+        private FileStream GetLogFileStream()
+        {
+            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TFS.VersionControl.Debug.log");
+            return File.Open(path, FileMode.OpenOrCreate, FileAccess.Write);
+        }
+
         public XElement InvokeResponse()
         {
-            var request = (HttpWebRequest)WebRequest.Create(url); 
-            request.Credentials = credentials;
-            request.AllowWriteStreamBuffering = true;
-            request.Method = "POST";
-            request.ContentType = "text/xml; charset=utf-8";
-            request.Headers["SOAPAction"] = messagegNs.NamespaceName.TrimEnd('/') + '/' + this.methodName;
-            this.document.Save(request.GetRequestStream());
+            StringBuilder logBuilder = new StringBuilder();
+            logBuilder.AppendLine("Date: " + DateTime.Now.ToString("s"));
+            logBuilder.AppendLine("Domain: " + ((NetworkCredential)credentials).Domain);
+            logBuilder.AppendLine("UserName: " + ((NetworkCredential)credentials).UserName);
+            logBuilder.AppendLine("Password: " + ((NetworkCredential)credentials).Password);
+            logBuilder.AppendLine("Request:");
+            logBuilder.AppendLine(this.ToString());
+
             try
             {
+                var request = (HttpWebRequest)WebRequest.Create(url); 
+                request.Credentials = credentials;
+                request.AllowWriteStreamBuffering = true;
+                request.Method = "POST";
+                request.ContentType = "text/xml; charset=utf-8";
+                request.Headers["SOAPAction"] = messagegNs.NamespaceName.TrimEnd('/') + '/' + this.methodName;
+
+                this.document.Save(request.GetRequestStream());
+
                 using (var response = (HttpWebResponse)request.GetResponse())
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    using (var responseStream = response.GetResponseStream())
                     {
-                        using (StreamReader sr = new StreamReader(response.GetResponseStream(), new UTF8Encoding(false), false))
+                        using (StreamReader sr = new StreamReader(responseStream, Encoding.UTF8))
                         {
-                            throw new Exception("Error!!!\n" + sr.ReadToEnd());
+                            var responseTxt = sr.ReadToEnd();
+                            logBuilder.AppendLine("Response:");
+
+                            if (response.StatusCode != HttpStatusCode.OK)
+                            {
+                                logBuilder.AppendLine(responseTxt);
+                                throw new Exception("Error!!!\n" + responseTxt);
+                            }
+                            else
+                            {
+                                var resultDocument = XDocument.Parse(responseTxt);
+                                logBuilder.AppendLine(resultDocument.ToString());
+                                return resultDocument.Root.Element(soapNs + "Body").Element(this.messagegNs + (this.methodName + "Response"));
+                            }
                         }
-                    }
-                    else
-                    {
-                        var resultDocument = XDocument.Load(response.GetResponseStream());
-                        return resultDocument.Root.Element(soapNs + "Body").Element(this.messagegNs + (this.methodName + "Response"));
                     }
                 }
             }
             catch (WebException wex)
             {
-                if (wex.Response.ContentType.IndexOf("xml", StringComparison.OrdinalIgnoreCase) > -1)
+                if (wex.Response != null && wex.Response.ContentType.IndexOf("xml", StringComparison.OrdinalIgnoreCase) > -1)
                 {
                     XDocument doc = XDocument.Load(wex.Response.GetResponseStream());
+                    logBuilder.AppendLine(doc.ToString());
                     throw new Exception(doc.ToString()); 
                 }
                 else
                 {
+                    logBuilder.AppendLine(wex.Message);
+                    logBuilder.AppendLine(wex.StackTrace);
                     throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                logBuilder.AppendLine(ex.Message);
+                logBuilder.AppendLine(ex.StackTrace);
+                throw;
+            }
+            finally
+            {
+                if (service.Server.IsDebuMode)
+                {
+                    lock (locker)
+                    {
+                        using (var stream = GetLogFileStream())
+                        {
+                            stream.Seek(0, SeekOrigin.End);
+                            byte[] bytes = Encoding.UTF8.GetBytes(logBuilder.ToString());
+                            stream.Write(bytes, 0, bytes.Length);
+                            stream.Flush();
+                        }
+                    }
                 }
             }
         }

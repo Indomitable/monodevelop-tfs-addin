@@ -71,6 +71,7 @@ namespace MonoDevelop.VersionControl.TFS
                 if (this.MergeToolInfo != null)
                     doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
                 doc.Root.Add(new XElement("CheckOutLockLevel", (int)CheckOutLockLevel));
+                doc.Root.Add(new XElement("DebugMode", IsDebugMode));
                 doc.Save(file);
                 file.Close();
             }
@@ -109,14 +110,9 @@ namespace MonoDevelop.VersionControl.TFS
                             Arguments = mergeToolElement.Attribute("Arguments").Value,
                         };
                     }
-                    if (doc.Root.Element("CheckOutLockLevel") == null)
-                    {
-                        checkOutLockLevel = CheckOutLockLevel.Unchanged;
-                    }
-                    else
-                    {
-                        checkOutLockLevel = (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
-                    }
+                    checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? CheckOutLockLevel.Unchanged : (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
+                    isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
+                    this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
                     file.Close();
                 }
             }
@@ -194,6 +190,22 @@ namespace MonoDevelop.VersionControl.TFS
             set
             {
                 checkOutLockLevel = value;
+                StorePrefs();
+            }
+        }
+
+        private bool isDebugMode;
+
+        public bool IsDebugMode
+        { 
+            get
+            {
+                return isDebugMode;
+            }
+            set
+            {
+                isDebugMode = value;
+                this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
                 StorePrefs();
             }
         }

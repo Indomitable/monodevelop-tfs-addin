@@ -34,6 +34,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     public class TFSOptionsWidget : VBox
     {
         readonly ComboBox lockLevelBox = GuiHelper.GetLockLevelComboBox();
+        readonly CheckBox debugModeBox = new CheckBox(GettextCatalog.GetString("Debug Mode"));
 
         public TFSOptionsWidget()
         {
@@ -48,6 +49,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var mergeToolButton = new Button(GettextCatalog.GetString("Config merge tool"));
             mergeToolButton.Clicked += OnConfigMergeTool;
             this.PackStart(mergeToolButton);
+
+            debugModeBox.AllowMixed = false;
+            debugModeBox.Active = TFSVersionControlService.Instance.IsDebugMode;
+            this.PackStart(debugModeBox);
         }
 
         void OnConfigMergeTool(object sender, EventArgs e)
@@ -65,6 +70,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public void ApplyChanges()
         {
             TFSVersionControlService.Instance.CheckOutLockLevel = (CheckOutLockLevel)lockLevelBox.SelectedItem;
+            TFSVersionControlService.Instance.IsDebugMode = debugModeBox.Active;
         }
     }
 }
