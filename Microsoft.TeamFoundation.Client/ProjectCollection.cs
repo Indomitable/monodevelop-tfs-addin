@@ -90,9 +90,18 @@ namespace Microsoft.TeamFoundation.Client
 
         public void LoadProjects()
         {
+            /*s.agostini (2014-01-14) Catch "401 unauthorized" exception, returning an empty list*/
+            try
+            {
             var commonStructureService = this.GetService<CommonStructureService>();
             this.Projects = commonStructureService.ListAllProjects();
             this.Projects.Sort();
+            }
+            catch
+            {
+                this.Projects = new List<ProjectInfo>();
+            }
+            /*s.agostini end*/
         }
 
         public void LoadProjects(List<string> names)
