@@ -88,7 +88,8 @@ namespace MonoDevelop.VersionControl.TFS
                 }
             }
             var repository = GetRepository(path, id);
-            repositoriesCache.Add(path, repository);
+            if (repository != null)
+                repositoriesCache.Add(path, repository);
             return repository;
         }
 
