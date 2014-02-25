@@ -132,6 +132,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                     workItemStore.AppendValues(workItem.Id, title, "Associate");
                     removeButton.Sensitive = true;
                 };
+                selectWorkItemDialog.WorkItemList.OnRemoveWorkItem += (workItem) => 
+                {
+                    if (!IsWorkItemAdded(workItem.Id))
+                        return;
+                    RemoveWorkItem(workItem.Id);
+                };
                 selectWorkItemDialog.Run(Xwt.Toolkit.CurrentEngine.WrapWindow(MessageService.RootWindow));
             }
         }
@@ -152,6 +158,29 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 }
             }
             return false;
+        }
+
+        private void RemoveWorkItem(int workItemId)
+        {
+            TreeIter iter;
+            if (workItemStore.GetIterFirst(out iter))
+            {
+                var id = (int)workItemStore.GetValue(iter, 0);
+                if (id == workItemId)
+                {
+                    workItemStore.Remove(ref iter);
+                    return;
+                }
+                while (workItemStore.IterNext(ref iter))
+                {
+                    var idNext = (int)workItemStore.GetValue(iter, 0);
+                    if (idNext == workItemId)
+                    {
+                        workItemStore.Remove(ref iter);
+                        return;
+                    }
+                }
+            }
         }
 
         void OnActionChanged(object o, EditedArgs args)

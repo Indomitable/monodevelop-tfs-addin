@@ -67,6 +67,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 
             workItemList.WidthRequest = 400;
             workItemList.HeightRequest = 400;
+            workItemList.ShowCheckboxes = true;
 
             mainBox.PackStart(workItemList, true, true);
 
