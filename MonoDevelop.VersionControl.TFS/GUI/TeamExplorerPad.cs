@@ -195,6 +195,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 case NodeType.WorkItemQuery:
                     var query = (StoredQuery)node.GetValue(_item);
                     WorkItemsView.Open(query);
+                    break;
                 default:
                     break;
             }

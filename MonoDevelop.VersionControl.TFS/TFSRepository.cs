@@ -323,12 +323,12 @@ namespace MonoDevelop.VersionControl.TFS
             FileService.NotifyFilesChanged(localPaths);
         }
 
-        protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor)
+        protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
             foreach (var ws in GroupFilesPerWorkspace(localPaths))
             {
                 List<Failure> failures;
-                ws.Key.PendDelete(ws.ToList(), RecursionType.None, out failures);
+                ws.Key.PendDelete(ws.ToList(), RecursionType.None, keepLocal, out failures);
                 if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 {
                     foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
@@ -341,12 +341,12 @@ namespace MonoDevelop.VersionControl.TFS
             FileService.NotifyFilesChanged(localPaths);
         }
 
-        protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor)
+        protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
             foreach (var ws in GroupFilesPerWorkspace(localPaths))
             {
                 List<Failure> failures;
-                ws.Key.PendDelete(ws.ToList(), RecursionType.Full, out failures);
+                ws.Key.PendDelete(ws.ToList(), RecursionType.Full, keepLocal, out failures);
                 if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 {
                     foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
@@ -487,35 +487,37 @@ namespace MonoDevelop.VersionControl.TFS
             return supportedOperations;
         }
 
-        public override bool RequestFileWritePermission(FilePath path)
+        public override bool RequestFileWritePermission(params FilePath[] paths)
         {
-            if (!File.Exists(path) || !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
-                return true;
-
             using (var progress = MonoDevelop.VersionControl.VersionControlService.GetProgressMonitor("Edit"))
             {
-                progress.Log.WriteLine("Start editing item: " + path);
-                try
+                foreach (var path in paths)
                 {
-                    var workspace = this.GetWorkspaceByLocalPath(path);
-                    var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
-                    if (failures.Any(f => f.SeverityType == SeverityType.Error))
+                    if (!File.Exists(path) || !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
+                        continue;
+                    progress.Log.WriteLine("Start editing item: " + path);
+                    try
                     {
-                        foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                        var workspace = this.GetWorkspaceByLocalPath(path);
+                        var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
+                        if (failures.Any(f => f.SeverityType == SeverityType.Error))
                         {
-                            progress.ReportError(failure.Code, new Exception(failure.Message));
+                            foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                            {
+                                progress.ReportError(failure.Code, new Exception(failure.Message));
+                            }
+                        }
+                        else
+                        {
+                            cache.RefreshItem(path);
+                            progress.ReportSuccess("Finish editing item.");
                         }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        cache.RefreshItem(path);
-                        progress.ReportSuccess("Finish editing item.");
+                        progress.ReportError(ex.Message, ex);
+                        return false;
                     }
-                }
-                catch (Exception ex)
-                {
-                    progress.ReportError(ex.Message, ex);
-                    return false;
                 }
             }
             return true;

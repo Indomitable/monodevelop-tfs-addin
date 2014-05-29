@@ -339,7 +339,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return operations.Count;
         }
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(List<FilePath> paths, RecursionType recursionType, out List<Failure> failures)
+        public void PendDelete(List<FilePath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures)
         {
             if (paths.Count == 0)
             {
@@ -349,7 +349,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, Directory.Exists(p) ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
             var getOperations = this.VersionControlService.PendChanges(this, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Delete);
+            var processType = keepLocal ? ProcessType.DeleteKeep : ProcessType.Delete;
+            ProcessGetOperations(getOperations, processType);
             this.RefreshPendingChanges();
         }
 
@@ -618,7 +619,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return null;
         }
 
-        private UpdateLocalVersion ProcessDelete(GetOperation operation, VersionControlDownloadService downloadService, ProcessDirection processDirection)
+        private UpdateLocalVersion ProcessDelete(GetOperation operation, VersionControlDownloadService downloadService, ProcessDirection processDirection, ProcessType processType)
         {
             if (processDirection == ProcessDirection.Undo)
             {
@@ -639,26 +640,29 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 return update;
             }
             else
-                return InternalProcessDelete(operation);
+                return InternalProcessDelete(operation, processType);
         }
 
-        private UpdateLocalVersion InternalProcessDelete(GetOperation operation)
+        private UpdateLocalVersion InternalProcessDelete(GetOperation operation, ProcessType processType)
         {
             var path = operation.SourceLocalItem;
-            try
+            if (processType == ProcessType.Delete)
             {
-                if (operation.ItemType == ItemType.File)
+                try
                 {
-                    FileHelper.FileDelete(path);
+                    if (operation.ItemType == ItemType.File)
+                    {
+                        FileHelper.FileDelete(path);
+                    }
+                    else
+                    {
+                        FileHelper.FolderDelete(path);
+                    }
                 }
-                else
+                catch
                 {
-                    FileHelper.FolderDelete(path);
+                    LoggingService.Log(MonoDevelop.Core.Logging.LogLevel.Info, "Can not delete path:" + path);
                 }
-            }
-            catch
-            {
-                LoggingService.Log(MonoDevelop.Core.Logging.LogLevel.Info, "Can not delete path:" + path);
             }
             return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
         }
@@ -790,7 +794,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             Add,
             Edit,
             Rename,
-            Delete
+            Delete,
+            DeleteKeep
         }
 
         private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor = null)
@@ -827,7 +832,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                                 update = ProcessRename(operation, ProcessDirection.Normal, progress);
                                 break;
                             case ProcessType.Delete:
-                                update = ProcessDelete(operation, downloadService, ProcessDirection.Normal);
+                            case ProcessType.DeleteKeep:
+                                update = ProcessDelete(operation, downloadService, ProcessDirection.Normal, processType);
                                 break;
                             default:
                                 update = ProcessGet(operation, downloadService, ProcessDirection.Normal);
@@ -882,7 +888,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
                         if (operation.IsDelete)
                         {
-                            update = ProcessDelete(operation, downloadService, ProcessDirection.Undo);
+                            update = ProcessDelete(operation, downloadService, ProcessDirection.Undo, ProcessType.Delete);
                             if (update != null)
                                 updates.QueueUpdate(update);
                         }

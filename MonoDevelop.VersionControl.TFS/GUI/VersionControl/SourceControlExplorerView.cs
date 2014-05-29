@@ -808,7 +808,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void DeleteItems(List<ExtendedItem> items)
         {
             List<Failure> failures;
-            _currentWorkspace.PendDelete(items.Select(x => (FilePath)x.LocalItem).ToList(), RecursionType.Full, out failures);
+            _currentWorkspace.PendDelete(items.Select(x => (FilePath)x.LocalItem).ToList(), RecursionType.Full, false, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 FailuresDisplayDialog.ShowFailures(failures);
             FireFilesRemoved(items);
