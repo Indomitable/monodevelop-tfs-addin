@@ -15,6 +15,9 @@ http://indomitable.github.io/monodevelop-tfs-addin/4.1/
 For MonoDevelop/Xamarin Studio 4.2 use:
 http://indomitable.github.io/monodevelop-tfs-addin/4.2/
 
+For MonoDevelop/Xamarin Studio 5.0 use:
+http://indomitable.github.io/monodevelop-tfs-addin/5.0/
+
 <h5>Work Items:</h5>
   This addin gives you access to your work items but currently you could only associate work items on commit.
 
