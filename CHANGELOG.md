@@ -1,5 +1,7 @@
 CHANGE LOG
 ==========
+* 1.4
+    - Move to MonoDevelop 5.0
 
 * 1.3
     - Add Debug Mode
