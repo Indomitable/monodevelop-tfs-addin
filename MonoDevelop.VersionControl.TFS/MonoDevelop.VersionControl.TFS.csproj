@@ -70,6 +70,161 @@
     <Compile Include="GUI\VersionControl\Dialogs\LockDialog.cs" />
     <Compile Include="Infrastructure\RepositoryCache.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\CheckInDialog.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\CommonStructureService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\LocationService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\ProjectCollectionService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\ServerStatusService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\TFSCollectionService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\Services\TFSService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ICredentialsProvider.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\IServiceResolver.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ProjectCollection.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ProjectInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ProjectState.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\SoapInvoker.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\TeamFoundationServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\TeamFoundationServerService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\UrlHelper.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\AccessEntry.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Annotation.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\BranchHistoryTreeItem.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\BranchRelative.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ChangeRequest.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ChangesetMerge.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\CheckinNote.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\CheckinNoteFieldValue.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\CheckinOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ConflictEventArgs.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ConflictEventHandler.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DeletedState.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Difference.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DifferenceUtil.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DiffItemLocalFile.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DiffItemVersionedFile.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DiffOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DiffUtil.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\DownloadService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ExceptionEventArgs.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ExceptionEventHandler.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\FailureException.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\FileHelper.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetFilterCallback.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetItemOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetOperation.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetRequest.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GetStatus.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GettingEventArgs.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\GettingEventHandler.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\IDiffItem.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ILocalUpdateOperation.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\InternalMessage.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\InternalServerInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ItemNotMappedException.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ItemSecurity.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\LabelChildOption.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\LabelResult.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\LabelResultStatus.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\LockLevel.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\MappingException.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\OperationStatus.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\PendingChangeEventArgs.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\PendingChangeEventHandler.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ProcessingChangeEventArgs.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ProcessingChangeEventHandler.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\RecursionType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\RepositoryConstants.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\RepositoryProperties.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\RepositoryService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\SecurityChange.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Shelveset.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\ShelvingOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\TeamProjectFolderOptions.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\TfsPath.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\UpdateLocalVersionQueue.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\UploadService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\VersionControlException.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\VersionControlLabel.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\VersionControlPath.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\VersionControlServiceResolver.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\WorkingFolder.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\WorkingFolderType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Workspace.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\WorkspaceData.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\WorkspaceInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\XmlNamespaces.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\ChangeType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\CheckOutLockLevel.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\ConflictType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\DiffOptionFlags.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\DiffOutputType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\ItemType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\RequestType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\ResolutionType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Enums\SeverityType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Helpers\EnumHelper.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Helpers\Extender.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Helpers\GeneralHelper.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\BaseItem.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\Change.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\Changeset.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\ChangesetVersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\CheckInResult.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\Conflict.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\DateVersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\ExtendedItem.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\Failure.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\Item.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\ItemSet.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\ItemSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\LabelItemSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\LabelVersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\LatestVersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\PendingChange.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\PendingSet.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\ResolveResult.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\VersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.VersionControl.Client\Objects\WorkspaceVersionSpec.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Enums\MetadataRowSetNames.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Enums\WorkItemCheckinAction.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Metadata\CachedMetaData.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Metadata\TableExtractor.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Metadata\TableFieldNameAttribute.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Action.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Constant.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Field.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Hierarchy.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Iteration.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\Project.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\StoredQuery.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\WorkItem.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Objects\WorkItemType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\LexalParser.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\NodesToXml.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\OrderByNodes.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\ParameterManager.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\SelectNodes.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\ArrayOfValues.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\CloseBracketNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\Condition.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\ConditionNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\ConstantNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\FieldNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\Node.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\NodeList.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\NodeType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\OpenBracketNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\Operator.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\OperatorNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\ParameterNode.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\Where\ValueDataType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\Query\WorkItemContext.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\ClientService.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\DataTypeConverter.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\InternalMessage.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemManager.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemsContext.cs" />
+    <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemStore.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -105,6 +260,9 @@
       <HintPath>\opt\monodevelop\bin\Mono.TextEditor.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup Condition=" '$(DefineConstants)' == 'DBus' ">
+    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5" />
+  </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
     <Folder Include="GUI\" />
@@ -117,19 +275,8 @@
     <Folder Include="GUI\WorkItems\" />
     <Folder Include="GUI\VersionControl\" />
     <Folder Include="GUI\VersionControl\Dialogs\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
-      <Project>{C0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.VersionControl.Client\Microsoft.TeamFoundation.VersionControl.Client.csproj">
-      <Project>{F0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.VersionControl.Client</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Microsoft.TeamFoundation.WorkItemTracking.Client\Microsoft.TeamFoundation.WorkItemTracking.Client.csproj">
-      <Project>{D0953653-D640-4338-BDAE-91DA9C3583F8}</Project>
-      <Name>Microsoft.TeamFoundation.WorkItemTracking.Client</Name>
-    </ProjectReference>
+    <Folder Include="Microsoft.TeamFoundation.Client\" />
+    <Folder Include="Microsoft.TeamFoundation.VersionControl.Client\" />
+    <Folder Include="Microsoft.TeamFoundation.WorkItemTracking.Client\" />
   </ItemGroup>
 </Project>
