@@ -6,7 +6,7 @@
        url         = "http://indomitable.github.io/monodevelop-tfs-addin/"
        description = "TFS support for the Version Control Add-in"
        category    = "Version Control"
-       version     = "1.4">
+       version     = "1.5">
  
 	<Dependencies>
 	    <Addin id="Core" version="5.0"/>

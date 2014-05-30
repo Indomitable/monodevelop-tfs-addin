@@ -41,12 +41,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     {
         private string label;
         private Item item;
-        private VersionSpec versionSpec;
 
-        public DiffItemVersionedFile(Item item, VersionSpec versionSpec)
+        public DiffItemVersionedFile(Item item)
         {
             this.item = item;
-            this.versionSpec = versionSpec;
             this.label = item.ServerItem;
         }
 

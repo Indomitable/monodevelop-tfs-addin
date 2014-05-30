@@ -9,17 +9,18 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
-    <ReleaseVersion>1.4</ReleaseVersion>
+    <ReleaseVersion>1.5</ReleaseVersion>
     <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
+    <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <CustomCommands>
       <CustomCommands>
         <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
+        <Command type="AfterBuild" command="cp ${SolutionDir}/Output/MonoDevelop.VersionControl.TFS.dll ${SolutionDir}/External/monodevelop/main/build/AddIns/VersionControl/" />
       </CustomCommands>
     </CustomCommands>
     <DebugSymbols>true</DebugSymbols>
@@ -27,14 +28,14 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
+    <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
     <DefineConstants>DBus</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug - No Dbus|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <Optimize>false</Optimize>
-    <OutputPath>..\External\monodevelop\main\build\AddIns\VersionControl</OutputPath>
+    <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
     <CustomCommands>
       <CustomCommands>
@@ -248,6 +249,7 @@
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemManager.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemsContext.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemStore.cs" />
+    <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

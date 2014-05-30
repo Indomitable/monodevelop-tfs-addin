@@ -41,7 +41,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         const string Boundary = "----------------------------8e5m2D6l5Q4h6";
         const int ChunkSize = 512 * 1024; //Chunk Size 512 K
         private static readonly string uncompressedContentType = "application/octet-stream";
-        private static readonly string compressedContentType = "application/gzip";
+//        private static readonly string compressedContentType = "application/gzip";
 
         class UploadServiceResolver : IServiceResolver
         {

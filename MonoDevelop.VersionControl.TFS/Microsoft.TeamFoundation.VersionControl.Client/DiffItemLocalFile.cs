@@ -38,14 +38,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
 	public sealed class DiffItemLocalFile : IDiffItem
 	{
-		private bool isTemporary;
 		private string fileName;
 		private int encoding;
 
 		public DiffItemLocalFile (String fileName, int encoding, 
-															DateTime lastModifiedDate, bool isTemporary)
+															DateTime lastModifiedDate)
 		{
-			this.isTemporary = isTemporary;
 			this.fileName = fileName;
 			this.encoding = encoding;
 		}

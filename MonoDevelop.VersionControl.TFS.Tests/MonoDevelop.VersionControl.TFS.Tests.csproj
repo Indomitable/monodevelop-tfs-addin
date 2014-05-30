@@ -10,7 +10,7 @@
     <RootNamespace>MonoDevelop.VersionControl.TFS.Tests</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS.Tests</AssemblyName>
     <UseMSBuildEngine>False</UseMSBuildEngine>
-    <ReleaseVersion>1.4</ReleaseVersion>
+    <ReleaseVersion>1.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
