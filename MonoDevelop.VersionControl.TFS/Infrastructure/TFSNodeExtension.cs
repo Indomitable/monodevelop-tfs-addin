@@ -29,9 +29,9 @@ using MonoDevelop.Projects;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.Ide.Gui.Pads.ProjectPad;
-using MonoDevelop.VersionControl.TFS.GUI;
 using MonoDevelop.Core;
 using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -41,7 +41,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             return typeof(ProjectFile).IsAssignableFrom(dataType)
             || typeof(SystemFile).IsAssignableFrom(dataType)
-            || typeof(IWorkspaceFileObject).IsAssignableFrom(dataType);
+            || typeof(IFolderItem).IsAssignableFrom(dataType)
+            || typeof(IWorkspaceObject).IsAssignableFrom(dataType);
         }
 
         public override Type CommandHandlerType
@@ -77,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     commandInfo.Visible = false;
                     return;
                 }
-
+    
                 var repo = item.Repository as TFSRepository;
                 if (repo == null)
                 {
@@ -109,12 +110,14 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             var solution = item.WorkspaceObject as Solution;
             if (solution != null)
             {
+                //Add Solution
                 paths.Add(solution.BaseDirectory);
-                foreach (var solutionItem in solution.Items)
+                //Add linked files.
+                foreach (var path in solution.GetItemFiles(true))
                 {
-                    if (!solutionItem.BaseDirectory.IsChildPathOf(solution.BaseDirectory))
+                    if (!path.IsChildPathOf(solution.BaseDirectory))
                     {
-                        paths.Add(solutionItem.BaseDirectory);
+                        paths.Add(path);
                     }
                 }
             }
@@ -148,6 +151,55 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return;
             }
             commandInfo.Visible = true;
+        }
+
+        [CommandHandler(TFSCommands.LocateInSourceExplorer)]
+        protected void OnLocateInSourceExplorer()
+        {
+            var item = base.GetItems(false)[0];
+            var repo = (TFSRepository)item.Repository;
+            var path = item.Path;
+            string fileName = null;
+            if (!item.IsDirectory)
+            {
+                fileName = path.FileName;
+                path = path.ParentDirectory;
+            }
+            var workspace = repo.GetWorkspaceByLocalPath(path);
+            if (workspace == null)
+                return;
+            var serverPath = workspace.GetServerPathForLocalPath(path);
+            SourceControlExplorerView.Open(workspace.ProjectCollection, serverPath, fileName);
+        }
+
+        [CommandUpdateHandler(TFSCommands.LocateInSourceExplorer)]
+        protected void UpdateLocateInSourceExplorer(CommandInfo commandInfo)
+        {
+            if (VersionControlService.IsGloballyDisabled)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            var items = base.GetItems(false);
+            if (items.Count != 1)
+            {
+                commandInfo.Visible = false;
+                return;
+            }
+            foreach (var item in items)
+            {
+                var repo = item.Repository as TFSRepository;
+                if (repo == null)
+                {
+                    commandInfo.Visible = false;
+                    return;
+                }
+                if (!item.VersionInfo.IsVersioned)
+                {
+                    commandInfo.Visible = false;
+                    return;
+                }
+            }
         }
     }
 }

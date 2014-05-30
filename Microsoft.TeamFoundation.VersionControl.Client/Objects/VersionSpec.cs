@@ -49,13 +49,13 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             if (prefix == 'T')
                 return Latest;
             else if (prefix == 'C')
-                    return new ChangesetVersionSpec(versionSpec.Substring(1));
-                else if (prefix == 'D')
-                        return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
-                    else if (prefix == 'L')
-                            return new LabelVersionSpec(versionSpec.Substring(1));
-                        else if (prefix == 'W')
-                                return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
+                return new ChangesetVersionSpec(versionSpec.Substring(1));
+            else if (prefix == 'D')
+                return new DateVersionSpec(DateTime.Parse(versionSpec.Substring(1)));
+            else if (prefix == 'L')
+                return new LabelVersionSpec(versionSpec.Substring(1));
+            else if (prefix == 'W')
+                return new WorkspaceVersionSpec(versionSpec.Substring(1), user);
 
             return null;
         }
@@ -63,5 +63,10 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         public abstract string DisplayString { get; }
 
         public static VersionSpec Latest { get { return latest; } }
+
+        public override string ToString()
+        {
+            return string.Format("VersionSpec: {0}", DisplayString);
+        }
     }
 }

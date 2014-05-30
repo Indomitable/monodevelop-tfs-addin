@@ -30,26 +30,47 @@ using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using System.Linq;
 using System.Collections.Generic;
+using System.Text;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
     public class WorkItemListWidget : VBox
     {
-        private readonly ListView listView = new ListView();
+        private readonly TreeView listView = new TreeView();
+        private DataField<bool> isCheckedField;
         private DataField<WorkItem> workItemField;
 
         public WorkItemListWidget()
         {
             this.PackStart(listView, true, true);
-            listView.RowActivated += OnWorkItemClicked;
+            listView.SelectionMode = SelectionMode.Multiple;
+            listView.KeyPressed += OnWorkItemKeyPressed;
         }
 
-        void OnWorkItemClicked(object sender, ListViewRowEventArgs e)
+        void OnWorkItemKeyPressed (object sender, KeyEventArgs e)
         {
-            var store = (ListStore)listView.DataSource;
-            var workItem = store.GetValue(e.RowIndex, workItemField);
-            if (OnSelectWorkItem != null)
-                OnSelectWorkItem(workItem);
+            if (e.Modifiers == ModifierKeys.Control && (e.Key == Key.c || e.Key == Key.C))
+            {
+                CopySelectedToClipBoard();
+            }
+        }
+
+        private void CopySelectedToClipBoard()
+        {
+            var store = (TreeStore)listView.DataSource;
+            StringBuilder builder = new StringBuilder();
+            foreach (var row in listView.SelectedRows)
+            {
+                List<string> rowValues = new List<string>();
+                foreach (var column in listView.Columns)
+                {
+                    var field = ((TextCellView)column.Views[0]).TextField as IDataField<object>;
+                    var val = Convert.ToString(store.GetNavigatorAt(row).GetValue(field));
+                    rowValues.Add(val);
+                }
+                builder.AppendLine(string.Join("\t", rowValues));
+            }
+            Clipboard.SetText(builder.ToString());
         }
 
         public void LoadQuery(StoredQuery query)
@@ -75,9 +96,32 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
                     if (dataFields.Any())
                     {
+                        if (ShowCheckboxes)
+                        {
+                            isCheckedField = new DataField<bool>();
+                            dataFields.Insert(0, isCheckedField);
+                            var checkColumn = new CheckBoxCellView(isCheckedField) { Editable = true };
+                            checkColumn.Toggled += (sender, e) => 
+                            {
+                                var astore = (TreeStore)listView.DataSource;
+                                var node = astore.GetNavigatorAt(listView.CurrentEventRow);
+                                var workItem = node.GetValue(workItemField);
+                                if (!node.GetValue(isCheckedField))
+                                {
+                                    if (OnSelectWorkItem != null)
+                                        OnSelectWorkItem(workItem);
+                                }
+                                else
+                                {
+                                    if (OnRemoveWorkItem != null)
+                                        OnRemoveWorkItem(workItem);
+                                }
+                            };
+                            listView.Columns.Add("", checkColumn);
+                        }
                         workItemField = new DataField<WorkItem>();
                         dataFields.Insert(0, workItemField);
-                        var listStore = new ListStore(dataFields.ToArray());
+                        var listStore = new TreeStore(dataFields.ToArray());
                         foreach (var map in mapping)
                         {
                             listView.Columns.Add(map.Key.Name, map.Value);
@@ -85,18 +129,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                         listView.DataSource = listStore;
                         foreach (var workItem in data)
                         {
-                            var row = listStore.AddRow();
-                            listStore.SetValue(row, workItemField, workItem);
+                            var row = listStore.AddNode();
+                            row.SetValue(workItemField, workItem);
                             foreach (var map in mapping)
                             {
                                 object value;
                                 if (workItem.WorkItemInfo.TryGetValue(map.Key.ReferenceName, out value))
                                 {
-                                    listStore.SetValue(row, map.Value, value);
+                                    row.SetValue(map.Value, value);
                                 }
                                 else
                                 {
-                                    listStore.SetValue(row, map.Value, null);
+                                    row.SetValue(map.Value, null);
                                 }
                             }
                         }
@@ -108,5 +152,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public delegate void WorkItemSelectedEventHandler(WorkItem workItem);
 
         public event WorkItemSelectedEventHandler OnSelectWorkItem;
+
+        public event WorkItemSelectedEventHandler OnRemoveWorkItem;
+
+        public bool ShowCheckboxes { get; set; }
     }
 }

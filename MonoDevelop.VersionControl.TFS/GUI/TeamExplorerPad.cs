@@ -33,6 +33,8 @@ using System.Linq;
 using System;
 using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -193,13 +195,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 case NodeType.WorkItemQuery:
                     var query = (StoredQuery)node.GetValue(_item);
                     WorkItemsView.Open(query);
+                    break;
                 default:
                     break;
             }
         }
 
         #endregion
-
     }
 }
 

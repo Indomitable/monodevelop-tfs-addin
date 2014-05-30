@@ -55,9 +55,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return workFolder;
         }
 
-        internal XElement ToXml()
+        internal XElement ToXml(XNamespace ns)
         {
-            return new XElement(XmlNamespaces.GetMessageElementName("WorkingFolder"), 
+            return new XElement(ns + "WorkingFolder", 
                 new XAttribute("local", TfsPath.FromPlatformPath(LocalItem)), 
                 new XAttribute("item", ServerItem),
                 new XAttribute("type", this.Type.ToString()));
@@ -93,6 +93,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public WorkingFolderType Type { get; private set; }
 
-        public string ServerItem { get; private set; }
+        public VersionControlPath ServerItem { get; private set; }
     }
 }

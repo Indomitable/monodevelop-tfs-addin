@@ -32,7 +32,10 @@ namespace MonoDevelop.VersionControl.TFS.Commands
         TeamExplorer,
         SourceControlExplorer,
         Checkout,
-        ResolveConflicts
+        ResolveConflicts,
+        ResolveConflictsMenu,
+        SourceControlExplorerMenu,
+        LocateInSourceExplorer
     }
 }
 

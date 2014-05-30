@@ -82,7 +82,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         internal void QueueUpdate(UpdateLocalVersion update)
         {
-            this.updates.Add(update);
+            if (!this.updates.Any(u => u.ItemId == update.ItemId && u.LocalVersion == update.LocalVersion && string.Equals(u.TargetLocalItem, update.TargetLocalItem)))
+                this.updates.Add(update);
         }
 
         internal IEnumerable<XElement> ToXml(XNamespace ns)

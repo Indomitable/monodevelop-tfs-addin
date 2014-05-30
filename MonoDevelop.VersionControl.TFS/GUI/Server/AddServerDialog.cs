@@ -1,5 +1,5 @@
 //
-// IItem.cs
+// AddServerDialog.cs
 //
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
@@ -23,15 +23,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
+using Xwt;
+using MonoDevelop.Core;
+using System;
+
+namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
-    public interface IItem
+    public class AddServerDialog : Dialog
     {
-        VersionControlPath ServerPath { get; }
+        readonly AddServerWidget widget = new AddServerWidget();
 
-        ItemType ItemType { get; }
+        public AddServerDialog()
+        {
+            BuildGui();
+        }
+
+        void BuildGui()
+        {
+            this.Title = GettextCatalog.GetString("Add Team Foundation Server");
+            this.Buttons.Add(Command.Ok, Command.Cancel);
+            this.Content = widget;
+            this.Resizable = false;
+        }
+
+        public string Name { get { return widget.ServerName; } }
+
+        public Uri Url { get { return widget.ServerUrl; } }
     }
 }
-

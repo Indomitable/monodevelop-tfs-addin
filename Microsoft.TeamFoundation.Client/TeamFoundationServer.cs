@@ -43,17 +43,14 @@ namespace Microsoft.TeamFoundation.Client
             
         }
 
-        public TeamFoundationServer(Uri uri, string name, string domain, string userName, string password)
+        public TeamFoundationServer(Uri uri, string name, string domain, string userName, string password, bool isPasswordSavedInXml)
         {
             this.Uri = uri;
             this.Name = name;
             this.Domain = domain;
             this.UserName = userName;
-            IsPasswordSavedSecurely = password == null;
-            if (!IsPasswordSavedSecurely)
-            {
-                Password = password;
-            }
+            this.IsPasswordSavedInXml = isPasswordSavedInXml;
+            this.Password = password;
         }
 
         public void LoadProjectConnections()
@@ -62,29 +59,15 @@ namespace Microsoft.TeamFoundation.Client
             this.ProjectCollections = projectCollectionsService.GetProjectCollections();
         }
 
-        public static TeamFoundationServer FromLocalXml(XElement element, string password)
+        public static TeamFoundationServer FromLocalXml(XElement element, string password, bool isPasswordSavedInXml)
         {
             try
             {
                 TeamFoundationServer server = new TeamFoundationServer();
                 server.Name = element.Attribute("Name").Value;
                 server.Uri = new Uri(element.Attribute("Url").Value);
-                server.IsPasswordSavedSecurely = password != null;
-                if (server.IsPasswordSavedSecurely)
-                {
-                    server.Password = password;
-                }
-                else
-                {
-                    if (element.Attribute("Password") != null)
-                    {
-                        server.Password = element.Attribute("Password").Value;
-                    }
-                    else
-                    {
-                        throw new Exception("Could not load password!");
-                    }
-                }
+                server.IsPasswordSavedInXml = isPasswordSavedInXml;
+                server.Password = password;
                 server.Domain = element.Attribute("Domain").Value;
                 server.UserName = element.Attribute("UserName").Value;
                 server.ProjectCollections = element.Elements("ProjectCollection").Select(x => ProjectCollection.FromLocalXml(server, x)).ToList();
@@ -104,7 +87,7 @@ namespace Microsoft.TeamFoundation.Client
                                     new XAttribute("Domain", this.Credentials.Domain),
                                     new XAttribute("UserName", this.Credentials.UserName),
                                     this.ProjectCollections.Select(p => p.ToLocalXml()));
-            if (!IsPasswordSavedSecurely)
+            if (IsPasswordSavedInXml)
                 serverElement.Add(new XAttribute("Password", this.Credentials.Password));
             return serverElement;
         }
@@ -117,7 +100,7 @@ namespace Microsoft.TeamFoundation.Client
             }
         }
 
-        public bool IsPasswordSavedSecurely { get; set; }
+        public bool IsPasswordSavedInXml { get; set; }
 
         public string Domain { get; set; }
 
@@ -130,6 +113,8 @@ namespace Microsoft.TeamFoundation.Client
         public string Name { get; private set; }
 
         public Uri Uri { get; private set; }
+
+        public bool IsDebuMode { get; set;}
 
         #region Equal
 
@@ -183,7 +168,6 @@ namespace Microsoft.TeamFoundation.Client
         }
 
         #endregion Equal
-
     }
 }
 

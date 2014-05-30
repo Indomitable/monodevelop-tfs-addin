@@ -31,7 +31,7 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using System;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class GetSpecVersionDialog : Dialog
     {
@@ -45,9 +45,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         readonly CheckBox forceGet = new CheckBox(GettextCatalog.GetString("Force get of file versions already in workspace"));
         //readonly CheckBox overrideGet = new CheckBox(GettextCatalog.GetString("Overwrite writeable files that are not checked out"));
         readonly SpinButton changeSetNumber = new SpinButton();
-        readonly Workspace workspace;
+        readonly Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace;
 
-        public GetSpecVersionDialog(Workspace workspace)
+        public GetSpecVersionDialog(Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
         {
             this.workspace = workspace;
             BuildGui();
@@ -127,17 +127,32 @@ namespace MonoDevelop.VersionControl.TFS.GUI
                 if (isChecked)
                 {
                     var item = listStore.GetValue(row, itemField);
-                    var spec = new ItemSpec(item.LocalItem, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full);
+                    var spec = new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full);
                     var version = (int)versionBox.SelectedItem == 0 ? new ChangesetVersionSpec(Convert.ToInt32(changeSetNumber.Value)) : VersionSpec.Latest;
                     requests.Add(new GetRequest(spec, version));
+                    if (forceGet.State == CheckBoxState.On)
+                    {
+                        workspace.ResetDownloadStatus(item.ItemId);
+                    }
                 }
             }
             var option = GetOptions.None;
             if (forceGet.State == CheckBoxState.On)
+            {
                 option |= GetOptions.GetAll;
+            }
 //            if (overrideGet.State == CheckBoxState.On)
 //                option |= GetOptions.Overwrite;
-            workspace.Get(requests, option);
+            using (var progress = VersionControlService.GetProgressMonitor("Get", VersionControlOperationType.Pull))
+            {
+                progress.Log.WriteLine("Start downloading items. GetOption: " + option);
+                foreach (var request in requests)
+                {
+                    progress.Log.WriteLine(request);
+                }
+                workspace.Get(requests, option, progress);
+                progress.ReportSuccess("Finish Downloading.");
+            }
             Respond(Command.Ok);
         }
     }

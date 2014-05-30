@@ -24,7 +24,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
+namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Enums
 {
     public enum WorkItemCheckinAction
     {

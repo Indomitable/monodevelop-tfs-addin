@@ -3,15 +3,15 @@
        name        = "TFS support"
        author      = "Ventsislav Mladenov"
        copyright   = "MIT X11"
-       url         = "https://github.com/Indomitable/monodevelop-tfs-addin"
+       url         = "http://indomitable.github.io/monodevelop-tfs-addin/"
        description = "TFS support for the Version Control Add-in"
        category    = "Version Control"
-       version     = "0.8">
+       version     = "1.4">
  
 	<Dependencies>
-	    <Addin id="Core" version="4.2"/>
-	    <Addin id="Ide" version="4.2"/>
-	    <Addin id="VersionControl" version="4.2"/>
+	    <Addin id="Core" version="5.0"/>
+	    <Addin id="Ide" version="5.0"/>
+	    <Addin id="VersionControl" version="5.0"/>
 	</Dependencies>
 
 	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
@@ -31,32 +31,48 @@
 			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
 				_label = "_Check Out"
 				description = "Check Out File."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"
+                _label = "_Locate in source explorer"
+                description = "Locate in source explorer."/>
             <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
                 _label = "_Resolve Conflicts"
                 description = "Resolve Conflicts."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu"
+                _label = "_Resolve Conflicts"
+                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ResolveConflictsHandler"
+                description = "Resolve Conflicts."/>
+            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu"
+                _label = "_Source Control Explorer"
+                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerMenuHandler"
+                description = "Source Control Explorer."/>
 		</Category>
 	</Extension>
 
-	<Extension path = "/MonoDevelop/Ide/MainMenu">
-		<ItemSet id = "TeamFoundation" _label = "Team" insertafter = "VersionControl" >
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
-			<SeparatorItem/>
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
-		</ItemSet>
-	</Extension>
+    <Extension path = "/MonoDevelop/Ide/MainMenu/VersionControl">
+        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.Annotate"/>
+        <ItemSet id = "TeamFoundation" _label = "TFS"  autohide="true" >
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu" />
+            <SeparatorItem/>
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu" />
+        </ItemSet>
+    </Extension>
 
 	<Extension path = "/MonoDevelop/Ide/Pads/ProjectPad">
 		<NodeBuilder class = "MonoDevelop.VersionControl.TFS.Infrastructure.TFSNodeExtension"/>
 	</Extension>
 
 	<Extension path = "/MonoDevelop/Ide/ContextMenu/ProjectPad/VersionControl">
+        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.SolutionStatus"/>
 		<Condition id="ItemType" value="IFileItem">
-			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout" 
-			insertbefore="MonoDevelop.VersionControl.Commands.ResolveConflicts"/>
+			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
 		</Condition>
         <Condition id="ItemType" value="Solution|Project">
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" 
-            insertafter="MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" />
+        </Condition>
+        <Condition id="ItemType" value="IFileItem|IFolderItem">
+            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"/>
         </Condition>
 	</Extension>
 	
@@ -68,6 +84,11 @@
 	<Extension path = "/MonoDevelop/VersionControl/CommitDialogExtensions">
 		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
 	</Extension>
+
+    <Extension path = "/MonoDevelop/Ide/GlobalOptionsDialog/VersionControl">
+        <Section id = "TFS" _label = "TFS" class = "MonoDevelop.VersionControl.TFS.GUI.TFSOptionsPanel" />
+    </Extension>
+
 <!--
     <Extension path = "/MonoDevelop/Core/StockIcons">
         <StockIcon stockid = "vc-repository" file = "Icons/repository.png" size="Menu" />

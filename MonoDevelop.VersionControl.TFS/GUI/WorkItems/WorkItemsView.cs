@@ -30,7 +30,7 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
     public class WorkItemsView : AbstractXwtViewContent
     {

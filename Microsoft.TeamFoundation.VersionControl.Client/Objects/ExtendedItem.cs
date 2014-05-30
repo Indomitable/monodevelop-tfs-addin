@@ -35,7 +35,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class ExtendedItem : IItem
+    public sealed class ExtendedItem : BaseItem
     {
         //          <ExtendedItem lver="int" did="int" latest="int" type="Any or Folder or File" enc="int" itemid="int" local="string" titem="string" sitem="string" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" chgEx="int" ochg="boolean" lock="None or Checkin or CheckOut or Unchanged" lowner="string" lownerdisp="string" date="dateTime">
         //            <IsBranch>boolean</IsBranch>
@@ -102,51 +102,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("ExtendedItem instance ");
-            sb.Append(GetHashCode());
-
-            sb.Append("\n	 LockOwner: ");
-            sb.Append(LockOwner);
-
-            sb.Append("\n	 HasOtherPendingChange: ");
-            sb.Append(HasOtherPendingChange);
-
-            sb.Append("\n	 ChangeType: ");
-            sb.Append(ChangeType);
-
-            sb.Append("\n	 LockStatus: ");
-            sb.Append(LockStatus.ToString());
-
-            sb.Append("\n	 VersionLocal: ");
-            sb.Append(VersionLocal);
-
-            sb.Append("\n	 VersionLatest: ");
-            sb.Append(VersionLatest);
-
-            sb.Append("\n	 Encoding: ");
-            sb.Append(Encoding);
-
-            sb.Append("\n	 LocalItem: ");
-            sb.Append(LocalItem);
-
-            sb.Append("\n	 TargetServerItem: ");
-            sb.Append(TargetServerItem);
-
-            sb.Append("\n	 SourceServerItem: ");
-            sb.Append(SourceServerItem);
-
-            sb.Append("\n	 ItemId: ");
-            sb.Append(ItemId);
-
-            sb.Append("\n	 ItemType: ");
-            sb.Append(ItemType);
-
-            sb.Append("\n	 DeletionId: ");
-            sb.Append(DeletionId);
-
-            return sb.ToString();
+            return TargetServerItem;
         }
 
         public int VersionLatest { get; private set; }
@@ -155,7 +111,13 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public LockLevel LockStatus { get; private set; }
 
-        public ItemType ItemType { get; private set; }
+        public bool IsLocked
+        {
+            get
+            {
+                return LockStatus.HasFlag(LockLevel.CheckOut) || LockStatus.HasFlag(LockLevel.Checkin);
+            }
+        }
 
         public ChangeType ChangeType { get; private set; }
 
@@ -163,7 +125,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public bool HasOtherPendingChange { get; private set; }
 
-        public bool IsInWorkspace { get { return (!string.IsNullOrEmpty(LocalItem)); } }
+        public bool IsInWorkspace { get { return !string.IsNullOrEmpty(LocalItem); } }
 
         public bool IsLatest { get { return VersionLatest == VersionLocal; } }
 
@@ -181,7 +143,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public DateTime CheckinDate { get; private set; }
 
-        public VersionControlPath ServerPath { get { return TargetServerItem; } }
+        public override VersionControlPath ServerPath { get { return TargetServerItem; } }
 
         public bool IsBranch { get; private set; }
     }

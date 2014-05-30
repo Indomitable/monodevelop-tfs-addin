@@ -31,9 +31,9 @@ using System.Xml.Linq;
 using System;
 using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
-using System.Net;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -70,6 +70,8 @@ namespace MonoDevelop.VersionControl.TFS
                 doc.Root.Add(new XElement("Workspaces", _activeWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
                 if (this.MergeToolInfo != null)
                     doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
+                doc.Root.Add(new XElement("CheckOutLockLevel", (int)CheckOutLockLevel));
+                doc.Root.Add(new XElement("DebugMode", IsDebugMode));
                 doc.Save(file);
                 file.Close();
             }
@@ -87,8 +89,11 @@ namespace MonoDevelop.VersionControl.TFS
                     XDocument doc = XDocument.Load(file);
                     foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                     {
-                        var password = CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
-                        var server = TeamFoundationServer.FromLocalXml(serverElement, password);
+                        var isPasswordSavedInXml = serverElement.Attribute("Password") != null;
+                        var password = isPasswordSavedInXml ? serverElement.Attribute("Password").Value : CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
+                        if (password == null)
+                            throw new Exception("TFS Addin: No Password found for TFS server: " + serverElement.Attribute("Name").Value);
+                        var server = TeamFoundationServer.FromLocalXml(serverElement, password, isPasswordSavedInXml);
                         if (server != null)
                             _registredServers.Add(server);
                     }
@@ -105,6 +110,9 @@ namespace MonoDevelop.VersionControl.TFS
                             Arguments = mergeToolElement.Attribute("Arguments").Value,
                         };
                     }
+                    checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? CheckOutLockLevel.Unchanged : (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
+                    isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
+                    this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
                     file.Close();
                 }
             }
@@ -151,7 +159,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public event Action OnServersChange;
 
-        private void RaiseServersChange()
+        public void RaiseServersChange()
         {
             if (OnServersChange != null)
             {
@@ -173,5 +181,45 @@ namespace MonoDevelop.VersionControl.TFS
         }
 
         public MergeToolInfo MergeToolInfo { get; set; }
+
+        private CheckOutLockLevel checkOutLockLevel;
+
+        public CheckOutLockLevel CheckOutLockLevel
+        {
+            get { return checkOutLockLevel; }
+            set
+            {
+                checkOutLockLevel = value;
+                StorePrefs();
+            }
+        }
+
+        private bool isDebugMode;
+
+        public bool IsDebugMode
+        { 
+            get
+            {
+                return isDebugMode;
+            }
+            set
+            {
+                isDebugMode = value;
+                this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
+                StorePrefs();
+            }
+        }
+
+        public void RefreshWorkingRepositories()
+        {
+            foreach(var system in VersionControlService.GetVersionControlSystems())
+            {
+                var tfsSystem = system as TFSClient;
+                if (tfsSystem != null)
+                {
+                    tfsSystem.RefreshRepositories();
+                }
+            }
+        }
     }
 }

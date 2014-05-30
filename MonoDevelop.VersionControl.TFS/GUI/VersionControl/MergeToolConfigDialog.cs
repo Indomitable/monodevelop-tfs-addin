@@ -23,13 +23,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
 using Xwt;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using System.Text;
 
-namespace MonoDevelop.VersionControl.TFS.GUI
+namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class MergeToolConfigDialog : Dialog
     {
@@ -40,6 +39,16 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         public MergeToolConfigDialog()
         {
             BuildGui();
+        }
+
+        public MergeToolConfigDialog(MergeToolInfo mergeInfo)
+            : this()
+        {
+            if (mergeInfo != null)
+            {
+                this.commandNameEntry.Text = mergeInfo.CommandName;
+                this.argumentsEntry.Text = mergeInfo.Arguments;
+            }
         }
 
         void BuildGui()

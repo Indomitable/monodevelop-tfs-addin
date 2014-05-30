@@ -33,12 +33,12 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using SoapInvoker = Microsoft.TeamFoundation.Client.SoapInvoker;
 using Microsoft.TeamFoundation.Client.Services;
+using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class RepositoryService : TFSCollectionService
+    public class RepositoryService : TFSCollectionService
     {
-
         #region TfsService
 
         public override XNamespace MessageNs
@@ -96,7 +96,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             msg.Add(new XElement(MessageNs + "oldWorkspaceName", oldWorkspaceName));
             msg.Add(new XElement(MessageNs + "ownerName", ownerName));
-            msg.Add(newWorkspace.ToXml("newWorkspace"));
+            msg.Add(newWorkspace.ToXml(MessageNs + "newWorkspace"));
 
             XElement result = invoker.InvokeResult();
             return Workspace.FromXml(this, result);
@@ -106,7 +106,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             var invoker = new SoapInvoker(this);
             XElement msg = invoker.CreateEnvelope("CreateWorkspace");
-            msg.Add(workspace.ToXml("workspace"));
+            msg.Add(workspace.ToXml(MessageNs + "workspace"));
             XElement result = invoker.InvokeResult();
             return Workspace.FromXml(this, result);
         }
@@ -317,14 +317,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         //          </PropertyValues>
         //        </GetOperation>
         //      </PendChangesResult>
-        internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest)
+        internal List<GetOperation> PendChanges(Workspace workspace, List<ChangeRequest> changeRequest, out List<Failure> failures)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("PendChanges");
             msg.Add(new XElement(MessageNs + "workspaceName", workspace.Name));
             msg.Add(new XElement(MessageNs + "ownerName", workspace.OwnerName));
             msg.Add(new XElement(MessageNs + "changes", changeRequest.Select(x => x.ToXml(MessageNs))));
-            var result = invoker.InvokeResult();
+            var response = invoker.InvokeResponse();
+            failures = FailuresExtractor(response);
+            var result = invoker.MethodResultExtractor(response);
             return result.Elements(MessageNs + "GetOperation").Select(GetOperation.FromXml).ToList();
         }
 
@@ -400,7 +402,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             var failures = response.Element(MessageNs + "failures");
             if (failures != null)
                 return failures.Elements(MessageNs + "Failure").Select(x => Failure.FromXml(x)).ToList();
-            return null;
+            return new List<Failure>();
         }
 
         private List<GetOperation> GetOperationExtractor(XElement element)
@@ -415,7 +417,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         #endregion
 
-        internal List<Failure> CheckIn(Workspace workspace, List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        internal CheckInResult CheckIn(Workspace workspace, List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             var invoker = new SoapInvoker(this);
             var msg = invoker.CreateEnvelope("CheckIn");
@@ -439,9 +441,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                             new XElement(MessageNs + "CheckinAction", wi.Value))))));
             }
             var response = invoker.InvokeResponse();
-            //var result = invoker.MethodResultExtractor(response);
-            var failures = FailuresExtractor(response);
-            return failures;
+            var resultElement = invoker.MethodResultExtractor(response);
+
+            var result = CheckInResult.FromXml(resultElement);
+            result.Failures = FailuresExtractor(response);
+            return result;
         }
 
         internal List<Conflict> QueryConflicts(Workspace workspace, List<ItemSpec> items)

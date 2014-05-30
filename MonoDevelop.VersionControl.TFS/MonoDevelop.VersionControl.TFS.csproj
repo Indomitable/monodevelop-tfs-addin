@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
-    <ReleaseVersion>0.8</ReleaseVersion>
+    <ReleaseVersion>1.3</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
@@ -21,15 +21,12 @@
     <Compile Include="TFSClient.cs" />
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
-    <Compile Include="GUI\SourceControlExplorerView.cs" />
     <Compile Include="Commands\ConnectToServerHandler.cs" />
-    <Compile Include="GUI\ConnectToServerDialog.cs" />
     <Compile Include="Helpers\CredentialsManager.cs" />
     <Compile Include="TFSVersionControlService.cs" />
     <Compile Include="Commands\InitHandler.cs" />
     <Compile Include="GUI\TeamExplorerPad.cs" />
     <Compile Include="Infrastructure\Objects\HierarchyItem.cs" />
-    <Compile Include="GUI\WorkspacesDialog.cs" />
     <Compile Include="Helpers\WorkspaceHelper.cs" />
     <Compile Include="GUI\Constants.cs" />
     <Compile Include="Commands\TeamExplorerHandler.cs" />
@@ -38,15 +35,36 @@
     <Compile Include="GUI\TFSCommitDialogExtension.cs" />
     <Compile Include="Infrastructure\TFSNodeExtension.cs" />
     <Compile Include="Infrastructure\Objects\TFSRevision.cs" />
-    <Compile Include="GUI\ResolveConflictsView.cs" />
     <Compile Include="Infrastructure\MergeToolInfo.cs" />
-    <Compile Include="GUI\MergeToolConfigDialog.cs" />
-    <Compile Include="GUI\GetSpecVersionDialog.cs" />
-    <Compile Include="GUI\WorkItemsView.cs" />
-    <Compile Include="GUI\WorkItemListWidget.cs" />
-    <Compile Include="GUI\SelectWorkItemDialog.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetXwt.cs" />
-    <Compile Include="GUI\TFSCommitDialogExtensionWidgetGtk.cs" />
+    <Compile Include="GUI\Workspace\ProjectSelectDialog.cs" />
+    <Compile Include="GUI\Workspace\WorkspaceAddEditDialog.cs" />
+    <Compile Include="GUI\Workspace\WorkspacesDialog.cs" />
+    <Compile Include="GUI\Server\AddServerDialog.cs" />
+    <Compile Include="GUI\Server\ChooseProjectsDialog.cs" />
+    <Compile Include="GUI\Server\ConnectToServerDialog.cs" />
+    <Compile Include="GUI\Server\CredentialsDialog.cs" />
+    <Compile Include="GUI\WorkItems\WorkItemsView.cs" />
+    <Compile Include="GUI\WorkItems\WorkItemListWidget.cs" />
+    <Compile Include="GUI\WorkItems\SelectWorkItemDialog.cs" />
+    <Compile Include="GUI\VersionControl\GetSpecVersionDialog.cs" />
+    <Compile Include="GUI\VersionControl\MergeToolConfigDialog.cs" />
+    <Compile Include="GUI\VersionControl\ResolveConflictsView.cs" />
+    <Compile Include="GUI\VersionControl\SourceControlExplorerView.cs" />
+    <Compile Include="GUI\TFSOptionsPanel.cs" />
+    <Compile Include="GUI\TFSOptionsWidget.cs" />
+    <Compile Include="GUI\VersionControl\FailuresDisplayDialog.cs" />
+    <Compile Include="GUI\Server\TFSRepositoryEditor.cs" />
+    <Compile Include="GUI\Server\AddServerWidget.cs" />
+    <Compile Include="Commands\ResolveConflictsHandler.cs" />
+    <Compile Include="Commands\SourceControlExplorerMenuHandler.cs" />
+    <Compile Include="GUI\GuiHelper.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\CheckOutDialog.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\UndoDialog.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\RenameDialog.cs" />
+    <Compile Include="GUI\TFSCommitDialogExtensionWidget.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\LockDialog.cs" />
+    <Compile Include="Infrastructure\RepositoryCache.cs" />
+    <Compile Include="GUI\VersionControl\Dialogs\CheckInDialog.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -89,6 +107,11 @@
     <Folder Include="Infrastructure\" />
     <Folder Include="Infrastructure\Objects\" />
     <Folder Include="Icons\" />
+    <Folder Include="GUI\Workspace\" />
+    <Folder Include="GUI\Server\" />
+    <Folder Include="GUI\WorkItems\" />
+    <Folder Include="GUI\VersionControl\" />
+    <Folder Include="GUI\VersionControl\Dialogs\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.TeamFoundation.Client\Microsoft.TeamFoundation.Client.csproj">
