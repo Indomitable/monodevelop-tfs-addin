@@ -58,7 +58,6 @@ Global
 		$2.scope = text/x-csharp
 		$0.CSharpFormattingPolicy = $3
 		$3.IndentSwitchBody = True
-		$3.AlignEmbeddedUsingStatements = False
 		$3.AutoPropertyFormatting = ForceOneLine
 		$3.AnonymousMethodBraceStyle = NextLine
 		$3.PropertyBraceStyle = NextLine
@@ -94,6 +93,6 @@ Global
 		$0.XmlFormattingPolicy = $6
 		$6.inheritsSet = null
 		$6.scope = application/x-addin+xml
-		version = 1.3
+		version = 1.4
 	EndGlobalSection
 EndGlobal
