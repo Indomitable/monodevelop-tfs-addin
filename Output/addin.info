@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Addin id="VersionControl.TFS" version="1.4" namespace="MonoDevelop" name="TFS support" author="Ventsislav Mladenov" url="http://indomitable.github.io/monodevelop-tfs-addin/" copyright="MIT X11" description="TFS support for the Version Control Add-in" category="Version Control">
+<Addin id="VersionControl.TFS" version="1.5" namespace="MonoDevelop" name="TFS support" author="Ventsislav Mladenov" url="http://indomitable.github.io/monodevelop-tfs-addin/" copyright="MIT X11" description="TFS support for the Version Control Add-in" category="Version Control">
   <Runtime>    
     <Import assembly="MonoDevelop.VersionControl.TFS.dll" />
   </Runtime>

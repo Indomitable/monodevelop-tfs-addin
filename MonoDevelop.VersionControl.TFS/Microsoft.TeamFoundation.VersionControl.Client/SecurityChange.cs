@@ -32,12 +32,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 {
 	public abstract class SecurityChange
 	{
-		private string item;
-
-		public string Item
-		{
-			get { return item; }
-		}
+        public string Item { get; set; }
 	}
 }
 

@@ -9,17 +9,12 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
-    <ReleaseVersion>1.4</ReleaseVersion>
+    <ReleaseVersion>1.5</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
-    <CustomCommands>
-      <CustomCommands>
-        <Command type="Execute" command="/opt/monodevelop/bin/MonoDevelop.exe" workingdir="/opt/monodevelop/bin/" />
-      </CustomCommands>
-    </CustomCommands>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -225,6 +220,7 @@
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemManager.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemsContext.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemStore.cs" />
+    <Compile Include="AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
