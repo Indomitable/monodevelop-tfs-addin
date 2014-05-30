@@ -1,8 +1,5 @@
 <AddinProject appVersion="5.0">
 	<Project>
-		<AddinFile>Output/Microsoft.TeamFoundation.Client.dll</AddinFile>
-		<AddinFile>Output/Microsoft.TeamFoundation.VersionControl.Client.dll</AddinFile>
-		<AddinFile>Output/Microsoft.TeamFoundation.WorkItemTracking.Client.dll</AddinFile>
 		<AddinFile>Output/MonoDevelop.VersionControl.TFS.dll</AddinFile>
 		<BuildFile>MonoDevelop.VersionControl.TFS.sln</BuildFile>
 		<BuildConfiguration>Release</BuildConfiguration>
