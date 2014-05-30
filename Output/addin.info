@@ -1,9 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Addin id="VersionControl.TFS" version="1.4" namespace="MonoDevelop" name="TFS support" author="Ventsislav Mladenov" url="http://indomitable.github.io/monodevelop-tfs-addin/" copyright="MIT X11" description="TFS support for the Version Control Add-in" category="Version Control">
   <Runtime>    
-    <Import assembly="Microsoft.TeamFoundation.Client.dll" />
-    <Import assembly="Microsoft.TeamFoundation.VersionControl.Client.dll" />
-    <Import assembly="Microsoft.TeamFoundation.WorkItemTracking.Client.dll" />    
     <Import assembly="MonoDevelop.VersionControl.TFS.dll" />
   </Runtime>
   <Dependencies>
