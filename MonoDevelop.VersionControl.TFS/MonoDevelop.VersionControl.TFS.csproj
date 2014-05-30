@@ -281,6 +281,7 @@
     <Reference Include="Mono.TextEditor">
       <HintPath>..\External\monodevelop\main\build\bin\Mono.TextEditor.dll</HintPath>
     </Reference>
+    <Reference Include="System.Web.Services" />
   </ItemGroup>
   <ItemGroup Condition=" '$(DefineConstants)' == 'DBus' ">
     <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5" />
