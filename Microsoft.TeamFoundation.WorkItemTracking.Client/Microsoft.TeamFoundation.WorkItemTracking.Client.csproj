@@ -29,7 +29,7 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="MonoDevelop.Core">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

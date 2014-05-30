@@ -15,6 +15,11 @@
     <Optimize>true</Optimize>
     <OutputPath>..\Output</OutputPath>
     <WarningLevel>4</WarningLevel>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="Execute" command="/opt/monodevelop/bin/MonoDevelop.exe" workingdir="/opt/monodevelop/bin/" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -74,13 +79,13 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Core">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
     <Reference Include="MonoDevelop.Ide">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\MonoDevelop.Ide.dll</HintPath>
     </Reference>
     <Reference Include="MonoDevelop.VersionControl">
-      <Package>monodevelop-core-addins</Package>
+      <HintPath>\opt\monodevelop\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
     <Reference Include="gtk-sharp" />
     <Reference Include="glib-sharp" />
@@ -88,16 +93,16 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xwt">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\Xwt.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.NRefactory">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\ICSharpCode.NRefactory.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="gdk-sharp" />
     <Reference Include="Mono.TextEditor">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\Mono.TextEditor.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

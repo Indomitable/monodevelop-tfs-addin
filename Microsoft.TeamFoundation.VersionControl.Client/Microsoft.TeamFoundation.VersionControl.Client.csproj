@@ -29,10 +29,10 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="MonoDevelop.Core">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
     <Reference Include="MonoDevelop.Ide">
-      <Package>monodevelop</Package>
+      <HintPath>\opt\monodevelop\bin\MonoDevelop.Ide.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
