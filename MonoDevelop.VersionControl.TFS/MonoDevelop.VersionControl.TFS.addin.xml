@@ -3,7 +3,7 @@
        name        = "TFS support"
        author      = "Ventsislav Mladenov"
        copyright   = "MIT X11"
-       url         = "http://indomitable.github.io/monodevelop-tfs-addin/"
+       url         = "https://bitbucket.org/ventsislav_mladenov/monodevelop-tfs-addin"
        description = "TFS support for the Version Control Add-in"
        category    = "Version Control"
        version     = "1.5">
