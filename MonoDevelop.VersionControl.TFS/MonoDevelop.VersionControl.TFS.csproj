@@ -10,7 +10,6 @@
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
     <ReleaseVersion>1.5</ReleaseVersion>
-    <UseMSBuildEngine>False</UseMSBuildEngine>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -306,6 +305,6 @@
     <Folder Include="Microsoft.TeamFoundation.WorkItemTracking.Client\" />
   </ItemGroup>
   <Target Name="AfterBuild">
-    <Copy SourceFiles="..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\Output\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
   </Target>
 </Project>
