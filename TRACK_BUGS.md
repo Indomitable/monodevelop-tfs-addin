@@ -1,9 +1,9 @@
 How to track bugs
 =================
-[MonoDevelop]: http://monodevelop.com/
-[XamarinStudio]: http://xamarin.com/studio 'Xamarin Studio'
+[MonoDevelop]: http://monodevelop.com/ "Mono Develop"
+[XamarinStudio]: http://xamarin.com/studio "Xamarin Studio"
 ### The best way to track bugs is using debugging. 
-1. Go to [monodevelop-tfs-addin](https://github.com/Indomitable/monodevelop-tfs-addin) and click on **Fork** button.
+1. Go to [monodevelop-tfs-addin](https://bitbucket.org/ventsislav_mladenov/monodevelop-tfs-addin) and click on **Fork** button.
 2. If you use Mac OS open the terminal and type `git clone url_to_you_repository`
 3. `cd monodevelop-tfs-addin`
 4. Download monodevelop and its submodules `git submodule update --init --recursive` - this will take some time.
