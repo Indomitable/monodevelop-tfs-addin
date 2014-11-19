@@ -221,6 +221,18 @@
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemsContext.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemStore.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\VisualStudioOnlineTFS.cs" />
+    <Compile Include="GUI\Server\AddVisualStudioOnlineServerWidget.cs" />
+    <Compile Include="GUI\Server\IAddServerWidget.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\TeamFoundationServerFactory.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ServerType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\BaseTeamFoundationServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\INetworkServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\IAuthServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ServerAuthentication.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\NetworkServerInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\BaseServerInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\VisualStudioServerInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />

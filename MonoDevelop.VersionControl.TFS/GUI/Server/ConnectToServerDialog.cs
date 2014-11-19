@@ -39,7 +39,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         private readonly ListView serverList = new ListView();
         private readonly DataField<string> nameField = new DataField<string>();
         private readonly DataField<string> urlField = new DataField<string>();
-        private readonly DataField<TeamFoundationServer> serverField = new DataField<TeamFoundationServer>();
+        private readonly DataField<BaseTeamFoundationServer> serverField = new DataField<BaseTeamFoundationServer>();
         private readonly ListStore serverStore;
 
         public ConnectToServerDialog()
@@ -108,30 +108,27 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         {
             using (var dialog = new AddServerDialog())
             {
-                if (dialog.Run(this) == Command.Ok && dialog.Url != null)
+                if (dialog.Run(this) == Command.Ok && dialog.ServerInfo != null)
                 {
-                    if (TFSVersionControlService.Instance.HasServer(dialog.Name))
+                    if (TFSVersionControlService.Instance.HasServer(dialog.ServerInfo.Name))
                     {
                         MessageService.ShowError("Server with same name already exists!");
                         return;
                     }
-                    using (var credentialsDialog = new CredentialsDialog())
+                    using (var credentialsDialog = new CredentialsDialog(dialog.ServerType))
                     {
-                        if (credentialsDialog.Run(this) == Command.Ok && credentialsDialog.Credentials != null)
+                        if (credentialsDialog.Run(this) == Command.Ok && credentialsDialog.Authentication != null)
                         {
-                            CredentialsManager.StoreCredential(dialog.Url, credentialsDialog.Credentials.Password);
-                            var password = CredentialsManager.GetPassword(dialog.Url); //Try Get Password
+                            CredentialsManager.StoreCredential(dialog.ServerInfo.Uri, credentialsDialog.Authentication.Password);
+                            var password = CredentialsManager.GetPassword(dialog.ServerInfo.Uri); //Try Get Password
                             bool isPasswordSavedInXml = false;
                             if (password == null)
                             {
                                 MessageService.ShowWarning("No keyring service found!\nPassword will be saved as plain text.");
                                 isPasswordSavedInXml = true;
                             }
-                            var server = new TeamFoundationServer(dialog.Url, dialog.Name, 
-                                             credentialsDialog.Credentials.Domain, 
-                                             credentialsDialog.Credentials.UserName, 
-                                             credentialsDialog.Credentials.Password, 
-                                             isPasswordSavedInXml);
+                            var server = TeamFoundationServerFactory.Create(dialog.ServerType, dialog.ServerInfo, 
+                                                                            credentialsDialog.Authentication, isPasswordSavedInXml);
                             using (var projectsDialog = new ChooseProjectsDialog(server))
                             {
                                 if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjects.Any())

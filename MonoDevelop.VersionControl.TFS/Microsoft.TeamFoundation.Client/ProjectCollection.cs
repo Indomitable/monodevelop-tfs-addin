@@ -50,7 +50,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public Uri LocationServiceUrl { get; set; }
 
-        public static ProjectCollection FromServerXml(TeamFoundationServer server, XElement element)
+        public static ProjectCollection FromServerXml(BaseTeamFoundationServer server, XElement element)
         {
             ProjectCollection collection = new ProjectCollection();
             collection.Server = server;
@@ -65,7 +65,7 @@ namespace Microsoft.TeamFoundation.Client
             return collection;
         }
 
-        public static ProjectCollection FromLocalXml(TeamFoundationServer server, XElement element)
+        public static ProjectCollection FromLocalXml(BaseTeamFoundationServer server, XElement element)
         {
             ProjectCollection collection = new ProjectCollection();
             collection.Server = server;
@@ -113,7 +113,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public List<ProjectInfo> Projects { get; set; }
 
-        public TeamFoundationServer Server { get; set; }
+        public BaseTeamFoundationServer Server { get; set; }
 
         public T GetService<T>()
             where T : TFSCollectionService

@@ -30,6 +30,7 @@ using System.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
+using System.Text;
 
 namespace Microsoft.TeamFoundation.WorkItemTracking.Client
 {
@@ -49,7 +50,14 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client
         {
             CachedMetaData.Instance.Init(this.clientService);
             var constants = CachedMetaData.Instance.Constants;
-            var userName = this.collection.Server.Credentials.Domain + "\\" + this.collection.Server.UserName;
+            var userNameBuilder = new StringBuilder();
+            var server = this.collection.Server as INetworkServer;
+            if (server != null && !string.IsNullOrEmpty(server.Credentials.Domain))
+            {
+                userNameBuilder.Append(server.Credentials.Domain + "\\");
+            }
+            userNameBuilder.Append(this.collection.Server.UserName);
+            var userName = userNameBuilder.ToString();
             var me = constants.FirstOrDefault(c => string.Equals(c.Value, userName, StringComparison.OrdinalIgnoreCase));
             if (me != null)
             {

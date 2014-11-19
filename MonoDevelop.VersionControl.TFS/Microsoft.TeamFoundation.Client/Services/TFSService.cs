@@ -31,7 +31,7 @@ namespace Microsoft.TeamFoundation.Client.Services
 {
     public abstract class TFSService
     {
-        public TeamFoundationServer Server { get; set; }
+        public BaseTeamFoundationServer Server { get; set; }
 
         public string RelativeUrl { get; set; }
 

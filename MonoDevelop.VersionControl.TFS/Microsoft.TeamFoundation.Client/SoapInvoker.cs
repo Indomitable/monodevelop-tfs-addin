@@ -50,7 +50,6 @@ namespace Microsoft.TeamFoundation.Client
         readonly TFSService service;
         readonly XNamespace messagegNs;
         readonly Uri url;
-        readonly ICredentials credentials;
         readonly XDocument document;
         string methodName;
 
@@ -58,7 +57,6 @@ namespace Microsoft.TeamFoundation.Client
         {
             this.service = service;
             this.url = service.Url;
-            this.credentials = service.Server.Credentials;
             this.messagegNs = service.MessageNs;
             this.document = new XDocument(
                 new XDeclaration("1.0", "utf-8", "no"),
@@ -105,18 +103,32 @@ namespace Microsoft.TeamFoundation.Client
 
         public XElement InvokeResponse()
         {
-            StringBuilder logBuilder = new StringBuilder();
+            var logBuilder = new StringBuilder();
             logBuilder.AppendLine("Date: " + DateTime.Now.ToString("s"));
-            logBuilder.AppendLine("Domain: " + ((NetworkCredential)credentials).Domain);
-            logBuilder.AppendLine("UserName: " + ((NetworkCredential)credentials).UserName);
-            logBuilder.AppendLine("Password: " + ((NetworkCredential)credentials).Password);
             logBuilder.AppendLine("Request:");
             logBuilder.AppendLine(this.ToString());
 
             try
             {
-                var request = (HttpWebRequest)WebRequest.Create(url); 
-                request.Credentials = credentials;
+                var request = (HttpWebRequest)WebRequest.Create(url);
+                if (service.Server is INetworkServer)
+                {
+                    var server = (INetworkServer)service.Server;
+                    logBuilder.AppendLine("Domain: " + server.Credentials.Domain);
+                    logBuilder.AppendLine("UserName: " + server.Credentials.UserName);
+                    logBuilder.AppendLine("Password: " + server.Credentials.Password);
+
+                    request.Credentials = server.Credentials;
+                }
+                else if (service.Server is IAuthServer) 
+                {
+                    var server = (IAuthServer)service.Server;
+                    request.Headers.Add(HttpRequestHeader.Authorization, server.AuthString);
+                }
+                else
+                {
+                    throw new Exception("Known server");
+                }
                 request.AllowWriteStreamBuffering = true;
                 request.Method = "POST";
                 request.ContentType = "text/xml; charset=utf-8";
@@ -189,7 +201,7 @@ namespace Microsoft.TeamFoundation.Client
 
         public override string ToString()
         {
-            StringBuilder builder = new StringBuilder();
+            var builder = new StringBuilder();
             builder.Append(document.ToString());
             return builder.ToString();
         }

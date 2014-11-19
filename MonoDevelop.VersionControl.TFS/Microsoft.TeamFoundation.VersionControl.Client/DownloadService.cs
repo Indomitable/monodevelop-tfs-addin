@@ -88,8 +88,21 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             try
             {
-                WebClient client = new WebClient();
-                client.Credentials = this.Collection.Server.Credentials;
+                var client = new WebClient();
+                if (this.Collection.Server is INetworkServer)
+                {
+                    var server = (INetworkServer)this.Collection.Server;
+                    client.Credentials = server.Credentials;
+                }
+                else if (this.Collection.Server is IAuthServer) 
+                {
+                    var server = (IAuthServer)this.Collection.Server;
+                    client.Headers.Add(HttpRequestHeader.Authorization, server.AuthString);
+                }
+                else
+                {
+                    throw new Exception("Known server");
+                }
                 var tempFileName = this.GetTempFileName(".gz");
                 UriBuilder bulder = new UriBuilder(this.Url);
                 bulder.Query = artifactUri;
