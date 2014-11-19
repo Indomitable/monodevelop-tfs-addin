@@ -50,7 +50,7 @@ namespace Microsoft.TeamFoundation.Client.Services
         private readonly string serviceUrl = "/TeamFoundation/Administration/v3.0/CatalogService.asmx";
         private readonly string projectCollectionsTypeId = "26338d9e-d437-44aa-91f2-55880a328b54";
 
-        public ProjectCollectionService(TeamFoundationServer server)
+        public ProjectCollectionService(BaseTeamFoundationServer server)
         {
             this.Server = server;
             this.RelativeUrl = serviceUrl;

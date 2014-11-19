@@ -27,10 +27,11 @@ using System;
 using Xwt;
 using MonoDevelop.Core;
 using System.Text.RegularExpressions;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
-    public class AddServerWidget : VBox
+    public class AddServerWidget : VBox, IAddServerWidget
     {
         readonly TextEntry _nameEntry = new TextEntry();
         readonly TextEntry _hostEntry = new TextEntry();
@@ -48,6 +49,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 
         void BuildGui()
         {
+            this.Margin = new WidgetSpacing(5, 5, 5, 5);
             this.PackStart(new Label(GettextCatalog.GetString("Name of connection")));
             _nameEntry.Changed += (sender, e) => _hostEntry.Text = _nameEntry.Text;
             this.PackStart(_nameEntry);
@@ -147,15 +149,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             }
         }
 
-        public string ServerName { get { return string.IsNullOrWhiteSpace(_nameEntry.Text) ? ServerUrl.ToString() : _nameEntry.Text; } }
-
-        public Uri ServerUrl
+        public BaseServerInfo ServerInfo
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(_hostEntry.Text))
                     return null;
-                return new Uri(_previewEntry.Text); 
+                var uri = new Uri(_previewEntry.Text); 
+                var name = string.IsNullOrWhiteSpace(_nameEntry.Text) ? uri.ToString() : _nameEntry.Text;
+                return new NetworkServerInfo(name, uri);
             }
         }
     }

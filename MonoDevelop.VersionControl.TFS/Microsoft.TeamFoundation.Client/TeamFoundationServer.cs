@@ -29,47 +29,30 @@
 
 using System;
 using System.Net;
-using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
-using Microsoft.TeamFoundation.Client.Services;
 
 namespace Microsoft.TeamFoundation.Client
 {
-    public sealed class TeamFoundationServer : IEquatable<TeamFoundationServer>, IComparable<TeamFoundationServer>
+    public class TeamFoundationServer : BaseTeamFoundationServer, INetworkServer
     {
-        private TeamFoundationServer()
-        {
-            
-        }
-
         public TeamFoundationServer(Uri uri, string name, string domain, string userName, string password, bool isPasswordSavedInXml)
+            : base(uri, name, userName, password, isPasswordSavedInXml)
         {
-            this.Uri = uri;
-            this.Name = name;
             this.Domain = domain;
-            this.UserName = userName;
-            this.IsPasswordSavedInXml = isPasswordSavedInXml;
-            this.Password = password;
-        }
-
-        public void LoadProjectConnections()
-        {
-            var projectCollectionsService = new ProjectCollectionService(this);
-            this.ProjectCollections = projectCollectionsService.GetProjectCollections();
+            Credentials = new NetworkCredential(UserName, Password, Domain);
         }
 
         public static TeamFoundationServer FromLocalXml(XElement element, string password, bool isPasswordSavedInXml)
         {
             try
             {
-                TeamFoundationServer server = new TeamFoundationServer();
-                server.Name = element.Attribute("Name").Value;
-                server.Uri = new Uri(element.Attribute("Url").Value);
-                server.IsPasswordSavedInXml = isPasswordSavedInXml;
-                server.Password = password;
-                server.Domain = element.Attribute("Domain").Value;
-                server.UserName = element.Attribute("UserName").Value;
+                var server = new TeamFoundationServer(new Uri(element.Attribute("Url").Value),
+                                                      element.Attribute("Name").Value,
+                                                      element.Attribute("Domain").Value,
+                                                      element.Attribute("UserName").Value,
+                                                      password,
+                                                      isPasswordSavedInXml);
                 server.ProjectCollections = element.Elements("ProjectCollection").Select(x => ProjectCollection.FromLocalXml(server, x)).ToList();
                 return server;
             }
@@ -79,9 +62,10 @@ namespace Microsoft.TeamFoundation.Client
             }
         }
 
-        public XElement ToLocalXml()
+        public override XElement ToLocalXml()
         {
             var serverElement = new XElement("Server", 
+                                    new XAttribute("Type", (int)ServerType.TFS),
                                     new XAttribute("Name", this.Name),
                                     new XAttribute("Url", this.Uri),
                                     new XAttribute("Domain", this.Credentials.Domain),
@@ -92,82 +76,9 @@ namespace Microsoft.TeamFoundation.Client
             return serverElement;
         }
 
-        public NetworkCredential Credentials
-        { 
-            get
-            {
-                return new NetworkCredential(UserName, Password, Domain);
-            }
-        }
+        string Domain { get; set; }
 
-        public bool IsPasswordSavedInXml { get; set; }
-
-        public string Domain { get; set; }
-
-        public string UserName { get; set; }
-
-        public string Password { get; set; }
-
-        public List<ProjectCollection> ProjectCollections { get; set; }
-
-        public string Name { get; private set; }
-
-        public Uri Uri { get; private set; }
-
-        public bool IsDebuMode { get; set;}
-
-        #region Equal
-
-        #region IComparable<TeamFoundationServer> Members
-
-        public int CompareTo(TeamFoundationServer other)
-        {
-            return string.Compare(Uri.ToString(), other.Uri.ToString(), StringComparison.Ordinal);
-        }
-
-        #endregion
-
-        #region IEquatable<TeamFoundationServer> Members
-
-        public bool Equals(TeamFoundationServer other)
-        {
-            if (ReferenceEquals(null, other))
-                return false;
-            if (ReferenceEquals(this, other))
-                return true;
-            return other.Uri == Uri;
-        }
-
-        #endregion
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-                return false;
-            if (ReferenceEquals(this, obj))
-                return true;
-            TeamFoundationServer cast = obj as TeamFoundationServer;
-            if (cast == null)
-                return false;
-            return Equals(cast);
-        }
-
-        public override int GetHashCode()
-        {
-            return Uri.GetHashCode();
-        }
-
-        public static bool operator ==(TeamFoundationServer left, TeamFoundationServer right)
-        {
-            return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
-        }
-
-        public static bool operator !=(TeamFoundationServer left, TeamFoundationServer right)
-        {
-            return !(left == right);
-        }
-
-        #endregion Equal
+        public NetworkCredential Credentials { get; private set; }
     }
 }
 

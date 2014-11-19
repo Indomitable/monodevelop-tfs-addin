@@ -13,13 +13,12 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Optimize>false</Optimize>
-    <OutputPath>..\Output</OutputPath>
+    <OutputPath>..\Output</OutputPath>   
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <CustomCommands>
       <CustomCommands>
         <Command type="Execute" command="mono-sgen ${SolutionDir}/External/monodevelop/main/build/bin/MonoDevelop.exe" workingdir="${SolutionDir}/External/monodevelop/main/build/bin/" />
-        <Command type="AfterBuild" command="cp ${SolutionDir}/Output/MonoDevelop.VersionControl.TFS.dll ${SolutionDir}/External/monodevelop/main/build/AddIns/VersionControl/" />
       </CustomCommands>
     </CustomCommands>
     <DebugSymbols>true</DebugSymbols>
@@ -249,6 +248,18 @@
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemsContext.cs" />
     <Compile Include="Microsoft.TeamFoundation.WorkItemTracking.Client\WorkItemStore.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\VisualStudioOnlineTFS.cs" />
+    <Compile Include="GUI\Server\AddVisualStudioOnlineServerWidget.cs" />
+    <Compile Include="GUI\Server\IAddServerWidget.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\TeamFoundationServerFactory.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ServerType.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\BaseTeamFoundationServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\INetworkServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\IAuthServer.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\ServerAuthentication.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\NetworkServerInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\BaseServerInfo.cs" />
+    <Compile Include="Microsoft.TeamFoundation.Client\VisualStudioServerInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
@@ -306,5 +317,6 @@
   </ItemGroup>
   <Target Name="AfterBuild">
     <Copy SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll.mdb" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
   </Target>
 </Project>

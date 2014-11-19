@@ -27,12 +27,15 @@
 using Xwt;
 using MonoDevelop.Core;
 using System;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class AddServerDialog : Dialog
     {
         readonly AddServerWidget widget = new AddServerWidget();
+        readonly AddVisualStudioOnlineServerWidget vsoWidget = new AddVisualStudioOnlineServerWidget();
+        readonly Notebook notebook = new Notebook();
 
         public AddServerDialog()
         {
@@ -43,12 +46,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         {
             this.Title = GettextCatalog.GetString("Add Team Foundation Server");
             this.Buttons.Add(Command.Ok, Command.Cancel);
-            this.Content = widget;
+            notebook.Add(widget, GettextCatalog.GetString("TFS Server"));
+            notebook.Add(vsoWidget, GettextCatalog.GetString("Visual Studio Online"));
+            this.Content = notebook;
             this.Resizable = false;
         }
 
-        public string Name { get { return widget.ServerName; } }
+        public ServerType ServerType { get { return notebook.CurrentTabIndex == 0 ? ServerType.TFS : ServerType.VisualStudio; } }
 
-        public Uri Url { get { return widget.ServerUrl; } }
+        public BaseServerInfo ServerInfo { get { return ServerType == ServerType.TFS ? widget.ServerInfo : vsoWidget.ServerInfo; } }
+
     }
 }

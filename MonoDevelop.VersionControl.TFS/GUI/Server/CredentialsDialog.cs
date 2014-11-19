@@ -27,6 +27,7 @@
 using Xwt;
 using MonoDevelop.Core;
 using System.Net;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -35,17 +36,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         readonly TextEntry domainEntry = new TextEntry();
         readonly TextEntry userNameEntry = new TextEntry();
         readonly PasswordEntry passwordEntry = new PasswordEntry();
+        readonly ServerType serverType;
 
-        public CredentialsDialog()
+        public CredentialsDialog(ServerType serverType)
         {
+            this.serverType = serverType;
             BuildGui();
         }
 
         void BuildGui()
         {
             var table = new Table();
-            table.Add(new Label(GettextCatalog.GetString("Domain") + ":"), 0, 0);
-            table.Add(domainEntry, 1, 0);
+            if (serverType == ServerType.TFS)
+            {
+                table.Add(new Label(GettextCatalog.GetString("Domain") + ":"), 0, 0);
+                table.Add(domainEntry, 1, 0);
+            }
             table.Add(new Label(GettextCatalog.GetString("User Name") + ":"), 0, 1);
             table.Add(userNameEntry, 1, 1);
             table.Add(new Label(GettextCatalog.GetString("Password") + ":"), 0, 2);
@@ -65,13 +71,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             };
         }
 
-        public NetworkCredential Credentials
+        public ServerAuthentication Authentication
         {
             get
             {
                 if (string.IsNullOrEmpty(userNameEntry.Text))
                     return null;
-                return new NetworkCredential { Domain = domainEntry.Text, UserName = userNameEntry.Text, Password = passwordEntry.Password };
+                var auth = new ServerAuthentication(serverType);
+                auth.AuthUser = userNameEntry.Text;
+                auth.Password = passwordEntry.Password;
+                auth.Domain = domainEntry.Text;
+                return auth;
             }
         }
     }

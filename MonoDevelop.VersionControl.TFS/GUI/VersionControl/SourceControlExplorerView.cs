@@ -597,6 +597,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 }
                 if (items.Count == 1 && items[0].ItemType == ItemType.Folder)
                 {
+                    menu.Add(CreateAddFileMenuItem(items[0]));
                     menu.Add(new SeparatorMenuItem());
                     menu.Add(CreateOpenFolderMenuItem(items[0]));
                 }
@@ -721,6 +722,42 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
             mapItem.Activated += (sender, e) => MapItem(items);
             return new List<MenuItem> { mapItem };
+        }
+
+        private MenuItem CreateAddFileMenuItem(ExtendedItem item)
+        {
+            MenuItem addItem = new MenuItem(GettextCatalog.GetString("Add new item"));
+            addItem.Activated += (sender, e) =>
+            {
+                var path = item.LocalItem;
+                if (string.IsNullOrEmpty(path))
+                    path = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
+
+                using (Xwt.OpenFileDialog openFileDialog = new Xwt.OpenFileDialog("Browse For File"))
+                {
+                    openFileDialog.CurrentFolder = path;
+                    openFileDialog.Multiselect = true;
+                    if (openFileDialog.Run())
+                    {
+                        List<FilePath> files = new List<FilePath>();
+                        foreach (var fileName in openFileDialog.FileNames) 
+                        {
+                            //Check if file is in other folder
+                            if (!string.Equals(Path.GetDirectoryName(fileName), path))
+                            {
+                                var newPath = Path.Combine(path, Path.GetFileName(fileName));
+                                File.Copy(fileName, newPath);
+                                files.Add(newPath);
+                            }
+                            else
+                                files.Add(fileName);
+                        }
+                        _currentWorkspace.PendAdd(files, false);
+                        CheckInDialog.Open(new List<ExtendedItem> { item }, _currentWorkspace);
+                    }
+                }
+            };
+            return addItem;
         }
 
         private MenuItem CreateOpenFolderMenuItem(ExtendedItem item)

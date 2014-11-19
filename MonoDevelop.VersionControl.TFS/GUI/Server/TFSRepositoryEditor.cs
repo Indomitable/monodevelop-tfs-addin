@@ -41,28 +41,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         public bool Validate()
         {
             return false;
-//            var res = !string.IsNullOrEmpty(widget.ServerName) && widget.ServerUrl != null;
-//            if (res)
-//            {
-//                this.repo.Name = widget.ServerName;
-//                using (var credentialsDialog = new CredentialsDialog())
-//                {
-//                    if (credentialsDialog.Run(widget.ParentWindow) == Command.Ok && credentialsDialog.Credentials != null)
-//                    {
-//                        var server = new TeamFoundationServer(widget.ServerUrl, widget.ServerName, 
-//                                         credentialsDialog.Credentials.Domain, 
-//                                         credentialsDialog.Credentials.UserName, 
-//                                         credentialsDialog.Credentials.Password, 
-//                                         true);
-//                        server.LoadProjectConnections();
-//                        if (server.ProjectCollections.Count != 1)
-//                            return false;
-//                        this.repo.VersionControlService = server.ProjectCollections[0].GetService<RepositoryService>();
-//                        return true;
-//                    }
-//                }
-//            }
-//            return false;
         }
 
         public Gtk.Widget Widget

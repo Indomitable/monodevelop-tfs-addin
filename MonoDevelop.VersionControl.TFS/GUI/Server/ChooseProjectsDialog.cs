@@ -47,7 +47,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 
         public List<ProjectInfo> SelectedProjects { get; set; }
 
-        public ChooseProjectsDialog(TeamFoundationServer server)
+        public ChooseProjectsDialog(BaseTeamFoundationServer server)
         {
             collectionStore = new ListStore(collectionName, collectionItem);
             projectsStore = new TreeStore(isProjectSelected, projectName, projectItem);
@@ -112,7 +112,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             this.Content = vBox;
         }
 
-        void LoadData(TeamFoundationServer server)
+        void LoadData(BaseTeamFoundationServer server)
         {
             server.LoadProjectConnections();
             server.ProjectCollections.ForEach(c => c.LoadProjects());

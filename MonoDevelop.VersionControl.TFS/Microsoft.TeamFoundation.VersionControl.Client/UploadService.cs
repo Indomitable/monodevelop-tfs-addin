@@ -123,8 +123,20 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
         {
             var request = (HttpWebRequest)WebRequest.Create(this.Url);
             request.Method = "POST";
-
-            request.Credentials = this.Collection.Server.Credentials;
+            if (this.Collection.Server is INetworkServer)
+            {
+                var server = (INetworkServer)this.Collection.Server;
+                request.Credentials = server.Credentials;
+            }
+            else if (this.Collection.Server is IAuthServer) 
+            {
+                var server = (IAuthServer)this.Collection.Server;
+                request.Headers.Add(HttpRequestHeader.Authorization, server.AuthString);
+            }
+            else
+            {
+                throw new Exception("Known server");
+            }
             request.AllowWriteStreamBuffering = true;
             request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
 

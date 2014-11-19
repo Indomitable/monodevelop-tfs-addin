@@ -143,7 +143,7 @@ namespace MonoDevelop.VersionControl.TFS
             return null;
         }
 
-        private TFSRepository GetRepoFromServer(TeamFoundationServer server, FilePath path)
+        private TFSRepository GetRepoFromServer(BaseTeamFoundationServer server, FilePath path)
         {
             foreach (var collection in server.ProjectCollections)
             {

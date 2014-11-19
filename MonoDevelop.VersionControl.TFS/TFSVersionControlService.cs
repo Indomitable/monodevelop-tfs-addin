@@ -39,7 +39,7 @@ namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSVersionControlService
     {
-        private readonly List<TeamFoundationServer> _registredServers = new List<TeamFoundationServer>();
+        private readonly List<BaseTeamFoundationServer> _registredServers = new List<BaseTeamFoundationServer>();
         private readonly Dictionary<string, string> _activeWorkspaces = new Dictionary<string, string>();
         private static TFSVersionControlService instance;
 
@@ -93,7 +93,7 @@ namespace MonoDevelop.VersionControl.TFS
                         var password = isPasswordSavedInXml ? serverElement.Attribute("Password").Value : CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
                         if (password == null)
                             throw new Exception("TFS Addin: No Password found for TFS server: " + serverElement.Attribute("Name").Value);
-                        var server = TeamFoundationServer.FromLocalXml(serverElement, password, isPasswordSavedInXml);
+                        var server = TeamFoundationServerFactory.Create(serverElement, password, isPasswordSavedInXml);
                         if (server != null)
                             _registredServers.Add(server);
                     }
@@ -127,7 +127,7 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public void AddServer(TeamFoundationServer server)
+        public void AddServer(BaseTeamFoundationServer server)
         {
             if (HasServer(server.Name))
                 RemoveServer(server.Name);
@@ -145,7 +145,7 @@ namespace MonoDevelop.VersionControl.TFS
             StorePrefs();
         }
 
-        public TeamFoundationServer GetServer(string name)
+        public BaseTeamFoundationServer GetServer(string name)
         {
             return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
@@ -155,7 +155,7 @@ namespace MonoDevelop.VersionControl.TFS
             return _registredServers.Any(x => string.Equals(x.Name, name, System.StringComparison.OrdinalIgnoreCase));
         }
 
-        public List<TeamFoundationServer> Servers { get { return _registredServers; } }
+        public List<BaseTeamFoundationServer> Servers { get { return _registredServers; } }
 
         public event Action OnServersChange;
 
