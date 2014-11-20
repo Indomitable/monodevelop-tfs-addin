@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Addin id="VersionControl.TFS" 
-	   version="1.5" 
+	   version="1.6" 
 	   namespace="MonoDevelop" 
 	   name="TFS support" 
 	   author="Ventsislav Mladenov" 
-	   url="https://bitbucket.org/ventsislav_mladenov/monodevelop-tfs-addin" 
+	   url="http://indomitable.github.io/monodevelop-tfs-addin" 
 	   copyright="MIT X11" 
 	   description="TFS support for the Version Control Add-in" 
 	   category="Version Control">

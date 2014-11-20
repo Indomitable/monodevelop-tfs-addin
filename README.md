@@ -26,4 +26,4 @@ Note for Mac and Linux users:
 
 More Info
 ---------
-Visit: [Addin Home Page](https://bitbucket.org/ventsislav_mladenov/monodevelop-tfs-addin) 
+Visit: [Addin Home Page](http://indomitable.github.io/monodevelop-tfs-addin) 

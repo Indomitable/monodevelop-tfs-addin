@@ -1,5 +1,8 @@
 CHANGE LOG
 ==========
+* 1.6
+    - Add ability to connect to VisualStudio.com
+
 * 1.4
     - Move to MonoDevelop 5.0
 

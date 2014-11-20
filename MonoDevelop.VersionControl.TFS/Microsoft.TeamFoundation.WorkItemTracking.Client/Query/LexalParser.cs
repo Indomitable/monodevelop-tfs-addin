@@ -318,9 +318,23 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
         private string ReadCondition(ref int i)
         {
             var word = GetNextWord(i);
+            if (string.Equals(word.Item1, "IN", StringComparison.OrdinalIgnoreCase))
+            {
+                //Check for condition IN Group
+                var nextWord = GetNextWord(word.Item2);
+                if (string.Equals(nextWord.Item1, "GROUP", StringComparison.OrdinalIgnoreCase))
+                {
+                    i = nextWord.Item2;
+                    return word.Item1 + " " + nextWord.Item1;
+                }
+                else
+                {
+                    i = word.Item2;
+                    return word.Item1;
+                }
+            }
 
-            if (string.Equals(word.Item1, "in", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(word.Item1, "under", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(word.Item1, "under", StringComparison.OrdinalIgnoreCase))
             {
                 i = word.Item2;
                 return word.Item1;

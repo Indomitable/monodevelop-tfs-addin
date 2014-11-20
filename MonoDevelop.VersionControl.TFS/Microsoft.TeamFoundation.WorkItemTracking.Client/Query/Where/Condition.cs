@@ -37,7 +37,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
         GreaterOrEquals,
         In,
         //Only for Project Id
-        Under
+        Under,
+        InGroup
         //Not supported
         //Contains,
     }

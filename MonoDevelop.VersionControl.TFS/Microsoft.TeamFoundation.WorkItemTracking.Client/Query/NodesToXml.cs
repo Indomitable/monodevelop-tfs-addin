@@ -46,7 +46,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             var fieldNode = ((FieldNode)node.Left);
             writer.WriteAttributeString("Column", fieldNode.Field);
             writer.WriteAttributeString("FieldType", fieldNode.FieldType.ToString());
-            writer.WriteAttributeString("Operator", node.Condition.ToString().ToLowerInvariant());
+            writer.WriteAttributeString("Operator", node.ToOperator());
             var constantNode = (ConstantNode)node.Right; //All Nodes to Right should be Constants.
             var strValue = Convert.ToString(constantNode.Value, CultureInfo.InvariantCulture);
 //                if (node.Condition == Condition.NotEquals && string.IsNullOrEmpty(strValue))
