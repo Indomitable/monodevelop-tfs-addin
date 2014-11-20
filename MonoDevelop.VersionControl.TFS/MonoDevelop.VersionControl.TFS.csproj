@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>MonoDevelop.VersionControl.TFS</RootNamespace>
     <AssemblyName>MonoDevelop.VersionControl.TFS</AssemblyName>
-    <ReleaseVersion>1.5</ReleaseVersion>
+    <ReleaseVersion>1.6</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>

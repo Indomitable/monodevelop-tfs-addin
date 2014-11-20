@@ -70,7 +70,7 @@ Global
 		$0.XmlFormattingPolicy = $6
 		$6.inheritsSet = null
 		$6.scope = application/x-addin+xml
-		version = 1.5
+		version = 1.6
 		outputpath = Output
 	EndGlobalSection
 EndGlobal

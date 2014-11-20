@@ -32,7 +32,7 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
     {
         public ConstantNode(string value)
         {
-            if (value.StartsWith("'", StringComparison.Ordinal))
+            if (value.StartsWith("'", StringComparison.Ordinal) || value.EndsWith("Z", StringComparison.OrdinalIgnoreCase))
             {
                 Value = value.Trim('\'');
                 DataType = ValueDataType.String;

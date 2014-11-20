@@ -57,6 +57,8 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
                         Condition = Condition.In;
                     else if (string.Equals(condition, "under", StringComparison.OrdinalIgnoreCase))
                         Condition = Condition.Under;
+                    else if (string.Equals(condition, "IN GROUP", StringComparison.OrdinalIgnoreCase))
+                        Condition = Condition.InGroup;
                     else
                         Condition = Condition.None;
                     break;
@@ -100,6 +102,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
                 case Condition.Under:
                     val = "Under";
                     break;
+                case Condition.InGroup:
+                    val = "IN GROUP";
+                    break;
                 default:
                     val = "NONE";
                     break;
@@ -107,6 +112,46 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where
             if (Left != null && Right != null)
                 return Left + " " + val + " " + Right;
             return val;
+        }
+
+        public string ToOperator()
+        {
+
+//            public static String EQUALS = "equals";
+//            public static String NOT_EQUALS = "notEquals";
+//            public static String GREATER = "greater";
+//            public static String LESS = "less";
+//            public static String EQUALS_GREATER = "equalsGreater";
+//            public static String EQUALS_LESS = "equalsLess";
+//            public static String CONTAINS = "contains";
+//            public static String NOT_CONTAINS = "notContains";
+//            public static String EVER = "ever";
+//            public static String NOT_EVER = "notEver";
+//            public static String UNDER = "under";
+//            public static String NOT_UNDER = "notUnder";
+            switch (Condition)
+            {
+                case Condition.Equals:
+                    return "equals";
+                case Condition.Greater:
+                    return "greater";
+                case Condition.GreaterOrEquals:
+                    return "equalsGreater";
+                case Condition.In:
+                    return "in";
+                case Condition.Less:
+                    return "less";
+                case Condition.LessOrEquals:
+                    return "equalsLess";
+                case Condition.NotEquals:
+                    return "notEquals";
+                case Condition.Under:
+                    return "under";
+                case Condition.InGroup:
+                    return "equals";
+                default:
+                    return string.Empty;
+            }
         }
     }
 }
