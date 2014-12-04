@@ -22,7 +22,6 @@
       </CustomCommands>
     </CustomCommands>
     <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>DBus</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>false</Optimize>
@@ -295,9 +294,6 @@
       <HintPath>..\External\monodevelop\main\build\bin\Mono.TextEditor.dll</HintPath>
     </Reference>
     <Reference Include="System.Web.Services" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(DefineConstants)' == 'DBus' ">
-    <Reference Include="dbus-sharp, Version=1.0.0.0, Culture=neutral, PublicKeyToken=5675b0c3093115b5" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Commands\" />
