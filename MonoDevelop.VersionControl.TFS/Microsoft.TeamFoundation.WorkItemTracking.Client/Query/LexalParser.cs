@@ -462,8 +462,9 @@ namespace Microsoft.TeamFoundation.WorkItemTracking.Client.Query
             {
                 var orderByItems = orderByClause.Split(new [] { "," }, StringSplitOptions.RemoveEmptyEntries);
                 foreach (var item in orderByItems)
-                {
-                    var parts = item.Split(new [] { " " }, StringSplitOptions.RemoveEmptyEntries);
+                { 
+                    var tmpItem = item.Trim();
+                    var parts = tmpItem.Split(new [] { " " }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length == 1)
                         list.Add(new OrderByNode(parts[0], Direction.Asc));
                     if (parts.Length == 2)
