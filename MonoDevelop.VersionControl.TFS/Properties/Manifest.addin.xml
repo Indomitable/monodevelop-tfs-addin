@@ -1,4 +1,5 @@
-<ExtensionModel>   
+<?xml version="1.0" encoding="UTF-8" ?>
+<ExtensionModel>
 	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
 		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
 	</Extension>

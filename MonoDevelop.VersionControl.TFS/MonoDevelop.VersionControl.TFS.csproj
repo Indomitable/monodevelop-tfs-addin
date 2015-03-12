@@ -264,10 +264,10 @@
     <Compile Include="Properties\AddinInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="MonoDevelop.VersionControl.TFS.addin.xml" />
     <EmbeddedResource Include="Icons\repository.png" />
     <EmbeddedResource Include="Icons\open-folder-16.png" />
     <EmbeddedResource Include="Icons\text-file-16.png" />
+    <EmbeddedResource Include="Properties\Manifest.addin.xml" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoDevelop.Core">
