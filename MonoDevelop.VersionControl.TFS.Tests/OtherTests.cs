@@ -24,14 +24,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using NUnit.Framework;
+using Xunit;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    [TestFixtureAttribute]
     public class OtherTests
     {
-        [Test]
+        [Fact]
         public void FieldTypeTest()
         {
             Console.WriteLine(288 & 0xF0);

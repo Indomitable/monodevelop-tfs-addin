@@ -32,7 +32,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="nunit.framework" />
     <Reference Include="MonoDevelop.VersionControl">
       <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
@@ -42,17 +41,19 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Web.Services" />
+    <Reference Include="xunit">
+      <HintPath>..\packages\xunit.1.9.2\lib\net20\xunit.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TFSRepositoryTests.cs" />
     <Compile Include="BaseTFSConnectTest.cs" />
-    <Compile Include="OpenTF\MessageTests.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />
     <Compile Include="QueryTests.cs" />
     <Compile Include="NodeListTests.cs" />
     <Compile Include="LexalParserTests.cs" />
     <Compile Include="OtherTests.cs" />
+    <Compile Include="MessageTests.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -62,6 +63,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="OpenTF\" />
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

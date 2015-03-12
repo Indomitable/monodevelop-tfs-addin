@@ -1,20 +1,19 @@
 using System;
 using System.Xml.Schema;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using NUnit.Framework;
 using System.Xml.Linq;
 using System.IO;
 using System.Xml;
 using System.Text;
 using System.Xml.XPath;
 using System.Linq;
+using Xunit;
 
 namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
 {
-    [TestFixture]
     public class MessageTests
     {
-        [Test]
+        [Fact]
         public void CreateHeader()
         {
             XNamespace xsiNs = "http://www.w3.org/2001/XMLSchema-instance";
@@ -29,11 +28,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
 
             doc.Add(el);
             doc.Save(Console.Out);
-            Assert.AreEqual("<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" />", el.ToString());
-
+            Assert.Equal("<soap:Envelope xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" />", el.ToString());
         }
 
-        [Test]
+        [Fact]
         public void CreateBody()
         {
             XNamespace xsiNs = XmlSchema.InstanceNamespace;
@@ -53,10 +51,9 @@ namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
             messageEl.Add(soapbody);
             document.Add(messageEl);
             document.Save(Console.Out);
-
         }
 
-        [Test]
+        [Fact]
         public void ReadResult()
         {
             XElement el = XElement.Parse(@"<GetResult xmlns=""http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03"">
@@ -68,7 +65,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
     </GetOperation>
   </ArrayOfGetOperation>
 </GetResult>");
-            Assert.AreEqual(3, el.XPathSelectElements("//msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver).Count());
+            Assert.Equal(3, el.XPathSelectElements("//msg:ArrayOfGetOperation/msg:GetOperation", XmlNamespaces.NsResolver).Count());
         }
     }
 }

@@ -24,20 +24,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using NUnit.Framework;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Net;
 using Microsoft.TeamFoundation.Client;
+using Xunit;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    [TestFixture]
     public class LocationServiceChecker
     {
         private static XNamespace ns = "http://microsoft.com/webservices/";
 
-        [Test]
+        [Fact]
         public void GetLocationServises()
         {
             var service = new ServiceChecker();
@@ -60,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         //            soapInvoker.CreateEnvelope("QueryServices", ns);
         //            Console.WriteLine(soapInvoker.InvokeResult());
         //        }
-        [Test]
+        [Fact]
         public void GetProjectLocationServises()
         {
             var service = new ServiceChecker();
@@ -76,7 +75,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void Connect()
         {
             var service = new ServiceChecker();
@@ -92,7 +91,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void GetDefaultCollectionId()
         {
             var service = new ServiceChecker();
@@ -108,7 +107,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void GetCollectionProperties()
         {
             var service = new ServiceChecker();
@@ -125,7 +124,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void QueryNodes()
         {
             var service = new ServiceChecker();
@@ -141,7 +140,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void QueryResourceTypes()
         {
             var service = new ServiceChecker();
@@ -157,7 +156,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void QueryResourcesByType()
         {
             var service = new ServiceChecker();
@@ -174,7 +173,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             }
         }
 
-        [Test]
+        [Fact]
         public void QueryHistory()
         {
             var service = new ServiceChecker();

@@ -24,15 +24,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using NUnit.Framework;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
+using Xunit;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
-    [TestFixtureAttribute]
     public class NodeListTests
     {
-        [Test]
+        [Fact]
         public void RemoveUnUsedBrackets1()
         {
             string val = "where (([a] = 2))";
@@ -40,10 +39,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
-            Assert.AreEqual("[a] = 2", nodes.ToString());
+            Assert.Equal("[a] = 2", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void RemoveUnUsedBrackets2()
         {
             string val = "where (([a] = 2) and [b] = @p)";
@@ -51,10 +50,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
-            Assert.AreEqual("( [a] = 2 ) And [b] = @p", nodes.ToString());
+            Assert.Equal("( [a] = 2 ) And [b] = @p", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void RemoveUnUsedBrackets3()
         {
             string val = "where ([a] = 2) and ([b] = @p)";
@@ -62,10 +61,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
-            Assert.AreEqual("( [a] = 2 ) And ( [b] = @p )", nodes.ToString());
+            Assert.Equal("( [a] = 2 ) And ( [b] = @p )", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void RemoveUnUsedBrackets4()
         {
             string val = "where (([a] = 2) and (([b] = @p)))";
@@ -73,10 +72,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             nodes.Optimize();
             Console.WriteLine(nodes);
-            Assert.AreEqual("( [a] = 2 ) And ( ( [b] = @p ) )", nodes.ToString());
+            Assert.Equal("( [a] = 2 ) And ( ( [b] = @p ) )", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void GetSubList1()
         {
             string val = "where ([a] = 2) and ([b] = @p)";
@@ -84,10 +83,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             var list = nodes.GetSubList(0);
             Console.WriteLine(list);
-            Assert.AreEqual("[a] = 2", list.ToString());
+            Assert.Equal("[a] = 2", list.ToString());
         }
 
-        [Test]
+        [Fact]
         public void GetSubList2()
         {
             string val = "where (([a] = 2) and [b] = @p)";
@@ -95,7 +94,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var nodes = parser.ProcessWherePart();
             var list = nodes.GetSubList(0);
             Console.WriteLine(list);
-            Assert.AreEqual("( [a] = 2 ) And [b] = @p", list.ToString());
+            Assert.Equal("( [a] = 2 ) And [b] = @p", list.ToString());
         }
         //        [Test]
         //        public void CreateHelperGroups1()
@@ -156,7 +155,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests
         //            Console.WriteLine(nodes);
         //            Assert.AreEqual("( ( [f] = 2 And [a] = 2 ) Or [s] = 1 ) And ( ( [b] = 3 Or [x] = 1 ) And [s] = 3  )", nodes.ToString());
         //        }
-        [Test]
+        [Fact]
         public void ExtractOperatorForward1()
         {
             string val = "where [a] = 2 and [b] = 3 and [c] = 4 or [d] = 5";
@@ -165,10 +164,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("Or ( And [a] = 2 [b] = 3 [c] = 4 ) [d] = 5", nodes.ToString());
+            Assert.Equal("Or ( And [a] = 2 [b] = 3 [c] = 4 ) [d] = 5", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void ExtractOperatorForward2()
         {
             string val = "where ([f] = 2 and [a] = 2 or [s] = 1) and [b] = 3";
@@ -177,10 +176,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) [b] = 3", nodes.ToString());
+            Assert.Equal("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) [b] = 3", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void ExtractOperatorForward3()
         {
             string val = "where ([f] = 2 and [a] = 2 or [s] = 1) and ([b] = 3 or [x] = 1 and [s] = 3)";
@@ -189,10 +188,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) ( And ( Or [b] = 3 [x] = 1 ) [s] = 3 )", nodes.ToString());
+            Assert.Equal("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) ( And ( Or [b] = 3 [x] = 1 ) [s] = 3 )", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void ExtractOperatorForward4()
         {
             string val = "where (([f] = 2 and [a] = 2) or [s] = 1) and ([b] = 3 or ([x] = 1 and [s] = 3))";
@@ -201,10 +200,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) ( Or [b] = 3 ( And [x] = 1 [s] = 3 ) )", nodes.ToString());
+            Assert.Equal("And ( Or ( And [f] = 2 [a] = 2 ) [s] = 1 ) ( Or [b] = 3 ( And [x] = 1 [s] = 3 ) )", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void ExtractOperatorForward5()
         {
             string val = "where ([f] = 2 and [a] = 2) or ([b] = 3 and [x] = 1)";
@@ -213,10 +212,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("Or ( And [f] = 2 [a] = 2 ) ( And [b] = 3 [x] = 1 )", nodes.ToString());
+            Assert.Equal("Or ( And [f] = 2 [a] = 2 ) ( And [b] = 3 [x] = 1 )", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void ExtractOperatorForward6()
         {
             string val = "where [f] = 2";
@@ -225,10 +224,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             nodes.Optimize();
             nodes.ExtractOperatorForward();
             Console.WriteLine(nodes);
-            Assert.AreEqual("[f] = 2", nodes.ToString());
+            Assert.Equal("[f] = 2", nodes.ToString());
         }
 
-        [Test]
+        [Fact]
         public void NodesToXml1()
         {
             string val = "where [f] = 2";
@@ -239,10 +238,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var xmlTransformer = new NodesToXml(nodes);
             var output = xmlTransformer.WriteXml();
             Console.WriteLine(output);
-            Assert.AreEqual("<Expression Column=\"f\" FieldType=\"\" Operator=\"equals\">\r\n  <Number>2</Number>\r\n</Expression>", output);
+            Assert.Equal("<Expression Column=\"f\" FieldType=\"0\" Operator=\"equals\">\r\n  <Number>2</Number>\r\n</Expression>", output);
         }
 
-        [Test]
+        [Fact]
         public void NodesToXml2()
         {
             string val = "where ([f] = 2 and [a] = 2) or ([b] = 3 and [x] = 1)";
@@ -253,10 +252,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests
             var xmlTransformer = new NodesToXml(nodes);
             var output = xmlTransformer.WriteXml();
             Console.WriteLine(output);
-            Assert.AreEqual("<Group GroupOperator=\"Or\">\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"f\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n    <Expression Column=\"a\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"b\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>3</Number>\r\n    </Expression>\r\n    <Expression Column=\"x\" FieldType=\"\" Operator=\"equals\">\r\n      <Number>1</Number>\r\n    </Expression>\r\n  </Group>\r\n</Group>", output);
+            Assert.Equal("<Group GroupOperator=\"Or\">\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"f\" FieldType=\"0\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n    <Expression Column=\"a\" FieldType=\"0\" Operator=\"equals\">\r\n      <Number>2</Number>\r\n    </Expression>\r\n  </Group>\r\n  <Group GroupOperator=\"And\">\r\n    <Expression Column=\"b\" FieldType=\"0\" Operator=\"equals\">\r\n      <Number>3</Number>\r\n    </Expression>\r\n    <Expression Column=\"x\" FieldType=\"0\" Operator=\"equals\">\r\n      <Number>1</Number>\r\n    </Expression>\r\n  </Group>\r\n</Group>", output);
         }
 
-        [Test]
+        [Fact]
         public void NodesToXml3()
         {
             string val = "where (([f] = 2 and [a] = 2) or [s] = 1) and ([b] = 3 or ([x] = 1 and [s] = 3))";
