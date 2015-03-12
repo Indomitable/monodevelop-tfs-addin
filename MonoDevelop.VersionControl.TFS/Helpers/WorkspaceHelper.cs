@@ -44,10 +44,10 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             return versionControl.QueryWorkspaces(collection.Server.UserName, string.Empty);
         }
 
-        public static Workspace GetWorkspace(ProjectCollection collection, string name)
+        public static Workspace GetWorkspace(ProjectCollection collection, string workspaceName)
         {
             var versionControl = collection.GetService<RepositoryService>();
-            return versionControl.QueryWorkspace(collection.Server.UserName, name);
+            return versionControl.QueryWorkspace(collection.Server.UserName, workspaceName);
         }
     }
 }
