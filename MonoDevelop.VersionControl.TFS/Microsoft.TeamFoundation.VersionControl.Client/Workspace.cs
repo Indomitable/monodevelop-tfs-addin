@@ -747,8 +747,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 var found = false;
                 if (operation.ItemType == ItemType.File)
                 {
-                    var project = IdeApp.Workspace.GetProjectContainingFile(operation.SourceLocalItem);
-                    if (project != null)
+                    var projects = IdeApp.Workspace.GetProjectsContainingFile(operation.SourceLocalItem);
+                    foreach(var project in projects)
                     {
                         found = true;
                         FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);

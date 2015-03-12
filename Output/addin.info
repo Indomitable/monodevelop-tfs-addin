@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Addin id="VersionControl.TFS" 
-	   version="1.6" 
+	   version="1.7" 
 	   namespace="MonoDevelop" 
 	   name="TFS support" 
 	   author="Ventsislav Mladenov" 
@@ -12,8 +12,8 @@
     <Import assembly="MonoDevelop.VersionControl.TFS.dll" />
   </Runtime>
   <Dependencies>
-    <Addin id="Core" version="5.0" />
-    <Addin id="Ide" version="5.0" />
-    <Addin id="VersionControl" version="5.0" />
+    <Addin id="Core" version="5.7.1" />
+    <Addin id="Ide" version="5.7.1" />
+    <Addin id="VersionControl" version="5.7.1" />
   </Dependencies>
 </Addin>

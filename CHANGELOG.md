@@ -1,5 +1,8 @@
 CHANGE LOG
 ==========
+* 1.7
+	- Update addin to use MonoDevelop 5.7.1
+
 * 1.6
     - Add ability to connect to VisualStudio.com
 

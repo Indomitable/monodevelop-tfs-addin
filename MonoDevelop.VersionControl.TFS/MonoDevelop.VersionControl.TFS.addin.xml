@@ -1,19 +1,4 @@
-<Addin id          = "VersionControl.TFS"
-       namespace   = "MonoDevelop"
-       name        = "TFS support"
-       author      = "Ventsislav Mladenov"
-       copyright   = "MIT X11"
-       url         = "http://indomitable.github.io/monodevelop-tfs-addin"
-       description = "TFS support for the Version Control Add-in"
-       category    = "Version Control"
-       version     = "1.6">
- 
-	<Dependencies>
-	    <Addin id="Core" version="5.0"/>
-	    <Addin id="Ide" version="5.0"/>
-	    <Addin id="VersionControl" version="5.0"/>
-	</Dependencies>
-
+<ExtensionModel>   
 	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
 		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
 	</Extension>
@@ -99,4 +84,4 @@
 		<!-- 4.0+ -->
 		<Migration sourceVersion="4.0+" kind="Config" path="VersionControl.TFS.config" />
 	</Extension>
-</Addin>
+</ExtensionModel>

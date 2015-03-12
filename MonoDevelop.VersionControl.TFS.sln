@@ -33,7 +33,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = MonoDevelop.VersionControl.TFS\MonoDevelop.VersionControl.TFS.csproj
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
 		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
@@ -79,7 +78,7 @@ Global
 		$0.XmlFormattingPolicy = $6
 		$6.inheritsSet = null
 		$6.scope = application/x-addin+xml
-		version = 1.6
+		version = 1.7
 		outputpath = Output
 	EndGlobalSection
 EndGlobal

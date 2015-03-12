@@ -1,7 +1,7 @@
 using System;
-using Microsoft.TeamFoundation.Client;
 using System.Net;
 using System.Runtime.ConstrainedExecution;
+using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.Tests
 {
