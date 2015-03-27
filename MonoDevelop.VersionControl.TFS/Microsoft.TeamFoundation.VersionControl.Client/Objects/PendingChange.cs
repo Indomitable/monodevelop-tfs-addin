@@ -34,6 +34,8 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -70,17 +72,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         internal static PendingChange FromXml(XElement element)
         {
             PendingChange change = new PendingChange();
-            change.ServerItem = element.GetAttribute("item");
-            change.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
-            change.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
-            change.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
-            change.Version = GeneralHelper.XmlAttributeToInt(element.GetAttribute("ver"));
-            change.CreationDate = DateTime.Parse(element.GetAttribute("date"));
-            change.Hash = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
-            change.uploadHashValue = GeneralHelper.ToByteArray(element.GetAttribute("uhash"));
-            change.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            change.DownloadUrl = element.GetAttribute("durl");
-            change.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
+            change.ServerItem = element.GetAttributeValue("item");
+            change.LocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
+            change.ItemId = element.GetIntAttribute("itemid");
+            change.Encoding = element.GetIntAttribute("enc");
+            change.Version = element.GetIntAttribute("ver");
+            change.CreationDate = element.GetDateAttribute("date");
+            change.Hash = element.GetByteArrayAttribute("hash");
+            change.uploadHashValue = element.GetByteArrayAttribute("uhash");
+            change.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
+            change.DownloadUrl = element.GetAttributeValue("durl");
+            change.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));
             if (change.ChangeType == ChangeType.Edit)
                 change.ItemType = ItemType.File;
             return change;

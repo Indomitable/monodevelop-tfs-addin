@@ -30,7 +30,7 @@ using System.Net;
 using Microsoft.TeamFoundation.Client;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class LocationServiceChecker
     {

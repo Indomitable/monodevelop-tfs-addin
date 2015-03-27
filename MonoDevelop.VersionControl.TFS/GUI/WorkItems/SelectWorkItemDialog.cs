@@ -24,11 +24,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using Xwt;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
-using Microsoft.TeamFoundation.WorkItemTracking.Client;
 using System.Linq;
 using MonoDevelop.Core;
-using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking;
+using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
@@ -37,6 +39,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         private readonly TreeView queryView = new TreeView();
         private readonly DataField<string> titleField = new DataField<string>();
         private readonly DataField<StoredQuery> queryField = new DataField<StoredQuery>();
+        private readonly DataField<ProjectCollection> collectionField = new DataField<ProjectCollection>();
         private readonly TreeStore queryStore;
         private readonly WorkItemListWidget workItemList = new WorkItemListWidget();
 
@@ -50,7 +53,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 
         public SelectWorkItemDialog()
         {
-            queryStore = new TreeStore(titleField, queryField);
+            queryStore = new TreeStore(titleField, queryField, collectionField);
             BuildGui();
         }
 
@@ -90,16 +93,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         void BuildQueryView()
         {
             queryStore.Clear();
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var serverConfig in TFSVersionControlService.Instance.Servers)
             {
-                var node = queryStore.AddNode().SetValue(titleField, server.Name);
-                foreach (var pc in server.ProjectCollections)
+                var node = queryStore.AddNode().SetValue(titleField, serverConfig.Name);
+                foreach (var pc in serverConfig.ProjectCollections)
                 {
                     node.AddChild().SetValue(titleField, pc.Name);
-                    var workItemManager = new WorkItemManager(pc);
+                    var server = TeamFoundationServerFactory.Create(serverConfig);
+                    var collection = new ProjectCollection(pc, server);
+                    var workItemManager = new WorkItemManager(collection);
                     foreach (var projectInfo in pc.Projects.OrderBy(x => x.Name))
                     {
-                        var workItemProject = workItemManager.GetByGuid(projectInfo.Guid);
+                        var workItemProject = workItemManager.GetByGuid(projectInfo.Id);
                         if (workItemProject == null)
                             continue;
 
@@ -111,7 +116,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                             node.AddChild().SetValue(titleField, "My Queries");
                             foreach (var query in privateQueries)
                             {
-                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query);
+                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, collection);
                                 node.MoveToParent();
                             }
                             node.MoveToParent();
@@ -122,7 +127,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                             node.AddChild().SetValue(titleField, "Public");
                             foreach (var query in publicQueries)
                             {
-                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query);
+                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, collection);
                                 node.MoveToParent();
                             }
                             node.MoveToParent();
@@ -145,7 +150,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                 var query = navigator.GetValue(queryField);
                 if (query != null)
                 {
-                    workItemList.LoadQuery(query);
+                    var collection = navigator.GetValue(collectionField);
+                    workItemList.LoadQuery(query, collection);
                 }
             };
         }

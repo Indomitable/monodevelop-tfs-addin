@@ -30,6 +30,5 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public delegate void ExceptionEventHandler(Object sender,
-																							ExceptionEventArgs e);
+    internal delegate void ExceptionEventHandler(Object sender, ExceptionEventArgs e);
 }

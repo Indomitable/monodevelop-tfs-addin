@@ -29,6 +29,8 @@
 
 using System;
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -53,17 +55,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.DeletionId = deletionId;
         }
 
-        internal XElement ToXml(XName element)
+        internal XElement ToXml(string elementName)
         {
-            XElement result = new XElement(element);
+            XElement result = new XElement(elementName);
             if (this.RecursionType != RecursionType.None)
                 result.Add(new XAttribute("recurse", RecursionType));
             if (this.DeletionId != 0)
                 result.Add(new XAttribute("did", DeletionId));
-            if (VersionControlPath.IsServerItem(Item))
+            if (RepositoryFilePath.IsServerItem(Item))
                 result.Add(new XAttribute("item", Item));
             else
-                result.Add(new XAttribute("item", TfsPath.FromPlatformPath(Item)));
+                result.Add(new XAttribute("item", TfsPathHelper.FromPlatformPath(Item)));
             return result;
         }
 

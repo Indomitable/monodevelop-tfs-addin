@@ -23,15 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.Client;
-using MonoDevelop.VersionControl.TFS.Helpers;
-using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using System.Collections.Generic;
-using MonoDevelop.Core;
-using System.IO;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using MonoDevelop.Core;
+using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.Server;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -99,10 +99,7 @@ namespace MonoDevelop.VersionControl.TFS
             if (File.Exists(solutionPath)) //Read Solution
             {
                 var repo = FindBySolution(solutionPath);
-                if (repo != null)
-                    return repo;
-                else
-                    return FindByPath(path);
+                return repo ?? FindByPath(path);
             }
             else
             {
@@ -113,7 +110,7 @@ namespace MonoDevelop.VersionControl.TFS
         private TFSRepository FindBySolution(FilePath solutionPath)
         {
             var content = File.ReadAllLines(solutionPath);
-            var line = content.FirstOrDefault(x => x.IndexOf("SccTeamFoundationServer", System.StringComparison.OrdinalIgnoreCase) > -1);
+            var line = content.FirstOrDefault(x => x.IndexOf("SccTeamFoundationServer", StringComparison.OrdinalIgnoreCase) > -1);
             if (line == null)
                 return null;
             var parts = line.Split(new [] { "=" }, StringSplitOptions.RemoveEmptyEntries);
@@ -122,7 +119,7 @@ namespace MonoDevelop.VersionControl.TFS
             var serverPath = new Uri(parts[1].Trim());
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                if (string.Equals(serverPath.Host, server.Uri.Host, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(serverPath.Host, server.Url.Host, StringComparison.OrdinalIgnoreCase))
                 {
                     var repo = GetRepoFromServer(server, solutionPath);
                     if (repo != null)
@@ -143,18 +140,18 @@ namespace MonoDevelop.VersionControl.TFS
             return null;
         }
 
-        private TFSRepository GetRepoFromServer(BaseTeamFoundationServer server, FilePath path)
+        private TFSRepository GetRepoFromServer(ServerConfig serverConfig, FilePath path)
         {
-            foreach (var collection in server.ProjectCollections)
+            var server = TeamFoundationServerFactory.Create(serverConfig);
+            foreach (var collectionConfig in serverConfig.ProjectCollections)
             {
-                var workspaces = WorkspaceHelper.GetLocalWorkspaces(collection);
-                var workspace = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
-                if (workspace != null)
+                var projectCollection = new ProjectCollection(collectionConfig, server);
+                var workspaces = projectCollection.GetLocalWorkspaces();
+                var workspaceData = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
+                if (workspaceData != null)
                 {
-                    var result = new TFSRepository(workspace.VersionControlService, path);
-                    result.AttachWorkspace(workspace);
-
-                    return result;
+                    var workspace = new Workspace(projectCollection, workspaceData);
+                    return new TFSRepository(workspace, path);
                 }
             }
             return null;

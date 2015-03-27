@@ -32,16 +32,16 @@ using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class DateVersionSpec : VersionSpec
+    sealed class DateVersionSpec : VersionSpec
     {
         public DateVersionSpec(DateTime date)
         {
             this.Date = date;
         }
 
-        internal override XElement ToXml(XName element)
+        internal override XElement ToXml(string elementName)
         {
-            return new XElement(element,
+            return new XElement(elementName,
                 new XAttribute(XsiNs + "type", "DateVersionSpec"),
                 new XAttribute("date", Date.ToString("s")));
         }

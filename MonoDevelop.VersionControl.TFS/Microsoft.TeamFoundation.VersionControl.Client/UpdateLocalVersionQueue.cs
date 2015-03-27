@@ -28,79 +28,31 @@
 //
 
 using System.Collections.Generic;
-using System.Text;
-using System.Xml.Linq;
 using System.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    internal class UpdateLocalVersion
+    internal sealed class UpdateLocalVersionQueue : List<UpdateLocalVersion>
     {
-        public UpdateLocalVersion(int itemId, string targetLocalItem, int localVersion)
-        {
-            this.ItemId = itemId;
-            this.TargetLocalItem = targetLocalItem;
-            this.LocalVersion = localVersion;
-        }
-
-        public int ItemId { get; private set; }
-
-        public string TargetLocalItem { get; private set; }
-
-        public int LocalVersion { get; private set; }
-
-        public XElement ToXml(XNamespace ns)
-        {
-            var el = new XElement(ns + "LocalVersionUpdate",
-                         new XAttribute("itemid", ItemId),
-                         new XAttribute("lver", LocalVersion));
-            if (!string.IsNullOrEmpty(TargetLocalItem))
-                el.Add(new XAttribute("tlocal", TfsPath.FromPlatformPath(TargetLocalItem)));
-            return el;
-        }
-    }
-
-    internal sealed class UpdateLocalVersionQueue
-    {
-        private readonly List<UpdateLocalVersion> updates;
         private readonly Workspace workspace;
 
         public UpdateLocalVersionQueue(Workspace workspace)
         {
             this.workspace = workspace;
-            updates = new List<UpdateLocalVersion>();
         }
-
-        public int Count { get { return updates.Count; } }
 
         public void Flush()
         {
-            if (updates.Count > 0)
-                workspace.VersionControlService.UpdateLocalVersion(this);
-            updates.Clear();
+            if (this.Count > 0)
+                workspace.UpdateLocalVersion(this);
+            this.Clear();
         }
 
         internal void QueueUpdate(UpdateLocalVersion update)
         {
-            if (!this.updates.Any(u => u.ItemId == update.ItemId && u.LocalVersion == update.LocalVersion && string.Equals(u.TargetLocalItem, update.TargetLocalItem)))
-                this.updates.Add(update);
-        }
-
-        internal IEnumerable<XElement> ToXml(XNamespace ns)
-        {
-            yield return new XElement(ns + "workspaceName", workspace.Name);
-            yield return new XElement(ns + "ownerName", workspace.OwnerName);
-            yield return new XElement(ns + "updates", updates.Select(u => u.ToXml(ns)));
-        }
-
-        public override string ToString()
-        {
-            StringBuilder sb = new StringBuilder();
-
-            sb.Append("UpdateLocalVersionQueue instance ");
-            sb.Append(GetHashCode());
-
-            return sb.ToString();
+            if (!this.Any(u => u.ItemId == update.ItemId && u.LocalVersion == update.LocalVersion && string.Equals(u.TargetLocalItem, update.TargetLocalItem)))
+                this.Add(update);
         }
     }
 }

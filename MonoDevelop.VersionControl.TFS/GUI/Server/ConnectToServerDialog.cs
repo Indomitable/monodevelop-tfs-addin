@@ -28,9 +28,10 @@ using Xwt;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.Ide;
-using Microsoft.TeamFoundation.Client;
 using System.Linq;
 using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -39,7 +40,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         private readonly ListView serverList = new ListView();
         private readonly DataField<string> nameField = new DataField<string>();
         private readonly DataField<string> urlField = new DataField<string>();
-        private readonly DataField<BaseTeamFoundationServer> serverField = new DataField<BaseTeamFoundationServer>();
+        private readonly DataField<ServerConfig> serverField = new DataField<ServerConfig>();
         private readonly ListStore serverStore;
 
         public ConnectToServerDialog()
@@ -90,14 +91,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 
         void OnServerClicked(object sender, ListViewRowEventArgs e)
         {
-            var server = serverStore.GetValue(e.RowIndex, serverField);
-            using (var projectsDialog = new ChooseProjectsDialog(server))
+            var serverConfig = serverStore.GetValue(e.RowIndex, serverField);
+            using (var projectsDialog = new ChooseProjectsDialog(serverConfig))
             {
-                if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjects.Any())
+                if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjectColletions.Any())
                 {
-                    var selectedProjects = projectsDialog.SelectedProjects;
-                    server.ProjectCollections = new List<ProjectCollection>(selectedProjects.Select(x => x.Collection).Distinct());
-                    server.ProjectCollections.ForEach(pc => pc.Projects = new List<ProjectInfo>(selectedProjects.Where(pi => pi.Collection == pc)));
+                    serverConfig.ProjectCollections.Clear();
+                    serverConfig.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
                     TFSVersionControlService.Instance.RaiseServersChange();
                     TFSVersionControlService.Instance.StorePrefs();
                 }
@@ -106,37 +106,36 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 
         void OnAddServer(object sender, EventArgs e)
         {
-            using (var dialog = new AddServerDialog())
+            using (var addServerDialog = new AddServerDialog())
             {
-                if (dialog.Run(this) == Command.Ok && dialog.ServerInfo != null)
+                if (addServerDialog.Run(this) == Command.Ok)
                 {
-                    if (TFSVersionControlService.Instance.HasServer(dialog.ServerInfo.Name))
+                    var addServerResult = addServerDialog.Result;
+                    if (TFSVersionControlService.Instance.HasServer(addServerResult.Name))
                     {
                         MessageService.ShowError("Server with same name already exists!");
                         return;
                     }
-                    using (var credentialsDialog = new CredentialsDialog(dialog.ServerType))
+                    using (var credentialsDialog = new CredentialsDialog(addServerResult.Type))
                     {
-                        if (credentialsDialog.Run(this) == Command.Ok && credentialsDialog.Authentication != null)
+                        if (credentialsDialog.Run(this) == Command.Ok)
                         {
-                            CredentialsManager.StoreCredential(dialog.ServerInfo.Uri, credentialsDialog.Authentication.Password);
-                            var password = CredentialsManager.GetPassword(dialog.ServerInfo.Uri); //Try Get Password
-                            bool isPasswordSavedInXml = false;
+                            var credentialsResult = credentialsDialog.Result;
+                            CredentialsManager.StoreCredential(addServerResult.Url, credentialsResult.Password);
+                            var password = CredentialsManager.GetPassword(addServerResult.Url); //Try Get Password
                             if (password == null)
                             {
                                 MessageService.ShowWarning("No keyring service found!\nPassword will be saved as plain text.");
-                                isPasswordSavedInXml = true;
                             }
-                            var server = TeamFoundationServerFactory.Create(dialog.ServerType, dialog.ServerInfo, 
-                                                                            credentialsDialog.Authentication, isPasswordSavedInXml);
-                            using (var projectsDialog = new ChooseProjectsDialog(server))
+                            var serverConfig = new ServerConfig(addServerResult.Type, addServerResult.Name, addServerResult.Url, addServerResult.UserName,
+                                                                credentialsResult.Domain, credentialsResult.UserName, 
+                                                                (password == null ? credentialsResult.Password : null));
+                            using (var projectsDialog = new ChooseProjectsDialog(serverConfig))
                             {
-                                if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjects.Any())
+                                if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjectColletions.Any())
                                 {
-                                    var selectedProjects = projectsDialog.SelectedProjects;
-                                    server.ProjectCollections = new List<ProjectCollection>(selectedProjects.Select(x => x.Collection).Distinct());
-                                    server.ProjectCollections.ForEach(pc => pc.Projects = new List<ProjectInfo>(selectedProjects.Where(pi => pi.Collection == pc)));
-                                    TFSVersionControlService.Instance.AddServer(server);
+                                    serverConfig.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
+                                    TFSVersionControlService.Instance.AddServer(serverConfig);
                                     UpdateServersList();
                                 }
                             }
@@ -163,7 +162,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             {
                 var row = serverStore.AddRow();
                 serverStore.SetValue(row, nameField, server.Name);
-                serverStore.SetValue(row, urlField, server.Uri.ToString());
+                serverStore.SetValue(row, urlField, server.Url.ToString());
                 serverStore.SetValue(row, serverField, server);
             }
         }

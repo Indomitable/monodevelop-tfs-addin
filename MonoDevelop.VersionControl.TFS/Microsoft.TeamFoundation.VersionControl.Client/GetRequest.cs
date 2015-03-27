@@ -32,7 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class GetRequest
+    internal sealed class GetRequest
     {
         public GetRequest(string item, RecursionType recursionType, VersionSpec versionSpec)
         {
@@ -55,12 +55,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public VersionSpec VersionSpec { get; private set; }
 
-        internal XElement ToXml(XNamespace ns)
+        internal XElement ToXml()
         {
-            XElement result = new XElement(ns + "GetRequest");
+            XElement result = new XElement("GetRequest");
             if (ItemSpec != null)
-                result.Add(ItemSpec.ToXml(ns + "ItemSpec"));
-            result.Add(VersionSpec.ToXml(ns + "VersionSpec"));
+                result.Add(ItemSpec.ToXml("ItemSpec"));
+            result.Add(VersionSpec.ToXml("VersionSpec"));
             return result;
         }
 

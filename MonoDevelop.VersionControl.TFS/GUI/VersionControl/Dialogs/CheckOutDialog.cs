@@ -112,7 +112,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        internal static void Open(List<ExtendedItem> items, MonoDevelop.VersionControl.TFS.VersionControl.Workspace workspace)
         {
             using (var dialog = new CheckOutDialog())
             {
@@ -125,7 +125,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                         progress.BeginTask("Check Out", itemsToCheckOut.Count);
                         foreach (var item in itemsToCheckOut)
                         {
-                            var path = item.IsInWorkspace ? item.LocalItem : workspace.GetLocalPathForServerPath(item.ServerPath);
+                            var path = item.IsInWorkspace ? item.LocalItem : workspace.Data.GetLocalPathForServerPath(item.ServerPath);
                             workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None, progress);
                             progress.Log.WriteLine("Check out item: " + item.ServerPath);
                             var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.Full, dialog.LockLevel);

@@ -29,7 +29,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
-    public class TFSRevision : Revision
+    sealed class TFSRevision : Revision
     {
         public int Version { get; set; }
 
@@ -49,9 +49,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
             this.Time = changeset.CreationDate;
         }
 
-        public void Load(RepositoryService service)
+        public void Load()
         {
-            var changeset = service.QueryChangeset(this.Version);
+            var repo = (TFSRepository)this.Repository;
+            var changeset = repo.Workspace.QueryChangeset(this.Version);
             this.Author = changeset.Committer;
             this.Message = changeset.Comment;
             this.Time = changeset.CreationDate;
@@ -64,8 +65,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
             if (this.Version <= 0)
                 return null;
             var repo = (TFSRepository)this.Repository;
-            //var workspace = repo.GetWorkspaceByServerPath(ItemPath);
-            var changeSets = repo.VersionControlService.QueryHistory(new ItemSpec(ItemPath, RecursionType.None), 
+            var changeSets = repo.Workspace.QueryHistory(new ItemSpec(ItemPath, RecursionType.None), 
                                  new ChangesetVersionSpec(this.Version), null, 
                                  new ChangesetVersionSpec(this.Version), 2);
             if (changeSets.Count == 2)

@@ -31,7 +31,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class LabelVersionSpec : VersionSpec
+    sealed class LabelVersionSpec : VersionSpec
     {
         private readonly string label;
 
@@ -40,9 +40,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.label = label;
         }
 
-        internal override XElement ToXml(XName element)
+        internal override XElement ToXml(string elementName)
         {
-            return new XElement(element,
+            return new XElement(elementName,
                 new XAttribute(XsiNs + "type", "LabelVersionSpec"),
                 new XAttribute("label", Label));
         }

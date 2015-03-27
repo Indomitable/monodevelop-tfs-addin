@@ -32,6 +32,7 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -86,17 +87,17 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         internal static Failure FromXml(XElement element)
         {
             Failure failure = new Failure();
-            failure.RequestType = EnumHelper.ParseRequestType(element.GetAttribute("req"));
-            if (!string.IsNullOrEmpty(element.GetAttribute("sev")))
+            failure.RequestType = EnumHelper.ParseRequestType(element.GetAttributeValue("req"));
+            if (!string.IsNullOrEmpty(element.GetAttributeValue("sev")))
             {
-                failure.SeverityType = EnumHelper.ParseSeverityType(element.GetAttribute("sev"));
+                failure.SeverityType = EnumHelper.ParseSeverityType(element.GetAttributeValue("sev"));
             }
-            failure.Code = element.GetAttribute("code");
-            failure.ComputerName = element.GetAttribute("computer");
-            failure.IdentityName = element.GetAttribute("ident");
-            failure.LocalItem = element.GetAttribute("local");
-            failure.ServerItem = element.GetAttribute("item");
-            failure.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
+            failure.Code = element.GetAttributeValue("code");
+            failure.ComputerName = element.GetAttributeValue("computer");
+            failure.IdentityName = element.GetAttributeValue("ident");
+            failure.LocalItem = element.GetAttributeValue("local");
+            failure.ServerItem = element.GetAttributeValue("item");
+            failure.ItemId = element.GetIntAttribute("itemid");
             if (element.Element(element.Name.Namespace + "Message") != null)
                 failure.Message = element.Element(element.Name.Namespace + "Message").Value;
             return failure;

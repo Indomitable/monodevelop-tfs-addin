@@ -30,6 +30,8 @@
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -70,9 +72,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.Target = target;
         }
 
-        internal XElement ToXml(XNamespace ns)
+        internal XElement ToXml()
         {
-            var result = new XElement(ns + "ChangeRequest", 
+            var result = new XElement("ChangeRequest", 
                              new XAttribute("req", RequestType),
                              new XAttribute("type", ItemType));
 
@@ -85,12 +87,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             if (!string.IsNullOrEmpty(Target))
             {
                 // convert local path specs from platform paths to tfs paths as needed
-                string fxdTarget = VersionControlPath.IsServerItem(Target) ? Target : TfsPath.FromPlatformPath(Target);
+                string fxdTarget = RepositoryFilePath.IsServerItem(Target) ? Target : TfsPathHelper.FromPlatformPath(Target);
                 result.Add(new XAttribute("target", fxdTarget));
             }
 
-            result.Add(this.Item.ToXml(ns + "item"));
-            result.Add(this.VersionSpec.ToXml(ns + "vspec"));
+            result.Add(this.Item.ToXml("item"));
+            result.Add(this.VersionSpec.ToXml("vspec"));
 
             return result;
         }

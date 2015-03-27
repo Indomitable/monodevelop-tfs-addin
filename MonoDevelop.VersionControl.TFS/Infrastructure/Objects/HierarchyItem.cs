@@ -23,15 +23,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using Microsoft.TeamFoundation.VersionControl.Client;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {
-    public class HierarchyItem
+    internal class HierarchyItem
     {
         public HierarchyItem(Item item)
         {
@@ -50,31 +47,5 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
         public string Name { get { return Item.ShortName; } }
     }
 
-    public static class ItemSetToHierarchItemConverter
-    {
-        public static HierarchyItem Convert(List<Item> items)
-        {
-            HierarchyItem[] linerHierarchy = items.Select(x => new HierarchyItem(x)).ToArray();
-            HierarchyItem root = linerHierarchy[0];
-            for (int i = 1; i < linerHierarchy.Length; i++)
-            {
-                var currentLine = linerHierarchy[i];
-                for (int j = i - 1; j >= 0; j--)
-                {
-                    var previousLine = string.Equals(linerHierarchy[j].ServerPath, VersionControlPath.RootFolder) ?
-                                       VersionControlPath.RootFolder :
-                                       linerHierarchy[j].ServerPath + VersionControlPath.Separator;
-                    if (currentLine.ServerPath.StartsWith(previousLine, StringComparison.Ordinal) &&
-                        currentLine.ServerPath.Substring(previousLine.Length).IndexOf(VersionControlPath.Separator) == -1)
-                    {
-                        currentLine.Parent = linerHierarchy[j];
-                        currentLine.Parent.Children.Add(currentLine);
-                        break;
-                    }
-                }
-            }
-            return root;
-        }
-    }
 }
 

@@ -26,8 +26,7 @@
 
 using Xwt;
 using MonoDevelop.Core;
-using System.Net;
-using Microsoft.TeamFoundation.Client;
+using MonoDevelop.VersionControl.TFS.Core;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -47,7 +46,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         void BuildGui()
         {
             var table = new Table();
-            if (serverType == ServerType.TFS)
+            if (serverType == ServerType.OnPremise)
             {
                 table.Add(new Label(GettextCatalog.GetString("Domain") + ":"), 0, 0);
                 table.Add(domainEntry, 1, 0);
@@ -71,14 +70,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             };
         }
 
-        public ServerAuthentication Authentication
+        public CredentialsResult Result
         {
             get
             {
                 if (string.IsNullOrEmpty(userNameEntry.Text))
                     return null;
-                var auth = new ServerAuthentication(serverType);
-                auth.AuthUser = userNameEntry.Text;
+                var auth = new CredentialsResult();
+                auth.UserName = userNameEntry.Text;
                 auth.Password = passwordEntry.Password;
                 auth.Domain = domainEntry.Text;
                 return auth;

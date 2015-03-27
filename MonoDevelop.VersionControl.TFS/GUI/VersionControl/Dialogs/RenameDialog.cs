@@ -32,6 +32,7 @@ using MonoDevelop.Ide;
 using GLib;
 using System.Collections.Generic;
 using System.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -40,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         readonly ExtendedItem item;
         readonly TextEntry nameEntry = new TextEntry();
 
-        public RenameDialog(ExtendedItem item)
+        internal RenameDialog(ExtendedItem item)
         {
             this.item = item;
             BuildGui();
@@ -68,7 +69,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static string Open(ExtendedItem item, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        internal static string Open(ExtendedItem item, Workspace workspace)
         {
             using (var dialog = new RenameDialog(item))
             {

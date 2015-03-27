@@ -28,44 +28,20 @@
 //
 
 using System;
-using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class ExtendedItem : BaseItem
+    sealed class ExtendedItem : BaseItem
     {
-        //          <ExtendedItem lver="int" did="int" latest="int" type="Any or Folder or File" enc="int" itemid="int" local="string" titem="string" sitem="string" chg="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" chgEx="int" ochg="boolean" lock="None or Checkin or CheckOut or Unchanged" lowner="string" lownerdisp="string" date="dateTime">
-        //            <IsBranch>boolean</IsBranch>
-        //            <PropertyValues xsi:nil="true" />
-        //          </ExtendedItem>
-        //        <s:complexType name="ExtendedItem">
-        //            <s:sequence>
-        //                <s:element minOccurs="0" maxOccurs="1" default="false" name="IsBranch" type="s:boolean"/>
-        //                <s:element minOccurs="0" maxOccurs="1" name="PropertyValues" type="tns:ArrayOfPropertyValue"/>
-        //            </s:sequence>
-        //            <s:attribute default="0" name="lver" type="s:int"/>
-        //            <s:attribute default="0" name="did" type="s:int"/>
-        //            <s:attribute default="0" name="latest" type="s:int"/>
-        //            <s:attribute default="Any" name="type" type="tns:ItemType"/>
-        //            <s:attribute default="-3" name="enc" type="s:int"/>
-        //            <s:attribute default="0" name="itemid" type="s:int"/>
-        //            <s:attribute name="local" type="s:string"/>
-        //            <s:attribute name="titem" type="s:string"/>
-        //            <s:attribute name="sitem" type="s:string"/>
-        //            <s:attribute default="None" name="chg" type="tns:ChangeType"/>
-        //            <s:attribute default="0" name="chgEx" type="s:int"/>
-        //            <s:attribute default="false" name="ochg" type="s:boolean"/>
-        //            <s:attribute default="None" name="lock" type="tns:LockLevel"/>
-        //            <s:attribute name="lowner" type="s:string"/>
-        //            <s:attribute name="lownerdisp" type="s:string"/>
-        //            <s:attribute name="date" type="s:dateTime" use="required"/>
-        //        </s:complexType>
         internal static ExtendedItem FromXml(XElement element)
         {
-            ExtendedItem item = new ExtendedItem
+            var item = new ExtendedItem
             {
                 ChangeType = ChangeType.None,
                 VersionLocal = 0,
@@ -78,24 +54,24 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
                 LockStatus = LockLevel.None
             };
 
-            item.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
-            item.HasOtherPendingChange = GeneralHelper.XmlAttributeToBool(element.GetAttribute("ochg"));
-            item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttribute("lock"));
-            item.LockOwner = element.GetAttribute("lowner");
-            item.LocalItem = TfsPath.ToPlatformPath(element.GetAttribute("local"));
-            item.TargetServerItem = element.GetAttribute("titem");
-            item.SourceServerItem = element.GetAttribute("sitem");
-            item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            item.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
-            item.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
-            item.VersionLocal = GeneralHelper.XmlAttributeToInt(element.GetAttribute("lver"));
-            item.VersionLatest = GeneralHelper.XmlAttributeToInt(element.GetAttribute("latest"));
-            item.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
-            item.CheckinDate = GeneralHelper.XmlAttributeToDate(element.GetAttribute("date"));
+            item.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));
+            item.HasOtherPendingChange = element.GetBooleanAttribute("ochg");
+            item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttributeValue("lock"));
+            item.LockOwner = element.GetAttributeValue("lowner");
+            item.LocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
+            item.TargetServerItem = element.GetAttributeValue("titem");
+            item.SourceServerItem = element.GetAttributeValue("sitem");
+            item.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
+            item.ItemId = element.GetIntAttribute("itemid");
+            item.Encoding = element.GetIntAttribute("enc");
+            item.VersionLocal = element.GetIntAttribute("lver");
+            item.VersionLatest = element.GetIntAttribute("latest");
+            item.DeletionId = element.GetIntAttribute("did");
+            item.CheckinDate = element.GetDateAttribute("date");
 
-            if (element.Element(XmlNamespaces.GetMessageElementName("IsBranch")) != null &&
-                !string.IsNullOrEmpty(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value))
-                item.IsBranch = GeneralHelper.XmlAttributeToBool(element.Element(XmlNamespaces.GetMessageElementName("IsBranch")).Value);
+            if (element.GetElement("IsBranch") != null &&
+                !string.IsNullOrEmpty(element.GetElement("IsBranch").Value))
+                item.IsBranch = string.Equals(element.GetElement("IsBranch").Value, "true", StringComparison.OrdinalIgnoreCase);
 
             return item;
         }
@@ -143,7 +119,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public DateTime CheckinDate { get; private set; }
 
-        public override VersionControlPath ServerPath { get { return TargetServerItem; } }
+        public override RepositoryFilePath ServerPath { get { return TargetServerItem; } }
 
         public bool IsBranch { get; private set; }
     }

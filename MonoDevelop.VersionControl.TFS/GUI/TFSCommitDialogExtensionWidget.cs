@@ -28,8 +28,8 @@ using Gtk;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {

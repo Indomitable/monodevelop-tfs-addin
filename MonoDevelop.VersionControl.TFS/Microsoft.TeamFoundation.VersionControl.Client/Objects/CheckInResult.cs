@@ -29,6 +29,7 @@ using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -43,7 +44,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         {
             var ns = el.Name.Namespace;
             var result = new CheckInResult();
-            result.ChangeSet = Convert.ToInt32(el.GetAttribute("cset"));
+            result.ChangeSet = el.GetIntAttribute("cset");
             result.UndoneServerItems = new List<string>();
             if (el.Element(ns + "UndoneServerItems") != null)
             {

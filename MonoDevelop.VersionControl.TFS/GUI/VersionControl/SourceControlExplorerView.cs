@@ -25,21 +25,23 @@
 // THE SOFTWARE.
 using System;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using MonoDevelop.Ide.Gui;
-using MonoDevelop.VersionControl.TFS.Helpers;
-using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
-using MonoDevelop.Ide;
-using MonoDevelop.Core;
-using System.Linq;
 using System.IO;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using MonoDevelop.VersionControl.TFS.GUI.Workspace;
-using Microsoft.TeamFoundation.Client;
-using Gtk;
+using System.Linq;
 using Gdk;
+using Gtk;
+using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.Core;
+using MonoDevelop.Ide;
+using MonoDevelop.Ide.Gui;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs;
+using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
@@ -50,14 +52,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private readonly TreeView _listView = new TreeView();
         private readonly ListStore _listStore = new ListStore(typeof(ExtendedItem), typeof(Pixbuf), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string));
         private readonly ComboBox _workspaceComboBox = new ComboBox();
-        private readonly ListStore _workspaceStore = new ListStore(typeof(Microsoft.TeamFoundation.VersionControl.Client.Workspace), typeof(string));
+        private readonly ListStore _workspaceStore = new ListStore(typeof(WorkspaceData), typeof(string));
         private readonly Button manageButton = new Button(GettextCatalog.GetString("Manage"));
         private readonly Button refreshButton = new Button(GettextCatalog.GetString("Refresh"));
         private readonly TreeView _treeView = new TreeView();
         private readonly TreeStore _treeStore = new TreeStore(typeof(BaseItem), typeof(Pixbuf), typeof(string));
         private ProjectCollection projectCollection;
-        private readonly List<Microsoft.TeamFoundation.VersionControl.Client.Workspace> _workspaces = new List<Microsoft.TeamFoundation.VersionControl.Client.Workspace>();
-        private Microsoft.TeamFoundation.VersionControl.Client.Workspace _currentWorkspace;
+        private readonly List<WorkspaceData> _workspaces = new List<WorkspaceData>();
+        private Workspace _currentWorkspace;
 
         public SourceControlExplorerView()
         {
@@ -65,32 +67,33 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             BuildGui();
         }
 
-        public static void Open(ProjectInfo project)
+        internal static void Open(ProjectConfig projectConfig)
         {
+            var collection = new ProjectCollection(projectConfig);
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var sourceDoc = view.GetContent<SourceControlExplorerView>();
                 if (sourceDoc != null)
                 {
-                    sourceDoc.Load(project.Collection);
-                    sourceDoc.ExpandPath(VersionControlPath.RootFolder + project.Name);
+                    sourceDoc.Load(collection);
+                    sourceDoc.ExpandPath(RepositoryFilePath.RootFolder + projectConfig.Name);
                     view.Window.SelectWindow();
                     return;
                 }
             }
 
             var sourceControlExplorerView = new SourceControlExplorerView();
-            sourceControlExplorerView.Load(project.Collection);
-            sourceControlExplorerView.ExpandPath(VersionControlPath.RootFolder + project.Name);
+            sourceControlExplorerView.Load(collection);
+            sourceControlExplorerView.ExpandPath(RepositoryFilePath.RootFolder + projectConfig.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
-        public static void Open(ProjectCollection collection)
+        internal static void Open(ProjectCollection collection)
         {
-            Open(collection, VersionControlPath.RootFolder, null);
+            Open(collection, RepositoryFilePath.RootFolder, null);
         }
 
-        public static void Open(ProjectCollection collection, string path, string fileName)
+        internal static void Open(ProjectCollection collection, string path, string fileName)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
@@ -119,7 +122,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void Load(ProjectCollection collection)
         {
-            if (this.projectCollection != null && string.Equals(collection.Id, this.projectCollection.Id, StringComparison.OrdinalIgnoreCase))
+            if (this.projectCollection != null && collection.Id ==  this.projectCollection.Id)
             {
                 return;
             }
@@ -226,7 +229,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             _workspaceComboBox.Changed -= OnChangeActiveWorkspaces;
             _workspaceStore.Clear();
             _workspaces.Clear();
-            _workspaces.AddRange(WorkspaceHelper.GetLocalWorkspaces(projectCollection));
+            _workspaces.AddRange(projectCollection.GetLocalWorkspaces());
             TreeIter activeWorkspaceRow = TreeIter.Zero;
             foreach (var workspace in _workspaces)
             {
@@ -254,8 +257,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var versionControl = projectCollection.GetService<RepositoryService>();
-            var items = versionControl.QueryItems(this._currentWorkspace, new ItemSpec(VersionControlPath.RootFolder, RecursionType.Full), VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
+            var items = this._currentWorkspace.GetItems(new [] { new ItemSpec(RepositoryFilePath.RootFolder, RecursionType.Full) }, 
+                                                        VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
             var node = _treeStore.AppendNode();
@@ -304,9 +307,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillListView(string serverPath)
         {
             _listStore.Clear();
-
-            var versionControl = projectCollection.GetService<RepositoryService>();
-            var itemSet = versionControl.QueryItemsExtended(this._currentWorkspace, new ItemSpec(serverPath, RecursionType.OneLevel), DeletedState.NonDeleted, ItemType.Any);
+            var itemSet = this._currentWorkspace.GetExtendedItems(new [] { new ItemSpec(serverPath, RecursionType.OneLevel) }, DeletedState.NonDeleted, ItemType.Any);
             foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {
                 var row = _listStore.Append();
@@ -318,7 +319,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     if (item.ChangeType != ChangeType.None && !item.HasOtherPendingChange)
                     {
                         _listStore.SetValue(row, 3, item.ChangeType.ToString());
-                        _listStore.SetValue(row, 4, this._currentWorkspace.OwnerName);
+                        _listStore.SetValue(row, 4, this._currentWorkspace.Data.Owner);
                     }
                     if (item.HasOtherPendingChange)
                     {
@@ -405,17 +406,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             if (_currentWorkspace == null)
                 return false;
-            return _currentWorkspace.IsServerPathMapped(serverPath);
+            return _currentWorkspace.Data.IsServerPathMapped(serverPath);
         }
 
-        private void ShowMappingPath(VersionControlPath serverPath)
+        private void ShowMappingPath(RepositoryFilePath serverPath)
         {
             if (!IsMapped(serverPath))
             {
                 _localFolder.Text = GettextCatalog.GetString("Not Mapped");
                 return;
             }
-            var mappedFolder = _currentWorkspace.Folders.First(f => serverPath.IsChildOrEqualTo(f.ServerItem));
+            var mappedFolder = _currentWorkspace.Data.WorkingFolders.First(f => serverPath.IsChildOrEqualTo(f.ServerItem));
             if (string.Equals(serverPath, mappedFolder.ServerItem, StringComparison.Ordinal))
                 _localFolder.Text = mappedFolder.LocalItem;
             else
@@ -432,9 +433,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter workspaceIter;
             if (_workspaceComboBox.GetActiveIter(out workspaceIter))
             {
-                var workspace = (Microsoft.TeamFoundation.VersionControl.Client.Workspace)_workspaceStore.GetValue(workspaceIter, 0);
-                _currentWorkspace = workspace;
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspace.Name);
+                var workspaceData = (WorkspaceData)_workspaceStore.GetValue(workspaceIter, 0);
+                _currentWorkspace = new Workspace(this.projectCollection, workspaceData);
+                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspaceData.Name);
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))
                 {
@@ -484,9 +485,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private string DownloadItemToTemp(ExtendedItem extendedItem)
         {
-            var dowloadService = this.projectCollection.GetService<VersionControlDownloadService>();
             var item = _currentWorkspace.GetItem(extendedItem.ServerPath, ItemType.File, true);
-            var filePath = dowloadService.DownloadToTempWithName(item.ArtifactUri, item.ServerPath.ItemName);
+            var filePath = _currentWorkspace.DownloadToTempWithName(item.ArtifactUri, item.ServerPath.ItemName);
             return filePath;
         }
 
@@ -526,7 +526,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             if (parentFolder == null)
                                 return;
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });
-                            var futurePath = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
+                            var futurePath = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
                             FileHelper.FileDelete(filePath);
                         }
@@ -731,7 +731,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var path = item.LocalItem;
                 if (string.IsNullOrEmpty(path))
-                    path = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
+                    path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
 
                 using (Xwt.OpenFileDialog openFileDialog = new Xwt.OpenFileDialog("Browse For File"))
                 {
@@ -767,7 +767,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var path = item.LocalItem;
                 if (string.IsNullOrEmpty(path))
-                    path = _currentWorkspace.GetLocalPathForServerPath(item.ServerPath);
+                    path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
                 DesktopService.OpenFolder(path);
             };
             return openFolder;
@@ -793,13 +793,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FireFilesChanged(List<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
-            FileService.NotifyFilesChanged(items.Select(i => (FilePath)_currentWorkspace.GetLocalPathForServerPath(i.ServerPath)), true);
+            FileService.NotifyFilesChanged(items.Select(i => (FilePath)_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath)), true);
         }
 
         private void FireFilesRemoved(List<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
-            FileService.NotifyFilesRemoved(items.Select(i => (FilePath)_currentWorkspace.GetLocalPathForServerPath(i.ServerPath)));
+            FileService.NotifyFilesRemoved(items.Select(i => (FilePath)_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath)));
         }
 
         private void RefreshList(List<ExtendedItem> items)

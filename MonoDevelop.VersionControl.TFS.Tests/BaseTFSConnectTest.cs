@@ -3,7 +3,7 @@ using System.Net;
 using System.Runtime.ConstrainedExecution;
 using Microsoft.TeamFoundation.Client;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class BaseTFSConnectTest
     {

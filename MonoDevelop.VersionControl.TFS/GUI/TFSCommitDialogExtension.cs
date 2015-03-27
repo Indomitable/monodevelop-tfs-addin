@@ -30,10 +30,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     {
         TFSCommitDialogExtensionWidget widget;
 
-        public TFSCommitDialogExtension()
-        {
-        }
-
         public override bool Initialize(ChangeSet changeSet)
         {
             var repo = changeSet.Repository as TFSRepository;

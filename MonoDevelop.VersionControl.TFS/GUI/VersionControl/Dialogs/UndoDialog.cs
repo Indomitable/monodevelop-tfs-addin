@@ -31,6 +31,8 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -71,7 +73,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             this.Content = content;
         }
 
-        private void FillStore(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        private void FillStore(List<ExtendedItem> items, Workspace workspace)
         {
             fileStore.Clear();
             List<ItemSpec> itemSpecs = new List<ItemSpec>();
@@ -84,7 +86,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             {
                 var row = fileStore.AddRow();
                 fileStore.SetValue(row, isCheckedField, true);
-                var path = (VersionControlPath)pendingChange.ServerItem;
+                var path = (RepositoryFilePath)pendingChange.ServerItem;
                 fileStore.SetValue(row, nameField, path.ItemName);
                 fileStore.SetValue(row, changesField, pendingChange.ChangeType.ToString());
                 fileStore.SetValue(row, folderField, path.ParentPath);
@@ -107,7 +109,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        internal static void Open(List<ExtendedItem> items, Workspace workspace)
         {
             using (var dialog = new UndoDialog())
             {

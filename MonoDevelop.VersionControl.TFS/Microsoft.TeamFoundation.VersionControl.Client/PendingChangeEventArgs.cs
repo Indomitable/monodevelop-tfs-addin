@@ -28,10 +28,11 @@
 
 using System;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class PendingChangeEventArgs : System.EventArgs
+    internal sealed class PendingChangeEventArgs : EventArgs
     {
         internal PendingChangeEventArgs(Workspace workspace, PendingChange pendingChange)
         {

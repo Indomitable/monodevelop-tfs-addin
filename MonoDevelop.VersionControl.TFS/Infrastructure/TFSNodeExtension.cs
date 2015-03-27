@@ -24,13 +24,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using MonoDevelop.Ide.Gui.Components;
-using MonoDevelop.Projects;
-using MonoDevelop.Components.Commands;
-using MonoDevelop.VersionControl.TFS.Commands;
-using MonoDevelop.Ide.Gui.Pads.ProjectPad;
-using MonoDevelop.Core;
 using System.Collections.Generic;
+using MonoDevelop.Components.Commands;
+using MonoDevelop.Core;
+using MonoDevelop.Ide.Gui.Components;
+using MonoDevelop.Ide.Gui.Pads.ProjectPad;
+using MonoDevelop.Projects;
+using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
@@ -101,7 +101,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return;
             var item = items[0];
             var repo = (TFSRepository)item.Repository;
-            ResolveConflictsView.Open(repo, GetWorkingPaths(item));
+            ResolveConflictsView.Open(repo.Workspace, GetWorkingPaths(item));
         }
 
         private List<FilePath> GetWorkingPaths(VersionControlItem item)
@@ -165,11 +165,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 fileName = path.FileName;
                 path = path.ParentDirectory;
             }
-            var workspace = repo.GetWorkspaceByLocalPath(path);
-            if (workspace == null)
-                return;
-            var serverPath = workspace.GetServerPathForLocalPath(path);
-            SourceControlExplorerView.Open(workspace.ProjectCollection, serverPath, fileName);
+            var serverPath = repo.Workspace.Data.GetServerPathForLocalPath(path);
+            SourceControlExplorerView.Open(repo.Workspace.ProjectCollection, serverPath, fileName);
         }
 
         [CommandUpdateHandler(TFSCommands.LocateInSourceExplorer)]

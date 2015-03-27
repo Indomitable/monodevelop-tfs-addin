@@ -44,7 +44,12 @@ namespace MonoDevelop.VersionControl.TFS.Commands
 
         protected override void Run()
         {
-            SourceControlExplorerView.Open(TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).Single());
+            var collection = TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).First();
+            var project = collection.Projects.FirstOrDefault();
+            if (project != null)
+            {
+                SourceControlExplorerView.Open(project);
+            }
         }
     }
 }

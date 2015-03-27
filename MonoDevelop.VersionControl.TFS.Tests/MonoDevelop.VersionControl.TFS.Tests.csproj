@@ -55,6 +55,8 @@
     <Compile Include="LexalParserTests.cs" />
     <Compile Include="OtherTests.cs" />
     <Compile Include="MessageTests.cs" />
+    <Compile Include="ConfigTests.cs" />
+    <Compile Include="Services\CommonStructureServiceTest.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -65,5 +67,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ProjectExtensions>
+    <MonoDevelop>
+      <Properties>
+        <Policies>
+          <DotNetNamingPolicy DirectoryNamespaceAssociation="Hierarchical" ResourceNamePolicy="FileFormatDefault" />
+        </Policies>
+      </Properties>
+    </MonoDevelop>
+  </ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="Services\" />
   </ItemGroup>
 </Project>

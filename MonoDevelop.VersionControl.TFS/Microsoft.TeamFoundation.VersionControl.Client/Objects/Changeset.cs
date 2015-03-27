@@ -32,11 +32,11 @@ using System.Globalization;
 using System.Text;
 using System.Xml.Linq;
 using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class Changeset
+    internal sealed class Changeset
     {
         private static readonly string[] DateTimeFormats = { "yyyy-MM-ddTHH:mm:ss.fZ", "yyyy-MM-ddTHH:mm:ss.ffZ", "yyyy-MM-ddTHH:mm:ss.fffZ", "yyyy-MM-ddTHH:mm:ss.ffffZ", "yyyy-MM-ddTHH:mm:ss.fffffZ", "yyyy-MM-ddTHH:mm:ss.ffffffZ", "yyyy-MM-ddTHH:mm:ssZ" };
         //      <QueryChangesetResult cmtr="string" cmtrdisp="string" date="dateTime" cset="int" owner="string" ownerdisp="string">
@@ -77,7 +77,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         {
             Changeset changeset = new Changeset();
             changeset.Committer = element.Attribute("cmtr").Value;
-            changeset.ChangesetId = GeneralHelper.XmlAttributeToInt(element.Attribute("cset").Value);
+            changeset.ChangesetId = element.GetIntAttribute("cset");
             string date = element.Attribute("date").Value;
             changeset.CreationDate = DateTime.ParseExact(date, DateTimeFormats, null, DateTimeStyles.None);
             changeset.Owner = element.Attribute("owner").Value;

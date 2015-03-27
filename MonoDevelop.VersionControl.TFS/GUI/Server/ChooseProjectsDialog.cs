@@ -27,9 +27,10 @@
 using System;
 using Xwt;
 using MonoDevelop.Core;
-using Microsoft.TeamFoundation.Client;
 using System.Linq;
 using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -38,25 +39,25 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         readonly ListStore collectionStore;
         readonly ListBox collectionsList = new ListBox();
         readonly DataField<string> collectionName = new DataField<string>();
-        readonly DataField<ProjectCollection> collectionItem = new DataField<ProjectCollection>();
+        readonly DataField<ProjectCollectionConfig> collectionItem = new DataField<ProjectCollectionConfig>();
         readonly TreeStore projectsStore;
         readonly TreeView projectsList = new TreeView();
         readonly DataField<bool> isProjectSelected = new DataField<bool>();
         readonly DataField<string> projectName = new DataField<string>();
-        readonly DataField<ProjectInfo> projectItem = new DataField<ProjectInfo>();
+        readonly DataField<ProjectConfig> projectItem = new DataField<ProjectConfig>();
 
-        public List<ProjectInfo> SelectedProjects { get; set; }
+        internal List<ProjectCollectionConfig> SelectedProjectColletions { get; set; }
 
-        public ChooseProjectsDialog(BaseTeamFoundationServer server)
+        internal ChooseProjectsDialog(ServerConfig serverConfig)
         {
             collectionStore = new ListStore(collectionName, collectionItem);
             projectsStore = new TreeStore(isProjectSelected, projectName, projectItem);
             BuildGui();
-            if (server.ProjectCollections == null)
-                SelectedProjects = new List<ProjectInfo>();
+            if (!serverConfig.ProjectCollections.Any())
+                SelectedProjectColletions = new List<ProjectCollectionConfig>();
             else
-                SelectedProjects = new List<ProjectInfo>(server.ProjectCollections.SelectMany(pc => pc.Projects));
-            LoadData(server);
+                SelectedProjectColletions = new List<ProjectCollectionConfig>(serverConfig.ProjectCollections);
+            LoadData(serverConfig);
         }
 
         void BuildGui()
@@ -81,13 +82,30 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                 var node = projectsStore.GetNavigatorAt(row);
                 var isSelected = !node.GetValue(isProjectSelected); //Xwt gives previous value
                 var project = node.GetValue(projectItem);
-                if (isSelected && !SelectedProjects.Any(p => string.Equals(p.Uri, project.Uri)))
+                if (isSelected) //Should add the project
                 {
-                    SelectedProjects.Add(project);
+                    var collection = SelectedProjectColletions.SingleOrDefault(pc => pc == project.Collection);
+                    if (collection == null)
+                    {
+                        collection = project.Collection.Copy();
+                        collection.Projects.Add(project);
+                        SelectedProjectColletions.Add(collection);
+                    }
+                    else
+                    {
+                        //Should not exists because now is selected
+                        collection.Projects.Add(project);
+                    }
                 }
-                if (!isSelected && SelectedProjects.Any(p => string.Equals(p.Uri, project.Uri)))
+                else
                 {
-                    SelectedProjects.RemoveAll(p => string.Equals(p.Uri, project.Uri));
+                    //Should exists because the project has been checked
+                    var collection = SelectedProjectColletions.Single(pc => pc == project.Collection);
+                    collection.Projects.Remove(project);
+                    if (!collection.Projects.Any())
+                    {
+                        SelectedProjectColletions.Remove(collection);
+                    }
                 }
             };
             projectsList.Columns.Add(new ListViewColumn("", checkView));
@@ -112,34 +130,35 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             this.Content = vBox;
         }
 
-        void LoadData(BaseTeamFoundationServer server)
+        void LoadData(ServerConfig serverConfig)
         {
-            server.LoadProjectConnections();
-            server.ProjectCollections.ForEach(c => c.LoadProjects());
-            foreach (var col in server.ProjectCollections)
+            var server = TeamFoundationServerFactory.Create(serverConfig);
+            var newServerConfig = server.FetchServerStructure();
+            foreach (var collection in newServerConfig.ProjectCollections)
             {
                 var row = collectionStore.AddRow();
-                collectionStore.SetValue(row, collectionName, col.Name);
-                collectionStore.SetValue(row, collectionItem, col);
+                collectionStore.SetValue(row, collectionName, collection.Name);
+                collectionStore.SetValue(row, collectionItem, collection);
             }
             collectionsList.SelectionChanged += (sender, e) =>
             {
                 if (collectionsList.SelectedRow > -1)
                 {
                     var collection = collectionStore.GetValue(collectionsList.SelectedRow, collectionItem);
+                    var selectedColletion = SelectedProjectColletions.SingleOrDefault(pc => pc == collection);
                     projectsStore.Clear();
                     foreach (var project in collection.Projects)
                     {
                         var node = projectsStore.AddNode();
                         var project1 = project;
-                        var isSelected = SelectedProjects.Any(x => string.Equals(x.Uri, project1.Uri, StringComparison.OrdinalIgnoreCase));
+                        var isSelected = selectedColletion != null && selectedColletion.Projects.Any(p => p == project1);
                         node.SetValue(isProjectSelected, isSelected);
                         node.SetValue(projectName, project.Name);    
                         node.SetValue(projectItem, project);
                     }
                 }
             };
-            if (server.ProjectCollections.Any())
+            if (newServerConfig.ProjectCollections.Any())
                 collectionsList.SelectRow(0);
         }
     }

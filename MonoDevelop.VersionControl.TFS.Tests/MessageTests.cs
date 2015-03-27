@@ -9,7 +9,7 @@ using System.Xml.XPath;
 using System.Linq;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests.OpenTF
+namespace Tests.OpenTF
 {
     public class MessageTests
     {

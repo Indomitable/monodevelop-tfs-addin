@@ -33,7 +33,7 @@ using System.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class ItemSet
+    internal sealed class ItemSet
     {
         private Item[] items;
         private string pattern;

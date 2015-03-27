@@ -33,15 +33,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Helpers
         {
             return boolVal ? "true" : "false";
         }
-
-        public static string GetAttribute(this XElement element, string attributeName)
-        {
-            if (!element.HasAttributes ||
-                element.Attribute(attributeName) == null ||
-                string.IsNullOrEmpty(element.Attribute(attributeName).Value))
-                return string.Empty;
-            return element.Attribute(attributeName).Value;
-        }
     }
 }
 

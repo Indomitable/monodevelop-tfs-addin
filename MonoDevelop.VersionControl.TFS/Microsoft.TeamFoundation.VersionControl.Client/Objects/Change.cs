@@ -34,7 +34,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class Change
+    internal sealed class Change
     {
         //          <Change type="None or Add or Edit or Encoding or Rename or Delete or Undelete or Branch or Merge or Lock or Rollback or SourceRename or Property" typeEx="int">
         //            <Item xsi:nil="true" />

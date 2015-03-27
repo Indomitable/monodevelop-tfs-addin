@@ -29,18 +29,22 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using System;
-using Microsoft.TeamFoundation.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS
 {
-    public class TFSVersionControlService
+    sealed class TFSVersionControlService
     {
-        private readonly List<BaseTeamFoundationServer> _registredServers = new List<BaseTeamFoundationServer>();
-        private readonly Dictionary<string, string> _activeWorkspaces = new Dictionary<string, string>();
+        private readonly List<ServerConfig> _registredServers = new List<ServerConfig>();
+        /// <summary>
+        /// Store default workspaces for each saved project collection. The Key - Project Collection Id, The Value - Workspace Name.
+        /// </summary>
+        private readonly Dictionary<Guid, string> _defaultWorkspaces = new Dictionary<Guid, string>();
         private static TFSVersionControlService instance;
 
         public TFSVersionControlService()
@@ -51,23 +55,15 @@ namespace MonoDevelop.VersionControl.TFS
         public static TFSVersionControlService Instance { get { return instance ?? (instance = new TFSVersionControlService()); } }
 
         private string ConfigFile { get { return UserProfile.Current.ConfigDir.Combine("VersionControl.TFS.config"); } }
-        //<TFSRoot>
-        //    <Servers>
-        //      <Server Name="ServerName" Url="ServerUrl" Workspace="activeWorkspaceName">
-        //         <ProjectCollection id="GUID" url="URL">
-        //              <Project name="projectName" />
-        //          </ProjectCollection>
-        //      </Server>
-        //    </Servers>
-        //</TFSRoot>
+
         public void StorePrefs()
         {
             using (var file = File.Create(ConfigFile))
             {
                 XDocument doc = new XDocument();
                 doc.Add(new XElement("TFSRoot"));
-                doc.Root.Add(new XElement("Servers", _registredServers.Select(x => x.ToLocalXml())));
-                doc.Root.Add(new XElement("Workspaces", _activeWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
+                doc.Root.Add(new XElement("Servers", _registredServers.Select(x => x.ToConfigXml())));
+                doc.Root.Add(new XElement("Workspaces", _defaultWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
                 if (this.MergeToolInfo != null)
                     doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
                 doc.Root.Add(new XElement("CheckOutLockLevel", (int)CheckOutLockLevel));
@@ -84,37 +80,28 @@ namespace MonoDevelop.VersionControl.TFS
                 return;
             try
             {
-                using (var file = File.OpenRead(ConfigFile))
+                var xmlConfig = File.ReadAllText(ConfigFile);
+                XDocument doc = XDocument.Parse(xmlConfig);
+                foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                 {
-                    XDocument doc = XDocument.Load(file);
-                    foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
-                    {
-                        var isPasswordSavedInXml = serverElement.Attribute("Password") != null;
-                        var password = isPasswordSavedInXml ? serverElement.Attribute("Password").Value : CredentialsManager.GetPassword(new Uri(serverElement.Attribute("Url").Value));
-                        if (password == null)
-                            throw new Exception("TFS Addin: No Password found for TFS server: " + serverElement.Attribute("Name").Value);
-                        var server = TeamFoundationServerFactory.Create(serverElement, password, isPasswordSavedInXml);
-                        if (server != null)
-                            _registredServers.Add(server);
-                    }
-                    foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
-                    {
-                        _activeWorkspaces.Add(workspace.Attribute("Id").Value, workspace.Attribute("Name").Value);
-                    }
-                    var mergeToolElement = doc.Root.Element("MergeTool");
-                    if (mergeToolElement != null)
-                    {
-                        this.MergeToolInfo = new MergeToolInfo
-                        {
-                            CommandName = mergeToolElement.Attribute("Command").Value,
-                            Arguments = mergeToolElement.Attribute("Arguments").Value,
-                        };
-                    }
-                    checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? CheckOutLockLevel.Unchanged : (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
-                    isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
-                    this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
-                    file.Close();
+                    var serverConfig = ServerConfig.FromConfigXml(serverElement);
+                    _registredServers.Add(serverConfig);
                 }
+                foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
+                {
+                    _defaultWorkspaces.Add(Guid.Parse(workspace.Attribute("Id").Value), workspace.Attribute("Name").Value);
+                }
+                var mergeToolElement = doc.Root.Element("MergeTool");
+                if (mergeToolElement != null)
+                {
+                    this.MergeToolInfo = new MergeToolInfo
+                    {
+                        CommandName = mergeToolElement.Attribute("Command").Value,
+                        Arguments = mergeToolElement.Attribute("Arguments").Value,
+                    };
+                }
+                checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? CheckOutLockLevel.Unchanged : (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
+                this.isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
             }
             catch (Exception e)
             {
@@ -127,11 +114,11 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public void AddServer(BaseTeamFoundationServer server)
+        public void AddServer(ServerConfig serverConfig)
         {
-            if (HasServer(server.Name))
-                RemoveServer(server.Name);
-            _registredServers.Add(server);
+            if (HasServer(serverConfig.Name))
+                RemoveServer(serverConfig.Name);
+            _registredServers.Add(serverConfig);
             RaiseServersChange();
             StorePrefs();
         }
@@ -145,17 +132,17 @@ namespace MonoDevelop.VersionControl.TFS
             StorePrefs();
         }
 
-        public BaseTeamFoundationServer GetServer(string name)
+        public ServerConfig GetServer(string name)
         {
             return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
         public bool HasServer(string name)
         {
-            return _registredServers.Any(x => string.Equals(x.Name, name, System.StringComparison.OrdinalIgnoreCase));
+            return _registredServers.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public List<BaseTeamFoundationServer> Servers { get { return _registredServers; } }
+        public List<ServerConfig> Servers { get { return _registredServers; } }
 
         public event Action OnServersChange;
 
@@ -169,14 +156,18 @@ namespace MonoDevelop.VersionControl.TFS
 
         public string GetActiveWorkspace(ProjectCollection collection)
         {
-            if (!_activeWorkspaces.ContainsKey(collection.Id))
+            if (!_defaultWorkspaces.ContainsKey(collection.Id))
                 return string.Empty;
-            return _activeWorkspaces[collection.Id];
+            return _defaultWorkspaces[collection.Id];
         }
 
         public void SetActiveWorkspace(ProjectCollection collection, string workspaceName)
         {
-            _activeWorkspaces[collection.Id] = workspaceName;
+            if (!_defaultWorkspaces.ContainsKey(collection.Id))
+                _defaultWorkspaces.Add(collection.Id, workspaceName);
+            else
+                _defaultWorkspaces[collection.Id] = workspaceName;
+
             StorePrefs();
         }
 
@@ -205,7 +196,6 @@ namespace MonoDevelop.VersionControl.TFS
             set
             {
                 isDebugMode = value;
-                this.Servers.ForEach(s => s.IsDebuMode = isDebugMode);
                 StorePrefs();
             }
         }

@@ -4,7 +4,7 @@
 // Author:
 //       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
 //
-// Copyright (c) 2013 Ventsislav Mladenov
+// Copyright (c) 2015 Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,15 +26,13 @@
 
 using Xwt;
 using MonoDevelop.Core;
-using System;
-using Microsoft.TeamFoundation.Client;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class AddServerDialog : Dialog
     {
-        readonly AddServerWidget widget = new AddServerWidget();
-        readonly AddVisualStudioOnlineServerWidget vsoWidget = new AddVisualStudioOnlineServerWidget();
+        readonly AddOnPremiseServerWidget widget = new AddOnPremiseServerWidget();
+        readonly AddCloudServerWidget vsoWidget = new AddCloudServerWidget();
         readonly Notebook notebook = new Notebook();
 
         public AddServerDialog()
@@ -46,15 +44,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         {
             this.Title = GettextCatalog.GetString("Add Team Foundation Server");
             this.Buttons.Add(Command.Ok, Command.Cancel);
-            notebook.Add(widget, GettextCatalog.GetString("TFS Server"));
-            notebook.Add(vsoWidget, GettextCatalog.GetString("Visual Studio Online"));
+            notebook.Add(widget, GettextCatalog.GetString("On-Premise Server (Local Server)"));
+            notebook.Add(vsoWidget, GettextCatalog.GetString("Cloud Server (Visual Studio Online)"));
             this.Content = notebook;
             this.Resizable = false;
         }
 
-        public ServerType ServerType { get { return notebook.CurrentTabIndex == 0 ? ServerType.TFS : ServerType.VisualStudio; } }
-
-        public BaseServerInfo ServerInfo { get { return ServerType == ServerType.TFS ? widget.ServerInfo : vsoWidget.ServerInfo; } }
-
+        public AddServerResult Result 
+        { 
+            get 
+            { 
+                return notebook.CurrentTabIndex == 0 ? widget.Result : vsoWidget.Result; 
+            } 
+        }
     }
 }

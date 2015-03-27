@@ -27,10 +27,11 @@
 //
 
 using System;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-	public class ConflictEventArgs : System.EventArgs
+	sealed class ConflictEventArgs : EventArgs
 	{
 		private Workspace workspace;
 		private string message;

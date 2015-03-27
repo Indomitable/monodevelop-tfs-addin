@@ -28,10 +28,11 @@
 //
 
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class WorkspaceVersionSpec : VersionSpec
+    sealed class WorkspaceVersionSpec : VersionSpec
     {
         private readonly string ownerName;
 
@@ -41,19 +42,19 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.ownerName = ownerName;
         }
 
-        public WorkspaceVersionSpec(Workspace workspace)
+        public WorkspaceVersionSpec(WorkspaceData workspaceData)
         {
-            this.Name = workspace.Name;
-            this.ownerName = workspace.OwnerName;
+            this.Name = workspaceData.Name;
+            this.ownerName = workspaceData.Owner;
         }
         //        public WorkspaceVersionSpec(WorkspaceInfo workspaceInfo)
         //        {
         //            this.Name = workspaceInfo.Name;
         //            this.ownerName = workspaceInfo.OwnerName;
         //        }
-        internal override XElement ToXml(XName element)
+        internal override XElement ToXml(string elementName)
         {
-            return new XElement(element,
+            return new XElement(elementName,
                 new XAttribute(XsiNs + "type", "WorkspaceVersionSpec"),
                 new XAttribute("name", Name),
                 new XAttribute("owner", OwnerName));

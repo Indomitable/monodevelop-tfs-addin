@@ -31,6 +31,7 @@ using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -57,8 +58,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         public static PendingSet FromXml(XElement element)
         {
             PendingSet pSet = new PendingSet();
-            pSet.Computer = element.GetAttribute("computer");
-            pSet.Owner = element.GetAttribute("owner");
+            pSet.Computer = element.GetAttributeValue("computer");
+            pSet.Owner = element.GetAttributeValue("owner");
             pSet.PendingChanges.AddRange(element.Descendants(element.Name.Namespace + "PendingChange").Select(PendingChange.FromXml));
             return pSet;
         }

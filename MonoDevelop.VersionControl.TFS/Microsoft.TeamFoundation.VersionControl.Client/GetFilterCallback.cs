@@ -28,9 +28,9 @@
 //
 
 using System.Collections.Generic;
-using System.Collections;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public delegate void GetFilterCallback(Workspace workspace,IEnumerable<ILocalUpdateOperation> operations,object userData);
+    internal delegate void GetFilterCallback(Workspace workspace, IEnumerable<ILocalUpdateOperation> operations, object userData);
 }

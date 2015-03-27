@@ -72,7 +72,7 @@ namespace MonoDevelop.VersionControl.TFS.Commands
                 }
             }
             var repo = (TFSRepository)VersionControlService.GetRepository(solution);
-            ResolveConflictsView.Open(repo, paths);
+            ResolveConflictsView.Open(repo.Workspace, paths);
         }
     }
 }

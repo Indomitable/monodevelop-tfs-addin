@@ -24,11 +24,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using MonoDevelop.Ide.Gui;
-using Xwt;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
+using MonoDevelop.Ide.Gui;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
+using Xwt;
+using MonoDevelop.VersionControl.TFS.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
@@ -36,7 +38,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
     {
         private readonly WorkItemListWidget widget = new WorkItemListWidget();
 
-        public WorkItemsView()
+        internal WorkItemsView()
         {
             this.ContentName = GettextCatalog.GetString("Work Items");
         }
@@ -46,10 +48,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             throw new NotImplementedException();
         }
 
-        private void Load(StoredQuery query)
+        private void Load(StoredQuery query, ProjectCollection collection)
         {
             this.ContentName = GettextCatalog.GetString("Work Items: " + query.QueryName);
-            widget.LoadQuery(query);
+            widget.LoadQuery(query, collection);
         }
 
         public override Widget Widget
@@ -60,21 +62,22 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             }
         }
 
-        public static void Open(StoredQuery query)
+        internal static void Open(StoredQuery query, ProjectConfig projectConfig)
         {
+            var collection = new ProjectCollection(projectConfig);
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var workView = view.GetContent<WorkItemsView>();
                 if (workView != null)
                 {
-                    workView.Load(query);
+                    workView.Load(query, collection);
                     view.Window.SelectWindow();
                     return;
                 }
             }
 
             WorkItemsView workItemsView = new WorkItemsView();
-            workItemsView.Load(query);
+            workItemsView.Load(query, collection);
             IdeApp.Workbench.OpenDocument(workItemsView, true);
         }
     }

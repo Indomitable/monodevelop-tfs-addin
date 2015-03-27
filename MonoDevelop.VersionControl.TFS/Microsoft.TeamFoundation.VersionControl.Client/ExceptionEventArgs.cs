@@ -28,10 +28,11 @@
 
 using System;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class ExceptionEventArgs : System.EventArgs
+    internal sealed class ExceptionEventArgs : EventArgs
     {
         private Workspace workspace;
         private Failure failure;

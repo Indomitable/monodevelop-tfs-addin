@@ -24,14 +24,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using Xwt;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
-using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using System.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl;
+using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -116,7 +117,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(List<ExtendedItem> items, Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        internal static void Open(List<ExtendedItem> items, Workspace workspace)
         {
             using (var dialog = new LockDialog())
             {

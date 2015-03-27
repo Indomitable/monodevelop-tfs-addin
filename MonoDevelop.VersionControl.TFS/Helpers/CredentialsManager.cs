@@ -26,7 +26,6 @@
 using System;
 using System.Net;
 using MonoDevelop.Core;
-using Microsoft.TeamFoundation.Client;
 
 #if DBus
 using DBus;

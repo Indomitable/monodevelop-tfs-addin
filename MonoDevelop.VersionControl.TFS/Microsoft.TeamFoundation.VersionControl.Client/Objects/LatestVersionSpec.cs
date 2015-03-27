@@ -31,15 +31,15 @@ using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class LatestVersionSpec : VersionSpec
+    sealed class LatestVersionSpec : VersionSpec
     {
         internal LatestVersionSpec()
         {
         }
 
-        internal override XElement ToXml(XName element)
+        internal override XElement ToXml(string elementName)
         {
-            return new XElement(element,
+            return new XElement(elementName,
                 new XAttribute(XsiNs + "type", "LatestVersionSpec"));
         }
 

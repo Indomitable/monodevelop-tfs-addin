@@ -27,7 +27,7 @@ using System;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class NodeListTests
     {

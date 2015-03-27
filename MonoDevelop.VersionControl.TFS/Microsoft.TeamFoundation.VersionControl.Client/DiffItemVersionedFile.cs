@@ -27,17 +27,11 @@
 //
 
 using System;
-using System.Collections;
-using System.IO;
-using System.Net;
-using System.Text;
-using System.Xml;
-using System.Web.Services;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public sealed class DiffItemVersionedFile : IDiffItem
+    internal sealed class DiffItemVersionedFile : IDiffItem
     {
         private string label;
         private Item item;

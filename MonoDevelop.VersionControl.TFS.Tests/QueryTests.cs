@@ -30,7 +30,7 @@ using System.Collections.Generic;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class QueryTests
     {

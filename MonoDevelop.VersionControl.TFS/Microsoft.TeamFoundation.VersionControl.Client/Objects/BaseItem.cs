@@ -23,14 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public abstract class BaseItem : IEquatable<BaseItem>, IComparable<BaseItem>
+    internal abstract class BaseItem : IEquatable<BaseItem>, IComparable<BaseItem>
     {
-        public abstract VersionControlPath ServerPath { get; }
+        public abstract RepositoryFilePath ServerPath { get; }
 
         public ItemType ItemType { get; protected set; }
 

@@ -32,7 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class LabelItemSpec
+    internal sealed class LabelItemSpec
     {
         public LabelItemSpec(ItemSpec itemSpec, VersionSpec version, bool exclude)
         {
@@ -41,12 +41,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.Exclude = exclude;
         }
 
-        internal XElement ToXml(XName element)
+        internal XElement ToXml(string elementName)
         {
-            return new XElement(element, 
+            return new XElement(elementName, 
                 new XAttribute("ex", Exclude.ToLowString()),
-                ItemSpec.ToXml(element.Namespace + "ItemSpec"),
-                Version.ToXml(element.Namespace + "Version"));
+                ItemSpec.ToXml("ItemSpec"),
+                Version.ToXml("Version"));
         }
 
         public bool Exclude { get; set; }

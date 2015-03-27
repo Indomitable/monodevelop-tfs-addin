@@ -30,6 +30,5 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public delegate void GettingEventHandler(Object sender,
-																						GettingEventArgs e);
+    internal delegate void GettingEventHandler(Object sender, GettingEventArgs e);
 }

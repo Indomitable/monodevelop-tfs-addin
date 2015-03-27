@@ -23,13 +23,15 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using Xwt;
+using System;
+using System.Collections.Generic;
+using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using System;
+using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
@@ -45,9 +47,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         readonly CheckBox forceGet = new CheckBox(GettextCatalog.GetString("Force get of file versions already in workspace"));
         //readonly CheckBox overrideGet = new CheckBox(GettextCatalog.GetString("Overwrite writeable files that are not checked out"));
         readonly SpinButton changeSetNumber = new SpinButton();
-        readonly Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace;
+        readonly Workspace workspace;
 
-        public GetSpecVersionDialog(Microsoft.TeamFoundation.VersionControl.Client.Workspace workspace)
+        internal GetSpecVersionDialog(Workspace workspace)
         {
             this.workspace = workspace;
             BuildGui();
@@ -104,7 +106,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             this.Content = content;
         }
 
-        public void AddItems(List<ExtendedItem> items)
+        internal void AddItems(List<ExtendedItem> items)
         {
             listStore.Clear();
             foreach (var item in items)
@@ -112,7 +114,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 var row = listStore.AddRow();
                 listStore.SetValue(row, itemField, item);
                 listStore.SetValue(row, isSelectedField, true);
-                VersionControlPath path = item.TargetServerItem;
+                RepositoryFilePath path = item.TargetServerItem;
                 listStore.SetValue(row, nameField, path.ItemName);
                 listStore.SetValue(row, pathField, path.ParentPath);
             }

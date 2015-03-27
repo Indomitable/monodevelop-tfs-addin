@@ -32,6 +32,8 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -101,18 +103,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                 VersionLocal = 0,
             };
 
-            getOperation.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            getOperation.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
-            getOperation.SourceLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("slocal"));
-            getOperation.TargetLocalItem = TfsPath.ToPlatformPath(element.GetAttribute("tlocal"));
-            getOperation.SourceServerItem = element.GetAttribute("sitem");
-            getOperation.TargetServerItem = element.GetAttribute("titem");
-            getOperation.VersionServer = GeneralHelper.XmlAttributeToInt(element.GetAttribute("sver"));
-            getOperation.VersionLocal = GeneralHelper.XmlAttributeToInt(element.GetAttribute("lver"));
-            getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttribute("chg"));
+            getOperation.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
+            getOperation.ItemId = element.GetIntAttribute("itemid");
+            getOperation.SourceLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("slocal"));
+            getOperation.TargetLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("tlocal"));
+            getOperation.SourceServerItem = element.GetAttributeValue("sitem");
+            getOperation.TargetServerItem = element.GetAttributeValue("titem");
+            getOperation.VersionServer = element.GetIntAttribute("sver");
+            getOperation.VersionLocal = element.GetIntAttribute("lver");
+            getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));
 
             // setup download url if found
-            getOperation.ArtifactUri = element.GetAttribute("durl");
+            getOperation.ArtifactUri = element.GetAttributeValue("durl");
 
             // here's what you get if you remap a working folder from one
             // team project to another team project with the same file
@@ -120,7 +122,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             // <GetOperation type="File" itemid="159025" slocal="foo.xml" titem="$/bar/foo.xml" lver="12002"><HashValue /></GetOperation>
 
             // look for a deletion id
-            getOperation.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
+            getOperation.DeletionId = element.GetIntAttribute("did");
             return getOperation;
         }
 

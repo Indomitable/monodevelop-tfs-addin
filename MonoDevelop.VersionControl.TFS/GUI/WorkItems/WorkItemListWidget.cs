@@ -25,12 +25,13 @@
 // THE SOFTWARE.
 using System;
 using Xwt;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Objects;
-using Microsoft.TeamFoundation.WorkItemTracking.Client;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Metadata;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Metadata;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
@@ -40,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         private DataField<bool> isCheckedField;
         private DataField<WorkItem> workItemField;
 
-        public WorkItemListWidget()
+        internal WorkItemListWidget()
         {
             this.PackStart(listView, true, true);
             listView.SelectionMode = SelectionMode.Multiple;
@@ -73,13 +74,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             Clipboard.SetText(builder.ToString());
         }
 
-        public void LoadQuery(StoredQuery query)
+        internal void LoadQuery(StoredQuery query, ProjectCollection collection)
         {
             listView.Columns.Clear();
             using (var progress = new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(true, false, false))
             {
                 var fields = CachedMetaData.Instance.Fields;
-                WorkItemStore store = new WorkItemStore(query);
+                WorkItemStore store = new WorkItemStore(query, collection);
                 var data = store.LoadByPage(progress);
                 if (data.Count > 0)
                 {
@@ -149,11 +150,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             }
         }
 
-        public delegate void WorkItemSelectedEventHandler(WorkItem workItem);
+        internal delegate void WorkItemSelectedEventHandler(WorkItem workItem);
 
-        public event WorkItemSelectedEventHandler OnSelectWorkItem;
+        internal event WorkItemSelectedEventHandler OnSelectWorkItem;
 
-        public event WorkItemSelectedEventHandler OnRemoveWorkItem;
+        internal event WorkItemSelectedEventHandler OnRemoveWorkItem;
 
         public bool ShowCheckboxes { get; set; }
     }

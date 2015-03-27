@@ -33,12 +33,12 @@ using System.Xml.Schema;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public abstract class VersionSpec
+    abstract class VersionSpec
     {
         protected static readonly XNamespace XsiNs = XmlSchema.InstanceNamespace;
         static readonly LatestVersionSpec latest = new LatestVersionSpec();
 
-        internal abstract XElement ToXml(XName element);
+        internal abstract XElement ToXml(string elementName);
 
         public static VersionSpec ParseSingleSpec(string versionSpec, string user)
         {

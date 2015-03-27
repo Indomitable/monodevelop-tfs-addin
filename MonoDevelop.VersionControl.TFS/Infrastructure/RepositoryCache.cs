@@ -29,10 +29,12 @@ using MonoDevelop.Core;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
-    public class RepositoryCache
+    internal class RepositoryCache
     {
         private readonly TFSRepository repo;
         private readonly List<ExtendedItem> cachedItems;
@@ -76,12 +78,12 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             cachedItems.Clear();
         }
 
-        public bool HasItem(VersionControlPath serverPath)
+        public bool HasItem(RepositoryFilePath serverPath)
         {
             return cachedItems.Any(c => c.ServerPath == serverPath);
         }
 
-        public ExtendedItem GetItem(VersionControlPath serverPath)
+        public ExtendedItem GetItem(RepositoryFilePath serverPath)
         {
             return cachedItems.Single(c => c.ServerPath == serverPath);
         }
@@ -90,10 +92,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             lock (locker)
             {
-                var workspace = repo.GetWorkspaceByLocalPath(localPath);
+                var workspace = repo.Workspace;
                 if (workspace == null)
                     return null;
-                var serverPath = workspace.GetServerPathForLocalPath(localPath);
+                var serverPath = workspace.Data.GetServerPathForLocalPath(localPath);
                 var item = cachedItems.SingleOrDefault(ex => ex.ServerPath == serverPath);
                 if (item == null)
                 {
@@ -114,10 +116,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 var workspaceFilesMapping = new Dictionary<Workspace, List<ItemSpec>>();
                 foreach (var path in paths) 
                 {
-                    var workspace = repo.GetWorkspaceByLocalPath(path);
+                    var workspace = repo.Workspace;
                     if (workspace == null)
                         continue;
-                    var serverPath = workspace.GetServerPathForLocalPath(path);
+                    var serverPath = workspace.Data.GetServerPathForLocalPath(path);
                     if (HasItem(serverPath) && recursionType == RecursionType.None)
                     {
                         items.Add(GetItem(serverPath));
@@ -152,10 +154,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             lock(locker)
             {
-                var workspace = repo.GetWorkspaceByLocalPath(localPath);
+                var workspace = repo.Workspace;
                 if (workspace == null)
                     return;
-                var serverPath = workspace.GetServerPathForLocalPath(localPath);
+                var serverPath = workspace.Data.GetServerPathForLocalPath(localPath);
                 var repoItem = workspace.GetExtendedItem(serverPath, ItemType.Any);
                 AddToCache(repoItem);
             }

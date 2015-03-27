@@ -28,10 +28,11 @@
 
 using System;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class GettingEventArgs : System.EventArgs
+    internal sealed class GettingEventArgs : EventArgs
     {
         private Workspace workspace;
         private OperationStatus status;

@@ -32,10 +32,12 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public sealed class Item: BaseItem
+    internal sealed class Item: BaseItem
     {
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
@@ -44,23 +46,23 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             if (element == null)
                 return null;
             Item item = new Item();
-            item.ServerItem = element.GetAttribute("item");
-            item.ItemType = EnumHelper.ParseItemType(element.GetAttribute("type"));
-            item.DeletionId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("did"));
-            item.CheckinDate = DateTime.Parse(element.GetAttribute("date"));
-            item.ChangesetId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("cs"));
-            item.ItemId = GeneralHelper.XmlAttributeToInt(element.GetAttribute("itemid"));
-            item.Encoding = GeneralHelper.XmlAttributeToInt(element.GetAttribute("enc"));
+            item.ServerItem = element.GetAttributeValue("item");
+            item.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
+            item.DeletionId = element.GetIntAttribute("did");
+            item.CheckinDate = element.GetDateAttribute("date");
+            item.ChangesetId = element.GetIntAttribute("cs");
+            item.ItemId = element.GetIntAttribute("itemid");
+            item.Encoding = element.GetIntAttribute("enc");
 
-            if (!string.IsNullOrEmpty(element.GetAttribute("isbranch")))
+            if (!string.IsNullOrEmpty(element.GetAttributeValue("isbranch")))
             {
-                item.IsBranch = GeneralHelper.XmlAttributeToBool(element.GetAttribute("isbranch"));
+                item.IsBranch = element.GetBooleanAttribute("isbranch");
             }
             if (item.ItemType == ItemType.File)
             {
-                item.ContentLength = GeneralHelper.XmlAttributeToInt(element.GetAttribute("len"));
-                item.ArtifactUri = element.GetAttribute("durl");
-                item.HashValue = GeneralHelper.ToByteArray(element.GetAttribute("hash"));
+                item.ContentLength = element.GetIntAttribute("len");
+                item.ArtifactUri = element.GetAttributeValue("durl");
+                item.HashValue = element.GetByteArrayAttribute("hash");
             }
             return item;
         }
@@ -123,7 +125,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public string ServerItem { get; private set; }
 
-        public override VersionControlPath ServerPath { get { return ServerItem; } }
+        public override RepositoryFilePath ServerPath { get { return ServerItem; } }
 
         public string ShortName
         {

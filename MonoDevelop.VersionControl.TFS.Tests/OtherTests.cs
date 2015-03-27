@@ -26,7 +26,7 @@
 using System;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class OtherTests
     {

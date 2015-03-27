@@ -29,7 +29,7 @@ using System.Xml.Linq;
 using System.Xml.Schema;
 using System.Web.Services.Protocols;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class ServiceChecker
     {

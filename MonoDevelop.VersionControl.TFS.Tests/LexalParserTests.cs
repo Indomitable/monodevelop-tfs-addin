@@ -29,7 +29,7 @@ using System.Xml.Linq;
 using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 using Xunit;
 
-namespace MonoDevelop.VersionControl.TFS.Tests
+namespace Tests
 {
     public class LexalParserTests
     {

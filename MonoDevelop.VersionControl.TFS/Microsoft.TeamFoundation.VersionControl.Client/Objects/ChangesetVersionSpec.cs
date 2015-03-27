@@ -32,7 +32,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class ChangesetVersionSpec : VersionSpec
+    sealed class ChangesetVersionSpec : VersionSpec
     {
         public ChangesetVersionSpec(string changesetId)
         {
@@ -44,9 +44,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.ChangesetId = changesetId;
         }
 
-        internal override XElement ToXml(XName element)
+        internal override XElement ToXml(string elementName)
         {
-            return new XElement(element, 
+            return new XElement(elementName, 
                 new XAttribute(XsiNs + "type", "ChangesetVersionSpec"),
                 new XAttribute("cs", ChangesetId));
         }
