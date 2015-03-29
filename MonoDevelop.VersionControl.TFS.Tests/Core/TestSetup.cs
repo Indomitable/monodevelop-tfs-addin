@@ -1,5 +1,5 @@
 ﻿//
-// CommonStructureService.cs
+// TestSetup.cs
 //
 // Author:
 //       Ventsislav Mladenov <ventsislav.mladenov@gmail.com>
@@ -24,21 +24,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using Microsoft.TeamFoundation.Client.Services;
-using Microsoft.TeamFoundation.Client;
-using MonoDevelop.VersionControl.TFS.Client;
+using Xunit;
+using MonoDevelop.VersionControl.TFS.Configuration;
 
-namespace Services
+namespace Core
 {
-    public class CommonStructureServiceTest
+    public class ProjectCollectionServiceTest 
     {
-        readonly CommonStructureService service;
-        public CommonStructureServiceTest()
-        {
+        ServerConfig serverConfig;
 
-            var server = TeamFoundationServerFactory.Create(ServerType.OnPremise, );
-            service = new CommonStructureService();
-            //service.Collection
+        #region IUseFixture implementation
+
+        public void SetFixture(ServerFixture data)
+        {
+            this.serverConfig = data.ServerConfig;
+        }
+
+        #endregion
+
+        public ProjectCollectionServiceTest()
+        {
+            
         }
     }
 }

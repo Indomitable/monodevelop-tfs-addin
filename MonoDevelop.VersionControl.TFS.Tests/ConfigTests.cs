@@ -26,8 +26,8 @@
 using System;
 using Xunit;
 using MonoDevelop.VersionControl.TFS.Configuration;
-using MonoDevelop.VersionControl.TFS.Client;
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Core;
 
 namespace Tests
 {
@@ -35,14 +35,7 @@ namespace Tests
     {
         private ServerConfig CreateServerConfig()
         {
-            var server = new ServerConfig();
-            server.Type = ServerType.OnPremise;
-            server.Name = "TestServer";
-            server.Domain = "TestDomain";
-            server.Url = new Uri("http://tfs.company.com:8080/tfs");
-            server.UserName = "MyUser";
-            server.Password = "MyPassword";
-            return server;
+            return new ServerConfig(ServerType.OnPremise, "TestServer", new Uri("http://tfs.company.com:8080/tfs"), "MyUser", "TestDomain", "MyUser", "MyPassword");
         }
 
         private ProjectCollectionConfig CreateProjectCollectionConfig()
@@ -50,8 +43,7 @@ namespace Tests
             var collection = new ProjectCollectionConfig();
             collection.Id = Guid.Parse("a4c1be27-e9c4-470d-9adb-fdb3bbb72ccb");
             collection.Name = "ProjectCollection";
-            collection.LocationServiceUrl = new Uri("http://tfs.company.local:8080/tfs/ProjectCollection/Services/v3.0/LocationService.asmx");
-            collection.Url = new Uri("http://tfs.company.local:8080/tfs/ProjectCollection");
+            collection.LocationServicePath = "/ProjectCollection/Services/v3.0/LocationService.asmx";
             return collection;
         }
 

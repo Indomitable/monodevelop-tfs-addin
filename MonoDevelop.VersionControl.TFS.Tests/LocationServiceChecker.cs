@@ -27,7 +27,6 @@ using System;
 using System.Runtime.InteropServices;
 using System.Xml.Linq;
 using System.Net;
-using Microsoft.TeamFoundation.Client;
 using Xunit;
 
 namespace Tests

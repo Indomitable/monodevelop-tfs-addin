@@ -24,8 +24,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using Xunit;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Query;
 
 namespace Tests
 {

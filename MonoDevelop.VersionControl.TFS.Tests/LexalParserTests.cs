@@ -24,16 +24,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System.Xml.Linq;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 using Xunit;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Query;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Query.Where;
 
 namespace Tests
 {
     public class LexalParserTests
     {
         [Fact]
+        [Theory]
         public void Parse1()
         {
             XElement el = XElement.Parse(@"<f>SELECT [System.Id], [System.WorkItemType], [System.AssignedTo], [System.CreatedBy], [Microsoft.VSTS.Common.Priority], [System.Title], [System.Description] 

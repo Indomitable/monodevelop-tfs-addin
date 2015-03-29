@@ -25,10 +25,10 @@
 // THE SOFTWARE.
 using System;
 using System.Xml.Linq;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.WorkItemTracking.Client.Query.Where;
 using Xunit;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Query;
+using MonoDevelop.VersionControl.TFS.WorkItemTracking.Query.Where;
 
 namespace Tests
 {
@@ -110,7 +110,7 @@ order by [System.Id]</f>");
             for (int i = 0; i < types.Length; i++)
             {
                 if (nodes[i].NodeType != types[i])
-                    throw new Xunit.Sdk.AssertException("Invalid Node Type");
+                    throw new Xunit.Sdk.AssertActualExpectedException(types[i], nodes[i].NodeType, "Invalid Node Type");
             }
         }
 
