@@ -31,8 +31,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class AddServerDialog : Dialog
     {
-        readonly AddOnPremiseServerWidget widget = new AddOnPremiseServerWidget();
-        readonly AddCloudServerWidget vsoWidget = new AddCloudServerWidget();
+        readonly AddServerWidget widget = new AddServerWidget();
         readonly Notebook notebook = new Notebook();
 
         public AddServerDialog()
@@ -44,9 +43,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         {
             this.Title = GettextCatalog.GetString("Add Team Foundation Server");
             this.Buttons.Add(Command.Ok, Command.Cancel);
-            notebook.Add(widget, GettextCatalog.GetString("On-Premise Server (Local Server)"));
-            notebook.Add(vsoWidget, GettextCatalog.GetString("Cloud Server (Visual Studio Online)"));
-            this.Content = notebook;
+            this.Content = widget;
             this.Resizable = false;
         }
 
@@ -54,7 +51,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         { 
             get 
             { 
-                return notebook.CurrentTabIndex == 0 ? widget.Result : vsoWidget.Result; 
+                return widget.Result; 
             } 
         }
     }

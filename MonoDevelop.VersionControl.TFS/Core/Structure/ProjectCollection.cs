@@ -26,7 +26,7 @@
 using System;
 using System.Linq;
 using System.Collections.Generic;
-using MonoDevelop.VersionControl.TFS.Configuration;
+using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.VersionControl.Services;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
@@ -40,32 +40,33 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
     sealed class ProjectCollection : IEquatable<ProjectCollection>, IComparable<ProjectCollection>
     {
-        readonly ProjectCollectionConfig config;
         Lazy<RepositoryService> repositoryService;
         Lazy<ClientService> clientService;
         Lazy<CommonStructureService> commonStructureService;
 
-        public ProjectCollection(ProjectConfig projectConfig)
-            : this(projectConfig.Collection, TeamFoundationServerFactory.Create(projectConfig.Collection.Server))
-        {
-        }
+//        public ProjectCollection(ProjectConfig projectConfig)
+//            : this(projectConfig.Collection, new TeamFoundationServer(projectConfig.Collection.Server))
+//        {
+//        }
 
-        public ProjectCollection(ProjectCollectionConfig config, BaseTeamFoundationServer server)
+        public ProjectCollection(BaseTeamFoundationServer server)
         {
             this.Server = server;
-            this.config = config;
-            repositoryService = new Lazy<RepositoryService>(() => this.GetService<RepositoryService>());
-            clientService = new Lazy<ClientService>(() => this.GetService<ClientService>());
-            commonStructureService = new Lazy<CommonStructureService>(() => this.GetService<CommonStructureService>());
+            repositoryService = new Lazy<RepositoryService>(this.GetService<RepositoryService>);
+            clientService = new Lazy<ClientService>(this.GetService<ClientService>);
+            commonStructureService = new Lazy<CommonStructureService>(this.GetService<CommonStructureService>);
         }
 
-        public Guid Id { get { return config.Id; } }
+        public Guid Id { get; private set; }
 
-        public string Name { get { return config.Name; } }
+        public string Name { get; private set; }
 
-        public List<ProjectConfig> FetchProjects()
+        public string LocationServicePath { get; private set; }
+
+        private List<ProjectInfo> FetchProjects()
         {
-            return this.commonStructureService.Value.ListAllProjects();
+            var projectConfigs = this.commonStructureService.Value.ListAllProjects();
+            return projectConfigs;
         }
 
         public void LoadProjects()
@@ -99,9 +100,54 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         public TService GetService<TService>()
             where TService : TFSService
         {
-            var locationService = new LocationService(this.Server.Uri, config.LocationServicePath);
+            var locationService = new LocationService(this.Server.Uri, this.LocationServicePath);
             return locationService.LoadService<TService>();
         }
+
+        #region Serialization
+
+        public XElement ToConfigXml()
+        {
+            var element = new XElement("ProjectCollection",
+                                new XAttribute("Id", this.Id),
+                                new XAttribute("Name", this.Name),
+                                new XAttribute("LocationServicePath", this.LocationServicePath));
+
+            element.Add(Projects.Select(p => p.ToConfigXml()));
+            return element;
+        }
+
+        public static ProjectCollection FromServerXml(XElement element, BaseTeamFoundationServer server)
+        {
+            var projectCollection = new ProjectCollection(server);
+            projectCollection.Id = Guid.Parse(catalogResource.Attribute("Identifier").Value);
+            projectCollection.Name = catalogResource.Attribute("DisplayName").Value;
+
+            var locationServiceElement = catalogResource.XPathSelectElement(
+                "./msg:CatalogServiceReferences/msg:CatalogServiceReference/msg:ServiceDefinition[@serviceType='LocationService']",
+                this.NsResolver
+            );
+            projectCollection.LocationServicePath = locationServiceElement.Attribute("relativePath").Value;
+
+            return projectCollection;
+        }
+
+        public static ProjectCollection FromConfigXml(XElement element, BaseTeamFoundationServer server)
+        {
+            if (!string.Equals(element.Name.LocalName, "ProjectCollection", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Invalid xml element");
+
+            var projectCollection = new ProjectCollection(server);
+            projectCollection.Id = Guid.Parse(element.Attribute("Id").Value);
+            projectCollection.Name = element.Attribute("Name").Value;
+            projectCollection.LocationServicePath = element.Attribute("LocationServicePath").Value;
+
+            projectCollection.Projects.AddRange(element.Elements("Project").Select(e => ProjectInfo.FromConfigXml(e, projectCollection)));
+
+            return projectCollection;
+        }
+
+        #endregion
 
         #region Workspace Management
 

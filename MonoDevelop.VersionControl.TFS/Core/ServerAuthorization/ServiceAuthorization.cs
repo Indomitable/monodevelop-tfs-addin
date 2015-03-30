@@ -1,5 +1,5 @@
 ﻿//
-// IBasicAuthenticatedServer.cs
+// ServiceAuthorization.cs
 //
 // Author:
 //       Ventsislav Mladenov <ventsislav.mladenov@gmail.com>
@@ -23,14 +23,37 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+using System;
+using System.Net;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+
 namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthentication
 {
-    public interface IBasicAuthenticatedServer
-    {
-        /// <summary>
-        /// namespace MonoDevelop.VersionControl.TFS.Corerd"
-        /// </summary>
-        /// <value>The authorization header string.</value>
-        string AuthorizationHeader { get; }
-    }
+//    internal static class ServiceAuthorization
+//    {
+//        public static void Authorize(this HttpWebRequest request, BaseTeamFoundationServer server)
+//        {
+//            if (server is INetworkCredentialsAuthorizatedServer)
+//            {
+//                request.Credentials = ((INetworkCredentialsAuthorizatedServer)server).Credentials;
+//            }
+//            else if (server is IBasicAuthenticatedServer) 
+//            {
+//                request.Headers.Add(HttpRequestHeader.Authorization, ((IBasicAuthenticatedServer)server).AuthorizationHeader);
+//            }
+//        }
+//
+//        public static void Authorize(this WebClient webClient, BaseTeamFoundationServer server)
+//        {
+//            if (server is INetworkCredentialsAuthorizatedServer)
+//            {
+//                webClient.Credentials = ((INetworkCredentialsAuthorizatedServer)server).Credentials;
+//            }
+//            else if (server is IBasicAuthenticatedServer) 
+//            {
+//                webClient.Headers.Add(HttpRequestHeader.Authorization, ((IBasicAuthenticatedServer)server).AuthorizationHeader);
+//            }
+//        }
+//    }
 }
+

@@ -2,9 +2,9 @@
 // Microsoft.TeamFoundation.Server.ProjectInfo
 //
 // Authors:
-//	Joel Reed (joelwreed@gmail.com)
+//	Joel Reed (joelwreed@gmail.com), Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
 //
-// Copyright (C) 2007 Joel Reed
+// Copyright (C) 2007-2015 Joel Reed, Ventsislav Mladenov
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -27,28 +27,63 @@
 //
 
 using System;
-using MonoDevelop.VersionControl.TFS.Configuration;
+using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
     sealed class ProjectInfo: IEquatable<ProjectInfo>, IComparable<ProjectInfo>
     {
-        ProjectConfig config;
-        public ProjectInfo(ProjectConfig config, ProjectCollection collection)
+        private ProjectInfo(ProjectCollection collection)
         {
             this.Collection = collection;
-            this.config = config;
         }
 
-        public string Name { get { return config.Name; } }
+        public string Name { get; private set;  }
 
-        public ProjectState State { get { return config.State; } }
+        public ProjectState State { get; private set; }
 
-        public Uri Uri { get { return config.Url; } }
+        public Uri Uri { get; private set; }
 
-        public Guid Id { get { return config.Id; }}
+        public Guid Id { get; private set; }
 
         public ProjectCollection Collection { get; private set; }
+
+        #region Serialization
+
+        public XElement ToConfigXml()
+        {
+            return new XElement("Project",
+                        new XAttribute("Name", this.Name),
+                        new XAttribute("Status", this.State),
+                        new XAttribute("Uri", this.Uri));
+        }
+
+        public static ProjectInfo FromServerXml(XElement element, ProjectCollection collection)
+        {
+            var projectInfo = new ProjectInfo(collection);
+            projectInfo.Name = element.GetElement("Name").Value;
+            projectInfo.Uri = new Uri(element.GetElement("Uri").Value);
+            projectInfo.Id = Guid.Parse(projectInfo.Uri.OriginalString.Remove(0, 36));
+            projectInfo.State = (ProjectState)Enum.Parse(typeof(ProjectState), element.GetElement("Status").Value);
+            return projectInfo;
+        }
+
+        public static ProjectInfo FromConfigXml(XElement element, ProjectCollection collection)
+        {
+            if (!string.Equals(element.Name.LocalName, "Project", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Invalid xml element");
+
+            var projectInfo = new ProjectInfo(collection);
+            projectInfo.Name = element.Attribute("Name").Value;
+            projectInfo.Uri = new Uri(element.Attribute("Uri").Value);
+            projectInfo.Id = Guid.Parse(projectInfo.Uri.OriginalString.Remove(0, 36));
+            projectInfo.State = (ProjectState)Enum.Parse(typeof(ProjectState), element.Attribute("Status").Value);
+            return projectInfo;
+        }
+
+
+        #endregion
 
         #region Equal
 

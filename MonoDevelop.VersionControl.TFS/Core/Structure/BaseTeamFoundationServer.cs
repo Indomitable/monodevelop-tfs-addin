@@ -1,52 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Web.Services.Protocols;
+using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
-    abstract class BaseTeamFoundationServer: IEquatable<BaseTeamFoundationServer>, IComparable<BaseTeamFoundationServer>
+    sealed class BaseTeamFoundationServer: IEquatable<BaseTeamFoundationServer>, IComparable<BaseTeamFoundationServer>
     {
-        protected ServerConfig Config;
-        private readonly string password;
-
-        protected BaseTeamFoundationServer(ServerConfig config)
+        BaseTeamFoundationServer()
         {
-            this.Config = config;
-            password = config.HasPassword ? config.Password : CredentialsManager.GetPassword(config.Url);
+            ProjectCollections = new List<ProjectCollection>();
         }
 
         public ServerConfig FetchServerStructure()
         {
-            var projectCollectionsService = new ProjectCollectionService(Uri);
+            var projectCollectionsService = new ProjectCollectionService(Uri) {Server = this};
             var projectCollectionConfigs = projectCollectionsService.GetProjectCollections();
-            this.Config.ProjectCollections.Clear();
+            this.config.ProjectCollections.Clear();
             foreach (var projectCollectionConfig in projectCollectionConfigs)
             {
+                projectCollectionConfig.Server = config;
                 projectCollectionConfig.Projects.Clear();
                 var projectCollection = new ProjectCollection(projectCollectionConfig, this);
                 projectCollectionConfig.Projects.AddRange(projectCollection.FetchProjects());
             }
-            this.Config.ProjectCollections.AddRange(projectCollectionConfigs);
-            return this.Config;
+            this.config.ProjectCollections.AddRange(projectCollectionConfigs);
+            return this.config;
         }
 
-        public bool IsPasswordSavedInXml { get { return this.Config.HasPassword; } }
+        public string Name { get; private set; }
 
-        public abstract string UserName { get; }
+        public Uri Uri { get; private set; }
 
-        public string Password { get { return this.password; } }
-
-        public string Name { get { return this.Config.Name; } }
-
-        public Uri Uri { get { return this.Config.Url; } }
+        public IServerAuthorization Authorization { get; private set; }
 
         public List<ProjectCollection> ProjectCollections { get; set; }
 
+        public XElement ToConfigXml()
+        {
+            var element = new XElement("Server",
+                                new XAttribute("Name", this.Name),
+                                new XAttribute("Uri", this.Uri));
+            element.Add(new XElement("Auth", Authorization.ToConfigXml()));
+            element.Add(new XElement("ProjectCollections", this.ProjectCollections.Select(pc => pc.ToConfigXml())));
+            return element;
+        }
+
+        public static BaseTeamFoundationServer FromConfigXml(XElement element)
+        {
+            if (!string.Equals(element.Name.LocalName, "Server", StringComparison.OrdinalIgnoreCase))
+                throw new Exception("Invalid xml element");
+
+            var server = new BaseTeamFoundationServer();
+            server.Name = element.Attribute("Name").Value;
+            server.Uri = new Uri(element.Attribute("Uri").Value);
+
+            var authElement = (XElement)element.Element("Auth").FirstNode;
+            server.Authorization = ServerAuthorizationFactory.GetServerAuthorization(authElement, server.Uri);
+
+            server.ProjectCollections.AddRange(element.GetDescendants("ProjectCollection").Select(ProjectCollection.FromConfigXml));
+            server.ProjectCollections.ForEach(pc => pc.Server = server);
+
+            return server;
+        }
+        
         #region Equal
 
-        #region IComparable<BaseTeamFoundationServer> Members
+        #region IComparable<TeamFoundationServer> Members
 
         public int CompareTo(BaseTeamFoundationServer other)
         {
@@ -55,7 +80,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 
         #endregion
 
-        #region IEquatable<BaseTeamFoundationServer> Members
+        #region IEquatable<TeamFoundationServer> Members
 
         public bool Equals(BaseTeamFoundationServer other)
         {

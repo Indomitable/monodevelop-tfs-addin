@@ -36,13 +36,18 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
+      <MonoDevelopRoot>C:\Program Files (x86)\Xamarin Studio</MonoDevelopRoot>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="MonoDevelop.VersionControl">
-      <HintPath>..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' " >..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' " >$(MonoDevelopRoot)\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
     <Reference Include="MonoDevelop.Core">
-      <HintPath>..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' " >..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' " >$(MonoDevelopRoot)\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />

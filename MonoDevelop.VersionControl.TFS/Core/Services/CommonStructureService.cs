@@ -27,7 +27,8 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using MonoDevelop.VersionControl.TFS.Core.Services.Resolvers;
-using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Services
 {
@@ -48,12 +49,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             }
         }
 
-        public List<ProjectConfig> ListAllProjects()
+        public List<ProjectInfo> ListAllProjects(ProjectCollection collection)
         {
             SoapInvoker invoker = new SoapInvoker(this);
             invoker.CreateEnvelope("ListAllProjects");
             var resultEl = invoker.InvokeResult();
-            return new List<ProjectConfig>(resultEl.Elements(this.MessageNs + "ProjectInfo").Select(ProjectConfig.FromServerXml));
+            return new List<ProjectInfo>(resultEl.GetElements("ProjectInfo").Select(e => ProjectInfo.FromServerXml(e, collection)));
         }
     }
 }

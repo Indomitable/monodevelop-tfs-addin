@@ -29,6 +29,8 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Linq;
 using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Services
 {
@@ -61,7 +63,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             SoapInvoker invoker = new SoapInvoker(this);
             //var serviceNs = 
             var message = invoker.CreateEnvelope("QueryResourcesByType");
-            message.Add(new XElement(MessageNs + "resourceTypes", new XElement(MessageNs + "guid", projectCollectionsTypeId)));
+            message.AddElement(new XElement("resourceTypes", new XElement("guid", projectCollectionsTypeId)));
             var resultElement = invoker.InvokeResult();
             return resultElement.XPathSelectElements(
                 string.Format("./msg:CatalogResources/msg:CatalogResource[@ResourceTypeIdentifier='{0}']", projectCollectionsTypeId), 
@@ -69,20 +71,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             );
         }
 
-        public List<ProjectCollectionConfig> GetProjectCollections()
+        public List<ProjectCollection> GetProjectCollections(BaseTeamFoundationServer server)
         {
-            var collection = new List<ProjectCollectionConfig>();
+            var collection = new List<ProjectCollection>();
             foreach (var catalogResource in GetXmlCollections())
             {
-                var config = new ProjectCollectionConfig();
-                config.Id = Guid.Parse(catalogResource.Attribute("Identifier").Value);
-                config.Name = catalogResource.Attribute("DisplayName").Value;
 
-                var locationServiceElement = catalogResource.XPathSelectElement(
-                    "./msg:CatalogServiceReferences/msg:CatalogServiceReference/msg:ServiceDefinition[@serviceType='LocationService']",
-                    this.NsResolver
-                );
-                config.LocationServicePath = locationServiceElement.Attribute("relativePath").Value;
                 collection.Add(config);
             }
             return collection;

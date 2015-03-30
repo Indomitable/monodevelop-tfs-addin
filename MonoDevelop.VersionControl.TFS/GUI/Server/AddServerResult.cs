@@ -30,7 +30,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class AddServerResult
     {
-        public ServerType Type { get; set; }
         public Uri Url { get; set; }
         public string Name { get; set; }
         public string UserName { get; set; }

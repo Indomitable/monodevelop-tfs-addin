@@ -31,7 +31,7 @@ using MonoDevelop.VersionControl.TFS.Core;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
-    public class AddOnPremiseServerWidget : VBox, IAddServerWidget
+    public class AddServerWidget : VBox
     {
         readonly TextEntry _nameEntry = new TextEntry();
         readonly TextEntry _hostEntry = new TextEntry();
@@ -42,7 +42,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         readonly RadioButton _httpsRadio = new RadioButton(GettextCatalog.GetString("HTTPS"));
         readonly TextEntry _previewEntry = new TextEntry();
 
-        public AddOnPremiseServerWidget()
+        public AddServerWidget()
         {
             this.BuildGui();
         }
