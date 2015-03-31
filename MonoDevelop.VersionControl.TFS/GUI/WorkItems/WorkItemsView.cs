@@ -30,7 +30,6 @@ using MonoDevelop.Ide.Gui;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xwt;
-using MonoDevelop.VersionControl.TFS.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
 {
@@ -62,9 +61,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
             }
         }
 
-        internal static void Open(StoredQuery query, ProjectConfig projectConfig)
+        internal static void Open(StoredQuery query, ProjectInfo projectInfo)
         {
-            var collection = new ProjectCollection(projectConfig);
+            var collection = projectInfo.Collection;
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var workView = view.GetContent<WorkItemsView>();

@@ -54,7 +54,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             SoapInvoker invoker = new SoapInvoker(this);
             invoker.CreateEnvelope("ListAllProjects");
             var resultEl = invoker.InvokeResult();
-            return new List<ProjectInfo>(resultEl.GetElements("ProjectInfo").Select(e => ProjectInfo.FromServerXml(e, collection)));
+            return new List<ProjectInfo>(resultEl.GetElements("ProjectInfo").Select(e => ProjectInfo.FromServerXml(e, collection)).OrderBy(p => p.Name));
         }
     }
 }

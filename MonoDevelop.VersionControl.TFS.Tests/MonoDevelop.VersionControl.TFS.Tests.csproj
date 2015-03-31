@@ -1,5 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props" Condition="Exists('..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
@@ -12,6 +13,7 @@
     <UseMSBuildEngine>False</UseMSBuildEngine>
     <ReleaseVersion>1.7</ReleaseVersion>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <NuGetPackageImportStamp>b347e4df</NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,17 +39,17 @@
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(OS)' == 'Windows_NT' ">
-      <MonoDevelopRoot>C:\Program Files (x86)\Xamarin Studio</MonoDevelopRoot>
+    <MonoDevelopRoot>C:\Program Files (x86)\Xamarin Studio</MonoDevelopRoot>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="MonoDevelop.VersionControl">
-      <HintPath Condition=" '$(OS)' != 'Windows_NT' " >..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
-      <HintPath Condition=" '$(OS)' == 'Windows_NT' " >$(MonoDevelopRoot)\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
     <Reference Include="MonoDevelop.Core">
-      <HintPath Condition=" '$(OS)' != 'Windows_NT' " >..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
-      <HintPath Condition=" '$(OS)' == 'Windows_NT' " >$(MonoDevelopRoot)\bin\MonoDevelop.Core.dll</HintPath>
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\bin\MonoDevelop.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
@@ -75,7 +77,6 @@
     <Compile Include="OtherTests.cs" />
     <Compile Include="MessageTests.cs" />
     <Compile Include="ConfigTests.cs" />
-    <Compile Include="Core\TestSetup.cs" />
     <Compile Include="Core\ServerFixture.cs" />
     <Compile Include="TestClass.cs" />
   </ItemGroup>
@@ -98,9 +99,17 @@
   </ProjectExtensions>
   <ItemGroup>
     <Folder Include="Services\" />
-    <Folder Include="Core\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\xunit.runner.visualstudio.2.0.0\build\net20\xunit.runner.visualstudio.props'))" />
+  </Target>
 </Project>

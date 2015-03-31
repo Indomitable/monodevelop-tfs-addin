@@ -34,7 +34,6 @@ using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xwt;
-using MonoDevelop.VersionControl.TFS.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -186,19 +185,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         {
             var node = _treeStore.GetNavigatorAt(e.Position);
             var nodeType = node.GetValue(_type);
-            ProjectConfig project;
+            ProjectInfo project;
             switch (nodeType)
             {
                 case NodeType.SourceControl:
                     node.MoveToParent();
-                    project = (ProjectConfig)node.GetValue(_item);
+                    project = (ProjectInfo)node.GetValue(_item);
                     SourceControlExplorerView.Open(project);
                     break;
                 case NodeType.WorkItemQuery:
                     var query = (StoredQuery)node.GetValue(_item);
                     node.MoveToParent(); //WorkItems
                     node.MoveToParent(); //Project
-                    project = (ProjectConfig)node.GetValue(_item);
+                    project = (ProjectInfo)node.GetValue(_item);
                     WorkItemsView.Open(query, project);
                     break;
                 default:

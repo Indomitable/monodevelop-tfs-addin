@@ -28,7 +28,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using MonoDevelop.Core;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.Server;
 using MonoDevelop.VersionControl.TFS.VersionControl;
@@ -42,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS
         {
             if (VersionControlService.IsGloballyDisabled)
             {
-                var pad = MonoDevelop.Ide.IdeApp.Workbench.GetPad<MonoDevelop.VersionControl.TFS.GUI.TeamExplorerPad>();
+                var pad = Ide.IdeApp.Workbench.GetPad<GUI.TeamExplorerPad>();
                 if (pad != null)
                 {
                     pad.Destroy();
@@ -119,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS
             var serverPath = new Uri(parts[1].Trim());
             foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                if (string.Equals(serverPath.Host, server.Url.Host, StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(serverPath.Host, server.Uri.Host, StringComparison.OrdinalIgnoreCase))
                 {
                     var repo = GetRepoFromServer(server, solutionPath);
                     if (repo != null)
@@ -140,12 +139,10 @@ namespace MonoDevelop.VersionControl.TFS
             return null;
         }
 
-        private TFSRepository GetRepoFromServer(ServerConfig serverConfig, FilePath path)
+        private TFSRepository GetRepoFromServer(TeamFoundationServer server, FilePath path)
         {
-            var server = TeamFoundationServerFactory.Create(serverConfig);
-            foreach (var collectionConfig in serverConfig.ProjectCollections)
+            foreach (var projectCollection in server.ProjectCollections)
             {
-                var projectCollection = new ProjectCollection(collectionConfig, server);
                 var workspaces = projectCollection.GetLocalWorkspaces();
                 var workspaceData = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
                 if (workspaceData != null)

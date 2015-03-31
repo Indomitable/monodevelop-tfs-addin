@@ -24,19 +24,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using MonoDevelop.VersionControl.TFS.Configuration;
-using MonoDevelop.VersionControl.TFS.Core;
+using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace Core
 {
-    public class ServerFixture
+    class ServerFixture
     {
-        public ServerConfig ServerConfig;
+        internal TeamFoundationServer Server;
         public ServerFixture()
         {
-            ServerConfig = new ServerConfig(ServerType.OnPremise, name: "CodePlex", 
-                url: new Uri("https://tfs.codeplex.com/tfs/"), userName: "mono_tfs_plugin_cp", 
-                domain: "snd", authUserName: "mono_tfs_plugin_cp", password: "mono_tfs_plugin");
+            var xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
+  <Auth>
+    <Ntlm UserName=""mono_tfs_plugin_cp"" Password=""mono_tfs_plugin"" Domain=""snd"" />
+  </Auth>
+</Server>";
+
+            Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
         }
     }
 }

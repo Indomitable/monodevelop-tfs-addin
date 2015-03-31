@@ -80,7 +80,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             try
             {
                 var client = new WebClient();
-                client.Authorize(this.Server);
+                this.Server.Authorization.Authorize(client);
                 var tempFileName = this.GetTempFileName(".gz");
                 UriBuilder bulder = new UriBuilder(this.Url);
                 bulder.Query = artifactUri;

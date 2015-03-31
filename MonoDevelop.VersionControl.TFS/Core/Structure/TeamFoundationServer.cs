@@ -1,41 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web.Services.Protocols;
 using System.Xml.Linq;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Core.Services;
+using MonoDevelop.VersionControl.TFS.GUI.Server;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
-    sealed class BaseTeamFoundationServer: IEquatable<BaseTeamFoundationServer>, IComparable<BaseTeamFoundationServer>
+    sealed class TeamFoundationServer: IEquatable<TeamFoundationServer>, IComparable<TeamFoundationServer>
     {
-        BaseTeamFoundationServer()
+        TeamFoundationServer()
         {
             ProjectCollections = new List<ProjectCollection>();
         }
 
-        public ServerConfig FetchServerStructure()
+        public void LoadStructure()
         {
             var projectCollectionsService = new ProjectCollectionService(Uri) {Server = this};
-            var projectCollectionConfigs = projectCollectionsService.GetProjectCollections();
-            this.config.ProjectCollections.Clear();
-            foreach (var projectCollectionConfig in projectCollectionConfigs)
+            var projectCollections = projectCollectionsService.GetProjectCollections(this);
+            this.ProjectCollections.Clear();
+            foreach (var projectCollection in projectCollections)
             {
-                projectCollectionConfig.Server = config;
-                projectCollectionConfig.Projects.Clear();
-                var projectCollection = new ProjectCollection(projectCollectionConfig, this);
-                projectCollectionConfig.Projects.AddRange(projectCollection.FetchProjects());
+                projectCollection.Projects.Clear();
+                projectCollection.LoadProjects();
+                this.ProjectCollections.Add(projectCollection);
             }
-            this.config.ProjectCollections.AddRange(projectCollectionConfigs);
-            return this.config;
         }
 
         public string Name { get; private set; }
 
         public Uri Uri { get; private set; }
+
+        public string UserName { get; set; }
 
         public IServerAuthorization Authorization { get; private set; }
 
@@ -45,35 +43,48 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         {
             var element = new XElement("Server",
                                 new XAttribute("Name", this.Name),
-                                new XAttribute("Uri", this.Uri));
+                                new XAttribute("Uri", this.Uri),
+                                new XAttribute("UserName", this.Uri));
             element.Add(new XElement("Auth", Authorization.ToConfigXml()));
             element.Add(new XElement("ProjectCollections", this.ProjectCollections.Select(pc => pc.ToConfigXml())));
             return element;
         }
 
-        public static BaseTeamFoundationServer FromConfigXml(XElement element)
+        public static TeamFoundationServer FromConfigXml(XElement element)
         {
             if (!string.Equals(element.Name.LocalName, "Server", StringComparison.OrdinalIgnoreCase))
                 throw new Exception("Invalid xml element");
 
-            var server = new BaseTeamFoundationServer();
-            server.Name = element.Attribute("Name").Value;
-            server.Uri = new Uri(element.Attribute("Uri").Value);
+            var server = new TeamFoundationServer();
+            server.Name = element.GetAttributeValue("Name");
+            server.Uri = element.GetUriAttribute("Uri");
+            server.UserName = element.GetAttributeValue("UserName");
 
             var authElement = (XElement)element.Element("Auth").FirstNode;
             server.Authorization = ServerAuthorizationFactory.GetServerAuthorization(authElement, server.Uri);
 
-            server.ProjectCollections.AddRange(element.GetDescendants("ProjectCollection").Select(ProjectCollection.FromConfigXml));
-            server.ProjectCollections.ForEach(pc => pc.Server = server);
-
+            server.ProjectCollections.AddRange(element.GetDescendants("ProjectCollection").Select(pc => ProjectCollection.FromConfigXml(pc, server)));
             return server;
         }
-        
+
+        public static TeamFoundationServer FromAddServerDialog(AddServerResult addServerResult,
+            IServerAuthorization authorization)
+        {
+            var server = new TeamFoundationServer
+            {
+                Uri = addServerResult.Url,
+                Name = addServerResult.Name,
+                UserName = addServerResult.UserName,
+                Authorization = authorization
+            };
+            return server;
+        }
+
         #region Equal
 
         #region IComparable<TeamFoundationServer> Members
 
-        public int CompareTo(BaseTeamFoundationServer other)
+        public int CompareTo(TeamFoundationServer other)
         {
             return string.Compare(Uri.ToString(), other.Uri.ToString(), StringComparison.Ordinal);
         }
@@ -82,7 +93,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 
         #region IEquatable<TeamFoundationServer> Members
 
-        public bool Equals(BaseTeamFoundationServer other)
+        public bool Equals(TeamFoundationServer other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -99,7 +110,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;
-            var cast = obj as BaseTeamFoundationServer;
+            var cast = obj as TeamFoundationServer;
             if (cast == null)
                 return false;
             return Equals(cast);
@@ -110,12 +121,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             return Uri.GetHashCode();
         }
 
-        public static bool operator ==(BaseTeamFoundationServer left, BaseTeamFoundationServer right)
+        public static bool operator ==(TeamFoundationServer left, TeamFoundationServer right)
         {
             return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
         }
 
-        public static bool operator !=(BaseTeamFoundationServer left, BaseTeamFoundationServer right)
+        public static bool operator !=(TeamFoundationServer left, TeamFoundationServer right)
         {
             return !(left == right);
         }

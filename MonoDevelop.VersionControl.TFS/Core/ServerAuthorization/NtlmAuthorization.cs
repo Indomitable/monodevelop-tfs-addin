@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization.Config;
 using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
@@ -37,11 +38,19 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
             var element = new XElement("Ntlm", 
                             new XAttribute("UserName", UserName),
                             new XAttribute("Domain", Domain));
-            if (SavePassword)
+            if (ClearSavePassword)
             {
                 element.Add(new XAttribute("Password", Password));
             }
             return element;
+        }
+
+        public static NtlmAuthorization FromConfigWidget(INtlmAuthorizationConfig config)
+        {
+            var authorization = new NtlmAuthorization();
+            authorization.ReadConfig(config);
+            authorization.Domain = config.Domain;
+            return authorization;
         }
     }
 }

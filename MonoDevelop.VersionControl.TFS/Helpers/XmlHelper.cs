@@ -58,6 +58,14 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             return Convert.ToInt32(value);
         }
 
+        public static Guid GetGuidAttribute(this XElement element, string attributeName)
+        {
+            var value = element.GetAttributeValue(attributeName);
+            if (string.IsNullOrWhiteSpace(value))
+                return Guid.Empty;
+            return Guid.Parse(value);
+        }
+
         public static DateTime GetDateAttribute(this XElement element, string attributeName)
         {
             var value = element.GetAttributeValue(attributeName);
@@ -72,6 +80,14 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             if (string.IsNullOrWhiteSpace(value))
                 return new byte[0];
             return Convert.FromBase64String(value);
+        }
+
+        public static Uri GetUriAttribute(this XElement element, string attributeName)
+        {
+            var value = element.GetAttributeValue(attributeName);
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+            return new Uri(value);
         }
 
         #endregion

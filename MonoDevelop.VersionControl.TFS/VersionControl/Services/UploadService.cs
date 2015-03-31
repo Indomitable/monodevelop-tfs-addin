@@ -115,7 +115,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         {
             var request = (HttpWebRequest)WebRequest.Create(this.Url);
             request.Method = "POST";
-            request.Authorize(this.Server);
+            this.Server.Authorization.Authorize(request);
             request.AllowWriteStreamBuffering = true;
             request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
 

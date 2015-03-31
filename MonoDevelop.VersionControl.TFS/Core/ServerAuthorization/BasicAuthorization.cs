@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using System.Xml.Linq;
+using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization.Config;
 
 namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
 {
@@ -33,7 +34,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
         {
             var element = new XElement("Basic",
                             new XAttribute("UserName", UserName));
-            if (SavePassword)
+            if (ClearSavePassword)
             {
                 element.Add(new XAttribute("Password", Password));
             }
@@ -47,6 +48,13 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
                 var credentialBuffer = Encoding.UTF8.GetBytes(this.UserName + ":" + this.Password);
                 return "Basic " + Convert.ToBase64String(credentialBuffer);
             }
+        }
+
+        public static IServerAuthorization FromConfigWidget(IUserPasswordAuthorizationConfig serverAuthorizationConfig)
+        {
+            var auth = new BasicAuthorization();
+            auth.ReadConfig(serverAuthorizationConfig);
+            return auth;
         }
     }
 }

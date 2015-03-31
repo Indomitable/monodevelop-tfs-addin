@@ -24,14 +24,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using Xwt;
-using MonoDevelop.Core;
-using MonoDevelop.VersionControl.TFS.Helpers;
-using MonoDevelop.Ide;
 using System.Linq;
-using System.Collections.Generic;
-using MonoDevelop.VersionControl.TFS.Configuration;
+using MonoDevelop.Core;
+using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -40,7 +38,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         private readonly ListView serverList = new ListView();
         private readonly DataField<string> nameField = new DataField<string>();
         private readonly DataField<string> urlField = new DataField<string>();
-        private readonly DataField<ServerConfig> serverField = new DataField<ServerConfig>();
+        private readonly DataField<TeamFoundationServer> serverField = new DataField<TeamFoundationServer>();
         private readonly ListStore serverStore;
 
         public ConnectToServerDialog()
@@ -116,26 +114,23 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                         MessageService.ShowError("Server with same name already exists!");
                         return;
                     }
-                    using (var credentialsDialog = new CredentialsDialog(addServerResult.Type))
+                    using (var credentialsDialog = new CredentialsDialog(addServerResult.Url))
                     {
                         if (credentialsDialog.Run(this) == Command.Ok)
                         {
-                            var credentialsResult = credentialsDialog.Result;
-                            CredentialsManager.StoreCredential(addServerResult.Url, credentialsResult.Password);
-                            var password = CredentialsManager.GetPassword(addServerResult.Url); //Try Get Password
-                            if (password == null)
+                            var serverAuthorization = credentialsDialog.Result;
+                            var userPasswordAuthorization = serverAuthorization as UserPasswordAuthorization;
+                            if (userPasswordAuthorization != null && userPasswordAuthorization.ClearSavePassword)
                             {
                                 MessageService.ShowWarning("No keyring service found!\nPassword will be saved as plain text.");
                             }
-                            var serverConfig = new ServerConfig(addServerResult.Type, addServerResult.Name, addServerResult.Url, addServerResult.UserName,
-                                                                credentialsResult.Domain, credentialsResult.UserName, 
-                                                                (password == null ? credentialsResult.Password : null));
-                            using (var projectsDialog = new ChooseProjectsDialog(serverConfig))
+                            var server = TeamFoundationServer.FromAddServerDialog(addServerResult, serverAuthorization);
+                            using (var projectsDialog = new ChooseProjectsDialog(server))
                             {
                                 if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjectColletions.Any())
                                 {
-                                    serverConfig.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
-                                    TFSVersionControlService.Instance.AddServer(serverConfig);
+                                    server.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
+                                    TFSVersionControlService.Instance.AddServer(server);
                                     UpdateServersList();
                                 }
                             }
@@ -162,7 +157,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             {
                 var row = serverStore.AddRow();
                 serverStore.SetValue(row, nameField, server.Name);
-                serverStore.SetValue(row, urlField, server.Url.ToString());
+                serverStore.SetValue(row, urlField, server.Uri.OriginalString);
                 serverStore.SetValue(row, serverField, server);
             }
         }

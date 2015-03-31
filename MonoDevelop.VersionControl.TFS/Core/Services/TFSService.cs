@@ -46,7 +46,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
 
         public Uri Url { get; private set; }
 
-        public BaseTeamFoundationServer Server { get; set; }
+        public TeamFoundationServer Server { get; set; }
 
         public abstract XNamespace MessageNs { get; }
 

@@ -27,7 +27,6 @@ using System;
 using Xwt;
 using MonoDevelop.Core;
 using System.Text.RegularExpressions;
-using MonoDevelop.VersionControl.TFS.Core;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
@@ -41,6 +40,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         readonly RadioButton _httpRadio = new RadioButton(GettextCatalog.GetString("HTTP"));
         readonly RadioButton _httpsRadio = new RadioButton(GettextCatalog.GetString("HTTPS"));
         readonly TextEntry _previewEntry = new TextEntry();
+        readonly TextEntry _userNameEntry = new TextEntry();
 
         public AddServerWidget()
         {
@@ -114,6 +114,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             previewBox.PackStart(_previewEntry, true, true);
             this.PackStart(previewBox);
 
+            var userNameBox = new HBox();
+            userNameBox.PackStart(new Label(GettextCatalog.GetString("TFS user name") + ":"));
+            userNameBox.PackStart(_userNameEntry, true, true);
+            this.PackStart(userNameBox);
+
             BuildUrl();
         }
 
@@ -158,10 +163,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                 var name = string.IsNullOrWhiteSpace(_nameEntry.Text) ? _previewEntry.Text : _nameEntry.Text;
                 return new AddServerResult
                 {
-                    Type = ServerType.OnPremise,
                     Name = name,
                     Url = new Uri(_previewEntry.Text),
-                    UserName = string.Empty
+                    UserName = _userNameEntry.Text
                 };
             }
         }

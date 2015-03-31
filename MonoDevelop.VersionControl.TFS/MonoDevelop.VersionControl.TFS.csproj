@@ -51,11 +51,18 @@
   <Import Project="..\packages\MonoDevelop.Addins.0.2.3\build\net40\MonoDevelop.Addins.targets" Condition="Exists('..\packages\MonoDevelop.Addins.0.2.3\build\net40\MonoDevelop.Addins.targets')" />
   <ItemGroup>
     <Compile Include="Core\ServerAuthorization\BasicAuthorization.cs" />
+    <Compile Include="Core\ServerAuthorization\Config\INtlmAuthorizationConfig.cs" />
+    <Compile Include="Core\ServerAuthorization\Config\IUserPasswordAuthorizationConfig.cs" />
     <Compile Include="Core\ServerAuthorization\IServerAuthorization.cs" />
     <Compile Include="Core\ServerAuthorization\NoAuthorization.cs" />
     <Compile Include="Core\ServerAuthorization\ServerAuthorizationFactory.cs" />
+    <Compile Include="Core\ServerAuthorization\ServerAuthorizationType.cs" />
     <Compile Include="Core\ServerAuthorization\UserPasswordAuthorization.cs" />
     <Compile Include="Core\ServerAuthorization\NtlmAuthorization.cs" />
+    <Compile Include="GUI\Server\Authorization\IServerAuthorizationConfig.cs" />
+    <Compile Include="GUI\Server\Authorization\NoAuthorizationConfig.cs" />
+    <Compile Include="GUI\Server\Authorization\NtlmAuthorizationConfig.cs" />
+    <Compile Include="GUI\Server\Authorization\UserPasswordAuthorizationConfig.cs" />
     <Compile Include="TFSClient.cs" />
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
@@ -190,8 +197,6 @@
     <Compile Include="Properties\AddinInfo.cs" />
     <Compile Include="GUI\Server\AddServerResult.cs" />
     <Compile Include="GUI\Server\AddServerWidget.cs" />
-    <Compile Include="GUI\Server\AddCloudServerWidget.cs" />
-    <Compile Include="GUI\Server\CredentialsResult.cs" />
     <Compile Include="Helpers\UrlHelper.cs" />
     <Compile Include="Core\ProjectState.cs" />
     <Compile Include="Core\Services\Resolvers\CommonStructureServiceResolver.cs" />
@@ -203,7 +208,7 @@
     <Compile Include="Core\Services\TFSServiceMessage.cs" />
     <Compile Include="Core\Services\ProjectCollectionService.cs" />
     <Compile Include="VersionControl\Services\RepositoryService.cs" />
-    <Compile Include="Core\Structure\BaseTeamFoundationServer.cs" />
+    <Compile Include="Core\Structure\TeamFoundationServer.cs" />
     <Compile Include="Core\Structure\ProjectCollection.cs" />
     <Compile Include="Core\Services\Resolvers\ServiceResolverAttribute.cs" />
     <Compile Include="VersionControl\Services\Resolvers\DownloadServiceResolver.cs" />
@@ -321,9 +326,7 @@
     </Reference>
     <Reference Include="System.Web.Services" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Configuration\" />
-  </ItemGroup>
+  <ItemGroup />
   <Target Name="AfterBuild">
     <Copy Condition=" '$(OS)' != 'Windows_NT' " SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
     <Copy Condition=" '$(OS)' == 'Windows_NT' " SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="$(MonoDevelopRoot)\AddIns\VersionControl\" SkipUnchangedFiles="false" />

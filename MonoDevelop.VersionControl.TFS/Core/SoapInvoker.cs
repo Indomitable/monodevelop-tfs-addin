@@ -105,7 +105,7 @@ namespace MonoDevelop.VersionControl.TFS.Core
             try
             {
                 var request = (HttpWebRequest)WebRequest.Create(url);
-                request.Authorize(this.service.Server);
+                this.service.Server.Authorization.Authorize(request);
                 request.AllowWriteStreamBuffering = true;
                 request.Method = "POST";
                 request.ContentType = "text/xml; charset=utf-8";

@@ -35,6 +35,7 @@ using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Services;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using MonoDevelop.VersionControl.TFS.Helpers;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
@@ -43,13 +44,9 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         Lazy<RepositoryService> repositoryService;
         Lazy<ClientService> clientService;
         Lazy<CommonStructureService> commonStructureService;
+        private readonly List<ProjectInfo> projects = new List<ProjectInfo>(); 
 
-//        public ProjectCollection(ProjectConfig projectConfig)
-//            : this(projectConfig.Collection, new TeamFoundationServer(projectConfig.Collection.Server))
-//        {
-//        }
-
-        public ProjectCollection(BaseTeamFoundationServer server)
+        public ProjectCollection(TeamFoundationServer server)
         {
             this.Server = server;
             repositoryService = new Lazy<RepositoryService>(this.GetService<RepositoryService>);
@@ -65,42 +62,43 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 
         private List<ProjectInfo> FetchProjects()
         {
-            var projectConfigs = this.commonStructureService.Value.ListAllProjects();
+            var projectConfigs = this.commonStructureService.Value.ListAllProjects(this);
             return projectConfigs;
         }
 
         public void LoadProjects()
         {
+            this.Projects.Clear();
             /*s.agostini (2014-01-14) Catch "401 unauthorized" exception, returning an empty list*/
             try
             {
-                this.Projects = (from pc in this.FetchProjects()
-                                 orderby pc.Name
-                                 select new ProjectInfo(pc, this)).ToList();
+                this.Projects.AddRange(this.FetchProjects());
             }
             catch
             {
-                this.Projects = new List<ProjectInfo>();
+                this.Projects.Clear();
             }
             /*s.agostini end*/
         }
 
         public void LoadProjects(List<string> names)
         {
-            this.Projects = (from pc in this.FetchProjects()
-                             where names.Any(n => string.Equals(pc.Name, n, StringComparison.OrdinalIgnoreCase))
-                             orderby pc.Name
-                             select new ProjectInfo(pc, this)).ToList();
+            this.Projects.Clear();
+            this.Projects.AddRange(from pc in this.FetchProjects()
+                                   where names.Any(n => string.Equals(pc.Name, n, StringComparison.OrdinalIgnoreCase))
+                                   orderby pc.Name
+                                   select pc);
         }
 
-        public BaseTeamFoundationServer Server { get; private set; }
+        public TeamFoundationServer Server { get; private set; }
 
-        public List<ProjectInfo> Projects { get; private set; }
+        public List<ProjectInfo> Projects { get { return projects; } }
 
         public TService GetService<TService>()
             where TService : TFSService
         {
             var locationService = new LocationService(this.Server.Uri, this.LocationServicePath);
+            locationService.Server = this.Server;
             return locationService.LoadService<TService>();
         }
 
@@ -117,34 +115,44 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             return element;
         }
 
-        public static ProjectCollection FromServerXml(XElement element, BaseTeamFoundationServer server)
+        public static ProjectCollection FromServerXml(XElement element, TeamFoundationServer server)
         {
             var projectCollection = new ProjectCollection(server);
-            projectCollection.Id = Guid.Parse(catalogResource.Attribute("Identifier").Value);
-            projectCollection.Name = catalogResource.Attribute("DisplayName").Value;
+            projectCollection.Id = element.GetGuidAttribute("Identifier");
+            projectCollection.Name = element.GetAttributeValue("DisplayName");
 
-            var locationServiceElement = catalogResource.XPathSelectElement(
-                "./msg:CatalogServiceReferences/msg:CatalogServiceReference/msg:ServiceDefinition[@serviceType='LocationService']",
-                this.NsResolver
-            );
-            projectCollection.LocationServicePath = locationServiceElement.Attribute("relativePath").Value;
+            var locationServiceElement = element.GetDescendants("ServiceDefinition")
+                                                .Single(el => string.Equals(el.GetAttributeValue("serviceType"), "LocationService"));
+
+            projectCollection.LocationServicePath = locationServiceElement.GetAttributeValue("relativePath");
 
             return projectCollection;
         }
 
-        public static ProjectCollection FromConfigXml(XElement element, BaseTeamFoundationServer server)
+        public static ProjectCollection FromConfigXml(XElement element, TeamFoundationServer server)
         {
             if (!string.Equals(element.Name.LocalName, "ProjectCollection", StringComparison.OrdinalIgnoreCase))
                 throw new Exception("Invalid xml element");
 
             var projectCollection = new ProjectCollection(server);
-            projectCollection.Id = Guid.Parse(element.Attribute("Id").Value);
-            projectCollection.Name = element.Attribute("Name").Value;
-            projectCollection.LocationServicePath = element.Attribute("LocationServicePath").Value;
+            projectCollection.Id = element.GetGuidAttribute("Id");
+            projectCollection.Name = element.GetAttributeValue("Name");
+            projectCollection.LocationServicePath = element.GetAttributeValue("LocationServicePath");
 
             projectCollection.Projects.AddRange(element.Elements("Project").Select(e => ProjectInfo.FromConfigXml(e, projectCollection)));
 
             return projectCollection;
+        }
+
+
+        public ProjectCollection Copy()
+        {
+            return new ProjectCollection(this.Server)
+            {
+                Id = this.Id,
+                Name = this.Name,
+                LocationServicePath =  this.LocationServicePath,
+            };
         }
 
         #endregion
@@ -330,7 +338,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             return this.clientService.Value.GetWorkItemTypes();
         }
 
-        public List<MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure.Action> GetActions()
+        public List<WorkItemTracking.Structure.Action> GetActions()
         {
             return this.clientService.Value.GetActions();
         }

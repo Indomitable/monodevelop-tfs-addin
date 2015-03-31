@@ -41,7 +41,6 @@ using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
-using MonoDevelop.VersionControl.TFS.Configuration;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
@@ -67,16 +66,16 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             BuildGui();
         }
 
-        internal static void Open(ProjectConfig projectConfig)
+        internal static void Open(ProjectInfo projectInfo)
         {
-            var collection = new ProjectCollection(projectConfig);
+            var collection = projectInfo.Collection;
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var sourceDoc = view.GetContent<SourceControlExplorerView>();
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(collection);
-                    sourceDoc.ExpandPath(RepositoryFilePath.RootFolder + projectConfig.Name);
+                    sourceDoc.ExpandPath(RepositoryFilePath.RootFolder + projectInfo.Name);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -84,7 +83,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
             var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
-            sourceControlExplorerView.ExpandPath(RepositoryFilePath.RootFolder + projectConfig.Name);
+            sourceControlExplorerView.ExpandPath(RepositoryFilePath.RootFolder + projectInfo.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 

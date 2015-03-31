@@ -27,10 +27,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Metadata;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
-using MonoDevelop.VersionControl.TFS.Core.Structure;
-using MonoDevelop.VersionControl.TFS.Core.ServerAuthentication;
 
 namespace MonoDevelop.VersionControl.TFS.WorkItemTracking
 {
@@ -49,11 +48,11 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking
             CachedMetaData.Instance.Init(this.collection);
             var constants = CachedMetaData.Instance.Constants;
             var userNameBuilder = new StringBuilder();
-            var server = this.collection.Server as INetworkCredentialsAuthorizatedServer;
-            if (server != null && !string.IsNullOrEmpty(server.Credentials.Domain))
-            {
-                userNameBuilder.Append(server.Credentials.Domain + "\\");
-            }
+            //var server = this.collection.Server;
+//            if (server != null && !string.IsNullOrEmpty(server.Credentials.Domain))
+//            {
+//                userNameBuilder.Append(server.Credentials.Domain + "\\");
+//            }
             userNameBuilder.Append(this.collection.Server.UserName);
             var userName = userNameBuilder.ToString();
             var me = constants.FirstOrDefault(c => string.Equals(c.Value, userName, StringComparison.OrdinalIgnoreCase));

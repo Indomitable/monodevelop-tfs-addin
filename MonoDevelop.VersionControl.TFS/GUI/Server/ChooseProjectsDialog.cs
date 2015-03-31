@@ -29,7 +29,6 @@ using Xwt;
 using MonoDevelop.Core;
 using System.Linq;
 using System.Collections.Generic;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
@@ -39,25 +38,25 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         readonly ListStore collectionStore;
         readonly ListBox collectionsList = new ListBox();
         readonly DataField<string> collectionName = new DataField<string>();
-        readonly DataField<ProjectCollectionConfig> collectionItem = new DataField<ProjectCollectionConfig>();
+        readonly DataField<ProjectCollection> collectionItem = new DataField<ProjectCollection>();
         readonly TreeStore projectsStore;
         readonly TreeView projectsList = new TreeView();
         readonly DataField<bool> isProjectSelected = new DataField<bool>();
         readonly DataField<string> projectName = new DataField<string>();
-        readonly DataField<ProjectConfig> projectItem = new DataField<ProjectConfig>();
+        readonly DataField<ProjectInfo> projectItem = new DataField<ProjectInfo>();
 
-        internal List<ProjectCollectionConfig> SelectedProjectColletions { get; set; }
+        internal List<ProjectCollection> SelectedProjectColletions { get; set; }
 
-        internal ChooseProjectsDialog(ServerConfig serverConfig)
+        internal ChooseProjectsDialog(TeamFoundationServer server)
         {
             collectionStore = new ListStore(collectionName, collectionItem);
             projectsStore = new TreeStore(isProjectSelected, projectName, projectItem);
             BuildGui();
-            if (!serverConfig.ProjectCollections.Any())
-                SelectedProjectColletions = new List<ProjectCollectionConfig>();
+            if (!server.ProjectCollections.Any())
+                SelectedProjectColletions = new List<ProjectCollection>();
             else
-                SelectedProjectColletions = new List<ProjectCollectionConfig>(serverConfig.ProjectCollections);
-            LoadData(serverConfig);
+                SelectedProjectColletions = new List<ProjectCollection>(server.ProjectCollections);
+            LoadData(server);
         }
 
         void BuildGui()
@@ -84,7 +83,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                 var project = node.GetValue(projectItem);
                 if (isSelected) //Should add the project
                 {
-                    var collection = SelectedProjectColletions.SingleOrDefault(pc => pc == project.Collection);
+                    var collection = SelectedProjectColletions.SingleOrDefault(col => col == project.Collection);
                     if (collection == null)
                     {
                         collection = project.Collection.Copy();
@@ -130,11 +129,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
             this.Content = vBox;
         }
 
-        void LoadData(ServerConfig serverConfig)
+        void LoadData(TeamFoundationServer server)
         {
-            var server = TeamFoundationServerFactory.Create(serverConfig);
-            var newServerConfig = server.FetchServerStructure();
-            foreach (var collection in newServerConfig.ProjectCollections)
+            server.LoadStructure();
+            foreach (var collection in server.ProjectCollections)
             {
                 var row = collectionStore.AddRow();
                 collectionStore.SetValue(row, collectionName, collection.Name);
@@ -158,7 +156,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                     }
                 }
             };
-            if (newServerConfig.ProjectCollections.Any())
+            if (server.ProjectCollections.Any())
                 collectionsList.SelectRow(0);
         }
     }

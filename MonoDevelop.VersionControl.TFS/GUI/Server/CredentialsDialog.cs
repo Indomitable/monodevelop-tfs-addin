@@ -24,63 +24,61 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System;
 using Xwt;
 using MonoDevelop.Core;
-using MonoDevelop.VersionControl.TFS.Core;
+using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization;
+using MonoDevelop.VersionControl.TFS.GUI.Server.Authorization;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
     public class CredentialsDialog : Dialog
     {
-        readonly TextEntry domainEntry = new TextEntry();
-        readonly TextEntry userNameEntry = new TextEntry();
-        readonly PasswordEntry passwordEntry = new PasswordEntry();
-        readonly ServerType serverType;
+        private readonly Uri _serverUri;
+        readonly VBox typeContainer = new VBox();
+        readonly ComboBox comboBox = new ComboBox();
+        private IServerAuthorizationConfig currentConfig;
 
-        public CredentialsDialog(ServerType serverType)
+        public CredentialsDialog(Uri serverUri)
         {
-            this.serverType = serverType;
+            _serverUri = serverUri;
             BuildGui();
         }
 
         void BuildGui()
         {
-            var table = new Table();
-            if (serverType == ServerType.OnPremise)
+            VBox container = new VBox();
+            container.PackStart(new Label(GettextCatalog.GetString("Select authorization type") + ":"));
+            foreach (var type in Enum.GetValues(typeof(ServerAuthorizationType)))
             {
-                table.Add(new Label(GettextCatalog.GetString("Domain") + ":"), 0, 0);
-                table.Add(domainEntry, 1, 0);
+                comboBox.Items.Add(type, Enum.GetName(typeof(ServerAuthorizationType), type));
             }
-            table.Add(new Label(GettextCatalog.GetString("User Name") + ":"), 0, 1);
-            table.Add(userNameEntry, 1, 1);
-            table.Add(new Label(GettextCatalog.GetString("Password") + ":"), 0, 2);
-            table.Add(passwordEntry, 1, 2);
+            container.PackStart(comboBox);
+            comboBox.SelectionChanged += (sender, args) => SetTypeConfig();
+            comboBox.SelectedIndex = 0;
+            SetTypeConfig();
+
+            container.PackStart(typeContainer);
 
             this.Buttons.Add(Command.Ok, Command.Cancel);
-            this.Content = table;
-            AttachEvents();
+            this.Content = container;
         }
 
-        void AttachEvents()
+
+        private void SetTypeConfig()
         {
-            passwordEntry.KeyReleased += (sender, e) =>
-            {
-                if (e.Key == Key.Return)
-                    this.Respond(Command.Ok);
-            };
+            var type = (ServerAuthorizationType)comboBox.SelectedItem;
+            currentConfig = ServerAuthorizationFactory.GetServerAuthorizationConfig(type, _serverUri);
+            typeContainer.Clear();
+            typeContainer.PackStart(currentConfig.Widget, true, true);
         }
 
-        public CredentialsResult Result
+        internal IServerAuthorization Result
         {
             get
             {
-                if (string.IsNullOrEmpty(userNameEntry.Text))
-                    return null;
-                var auth = new CredentialsResult();
-                auth.UserName = userNameEntry.Text;
-                auth.Password = passwordEntry.Password;
-                auth.Domain = domainEntry.Text;
-                return auth;
+                var type = (ServerAuthorizationType)comboBox.SelectedItem;
+                return ServerAuthorizationFactory.GetServerAuthorization(type, currentConfig);
             }
         }
     }

@@ -27,8 +27,6 @@ using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using System.Linq;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
 
@@ -71,13 +69,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             );
         }
 
-        public List<ProjectCollection> GetProjectCollections(BaseTeamFoundationServer server)
+        public List<ProjectCollection> GetProjectCollections(TeamFoundationServer server)
         {
             var collection = new List<ProjectCollection>();
             foreach (var catalogResource in GetXmlCollections())
             {
-
-                collection.Add(config);
+                collection.Add(ProjectCollection.FromServerXml(catalogResource, server));
             }
             return collection;
 

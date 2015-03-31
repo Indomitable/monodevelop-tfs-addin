@@ -33,14 +33,13 @@ using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace MonoDevelop.VersionControl.TFS
 {
     sealed class TFSVersionControlService
     {
-        private readonly List<ServerConfig> _registredServers = new List<ServerConfig>();
+        private readonly List<TeamFoundationServer> _registredServers = new List<TeamFoundationServer>();
         /// <summary>
         /// Store default workspaces for each saved project collection. The Key - Project Collection Id, The Value - Workspace Name.
         /// </summary>
@@ -84,8 +83,8 @@ namespace MonoDevelop.VersionControl.TFS
                 XDocument doc = XDocument.Parse(xmlConfig);
                 foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
                 {
-                    var serverConfig = ServerConfig.FromConfigXml(serverElement);
-                    _registredServers.Add(serverConfig);
+                    var server = TeamFoundationServer.FromConfigXml(serverElement);
+                    _registredServers.Add(server);
                 }
                 foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
                 {
@@ -114,11 +113,11 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public void AddServer(ServerConfig serverConfig)
+        public void AddServer(TeamFoundationServer server)
         {
-            if (HasServer(serverConfig.Name))
-                RemoveServer(serverConfig.Name);
-            _registredServers.Add(serverConfig);
+            if (HasServer(server.Name))
+                RemoveServer(server.Name);
+            _registredServers.Add(server);
             RaiseServersChange();
             StorePrefs();
         }
@@ -132,7 +131,7 @@ namespace MonoDevelop.VersionControl.TFS
             StorePrefs();
         }
 
-        public ServerConfig GetServer(string name)
+        public TeamFoundationServer GetServer(string name)
         {
             return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
@@ -142,7 +141,7 @@ namespace MonoDevelop.VersionControl.TFS
             return _registredServers.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
 
-        public List<ServerConfig> Servers { get { return _registredServers; } }
+        public List<TeamFoundationServer> Servers { get { return _registredServers; } }
 
         public event Action OnServersChange;
 

@@ -28,7 +28,6 @@ using System.Linq;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
-using MonoDevelop.VersionControl.TFS.Configuration;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 
@@ -93,16 +92,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         void BuildQueryView()
         {
             queryStore.Clear();
-            foreach (var serverConfig in TFSVersionControlService.Instance.Servers)
+            foreach (var server in TFSVersionControlService.Instance.Servers)
             {
-                var node = queryStore.AddNode().SetValue(titleField, serverConfig.Name);
-                foreach (var pc in serverConfig.ProjectCollections)
+                var node = queryStore.AddNode().SetValue(titleField, server.Name);
+                foreach (var projectCollection in server.ProjectCollections)
                 {
-                    node.AddChild().SetValue(titleField, pc.Name);
-                    var server = TeamFoundationServerFactory.Create(serverConfig);
-                    var collection = new ProjectCollection(pc, server);
-                    var workItemManager = new WorkItemManager(collection);
-                    foreach (var projectInfo in pc.Projects.OrderBy(x => x.Name))
+                    node.AddChild().SetValue(titleField, projectCollection.Name);
+                    var workItemManager = new WorkItemManager(projectCollection);
+                    foreach (var projectInfo in projectCollection.Projects.OrderBy(x => x.Name))
                     {
                         var workItemProject = workItemManager.GetByGuid(projectInfo.Id);
                         if (workItemProject == null)
@@ -116,7 +113,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                             node.AddChild().SetValue(titleField, "My Queries");
                             foreach (var query in privateQueries)
                             {
-                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, collection);
+                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, projectCollection);
                                 node.MoveToParent();
                             }
                             node.MoveToParent();
@@ -127,7 +124,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
                             node.AddChild().SetValue(titleField, "Public");
                             foreach (var query in publicQueries)
                             {
-                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, collection);
+                                node.AddChild().SetValue(titleField, query.QueryName).SetValue(queryField, query).SetValue(collectionField, projectCollection);
                                 node.MoveToParent();
                             }
                             node.MoveToParent();
