@@ -31,7 +31,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
     [ServiceResolver(typeof(ServerStatusServiceResolver))]
     internal sealed class ServerStatusService : TFSService
     {
-        internal ServerStatusService(Uri baseUri, string servicePath)
+        private ServerStatusService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
 

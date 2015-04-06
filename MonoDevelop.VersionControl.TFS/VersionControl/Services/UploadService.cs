@@ -40,7 +40,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
     [ServiceResolverAttribute(typeof(UploadServiceResolver))]
     internal sealed class UploadService: TFSService
     {
-        internal UploadService(Uri baseUri, string servicePath)
+        private UploadService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
             

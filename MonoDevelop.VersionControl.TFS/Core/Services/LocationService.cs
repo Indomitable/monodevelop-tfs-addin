@@ -78,10 +78,13 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
                 this.NsResolver
             );
 
-            var basePath = accessElement.Attribute("AccessPoint").Value;
+            var basePath = new Uri(accessElement.Attribute("AccessPoint").Value);
             var servicePath = serviceElement.Attribute("relativePath").Value;
 
-            var service = (TFSService)Activator.CreateInstance(serviceType, basePath, servicePath);
+            //var service = (TFSService)Activator.CreateInstance(serviceType, basePath, servicePath);
+            var serviceConstructor = serviceType.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof(System.Uri), typeof(System.String) }, null);
+            var service = (TFSService)serviceConstructor.Invoke(new object[] { basePath, servicePath } );
+
             service.Server = this.Server;
             var properties = serviceType.GetProperties();
             foreach (var property in properties)

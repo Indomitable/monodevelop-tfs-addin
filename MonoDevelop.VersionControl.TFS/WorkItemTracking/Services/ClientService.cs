@@ -40,7 +40,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
     [ServiceResolver(typeof(ClientServiceResolver))]
     sealed class ClientService : TFSService
     {
-        internal ClientService(Uri baseUri, string servicePath)
+        private ClientService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
             

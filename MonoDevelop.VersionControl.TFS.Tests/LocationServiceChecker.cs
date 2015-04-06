@@ -188,6 +188,9 @@ namespace Tests
                 Console.WriteLine(responseDoc);
             }
         }
+
+        //[Fact]
+        //public void GetSer
     }
 }
 

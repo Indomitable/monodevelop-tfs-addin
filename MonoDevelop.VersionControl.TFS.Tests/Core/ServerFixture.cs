@@ -29,10 +29,10 @@ using MonoDevelop.VersionControl.TFS.Core.Structure;
 
 namespace Core
 {
-    class ServerFixture
+    public class ServerFixture
     {
         internal TeamFoundationServer Server;
-        public ServerFixture()
+        protected ServerFixture()
         {
             var xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
   <Auth>

@@ -38,7 +38,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
     [ServiceResolver(typeof(DownloadServiceResolver))]
     sealed class DownloadService : TFSService
     {
-        internal DownloadService(Uri baseUri, string servicePath)
+        private DownloadService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
             

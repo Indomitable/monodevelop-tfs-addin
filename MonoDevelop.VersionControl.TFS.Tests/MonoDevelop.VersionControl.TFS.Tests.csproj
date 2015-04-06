@@ -43,13 +43,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="MonoDevelop.VersionControl">
-      <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
-      <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
-    </Reference>
     <Reference Include="MonoDevelop.Core">
       <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
       <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\bin\MonoDevelop.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoDevelop.Ide">
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\MonoDevelop.Ide.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\bin\MonoDevelop.Ide.dll</HintPath>
+    </Reference>
+    <Reference Include="MonoDevelop.VersionControl">
+      <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
+      <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\AddIns\VersionControl\MonoDevelop.VersionControl.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
@@ -78,6 +82,7 @@
     <Compile Include="MessageTests.cs" />
     <Compile Include="ConfigTests.cs" />
     <Compile Include="Core\ServerFixture.cs" />
+    <Compile Include="Services\ProjectCollectionServiceTests.cs" />
     <Compile Include="TestClass.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
@@ -97,9 +102,7 @@
       </Properties>
     </MonoDevelop>
   </ProjectExtensions>
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>

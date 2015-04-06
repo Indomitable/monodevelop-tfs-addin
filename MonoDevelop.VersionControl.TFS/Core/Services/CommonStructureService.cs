@@ -35,7 +35,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
     [ServiceResolver(typeof(CommonStructureServiceResolver))]
     internal sealed class CommonStructureService : TFSService
     {
-        internal CommonStructureService(Uri baseUri, string servicePath)
+        private CommonStructureService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
             

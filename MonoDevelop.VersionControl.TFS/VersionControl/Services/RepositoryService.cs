@@ -46,7 +46,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
     [ServiceResolver(typeof(RepositoryServiceResolver))]
     sealed class RepositoryService : TFSService
     {
-        internal RepositoryService(Uri baseUri, string servicePath)
+        private RepositoryService(Uri baseUri, string servicePath)
             : base(baseUri, servicePath)
         {
             

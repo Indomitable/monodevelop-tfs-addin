@@ -97,8 +97,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         public TService GetService<TService>()
             where TService : TFSService
         {
-            var locationService = new LocationService(this.Server.Uri, this.LocationServicePath);
-            locationService.Server = this.Server;
+            var locationService = new LocationService(this.Server.Uri, this.LocationServicePath) { Server = this.Server };
             return locationService.LoadService<TService>();
         }
 

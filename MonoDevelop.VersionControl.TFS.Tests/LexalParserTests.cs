@@ -34,7 +34,6 @@ namespace Tests
     public class LexalParserTests
     {
         [Fact]
-        [Theory]
         public void Parse1()
         {
             XElement el = XElement.Parse(@"<f>SELECT [System.Id], [System.WorkItemType], [System.AssignedTo], [System.CreatedBy], [Microsoft.VSTS.Common.Priority], [System.Title], [System.Description] 
