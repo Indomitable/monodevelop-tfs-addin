@@ -80,6 +80,8 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking
 
         public void UpdateWorkItems(int changeSet, Dictionary<int, WorkItemCheckinAction> workItems, string comment)
         {
+            if (workItems == null)
+                return;
             foreach (var workItem in workItems)
             {
                 switch (workItem.Value)

@@ -49,7 +49,6 @@ namespace MonoDevelop.VersionControl.TFS
         internal TFSRepository(Workspace workspace, string rootPath)
         {
             this.workspace = workspace;
-            this.workspace.RefreshPendingChanges();
             this.RootPath = rootPath;
             this.cache = new RepositoryCache(this);
         }
@@ -247,7 +246,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnRevert(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
         {
-            var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None)).ToList();
+            var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None));
             var operations = workspace.Undo(specs, monitor);
             cache.RefreshItems(operations);
             FileService.NotifyFilesChanged(operations);

@@ -28,6 +28,7 @@ using Xwt;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Ide;
@@ -120,11 +121,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                     using (var progress = VersionControlService.GetProgressMonitor("Undo", VersionControlOperationType.Pull))
                     {
                         progress.BeginTask("Undo", changesToUndo.Count);
-                        var itemSpecs = new List<ItemSpec>();
-                        foreach (var change in changesToUndo)
-                        {
-                            itemSpecs.Add(new ItemSpec(change.LocalItem, change.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
-                        }
+                        var itemSpecs = changesToUndo.Select(change => new ItemSpec(change.LocalItem, change.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
                         workspace.Undo(itemSpecs, progress);
                         progress.EndTask();
                         progress.ReportSuccess("Finish Undo");

@@ -47,16 +47,18 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 {
     sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
     {
-        ProjectCollection collection;
-        WorkspaceData workspaceData;
+        private readonly ProjectCollection collection;
+        private readonly WorkspaceData workspaceData;
+        private readonly List<PendingChange> pendingChanges = new List<PendingChange>(); 
 
         public Workspace(ProjectCollection collection, WorkspaceData workspaceData)
         {
             this.workspaceData = workspaceData;
             this.collection = collection;
+            RefreshPendingChanges();
         }
 
-        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems, IProgressMonitor monitor = null)
         {
             foreach (var change in changes)
             {
@@ -69,7 +71,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
             }
             this.RefreshPendingChanges();
-            ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
+            ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get, monitor);
             foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
             {
                 MakeFileReadOnly(file);
@@ -79,7 +81,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region Pending Changes
 
-        public List<PendingChange> PendingChanges { get; set; }
+        public List<PendingChange> PendingChanges { get { return pendingChanges; } }
 
         public void RefreshPendingChanges()
         {
@@ -222,7 +224,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             }
         }
 
-        public int PendAdd(IEnumerable<FilePath> paths, bool isRecursive)
+        public int PendAdd(IEnumerable<FilePath> paths, bool isRecursive, IProgressMonitor monitor = null)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
 
@@ -241,13 +243,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             List<Failure> failures;
             var operations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(operations, ProcessType.Add);
+            ProcessGetOperations(operations, ProcessType.Add, monitor);
             this.RefreshPendingChanges();
             return operations.Count;
         }
 
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(IEnumerable<FilePath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures)
+        public void PendDelete(IEnumerable<FilePath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures, IProgressMonitor monitor = null)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, Directory.Exists(p) ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
 
@@ -259,7 +261,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             var processType = keepLocal ? ProcessType.DeleteKeep : ProcessType.Delete;
-            ProcessGetOperations(getOperations, processType);
+            ProcessGetOperations(getOperations, processType, monitor);
             this.RefreshPendingChanges();
         }
 
@@ -268,7 +270,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return this.PendEdit(new List<FilePath> { path }, recursionType, checkOutlockLevel);
         }
 
-        public List<Failure> PendEdit(List<FilePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
+        public List<Failure> PendEdit(List<FilePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel, IProgressMonitor monitor = null)
         {
             if (paths.Count == 0)
                 return new List<Failure>();
@@ -280,17 +282,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, lockLevel, VersionSpec.Latest)).ToList();
             List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Edit);
+            ProcessGetOperations(getOperations, ProcessType.Edit, monitor);
             this.RefreshPendingChanges();
             return failures;
         }
 
-        private void PendRename(string oldPath, string newPath, ItemType itemType, out List<Failure> failures)
+        private void PendRename(string oldPath, string newPath, ItemType itemType, out List<Failure> failures, IProgressMonitor monitor = null)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
             changes.Add(new ChangeRequest(oldPath, newPath, RequestType.Rename, itemType));
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Rename);
+            ProcessGetOperations(getOperations, ProcessType.Rename, monitor);
             this.RefreshPendingChanges();
         }
 
@@ -304,7 +306,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             PendRename(oldPath, newPath, ItemType.Folder, out failures);
         }
 
-        public List<FilePath> Undo(List<ItemSpec> items, IProgressMonitor monitor = null)
+        public List<FilePath> Undo(IEnumerable<ItemSpec> items, IProgressMonitor monitor = null)
         {
             var operations = this.collection.UndoPendChanges(workspaceData, items);
             UndoGetOperations(operations, monitor);
@@ -327,7 +329,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             SetLock(paths, ItemType.File, lockLevel, RecursionType.Full);
         }
 
-        private void SetLock(IEnumerable<string> paths, ItemType itemType, LockLevel lockLevel, RecursionType recursion)
+        private void SetLock(IEnumerable<string> paths, ItemType itemType, LockLevel lockLevel, RecursionType recursion, IProgressMonitor monitor = null)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, itemType, recursion, lockLevel, VersionSpec.Latest)).ToList();
             if (changes.Count == 0)
@@ -335,7 +337,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Get);
+            ProcessGetOperations(getOperations, ProcessType.Get, monitor);
             this.RefreshPendingChanges();
         }
 
@@ -355,11 +357,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return this.collection.QueryConflicts(workspaceData, itemSpecs);
         }
 
-        public void Resolve(Conflict conflict, ResolutionType resolutionType)
+        public void Resolve(Conflict conflict, ResolutionType resolutionType, IProgressMonitor monitor = null)
         {
             var result = this.collection.Resolve(workspaceData, conflict, resolutionType);
-            ProcessGetOperations(result.GetOperations, ProcessType.Get);
-            this.Undo(result.UndoOperations.Select(x => new ItemSpec(x.TargetLocalItem, RecursionType.None)).ToList());
+            ProcessGetOperations(result.GetOperations, ProcessType.Get, monitor);
+            this.Undo(result.UndoOperations.Select(x => new ItemSpec(x.TargetLocalItem, RecursionType.None)));
         }
 
         public string DownloadToTempWithName(string downloadUrl, string fileName)
@@ -695,11 +697,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             DeleteKeep
         }
 
-        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor = null)
+        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor)
         {
             if (getOperations == null || getOperations.Count == 0)
                 return;
-            IProgressMonitor progress = monitor ?? new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
+            IProgressMonitor progress = monitor ?? new Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
             try
             {
                 progress.BeginTask("Process", getOperations.Count);

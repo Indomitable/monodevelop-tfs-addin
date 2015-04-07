@@ -23,25 +23,83 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
-using System.Xml.Linq;
-using MonoDevelop.VersionControl.TFS.Core.Structure;
 
-namespace Core
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.Core.ProgressMonitoring;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using Xunit;
+
+namespace MonoDevelop.VersionControl.TFS.Tests.Core
 {
     public class ServerFixture
     {
         internal TeamFoundationServer Server;
-        protected ServerFixture()
+        internal const string WorkspaceName = "TEST_COMPUTER_WORKSPACE";
+        internal readonly string MapFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TFS_ADDIN_TEST_Projects");
+        internal readonly string RootFolder = "monotfstestproject";
+
+        public ServerFixture()
         {
-            var xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
+            const string xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
   <Auth>
     <Ntlm UserName=""mono_tfs_plugin_cp"" Password=""mono_tfs_plugin"" Domain=""snd"" />
   </Auth>
 </Server>";
 
             Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
+            Server.LoadStructure();
         }
+
+
+        internal Workspace GetWorkspace(ProjectCollection collection)
+        {
+            var workspaceDatas = collection.GetLocalWorkspaces();
+            var workspaceData = workspaceDatas.SingleOrDefault(wd => string.Equals(wd.Name, WorkspaceName, StringComparison.OrdinalIgnoreCase));
+            if (workspaceData == null)
+            {
+                workspaceData = new WorkspaceData
+                {
+                    Computer = Environment.MachineName,
+                    Comment = "Test Workspace",
+                    Name = WorkspaceName,
+                    Owner = Server.UserName,
+                    IsLocal = false,
+                    WorkingFolders = new List<WorkingFolder> { new WorkingFolder(RepositoryFilePath.RootFolder, MapFolder) }
+                };
+                collection.CreateWorkspace(workspaceData);
+            }
+            var topFolder = GetWorkspaceTopFolder();
+            if (!Directory.Exists(topFolder))
+            {
+                Directory.CreateDirectory(topFolder);
+            }
+            var workspace = new Workspace(collection, workspaceData);
+            if (workspace.PendingChanges.Any())
+            {
+                var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));
+                workspace.Undo(undoItems, new NullProgressMonitor());
+            }
+            return workspace;
+        }
+
+        internal string GetWorkspaceTopFolder()
+        {
+            return Path.Combine(MapFolder, RootFolder);
+        }
+    }
+
+    [CollectionDefinition("Server")]
+    public class ServerCollection : ICollectionFixture<ServerFixture>
+    {
+        
     }
 }
 

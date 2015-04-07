@@ -73,6 +73,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTFSConnectTest.cs" />
+    <Compile Include="Core\EmptyProgressMonitor.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />
     <Compile Include="QueryTests.cs" />
@@ -83,6 +84,8 @@
     <Compile Include="ConfigTests.cs" />
     <Compile Include="Core\ServerFixture.cs" />
     <Compile Include="Services\ProjectCollectionServiceTests.cs" />
+    <Compile Include="Services\VersionControl\RepositoryTests.cs" />
+    <Compile Include="Services\VersionControl\WorkspasceDataTests.cs" />
     <Compile Include="TestClass.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
