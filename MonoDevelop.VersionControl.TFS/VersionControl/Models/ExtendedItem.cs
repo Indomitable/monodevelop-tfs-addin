@@ -29,15 +29,16 @@
 
 using System;
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
-using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
+namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
 {
-    sealed class ExtendedItem : BaseItem
+    sealed class ExtendedItem : ServerItem
     {
         internal static ExtendedItem FromXml(XElement element)
         {
@@ -58,7 +59,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             item.HasOtherPendingChange = element.GetBooleanAttribute("ochg");
             item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttributeValue("lock"));
             item.LockOwner = element.GetAttributeValue("lowner");
-            item.LocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
+            item.LocalPath = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
             item.TargetServerItem = element.GetAttributeValue("titem");
             item.SourceServerItem = element.GetAttributeValue("sitem");
             item.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
@@ -101,7 +102,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public bool HasOtherPendingChange { get; private set; }
 
-        public bool IsInWorkspace { get { return !string.IsNullOrEmpty(LocalItem); } }
+        public bool IsInWorkspace { get { return !LocalPath.IsEmpty; } }
 
         public bool IsLatest { get { return VersionLatest == VersionLocal; } }
 
@@ -109,7 +110,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public int Encoding { get; private set; }
 
-        public string LocalItem { get; private set; }
+        public LocalPath LocalPath { get; private set; }
 
         public string LockOwner { get; private set; }
 
@@ -119,7 +120,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public DateTime CheckinDate { get; private set; }
 
-        public override RepositoryFilePath ServerPath { get { return TargetServerItem; } }
+        public override RepositoryPath ServerPath { get { return new RepositoryPath(TargetServerItem, ItemType == ItemType.Folder); } }
 
         public bool IsBranch { get; private set; }
     }

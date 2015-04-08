@@ -30,6 +30,7 @@
 using System.Collections.Generic;
 using System.Xml.Linq;
 using System.Linq;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {

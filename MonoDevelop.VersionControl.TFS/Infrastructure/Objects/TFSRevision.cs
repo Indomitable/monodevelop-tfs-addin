@@ -26,6 +26,7 @@
 using System;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
 {

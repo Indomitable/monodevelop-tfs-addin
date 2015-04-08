@@ -29,67 +29,48 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
 
         #region Working Folders
 
-        public bool IsLocalPathMapped(string localPath)
+        public bool IsLocalPathMapped(LocalPath localPath)
         {
             if (localPath == null)
                 throw new ArgumentNullException("localPath");
-            return WorkingFolders.Any(f => localPath.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
+            return WorkingFolders.Any(f => localPath.IsChildOrEqualOf(f.LocalItem));
         }
 
-        public bool IsServerPathMapped(RepositoryFilePath serverPath)
+        public bool IsServerPathMapped(RepositoryPath serverPath)
         {
-            return WorkingFolders.Any(f => serverPath.IsChildOrEqualTo(f.ServerItem));
+            return WorkingFolders.Any(f => serverPath.IsChildOrEqualOf(f.ServerItem));
         }
 
-        public RepositoryFilePath GetServerPathForLocalPath(string localItem)
+        public RepositoryPath GetServerPathForLocalPath(LocalPath localPath)
         {
-            var mappedFolder = WorkingFolders.FirstOrDefault(f => localItem.StartsWith(f.LocalItem, StringComparison.OrdinalIgnoreCase));
+            var mappedFolder = WorkingFolders.FirstOrDefault(f => localPath.IsChildOrEqualOf(f.LocalItem));
             if (mappedFolder == null)
                 return null;
-            if (string.Equals(mappedFolder.LocalItem, localItem, StringComparison.OrdinalIgnoreCase))
+            if (localPath == mappedFolder.LocalItem)
                 return mappedFolder.ServerItem;
-            else
-            {
-                string rest = TfsPathHelper.LocalToServerPath(localItem.Substring(mappedFolder.LocalItem.Length));
-                if (mappedFolder.ServerItem == RepositoryFilePath.RootFolder)
-                    return "$" + rest;
-                else
-                    return mappedFolder.ServerItem + rest;
-            }
+            var relativePath = localPath.ToRelativeOf(mappedFolder.LocalItem);
+            if (!EnvironmentHelper.IsRunningOnUnix)
+                relativePath = relativePath.Replace(Path.DirectorySeparatorChar, RepositoryPath.Separator);
+            return new RepositoryPath(mappedFolder.ServerItem + relativePath, localPath.IsDirectory);
         }
 
-        public string GetLocalPathForServerPath(RepositoryFilePath serverItem)
+        public LocalPath GetLocalPathForServerPath(RepositoryPath serverPath)
         {
-            var mappedFolder = WorkingFolders.FirstOrDefault(f => serverItem.IsChildOrEqualTo(f.ServerItem));
+            var mappedFolder = WorkingFolders.FirstOrDefault(f => serverPath.IsChildOrEqualOf(f.ServerItem));
             if (mappedFolder == null)
                 return null;
-            if (serverItem == mappedFolder.ServerItem)
+            if (serverPath == mappedFolder.ServerItem)
                 return mappedFolder.LocalItem;
             else
             {
-                string rest = TfsPathHelper.ServerToLocalPath(serverItem.ChildPart(mappedFolder.ServerItem));
+                string rest = TfsPathHelper.ServerToLocalPath(serverPath.ToRelativeOf(mappedFolder.ServerItem));
                 return Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
 
-        public WorkingFolder GetWorkingFolderForServerItem(string serverItem)
+        public WorkingFolder GetWorkingFolderForServerItem(RepositoryPath serverPath)
         {
-            int maxPath = 0;
-            WorkingFolder workingFolder = null;
-
-            foreach (WorkingFolder folder in WorkingFolders)
-            {
-                if (!serverItem.StartsWith(folder.ServerItem, StringComparison.InvariantCultureIgnoreCase))
-                    continue;
-
-                if (folder.LocalItem.Length > maxPath)
-                {
-                    workingFolder = folder;
-                    maxPath = folder.LocalItem.Length;
-                }
-            }
-
-            return workingFolder;
+            return this.WorkingFolders.SingleOrDefault(wf => serverPath.IsChildOrEqualOf(wf.ServerItem));
         }
 
         #endregion

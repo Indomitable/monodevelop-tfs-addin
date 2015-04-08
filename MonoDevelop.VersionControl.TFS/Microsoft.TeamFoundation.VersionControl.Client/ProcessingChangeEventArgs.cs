@@ -31,7 +31,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public class ProcessingChangeEventArgs : System.EventArgs
+    internal sealed class ProcessingChangeEventArgs : System.EventArgs
     {
         public PendingChange PendingChange { get; set; }
     }

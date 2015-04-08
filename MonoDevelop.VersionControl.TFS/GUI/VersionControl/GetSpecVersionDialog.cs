@@ -30,6 +30,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using Xwt;
 
@@ -114,7 +115,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 var row = listStore.AddRow();
                 listStore.SetValue(row, itemField, item);
                 listStore.SetValue(row, isSelectedField, true);
-                RepositoryFilePath path = item.TargetServerItem;
+                RepositoryPath path = item.ServerPath;
                 listStore.SetValue(row, nameField, path.ItemName);
                 listStore.SetValue(row, pathField, path.ParentPath);
             }

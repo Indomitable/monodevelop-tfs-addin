@@ -32,6 +32,7 @@ using MonoDevelop.Ide.Gui.Pads.ProjectPad;
 using MonoDevelop.Projects;
 using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -104,9 +105,9 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             ResolveConflictsView.Open(repo.Workspace, GetWorkingPaths(item));
         }
 
-        private List<FilePath> GetWorkingPaths(VersionControlItem item)
+        private List<LocalPath> GetWorkingPaths(VersionControlItem item)
         {
-            List<FilePath> paths = new List<FilePath>();
+            var paths = new List<LocalPath>();
             var solution = item.WorkspaceObject as Solution;
             if (solution != null)
             {

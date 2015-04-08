@@ -41,7 +41,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         public WorkingFolder(string serverItem, string localItem)
         {
             CheckServerPathStartsWithDollarSlash(serverItem);
-            ServerItem = serverItem;
+            ServerItem = new RepositoryPath(serverItem, true);
             LocalItem = Path.GetFullPath(localItem);
             Type = WorkingFolderType.Map;
         }
@@ -49,7 +49,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         internal static WorkingFolder FromXml(XElement element)
         {
             string local = TfsPathHelper.ToPlatformPath(element.Attribute("local").Value);
-            string serverItem = element.Attribute("item").Value;
+            string serverItem = new RepositoryPath(element.Attribute("item").Value, true);
             var workFolder = new WorkingFolder(serverItem, local);
             if (element.Attribute("type") != null)
                 workFolder.Type = (WorkingFolderType)Enum.Parse(typeof(WorkingFolderType), element.Attribute("type").Value);
@@ -83,18 +83,18 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
 
         internal void CheckServerPathStartsWithDollarSlash(string serverItem)
         {
-            if (RepositoryFilePath.IsServerItem(serverItem))
+            if (RepositoryPath.IsServerItem(serverItem))
                 return;
-            string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, RepositoryFilePath.RootFolder);
+            string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, RepositoryPath.RootFolder);
             throw new VersionControlException(msg);
         }
 
         public bool IsCloaked { get { return this.Type == WorkingFolderType.Cloak; } }
 
-        public string LocalItem { get; private set; }
+        public LocalPath LocalItem { get; private set; }
 
         public WorkingFolderType Type { get; private set; }
 
-        public RepositoryFilePath ServerItem { get; private set; }
+        public RepositoryPath ServerItem { get; private set; }
     }
 }

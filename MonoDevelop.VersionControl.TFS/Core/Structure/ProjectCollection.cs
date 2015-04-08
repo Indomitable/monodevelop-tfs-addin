@@ -36,6 +36,7 @@ using MonoDevelop.VersionControl.TFS.WorkItemTracking.Services;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {

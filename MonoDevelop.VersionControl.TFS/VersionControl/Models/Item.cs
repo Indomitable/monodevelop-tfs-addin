@@ -32,12 +32,12 @@ using System.Text;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
+namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
 {
-    internal sealed class Item: BaseItem
+    internal sealed class Item: ServerItem
     {
         //<Item cs="1" date="2006-12-15T16:16:26.95Z" enc="-3" type="Folder" itemid="1" item="$/" />
         //<Item cs="30884" date="2012-08-29T15:35:18.273Z" enc="65001" type="File" itemid="189452" item="$/.gitignore" hash="/S3KuHKFNtrxTG7LeQA7LQ==" len="387" />
@@ -125,7 +125,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public string ServerItem { get; private set; }
 
-        public override RepositoryFilePath ServerPath { get { return ServerItem; } }
+        public override RepositoryPath ServerPath { get { return new RepositoryPath(ServerItem, ItemType == ItemType.Folder); } }
 
         public string ShortName
         {

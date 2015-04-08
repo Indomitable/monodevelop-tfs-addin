@@ -35,6 +35,7 @@ using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xwt;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
@@ -162,17 +163,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         private void FillStore(List<ExtendedItem> items, Workspace workspace)
         {
             fileStore.Clear();
-            List<ItemSpec> itemSpecs = new List<ItemSpec>();
-            foreach (var item in items)
-            {
-                itemSpecs.Add(new ItemSpec(item.ServerPath, item.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
-            }
-            var pendingChanges = workspace.GetPendingChanges(itemSpecs);
+            var pendingChanges = workspace.GetPendingChanges(items, false);
             foreach (var pendingChange in pendingChanges)
             {
                 var row = fileStore.AddRow();
                 fileStore.SetValue(row, isCheckedField, true);
-                var path = (RepositoryFilePath)pendingChange.ServerItem;
+                var path = (RepositoryPath)pendingChange.ServerItem;
                 fileStore.SetValue(row, nameField, path.ItemName);
                 fileStore.SetValue(row, changesField, pendingChange.ChangeType.ToString());
                 fileStore.SetValue(row, folderField, path.ParentPath);

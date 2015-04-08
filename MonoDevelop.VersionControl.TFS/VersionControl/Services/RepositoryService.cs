@@ -39,6 +39,7 @@ using MonoDevelop.VersionControl.TFS.Core;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
@@ -165,7 +166,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public List<Item> QueryFolders()
         {
-            var itemSpecs = new [] { new ItemSpec(RepositoryFilePath.RootFolder, RecursionType.Full) };
+            var itemSpecs = new [] { new ItemSpec(RepositoryPath.RootFolder, RecursionType.Full) };
             return QueryItems(null, itemSpecs, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
         }
 

@@ -31,6 +31,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure
 {
@@ -78,17 +79,17 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             cachedItems.Clear();
         }
 
-        public bool HasItem(RepositoryFilePath serverPath)
+        public bool HasItem(RepositoryPath serverPath)
         {
             return cachedItems.Any(c => c.ServerPath == serverPath);
         }
 
-        public ExtendedItem GetItem(RepositoryFilePath serverPath)
+        public ExtendedItem GetItem(RepositoryPath serverPath)
         {
             return cachedItems.Single(c => c.ServerPath == serverPath);
         }
 
-        public ExtendedItem GetItem(FilePath localPath)
+        public ExtendedItem GetItem(LocalPath localPath)
         {
             lock (locker)
             {
@@ -108,7 +109,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             }
         }
 
-        public List<ExtendedItem> GetItems(List<FilePath> paths, RecursionType recursionType)
+        public List<ExtendedItem> GetItems(List<LocalPath> paths, RecursionType recursionType)
         {
             lock(locker)
             {
@@ -142,7 +143,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             }
         }
 
-        public void RefreshItems(IEnumerable<FilePath> localPaths)
+        public void RefreshItems(IEnumerable<LocalPath> localPaths)
         {
             foreach (var path in localPaths)
             {
@@ -150,7 +151,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             }
         }
 
-        public void RefreshItem(FilePath localPath)
+        public void RefreshItem(LocalPath localPath)
         {
             lock(locker)
             {

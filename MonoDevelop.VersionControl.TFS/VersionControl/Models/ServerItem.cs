@@ -23,15 +23,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
+namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
 {
-    internal abstract class BaseItem : IEquatable<BaseItem>, IComparable<BaseItem>
+    internal abstract class ServerItem : IEquatable<ServerItem>, IComparable<ServerItem>
     {
-        public abstract RepositoryFilePath ServerPath { get; }
+        public abstract RepositoryPath ServerPath { get; }
 
         public ItemType ItemType { get; protected set; }
 
@@ -39,7 +40,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         #region IComparable<IItem> Members
 
-        public int CompareTo(BaseItem other)
+        public int CompareTo(ServerItem other)
         {
             return ServerPath.CompareTo(other.ServerPath);
         }
@@ -48,7 +49,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         #region IEquatable<IItem> Members
 
-        public bool Equals(BaseItem other)
+        public bool Equals(ServerItem other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -65,7 +66,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;
-            BaseItem cast = obj as BaseItem;
+            ServerItem cast = obj as ServerItem;
             if (cast == null)
                 return false;
             return Equals(cast);
@@ -76,12 +77,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             return ServerPath.GetHashCode();
         }
 
-        public static bool operator ==(BaseItem left, BaseItem right)
+        public static bool operator ==(ServerItem left, ServerItem right)
         {
             return ReferenceEquals(null, left) ? ReferenceEquals(null, right) : left.Equals(right);
         }
 
-        public static bool operator !=(BaseItem left, BaseItem right)
+        public static bool operator !=(ServerItem left, ServerItem right)
         {
             return !(left == right);
         }

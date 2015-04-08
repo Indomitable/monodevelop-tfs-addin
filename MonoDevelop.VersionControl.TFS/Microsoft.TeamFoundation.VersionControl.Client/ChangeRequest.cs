@@ -32,6 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
@@ -51,7 +52,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
     //</s:complexType>
     internal class ChangeRequest
     {
-        public ChangeRequest(string path, RequestType requestType, ItemType itemType,
+        public ChangeRequest(BasePath path, RequestType requestType, ItemType itemType,
                              RecursionType recursion, LockLevel lockLevel, VersionSpec version)
         {
             this.Item = new ItemSpec(path, recursion);
@@ -61,12 +62,12 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             this.VersionSpec = version;
         }
 
-        public ChangeRequest(string path, RequestType requestType, ItemType itemType)
+        public ChangeRequest(BasePath path, RequestType requestType, ItemType itemType)
             : this(path, requestType, itemType, RecursionType.None, LockLevel.None, VersionSpec.Latest)
         {
         }
 
-        public ChangeRequest(string path, string target, RequestType requestType, ItemType itemType)
+        public ChangeRequest(BasePath path, string target, RequestType requestType, ItemType itemType)
             : this(path, requestType, itemType)
         {
             this.Target = target;
@@ -87,7 +88,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             if (!string.IsNullOrEmpty(Target))
             {
                 // convert local path specs from platform paths to tfs paths as needed
-                string fxdTarget = RepositoryFilePath.IsServerItem(Target) ? Target : TfsPathHelper.FromPlatformPath(Target);
+                string fxdTarget = RepositoryPath.IsServerItem(Target) ? Target : TfsPathHelper.FromPlatformPath(Target);
                 result.Add(new XAttribute("target", fxdTarget));
             }
 

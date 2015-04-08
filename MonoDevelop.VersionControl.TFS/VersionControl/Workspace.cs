@@ -39,6 +39,7 @@ using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.Projects;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
@@ -86,48 +87,18 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         public void RefreshPendingChanges()
         {
             this.PendingChanges.Clear();
-            var paths = this.Data.WorkingFolders.Select(f => f.LocalItem).ToArray();
-            this.PendingChanges.AddRange(this.GetPendingChanges(paths, RecursionType.Full));
+            var paths = this.Data.WorkingFolders.Select(f => f.LocalItem);
+            this.PendingChanges.AddRange(this.GetPendingChanges(paths, false));
         }
 
-        public List<PendingChange> GetPendingChanges()
+        public List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items, bool includeDownloadInfo)
         {
-            return GetPendingChanges(RepositoryFilePath.RootFolder, RecursionType.Full);
+            return this.collection.QueryPendingChangesForWorkspace(workspaceData, items.Select(ItemSpec.FromServerItem), false);
         }
 
-        public List<PendingChange> GetPendingChanges(string item)
+        public List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths, bool includeDownloadInfo)
         {
-            return GetPendingChanges(item, RecursionType.None);
-        }
-
-        public List<PendingChange> GetPendingChanges(string item, RecursionType rtype)
-        {
-            return GetPendingChanges(item, rtype, false);
-        }
-
-        public List<PendingChange> GetPendingChanges(string item, RecursionType rtype,
-                                                     bool includeDownloadInfo)
-        {
-            string[] items = { item };
-            return GetPendingChanges(items, rtype, includeDownloadInfo);
-        }
-
-        public List<PendingChange> GetPendingChanges(string[] items, RecursionType rtype)
-        {
-            return GetPendingChanges(items, rtype, false);
-        }
-
-        public List<PendingChange> GetPendingChanges(string[] items, RecursionType rtype,
-                                                     bool includeDownloadInfo)
-        {
-
-            var itemSpecs = new List<ItemSpec>(items.Select(i => new ItemSpec(i, rtype)));
-            return this.collection.QueryPendingChangesForWorkspace(workspaceData, itemSpecs, includeDownloadInfo);
-        }
-
-        public List<PendingChange> GetPendingChanges(List<ItemSpec> items)
-        {
-            return this.collection.QueryPendingChangesForWorkspace(workspaceData, items, false);
+            return this.collection.QueryPendingChangesForWorkspace(workspaceData, paths.Select(ItemSpec.FromLocalItem), false);
         }
 
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
@@ -209,22 +180,22 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return new GetStatus(getOperations.Count);
         }
 
-        private void CollectPaths(FilePath root, List<ChangeRequest> paths)
+        private void CollectPaths(LocalPath root, List<ChangeRequest> paths)
         {
             if (!root.IsDirectory)
                 return;
             foreach (var dir in Directory.EnumerateDirectories(root))
             {
-                paths.Add(new ChangeRequest(dir, RequestType.Add, ItemType.Folder));
+                paths.Add(new ChangeRequest((LocalPath)dir, RequestType.Add, ItemType.Folder));
                 CollectPaths(dir, paths);
             }
             foreach (var file in Directory.EnumerateFiles(root))
             {
-                paths.Add(new ChangeRequest(file, RequestType.Add, ItemType.File));
+                paths.Add(new ChangeRequest((LocalPath)file, RequestType.Add, ItemType.File));
             }
         }
 
-        public int PendAdd(IEnumerable<FilePath> paths, bool isRecursive, IProgressMonitor monitor = null)
+        public int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive, IProgressMonitor monitor = null)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
 
@@ -249,7 +220,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         }
 
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(IEnumerable<FilePath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures, IProgressMonitor monitor = null)
+        public void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures, IProgressMonitor monitor = null)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, Directory.Exists(p) ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
 
@@ -265,21 +236,24 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.RefreshPendingChanges();
         }
 
-        public List<Failure> PendEdit(FilePath path, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
+        public List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel, IProgressMonitor monitor = null)
         {
-            return this.PendEdit(new List<FilePath> { path }, recursionType, checkOutlockLevel);
-        }
-
-        public List<Failure> PendEdit(List<FilePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel, IProgressMonitor monitor = null)
-        {
-            if (paths.Count == 0)
-                return new List<Failure>();
             LockLevel lockLevel = LockLevel.None;
-            if (checkOutlockLevel == CheckOutLockLevel.CheckOut)
-                lockLevel = LockLevel.CheckOut;
-            else if (checkOutlockLevel == CheckOutLockLevel.CheckIn)
-                lockLevel = LockLevel.Checkin;
+            switch (checkOutlockLevel)
+            {
+                case CheckOutLockLevel.CheckOut:
+                    lockLevel = LockLevel.CheckOut;
+                    break;
+                case CheckOutLockLevel.CheckIn:
+                    lockLevel = LockLevel.Checkin;
+                    break;
+            }
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, lockLevel, VersionSpec.Latest)).ToList();
+            if (changes.Count == 0)
+            {
+                return new List<Failure>();
+            }
+
             List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Edit, monitor);
@@ -287,51 +261,44 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return failures;
         }
 
-        private void PendRename(string oldPath, string newPath, ItemType itemType, out List<Failure> failures, IProgressMonitor monitor = null)
+        public void PendRename(LocalPath oldPath, LocalPath newPath, out List<Failure> failures, IProgressMonitor monitor = null)
         {
-            List<ChangeRequest> changes = new List<ChangeRequest>();
-            changes.Add(new ChangeRequest(oldPath, newPath, RequestType.Rename, itemType));
+            List<ChangeRequest> changes = new List<ChangeRequest>
+            {
+                new ChangeRequest(oldPath, newPath, RequestType.Rename, oldPath.IsDirectory ? ItemType.Folder : ItemType.File)
+            };
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Rename, monitor);
             this.RefreshPendingChanges();
         }
 
-        public void PendRenameFile(string oldPath, string newPath, out List<Failure> failures)
-        {
-            PendRename(oldPath, newPath, ItemType.File, out failures);
-        }
-
-        public void PendRenameFolder(string oldPath, string newPath, out List<Failure> failures)
-        {
-            PendRename(oldPath, newPath, ItemType.Folder, out failures);
-        }
-
-        public List<FilePath> Undo(IEnumerable<ItemSpec> items, IProgressMonitor monitor = null)
+        public List<LocalPath> Undo(IEnumerable<ItemSpec> items, IProgressMonitor monitor = null)
         {
             var operations = this.collection.UndoPendChanges(workspaceData, items);
             UndoGetOperations(operations, monitor);
             this.RefreshPendingChanges();
-            List<FilePath> undoPaths = new List<FilePath>();
-            foreach (var oper in operations)
-            {
-                undoPaths.Add(oper.TargetLocalItem);
-            }
-            return undoPaths;
+            return operations.Select(op => (LocalPath) op.TargetLocalItem).ToList();
         }
 
-        public void LockFiles(IEnumerable<string> paths, LockLevel lockLevel)
-        {
-            SetLock(paths, ItemType.File, lockLevel, RecursionType.None);
-        }
+//        public void LockFiles(IEnumerable<LocalPath> paths, LockLevel lockLevel)
+//        {
+//            SetLock(paths, ItemType.File, lockLevel, RecursionType.None);
+//        }
+//
+//        public void LockFolders(IEnumerable<LocalPath> paths, LockLevel lockLevel)
+//        {
+//            SetLock(paths, ItemType.File, lockLevel, RecursionType.Full);
+//        }
 
-        public void LockFolders(IEnumerable<string> paths, LockLevel lockLevel)
-        {
-            SetLock(paths, ItemType.File, lockLevel, RecursionType.Full);
-        }
 
-        private void SetLock(IEnumerable<string> paths, ItemType itemType, LockLevel lockLevel, RecursionType recursion, IProgressMonitor monitor = null)
+
+        public void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel, IProgressMonitor monitor = null)
         {
-            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, itemType, recursion, lockLevel, VersionSpec.Latest)).ToList();
+            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, 
+                                                              ItemType.Any,
+                                                              p.IsDirectory ? RecursionType.Full : RecursionType.None, 
+                                                              lockLevel, 
+                                                              VersionSpec.Latest)).ToList();
             if (changes.Count == 0)
                 return;
 
@@ -351,7 +318,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return this.collection.QueryChangeset(changeSetId, includeChanges, includeDownloadUrls, includeSourceRenames);
         }
 
-        public List<Conflict> GetConflicts(IEnumerable<FilePath> paths)
+        public List<Conflict> GetConflicts(IEnumerable<LocalPath> paths)
         {
             var itemSpecs = paths.Select(p => new ItemSpec(p, RecursionType.Full)).ToList();
             return this.collection.QueryConflicts(workspaceData, itemSpecs);
@@ -523,16 +490,16 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             if (processDirection == ProcessDirection.Undo)
             {
                 var update = ProcessGet(operation, ProcessDirection.Normal);
-                var filePath = (FilePath)operation.TargetLocalItem;
+                var filePath = operation.TargetLocalItem;
                 var projects = IdeApp.Workspace.GetAllProjects();
                 foreach (var project in projects)
                 {
-                    if (filePath.IsChildPathOf(project.BaseDirectory))
+                    if (filePath.IsChildOrEqualOf(project.BaseDirectory))
                     {
                         if (operation.ItemType == ItemType.File)
                             project.AddFile(operation.TargetLocalItem);
                         if (operation.ItemType == ItemType.Folder)
-                            project.AddDirectory(operation.TargetLocalItem.Substring(((string)project.BaseDirectory).Length + 1));
+                            project.AddDirectory(operation.TargetLocalItem.ToRelativeOf(project.BaseDirectory));
                         break;
                     }
                 }

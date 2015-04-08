@@ -32,6 +32,8 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
 using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -125,10 +127,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                         progress.BeginTask("Check Out", itemsToCheckOut.Count);
                         foreach (var item in itemsToCheckOut)
                         {
-                            var path = item.IsInWorkspace ? item.LocalItem : workspace.Data.GetLocalPathForServerPath(item.ServerPath);
+                            var path = item.IsInWorkspace ? item.LocalPath : workspace.Data.GetLocalPathForServerPath(item.ServerPath);
                             workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None, progress);
                             progress.Log.WriteLine("Check out item: " + item.ServerPath);
-                            var failures = workspace.PendEdit(new List<FilePath> { path }, RecursionType.Full, dialog.LockLevel);
+                            var failures = workspace.PendEdit(new [] { path }, RecursionType.Full, dialog.LockLevel);
                             if (failures != null && failures.Any())
                             {
                                 if (failures.Any(f => f.SeverityType == SeverityType.Error))

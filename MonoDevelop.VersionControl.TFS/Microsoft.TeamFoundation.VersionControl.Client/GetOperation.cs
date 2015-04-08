@@ -34,34 +34,12 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     internal class GetOperation : ILocalUpdateOperation
     {
-        public ChangeType ChangeType { get; private set; }
-
-        public int DeletionId { get; private set; }
-
-        public int ItemId { get; private set; }
-
-        public ItemType ItemType { get; private set; }
-
-        public string TargetLocalItem { get; private set; }
-
-        public string SourceLocalItem { get; private set; }
-
-        public string SourceServerItem { get; private set; }
-
-        public string TargetServerItem { get; private set; }
-
-        public int VersionLocal { get; private set; }
-
-        public int VersionServer { get; private set; }
-
-        public string ArtifactUri { get; private set; }
-
-        public LockLevel LockLevel { get; private set; }
         //<s:complexType name="GetOperation">
         //    <s:sequence>
         //        <s:element minOccurs="0" maxOccurs="1" name="HashValue" type="s:base64Binary"/>
@@ -107,8 +85,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             getOperation.ItemId = element.GetIntAttribute("itemid");
             getOperation.SourceLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("slocal"));
             getOperation.TargetLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("tlocal"));
-            getOperation.SourceServerItem = element.GetAttributeValue("sitem");
-            getOperation.TargetServerItem = element.GetAttributeValue("titem");
+            getOperation.SourceServerItem = new RepositoryPath(element.GetAttributeValue("sitem"), getOperation.ItemType == ItemType.Folder);
+            getOperation.TargetServerItem = new RepositoryPath(element.GetAttributeValue("titem"), getOperation.ItemType == ItemType.Folder);
             getOperation.VersionServer = element.GetIntAttribute("sver");
             getOperation.VersionLocal = element.GetIntAttribute("lver");
             getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));
@@ -126,13 +104,58 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             return getOperation;
         }
 
+        public ChangeType ChangeType { get; private set; }
+
+        public int DeletionId { get; private set; }
+
+        public int ItemId { get; private set; }
+
+        public ItemType ItemType { get; private set; }
+
+        public LocalPath TargetLocalItem { get; private set; }
+
+        public LocalPath SourceLocalItem { get; private set; }
+
+        public RepositoryPath SourceServerItem { get; private set; }
+
+        public RepositoryPath TargetServerItem { get; private set; }
+
+        public int VersionLocal { get; private set; }
+
+        public int VersionServer { get; private set; }
+
+        public string ArtifactUri { get; private set; }
+
+        public LockLevel LockLevel { get; private set; }
+
+        public bool IsAdd
+        {
+            get { return ChangeType.HasFlag(ChangeType.Add); }
+        }
+
+        public bool IsDelete
+        {
+            get { return ChangeType.HasFlag(ChangeType.Delete); }
+        }
+
+        public bool IsEdit
+        {
+            get { return ChangeType.HasFlag(ChangeType.Edit); }
+        }
+
+        public bool IsEncoding
+        {
+            get { return ChangeType.HasFlag(ChangeType.Encoding); }
+        }
+
+        public bool IsRename
+        {
+            get { return ChangeType.HasFlag(ChangeType.Rename); }
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-
-            sb.Append("GetOperation instance ");
-            sb.Append(GetHashCode());
-
             sb.Append("\n	 type: ");
             sb.Append(ItemType.ToString());
 
@@ -164,31 +187,6 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
             sb.Append(ChangeType.ToString());
 
             return sb.ToString();
-        }
-
-        public bool IsAdd
-        {
-            get { return ChangeType.HasFlag(ChangeType.Add); }
-        }
-
-        public bool IsDelete
-        {
-            get { return ChangeType.HasFlag(ChangeType.Delete); }
-        }
-
-        public bool IsEdit
-        {
-            get { return ChangeType.HasFlag(ChangeType.Edit); }
-        }
-
-        public bool IsEncoding
-        {
-            get { return ChangeType.HasFlag(ChangeType.Encoding); }
-        }
-
-        public bool IsRename
-        {
-            get { return ChangeType.HasFlag(ChangeType.Rename); }
         }
     }
 }

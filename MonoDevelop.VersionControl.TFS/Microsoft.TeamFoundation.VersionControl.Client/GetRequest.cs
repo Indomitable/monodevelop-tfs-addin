@@ -29,6 +29,7 @@
 
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {

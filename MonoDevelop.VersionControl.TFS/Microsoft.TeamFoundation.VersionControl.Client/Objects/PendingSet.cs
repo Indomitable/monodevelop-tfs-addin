@@ -48,7 +48,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
     //    <s:attribute name="type" type="tns:PendingSetType" use="required"/>
     //    <s:attribute name="signature" type="s1:guid" use="required"/>
     //</s:complexType>
-    public class PendingSet
+    internal sealed class PendingSet
     {
         private PendingSet()
         {

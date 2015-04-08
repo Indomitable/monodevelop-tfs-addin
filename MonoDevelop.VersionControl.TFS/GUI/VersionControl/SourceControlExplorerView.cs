@@ -41,6 +41,7 @@ using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
@@ -55,7 +56,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private readonly Button manageButton = new Button(GettextCatalog.GetString("Manage"));
         private readonly Button refreshButton = new Button(GettextCatalog.GetString("Refresh"));
         private readonly TreeView _treeView = new TreeView();
-        private readonly TreeStore _treeStore = new TreeStore(typeof(BaseItem), typeof(Pixbuf), typeof(string));
+        private readonly TreeStore _treeStore = new TreeStore(typeof(ServerItem), typeof(Pixbuf), typeof(string));
         private ProjectCollection projectCollection;
         private readonly List<WorkspaceData> _workspaces = new List<WorkspaceData>();
         private Workspace _currentWorkspace;
@@ -75,7 +76,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(collection);
-                    sourceDoc.ExpandPath(RepositoryFilePath.RootFolder + projectInfo.Name);
+                    sourceDoc.ExpandPath(RepositoryPath.RootFolder + projectInfo.Name);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -83,13 +84,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
             var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
-            sourceControlExplorerView.ExpandPath(RepositoryFilePath.RootFolder + projectInfo.Name);
+            sourceControlExplorerView.ExpandPath(RepositoryPath.RootFolder + projectInfo.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         internal static void Open(ProjectCollection collection)
         {
-            Open(collection, RepositoryFilePath.RootFolder, null);
+            Open(collection, RepositoryPath.RootFolder, null);
         }
 
         internal static void Open(ProjectCollection collection, string path, string fileName)
@@ -256,7 +257,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var items = this._currentWorkspace.GetItems(new [] { new ItemSpec(RepositoryFilePath.RootFolder, RecursionType.Full) }, 
+            var items = this._currentWorkspace.GetItems(new [] { new ItemSpec(RepositoryPath.RootFolder, RecursionType.Full) }, 
                                                         VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
@@ -363,7 +364,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter = TreeIter.Zero;
             _treeStore.Foreach((m, p, i) =>
             {
-                var item = ((BaseItem)m.GetValue(i, 0));
+                var item = ((ServerItem)m.GetValue(i, 0));
                 if (string.Equals(item.ServerPath, path, StringComparison.OrdinalIgnoreCase))
                 {
                     iter = i;
@@ -386,7 +387,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter = TreeIter.Zero;
             _listStore.Foreach((model, path, it) =>
             {
-                var item = ((BaseItem)model.GetValue(it, 0));
+                var item = ((ServerItem)model.GetValue(it, 0));
                 if (string.Equals(item.ServerPath.ItemName, name, StringComparison.OrdinalIgnoreCase))
                 {
                     iter = it;
@@ -401,26 +402,26 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             _listView.ScrollToCell(treePath, _listView.Columns[0], false, 0, 0);
         }
 
-        private bool IsMapped(string serverPath)
+        private bool IsMapped(RepositoryPath serverPath)
         {
             if (_currentWorkspace == null)
                 return false;
             return _currentWorkspace.Data.IsServerPathMapped(serverPath);
         }
 
-        private void ShowMappingPath(RepositoryFilePath serverPath)
+        private void ShowMappingPath(RepositoryPath serverPath)
         {
             if (!IsMapped(serverPath))
             {
                 _localFolder.Text = GettextCatalog.GetString("Not Mapped");
                 return;
             }
-            var mappedFolder = _currentWorkspace.Data.WorkingFolders.First(f => serverPath.IsChildOrEqualTo(f.ServerItem));
+            var mappedFolder = _currentWorkspace.Data.WorkingFolders.First(f => serverPath.IsChildOrEqualOf(f.ServerItem));
             if (string.Equals(serverPath, mappedFolder.ServerItem, StringComparison.Ordinal))
                 _localFolder.Text = mappedFolder.LocalItem;
             else
             {
-                string rest = serverPath.ChildPart(mappedFolder.ServerItem);
+                string rest = serverPath.ToRelativeOf(mappedFolder.ServerItem);
                 _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
             }
         }
@@ -438,7 +439,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))
                 {
-                    var currentItem = (BaseItem)_treeStore.GetValue(treeIter, 0);
+                    var currentItem = (ServerItem)_treeStore.GetValue(treeIter, 0);
                     ShowMappingPath(currentItem.ServerPath);
                     FillListView(currentItem.ServerPath);
                 }
@@ -455,7 +456,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             if (!_treeView.Selection.GetSelected(out iter))
                 return;
         
-            var item = (BaseItem)_treeStore.GetValue(iter, 0);
+            var item = (ServerItem)_treeStore.GetValue(iter, 0);
             FillListView(item.ServerPath);
             ShowMappingPath(item.ServerPath);
         }
@@ -476,7 +477,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter;
             string selectedPath = string.Empty;
             if (_treeView.Selection.GetSelected(out iter))
-                selectedPath = ((BaseItem)_treeStore.GetValue(iter, 0)).ServerPath;
+                selectedPath = ((ServerItem)_treeStore.GetValue(iter, 0)).ServerPath;
             FillTreeView();
             if (!string.IsNullOrEmpty(selectedPath))
                 ExpandPath(selectedPath);
@@ -507,13 +508,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 {
                     if (item.IsInWorkspace)
                     {
-                        if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalItem))
+                        if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalPath))
                         {
-                            IdeApp.Workspace.OpenWorkspaceItem(item.LocalItem, true);
+                            IdeApp.Workspace.OpenWorkspaceItem(item.LocalPath, true);
                         }
                         else
                         {
-                            IdeApp.Workbench.OpenDocument(item.LocalItem, null, true);
+                            IdeApp.Workbench.OpenDocument(item.LocalPath, null, true);
                         }
                     }
                     else
@@ -661,10 +662,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 MenuItem unLockItem = new MenuItem(GettextCatalog.GetString("UnLock"));
                 unLockItem.Activated += (sender, e) =>
                 {
-                    var folders = new List<string>(unLockItems.Where(i => i.ItemType == ItemType.Folder).Select(i => (string)i.ServerPath));
-                    var files = new List<string>(unLockItems.Where(i => i.ItemType == ItemType.File).Select(i => (string)i.ServerPath));
-                    _currentWorkspace.LockFolders(folders, LockLevel.None);
-                    _currentWorkspace.LockFiles(files, LockLevel.None);
+                    _currentWorkspace.LockItems(unLockItems.Select(i => i.ServerPath), LockLevel.None);
                     FireFilesChanged(unLockItems);
                     RefreshList(items);
                 };
@@ -728,7 +726,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             MenuItem addItem = new MenuItem(GettextCatalog.GetString("Add new item"));
             addItem.Activated += (sender, e) =>
             {
-                var path = item.LocalItem;
+                var path = item.LocalPath;
                 if (string.IsNullOrEmpty(path))
                     path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
 
@@ -738,7 +736,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     openFileDialog.Multiselect = true;
                     if (openFileDialog.Run())
                     {
-                        List<FilePath> files = new List<FilePath>();
+                        var files = new List<LocalPath>();
                         foreach (var fileName in openFileDialog.FileNames) 
                         {
                             //Check if file is in other folder
@@ -764,7 +762,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             MenuItem openFolder = new MenuItem(GettextCatalog.GetString("Open mapped folder"));
             openFolder.Activated += (sender, e) =>
             {
-                var path = item.LocalItem;
+                var path = item.LocalPath;
                 if (string.IsNullOrEmpty(path))
                     path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
                 DesktopService.OpenFolder(path);
@@ -844,7 +842,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void DeleteItems(List<ExtendedItem> items)
         {
             List<Failure> failures;
-            _currentWorkspace.PendDelete(items.Select(x => (FilePath)x.LocalItem).ToList(), RecursionType.Full, false, out failures);
+            _currentWorkspace.PendDelete(items.Select(x => x.LocalPath), RecursionType.Full, false, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 FailuresDisplayDialog.ShowFailures(failures);
             FireFilesRemoved(items);

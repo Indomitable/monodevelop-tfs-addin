@@ -36,6 +36,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
@@ -67,12 +68,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
     //    <s:attribute name="shelvedurl" type="s:string"/>
     //    <s:attribute name="ct" type="s:int" use="required"/>
     //</s:complexType>
-    public class PendingChange
+    sealed class PendingChange
     {
         internal static PendingChange FromXml(XElement element)
         {
             PendingChange change = new PendingChange();
-            change.ServerItem = element.GetAttributeValue("item");
             change.LocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
             change.ItemId = element.GetIntAttribute("itemid");
             change.Encoding = element.GetIntAttribute("enc");
@@ -85,6 +85,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             change.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));
             if (change.ChangeType == ChangeType.Edit)
                 change.ItemType = ItemType.File;
+
+            change.ServerItem = new RepositoryPath(element.GetAttributeValue("item"), change.ItemType == ItemType.Folder);
+
             return change;
         }
 
@@ -200,7 +203,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public ChangeType ChangeType { get; private set; }
 
-        public string ServerItem { get; private set; }
+        public RepositoryPath ServerItem { get; private set; }
 
         public string DownloadUrl { get; set; }
 

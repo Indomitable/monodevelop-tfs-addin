@@ -29,12 +29,14 @@
 
 using System;
 using System.Xml.Linq;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using Microsoft.TeamFoundation.VersionControl.Client;
+using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
-namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
+namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
 {
-    public class ItemSpec
+    internal sealed class ItemSpec
     {
         public ItemSpec(string item, RecursionType recursionType)
         {
@@ -55,6 +57,16 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             this.DeletionId = deletionId;
         }
 
+        internal static ItemSpec FromServerItem(ServerItem item)
+        {
+            return new ItemSpec(item.ServerPath, item.ItemType == ItemType.Folder ? RecursionType.Full : RecursionType.None);
+        }
+
+        internal static ItemSpec FromLocalItem(LocalPath path)
+        {
+            return new ItemSpec(path, path.IsDirectory ? RecursionType.Full : RecursionType.None);
+        }
+
         internal XElement ToXml(string elementName)
         {
             XElement result = new XElement(elementName);
@@ -62,7 +74,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
                 result.Add(new XAttribute("recurse", RecursionType));
             if (this.DeletionId != 0)
                 result.Add(new XAttribute("did", DeletionId));
-            if (RepositoryFilePath.IsServerItem(Item))
+            if (RepositoryPath.IsServerItem(Item))
                 result.Add(new XAttribute("item", Item));
             else
                 result.Add(new XAttribute("item", TfsPathHelper.FromPlatformPath(Item)));

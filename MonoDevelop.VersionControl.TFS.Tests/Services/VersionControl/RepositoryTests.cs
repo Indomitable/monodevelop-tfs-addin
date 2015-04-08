@@ -15,6 +15,7 @@ using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
 {
@@ -34,13 +35,13 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
         public void GetRoot()
         {
             var workspace = _fixture.GetWorkspace(_project.Collection);
-            var item = workspace.GetExtendedItem(RepositoryFilePath.RootFolder, ItemType.Folder);
+            var item = workspace.GetExtendedItem(RepositoryPath.RootFolder, ItemType.Folder);
             Assert.NotNull(item);
-            Assert.Equal(item.ServerPath, RepositoryFilePath.RootFolder);
+            Assert.Equal(item.ServerPath, RepositoryPath.RootFolder);
         }
 
         [Fact]
-        public void UploadFile()
+        public void AddFile()
         {
             var workspace = _fixture.GetWorkspace(_project.Collection);
             //Prepare file.
@@ -56,7 +57,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
                 content = Convert.ToBase64String(buffer);
             }
             File.WriteAllText(fileName, content, Encoding.UTF8);
-            workspace.PendAdd(new FilePath[] {fileName}, false, new NullProgressMonitor());
+            workspace.PendAdd(new [] { (LocalPath)fileName}, false, new NullProgressMonitor());
             
             Assert.Equal(1, workspace.PendingChanges.Count);
 
@@ -72,6 +73,16 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var downloadFileContent = File.ReadAllText(downloadFile);
 
             Assert.Equal(content, downloadFileContent);
+        }
+
+        [Fact]
+        public void GetFile()
+        {
+            var workspace = _fixture.GetWorkspace(_project.Collection);
+            var directory = _fixture.GetWorkspaceTopFolder();
+            Directory.Delete(directory, true);
+            Directory.CreateDirectory(directory);
+            workspace.Get(new GetRequest(RepositoryPath.RootFolder, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll, new NullProgressMonitor());
         }
     }
 }

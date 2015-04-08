@@ -32,6 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
@@ -130,10 +131,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                     using (var progress = VersionControlService.GetProgressMonitor("Lock Files", VersionControlOperationType.Pull))
                     {
                         progress.BeginTask("Lock Files", itemsToLock.Count);
-                        var folders = new List<string>(itemsToLock.Where(i => i.ItemType == ItemType.Folder).Select(i => (string)i.ServerPath));
-                        var files = new List<string>(itemsToLock.Where(i => i.ItemType == ItemType.File).Select(i => (string)i.ServerPath));
-                        workspace.LockFolders(folders, lockLevel);
-                        workspace.LockFiles(files, lockLevel);
+                        workspace.LockItems(itemsToLock.Select(i => i.ServerPath), lockLevel);
                         progress.EndTask();
                         progress.ReportSuccess("Finish locking.");
                     }

@@ -34,6 +34,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using Xunit;
 
@@ -72,7 +73,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
                     Name = WorkspaceName,
                     Owner = Server.UserName,
                     IsLocal = false,
-                    WorkingFolders = new List<WorkingFolder> { new WorkingFolder(RepositoryFilePath.RootFolder, MapFolder) }
+                    WorkingFolders = new List<WorkingFolder> { new WorkingFolder(RepositoryPath.RootFolder, MapFolder) }
                 };
                 collection.CreateWorkspace(workspaceData);
             }

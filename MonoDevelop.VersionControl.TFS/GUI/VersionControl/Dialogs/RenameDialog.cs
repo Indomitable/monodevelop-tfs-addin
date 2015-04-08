@@ -33,6 +33,7 @@ using GLib;
 using System.Collections.Generic;
 using System.Linq;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -64,7 +65,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         {
             get
             {
-                var dir = Path.GetDirectoryName(item.LocalItem);
+                var dir = Path.GetDirectoryName(item.LocalPath);
                 return Path.Combine(dir, nameEntry.Text);
             }
         }
@@ -79,11 +80,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                     {
                         progress.BeginTask("Rename", 1);
                         List<Failure> failures;
-                        if (item.ItemType == Microsoft.TeamFoundation.VersionControl.Client.Enums.ItemType.File)
-                            workspace.PendRenameFile(item.LocalItem, dialog.NewPath, out failures);
-                        else
-                            workspace.PendRenameFolder(item.LocalItem, dialog.NewPath, out failures);
-
+                        workspace.PendRename(item.LocalPath, dialog.NewPath, out failures);
                         if (failures != null && failures.Any(f => f.SeverityType == Microsoft.TeamFoundation.VersionControl.Client.Enums.SeverityType.Error))
                         {
                             progress.EndTask();

@@ -30,10 +30,11 @@ using System;
 using System.Text;
 using System.Xml;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
-    public interface ILocalUpdateOperation
+    interface ILocalUpdateOperation
     {
         ChangeType ChangeType { get; }
 
@@ -43,11 +44,11 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         ItemType ItemType { get; }
 
-        string TargetLocalItem { get; }
+        LocalPath TargetLocalItem { get; }
 
-        string SourceLocalItem { get; }
+        LocalPath SourceLocalItem { get; }
 
-        string TargetServerItem { get; }
+        RepositoryPath TargetServerItem { get; }
 
         int VersionLocal { get; }
 

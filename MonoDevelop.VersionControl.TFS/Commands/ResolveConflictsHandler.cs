@@ -29,6 +29,7 @@ using MonoDevelop.Ide;
 using System.Collections.Generic;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
@@ -60,7 +61,7 @@ namespace MonoDevelop.VersionControl.TFS.Commands
         protected override void Run()
         {
             var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
-            List<FilePath> paths = new List<FilePath>();
+            var paths = new List<LocalPath>();
             //Add Solution
             paths.Add(solution.BaseDirectory);
             //Add linked files.

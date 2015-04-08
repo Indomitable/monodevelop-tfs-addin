@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
@@ -44,10 +45,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
                 var currentLine = linerHierarchy[i];
                 for (int j = i - 1; j >= 0; j--)
                 {
-                    var previousLine = string.Equals(linerHierarchy[j].ServerPath, RepositoryFilePath.RootFolder) ?
-                                                     RepositoryFilePath.RootFolder : linerHierarchy[j].ServerPath + RepositoryFilePath.Separator;
+                    var previousLine = string.Equals(linerHierarchy[j].ServerPath, RepositoryPath.RootFolder) ?
+                                                     RepositoryPath.RootFolder : linerHierarchy[j].ServerPath + RepositoryPath.Separator;
                     if (currentLine.ServerPath.StartsWith(previousLine, StringComparison.Ordinal) &&
-                        currentLine.ServerPath.Substring(previousLine.Length).IndexOf(RepositoryFilePath.Separator) == -1)
+                        currentLine.ServerPath.Substring(previousLine.Length).IndexOf(RepositoryPath.Separator) == -1)
                     {
                         currentLine.Parent = linerHierarchy[j];
                         currentLine.Parent.Children.Add(currentLine);
