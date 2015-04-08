@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
@@ -10,6 +11,24 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         public LocalPath(string localPath)
         {
             this.Path = !string.IsNullOrWhiteSpace(localPath) ? localPath.TrimEnd(System.IO.Path.DirectorySeparatorChar) : string.Empty;
+            //When runing linux we should check formating. If localPath is comming from server the it will be in format U:\SomeFolder\...
+            //We have to convert it to /SomeFolder/...
+            if (EnvironmentHelper.IsRunningOnUnix)
+            {
+                var regEx = new Regex("^[a-zA-Z]:\\\\");
+                if (regEx.IsMatch(this.Path))
+                {
+                    this.Path = this.Path.Remove(0, 2).Replace('\\', '/'); //Remove Drive letter and convert slashes
+                }
+            }
+         }
+
+        private StringComparison CompareType
+        {
+            get
+            {
+                return EnvironmentHelper.IsRunningOnUnix ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+            }
         }
 
         public override bool IsDirectory
@@ -40,15 +59,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
             return this.Path.Substring(basePath.Path.Length + 1); //Skip start slash
         }
 
-
-        private StringComparison CompareType
+        //TFS requires local file names to be in Windows format to have a drive letter and to use \ slash
+        public string ToRepositoryLocalPath()
         {
-            get
+            if (!EnvironmentHelper.IsRunningOnUnix)
+                return this.Path;
+            else
             {
-                return EnvironmentHelper.IsRunningOnUnix ? StringComparison.Ordinal : StringComparison.OrdinalIgnoreCase;
+                return "U:" + this.Path.Replace('/', '\\'); //Use U: like git-tf
             }
         }
-
+        
         public static implicit operator LocalPath(string path)
         {
             return new LocalPath(path);
@@ -62,6 +83,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         public static implicit operator FilePath(LocalPath path)
         {
             return path.Path;
+        }
+        
+        public override string ToString()
+        {
+            return this.Path;
         }
 
         #region Equal

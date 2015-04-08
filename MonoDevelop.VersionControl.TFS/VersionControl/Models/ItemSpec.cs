@@ -77,7 +77,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
             if (RepositoryPath.IsServerItem(Item))
                 result.Add(new XAttribute("item", Item));
             else
-                result.Add(new XAttribute("item", TfsPathHelper.FromPlatformPath(Item)));
+                result.Add(new XAttribute("item", (new LocalPath(Item)).ToRepositoryLocalPath()));
             return result;
         }
 

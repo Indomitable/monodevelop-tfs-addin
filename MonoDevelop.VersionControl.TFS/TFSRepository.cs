@@ -515,7 +515,7 @@ namespace MonoDevelop.VersionControl.TFS
             }
         }
 
-        public void Resolve(Conflict conflict, ResolutionType resolutionType)
+        internal void Resolve(Conflict conflict, ResolutionType resolutionType)
         {
             this.workspace.Resolve(conflict, resolutionType);
         }

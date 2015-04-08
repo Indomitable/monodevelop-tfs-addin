@@ -59,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
             item.HasOtherPendingChange = element.GetBooleanAttribute("ochg");
             item.LockStatus = EnumHelper.ParseLockLevel(element.GetAttributeValue("lock"));
             item.LockOwner = element.GetAttributeValue("lowner");
-            item.LocalPath = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
+            item.LocalPath = element.GetAttributeValue("local");
             item.TargetServerItem = element.GetAttributeValue("titem");
             item.SourceServerItem = element.GetAttributeValue("sitem");
             item.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));

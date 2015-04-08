@@ -63,8 +63,12 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
                 return mappedFolder.LocalItem;
             else
             {
-                string rest = TfsPathHelper.ServerToLocalPath(serverPath.ToRelativeOf(mappedFolder.ServerItem));
-                return Path.Combine(mappedFolder.LocalItem, rest);
+                string relativePath = serverPath.ToRelativeOf(mappedFolder.ServerItem);
+                if (!EnvironmentHelper.IsRunningOnUnix)
+                {
+                    relativePath = relativePath.Replace(RepositoryPath.Separator, Path.DirectorySeparatorChar);
+                }
+                return Path.Combine(mappedFolder.LocalItem, relativePath);
             }
         }
 

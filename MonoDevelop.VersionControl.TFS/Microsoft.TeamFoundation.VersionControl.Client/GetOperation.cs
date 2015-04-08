@@ -83,10 +83,18 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
             getOperation.ItemType = EnumHelper.ParseItemType(element.GetAttributeValue("type"));
             getOperation.ItemId = element.GetIntAttribute("itemid");
-            getOperation.SourceLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("slocal"));
-            getOperation.TargetLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("tlocal"));
-            getOperation.SourceServerItem = new RepositoryPath(element.GetAttributeValue("sitem"), getOperation.ItemType == ItemType.Folder);
-            getOperation.TargetServerItem = new RepositoryPath(element.GetAttributeValue("titem"), getOperation.ItemType == ItemType.Folder);
+            getOperation.SourceLocalItem = element.GetAttributeValue("slocal");
+            getOperation.TargetLocalItem = element.GetAttributeValue("tlocal");
+            RepositoryPath sourceSeverItem;
+            if (RepositoryPath.TryGet(element.GetAttributeValue("sitem"), getOperation.ItemType == ItemType.Folder, out sourceSeverItem))
+            {
+                getOperation.SourceServerItem = sourceSeverItem;
+            }
+            RepositoryPath targetServerItem;
+            if (RepositoryPath.TryGet(element.GetAttributeValue("titem"), getOperation.ItemType == ItemType.Folder, out targetServerItem))
+            {
+                getOperation.TargetServerItem = targetServerItem;
+            }
             getOperation.VersionServer = element.GetIntAttribute("sver");
             getOperation.VersionLocal = element.GetIntAttribute("lver");
             getOperation.ChangeType = EnumHelper.ParseChangeType(element.GetAttributeValue("chg"));

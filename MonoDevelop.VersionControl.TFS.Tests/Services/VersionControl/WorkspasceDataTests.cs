@@ -80,7 +80,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var path = new RepositoryPath("$", true);
             Assert.True(path.IsRoot);
             Assert.True(path.IsDirectory);
-            Assert.Equal(RepositoryPath.RootFolder, path.ItemName);
+            Assert.Equal(RepositoryPath.RootPath, path.ItemName);
             Assert.Null(path.ParentPath);
         }
 

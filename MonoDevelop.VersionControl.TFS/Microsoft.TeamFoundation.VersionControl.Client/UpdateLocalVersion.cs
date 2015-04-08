@@ -26,12 +26,13 @@
 
 using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     internal sealed class UpdateLocalVersion
     {
-        public UpdateLocalVersion(int itemId, string targetLocalItem, int localVersion)
+        public UpdateLocalVersion(int itemId, LocalPath targetLocalItem, int localVersion)
         {
             this.ItemId = itemId;
             this.TargetLocalItem = targetLocalItem;
@@ -40,7 +41,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
 
         public int ItemId { get; private set; }
 
-        public string TargetLocalItem { get; private set; }
+        public LocalPath TargetLocalItem { get; private set; }
 
         public int LocalVersion { get; private set; }
 
@@ -50,7 +51,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client
                          new XAttribute("itemid", ItemId),
                          new XAttribute("lver", LocalVersion));
             if (!string.IsNullOrEmpty(TargetLocalItem))
-                el.Add(new XAttribute("tlocal", TfsPathHelper.FromPlatformPath(TargetLocalItem)));
+                el.Add(new XAttribute("tlocal", TargetLocalItem.ToRepositoryLocalPath()));
             return el;
         }
     }

@@ -73,7 +73,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
                     Name = WorkspaceName,
                     Owner = Server.UserName,
                     IsLocal = false,
-                    WorkingFolders = new List<WorkingFolder> { new WorkingFolder(RepositoryPath.RootFolder, MapFolder) }
+                    WorkingFolders = new List<WorkingFolder> { new WorkingFolder(RepositoryPath.RootPath, MapFolder) }
                 };
                 collection.CreateWorkspace(workspaceData);
             }

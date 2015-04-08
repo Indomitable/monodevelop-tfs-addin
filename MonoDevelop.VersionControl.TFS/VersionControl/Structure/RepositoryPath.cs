@@ -35,7 +35,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
 {
     sealed class RepositoryPath : BasePath, IEquatable<RepositoryPath>, IComparable<RepositoryPath>
     {
-        public static readonly string RootFolder = "$";
+        private const string RootFolder = "$";
         public const char Separator = '/';
 
         private string[] GetPathParts()
@@ -50,6 +50,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
             this.Path = path.TrimEnd(Separator);
             if (isFolder)
                 this.Path += Separator;
+        }
+
+        public static bool TryGet(string path, bool isFolder, out RepositoryPath result)
+        {
+            if (!IsServerItem(path))
+            {
+                result = null;
+                return false;
+            }
+            result = new RepositoryPath(path, isFolder);
+            return true;
         }
 
         public static RepositoryPath RootPath

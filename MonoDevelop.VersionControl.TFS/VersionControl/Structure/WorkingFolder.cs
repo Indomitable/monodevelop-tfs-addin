@@ -31,11 +31,11 @@ using System;
 using System.IO;
 using System.Text;
 using System.Xml.Linq;
-using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using System.Xml.Serialization;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
 {
-    [System.Xml.Serialization.XmlTypeAttribute(Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
+    [XmlType(Namespace = "http://schemas.microsoft.com/TeamFoundation/2005/06/VersionControl/ClientServices/03")]
     internal sealed class WorkingFolder
     {
         public WorkingFolder(string serverItem, string localItem)
@@ -48,7 +48,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
 
         internal static WorkingFolder FromXml(XElement element)
         {
-            string local = TfsPathHelper.ToPlatformPath(element.Attribute("local").Value);
+            var local = new LocalPath(element.Attribute("local").Value);
             string serverItem = new RepositoryPath(element.Attribute("item").Value, true);
             var workFolder = new WorkingFolder(serverItem, local);
             if (element.Attribute("type") != null)
@@ -59,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         internal XElement ToXml()
         {
             return new XElement("WorkingFolder", 
-                new XAttribute("local", TfsPathHelper.FromPlatformPath(LocalItem)), 
+                new XAttribute("local", LocalItem.ToRepositoryLocalPath()), 
                 new XAttribute("item", ServerItem),
                 new XAttribute("type", this.Type.ToString())
             );
@@ -85,7 +85,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
         {
             if (RepositoryPath.IsServerItem(serverItem))
                 return;
-            string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, RepositoryPath.RootFolder);
+            string msg = String.Format("TF10125: The path '{0}' must start with {1}", serverItem, RepositoryPath.RootPath);
             throw new VersionControlException(msg);
         }
 

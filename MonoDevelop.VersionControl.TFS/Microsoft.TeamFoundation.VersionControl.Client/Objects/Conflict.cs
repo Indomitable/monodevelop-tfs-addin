@@ -29,10 +29,11 @@ using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 {
-    public class Conflict
+    sealed class Conflict
     {
         internal static Conflict FromXml(XElement element)
         {
@@ -68,8 +69,8 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
             conflict.TheirDeletionId = element.GetIntAttribute("tdid");
             conflict.TheirItemType = EnumHelper.ParseItemType(element.GetAttributeValue("ttype"));
             conflict.TheirLastMergedVersion = element.GetIntAttribute("tlmver");
-            conflict.SourceLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("srclitem"));
-            conflict.TargetLocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("tgtlitem"));
+            conflict.SourceLocalItem = element.GetAttributeValue("srclitem");
+            conflict.TargetLocalItem = element.GetAttributeValue("tgtlitem");
 
             conflict.ConflictType = EnumHelper.ParseConflictType(element.GetAttributeValue("ctype"));
             conflict.Reason = element.GetIntAttribute("reason");
@@ -140,9 +141,9 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public int TheirLastMergedVersion { get; private set; }
 
-        public string SourceLocalItem { get; private set; }
+        public LocalPath SourceLocalItem { get; private set; }
 
-        public string TargetLocalItem { get; private set; }
+        public LocalPath TargetLocalItem { get; private set; }
 
         public ConflictType ConflictType { get; private set; }
 

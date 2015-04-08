@@ -76,7 +76,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(collection);
-                    sourceDoc.ExpandPath(RepositoryPath.RootFolder + projectInfo.Name);
+                    sourceDoc.ExpandPath(RepositoryPath.RootPath + projectInfo.Name);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -84,13 +84,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
             var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
-            sourceControlExplorerView.ExpandPath(RepositoryPath.RootFolder + projectInfo.Name);
+            sourceControlExplorerView.ExpandPath(RepositoryPath.RootPath + projectInfo.Name);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
         internal static void Open(ProjectCollection collection)
         {
-            Open(collection, RepositoryPath.RootFolder, null);
+            Open(collection, RepositoryPath.RootPath, null);
         }
 
         internal static void Open(ProjectCollection collection, string path, string fileName)
@@ -257,7 +257,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var items = this._currentWorkspace.GetItems(new [] { new ItemSpec(RepositoryPath.RootFolder, RecursionType.Full) }, 
+            var items = this._currentWorkspace.GetItems(new[] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) }, 
                                                         VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);

@@ -166,7 +166,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public List<Item> QueryFolders()
         {
-            var itemSpecs = new [] { new ItemSpec(RepositoryPath.RootFolder, RecursionType.Full) };
+            var itemSpecs = new[] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) };
             return QueryItems(null, itemSpecs, VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
         }
 

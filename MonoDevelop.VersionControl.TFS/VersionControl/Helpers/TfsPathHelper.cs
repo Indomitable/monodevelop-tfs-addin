@@ -31,57 +31,37 @@ using System;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Helpers
 {
-    static class TfsPathHelper
-    {
-        static bool IsRunningOnUnix
-        {
-            get
-            {
-                var p = Environment.OSVersion.Platform;
-                return (p == PlatformID.Unix) || (p == PlatformID.MacOSX);
-            }
-        }
-
-        public static string ToPlatformPath(string path)
-        {
-            if (String.IsNullOrEmpty(path))
-                return path;
-
-            // TFS servers corrupt *nix type paths
-            if (!IsRunningOnUnix)
-                return path;
-            return path.Remove(0, 2).Replace('\\', '/');
-        }
-
-        public static string FromPlatformPath(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-                return path;
-
-            // TFS servers corrupt *nix type paths
-            if (!IsRunningOnUnix)
-                return path;
-            return "U:" + path.Replace('/', '\\'); //Use U: like git-tf
-        }
-
-        public static string ServerToLocalPath(string path)
-        {
-            //tfs uses / for server paths and \ for localpaths
-            if (!IsRunningOnUnix)
-            {
-                path = path.Replace('/', '\\');
-            }
-            return path;
-        }
-
-        public static string LocalToServerPath(string path)
-        {
-            //tfs uses / for server paths and \ for localpaths
-            if (!IsRunningOnUnix)
-            {
-                path = path.Replace('\\', '/');
-            }
-            return path;
-        }
-    }
+//    static class TfsPathHelper
+//    {
+//        static bool IsRunningOnUnix
+//        {
+//            get
+//            {
+//                var p = Environment.OSVersion.Platform;
+//                return (p == PlatformID.Unix) || (p == PlatformID.MacOSX);
+//            }
+//        }
+//
+//        public static string ToPlatformPath(string path)
+//        {
+//            if (String.IsNullOrEmpty(path))
+//                return path;
+//
+//            // TFS servers corrupt *nix type paths
+//            if (!IsRunningOnUnix)
+//                return path;
+//            return path.Remove(0, 2).Replace('\\', '/');
+//        }
+//
+//        public static string FromPlatformPath(string path)
+//        {
+//            if (string.IsNullOrEmpty(path))
+//                return path;
+//
+//            // TFS servers corrupt *nix type paths
+//            if (!IsRunningOnUnix)
+//                return path;
+//            return "U:" + path.Replace('/', '\\'); //Use U: like git-tf
+//        }
+//    }
 }

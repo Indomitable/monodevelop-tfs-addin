@@ -35,9 +35,9 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
         public void GetRoot()
         {
             var workspace = _fixture.GetWorkspace(_project.Collection);
-            var item = workspace.GetExtendedItem(RepositoryPath.RootFolder, ItemType.Folder);
+            var item = workspace.GetExtendedItem(RepositoryPath.RootPath, ItemType.Folder);
             Assert.NotNull(item);
-            Assert.Equal(item.ServerPath, RepositoryPath.RootFolder);
+            Assert.Equal(item.ServerPath, RepositoryPath.RootPath);
         }
 
         [Fact]
@@ -82,7 +82,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var directory = _fixture.GetWorkspaceTopFolder();
             Directory.Delete(directory, true);
             Directory.CreateDirectory(directory);
-            workspace.Get(new GetRequest(RepositoryPath.RootFolder, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll, new NullProgressMonitor());
+            workspace.Get(new GetRequest(RepositoryPath.RootPath, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll, new NullProgressMonitor());
         }
     }
 }

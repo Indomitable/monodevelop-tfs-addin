@@ -45,8 +45,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Objects
                 var currentLine = linerHierarchy[i];
                 for (int j = i - 1; j >= 0; j--)
                 {
-                    var previousLine = string.Equals(linerHierarchy[j].ServerPath, RepositoryPath.RootFolder) ?
-                                                     RepositoryPath.RootFolder : linerHierarchy[j].ServerPath + RepositoryPath.Separator;
+                    var previousLine = string.Equals(linerHierarchy[j].ServerPath, RepositoryPath.RootPath ) ?
+                                                     RepositoryPath.RootPath : linerHierarchy[j].ServerPath + RepositoryPath.Separator;
                     if (currentLine.ServerPath.StartsWith(previousLine, StringComparison.Ordinal) &&
                         currentLine.ServerPath.Substring(previousLine.Length).IndexOf(RepositoryPath.Separator) == -1)
                     {

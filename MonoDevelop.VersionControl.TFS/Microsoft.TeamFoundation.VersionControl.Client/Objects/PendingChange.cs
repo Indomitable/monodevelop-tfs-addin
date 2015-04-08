@@ -73,7 +73,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
         internal static PendingChange FromXml(XElement element)
         {
             PendingChange change = new PendingChange();
-            change.LocalItem = TfsPathHelper.ToPlatformPath(element.GetAttributeValue("local"));
+            change.LocalItem = element.GetAttributeValue("local");
             change.ItemId = element.GetIntAttribute("itemid");
             change.Encoding = element.GetIntAttribute("enc");
             change.Version = element.GetIntAttribute("ver");
@@ -153,7 +153,7 @@ namespace Microsoft.TeamFoundation.VersionControl.Client.Objects
 
         public int Encoding { get; private set; }
 
-        public string LocalItem { get; private set; }
+        public LocalPath LocalItem { get; private set; }
 
         public int ItemId { get; private set; }
 

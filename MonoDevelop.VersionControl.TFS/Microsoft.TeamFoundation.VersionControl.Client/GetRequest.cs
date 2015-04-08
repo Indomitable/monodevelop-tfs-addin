@@ -30,12 +30,13 @@
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client
 {
     internal sealed class GetRequest
     {
-        public GetRequest(string item, RecursionType recursionType, VersionSpec versionSpec)
+        public GetRequest(BasePath item, RecursionType recursionType, VersionSpec versionSpec)
         {
             this.ItemSpec = new ItemSpec(item, recursionType);
             this.VersionSpec = versionSpec;
