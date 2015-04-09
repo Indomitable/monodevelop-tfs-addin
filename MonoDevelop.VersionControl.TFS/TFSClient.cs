@@ -30,6 +30,7 @@ using System.Linq;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.Server;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS
@@ -53,7 +54,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override Repository OnCreateRepositoryInstance()
         {
-            return new TFSRepository(null, null);
+            return new TFSRepository(null);
         }
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
@@ -143,12 +144,13 @@ namespace MonoDevelop.VersionControl.TFS
         {
             foreach (var projectCollection in server.ProjectCollections)
             {
-                var workspaces = projectCollection.GetLocalWorkspaces();
-                var workspaceData = workspaces.SingleOrDefault(w => w.IsLocalPathMapped(path));
+                var workspaceDatas = projectCollection.GetLocalWorkspaces();
+                var workspaceData = workspaceDatas.SingleOrDefault(w => w.IsLocalPathMapped(path));
                 if (workspaceData != null)
                 {
-                    var workspace = new Workspace(projectCollection, workspaceData);
-                    return new TFSRepository(workspace, path);
+                    //var workspace = new Workspace(projectCollection, workspaceData);
+                    TFSContext.Current.Set(projectCollection, workspaceData);
+                    return new TFSRepository(path);
                 }
             }
             return null;

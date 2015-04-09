@@ -153,7 +153,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 {
                     progress.Log.WriteLine(request);
                 }
-                workspace.Get(requests, option, progress);
+                workspace.Get(requests, option);
                 progress.ReportSuccess("Finish Downloading.");
             }
             Respond(Command.Ok);

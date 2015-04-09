@@ -59,6 +59,16 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
             return this.Path.Substring(basePath.Path.Length + 1); //Skip start slash
         }
 
+        public LocalPath GetDirectory()
+        {
+            return new LocalPath(System.IO.Path.GetDirectoryName(Path));
+        }
+
+        public bool Exists()
+        {
+            return !IsEmpty && (Directory.Exists(Path) || File.Exists(Path));
+        }
+
         //TFS requires local file names to be in Windows format to have a drive letter and to use \ slash
         public string ToRepositoryLocalPath()
         {

@@ -57,11 +57,11 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
                 content = Convert.ToBase64String(buffer);
             }
             File.WriteAllText(fileName, content, Encoding.UTF8);
-            workspace.PendAdd(new [] { (LocalPath)fileName}, false, new NullProgressMonitor());
+            workspace.PendAdd(new [] { (LocalPath)fileName}, false);
             
             Assert.Equal(1, workspace.PendingChanges.Count);
 
-            var checkinResult = workspace.CheckIn(workspace.PendingChanges, "Test Check In", null, new NullProgressMonitor());
+            var checkinResult = workspace.CheckIn(workspace.PendingChanges, "Test Check In", null);
 
             Assert.Equal(0, workspace.PendingChanges.Count);
 
@@ -73,6 +73,13 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var downloadFileContent = File.ReadAllText(downloadFile);
 
             Assert.Equal(content, downloadFileContent);
+
+            List<Failure> failures;
+            workspace.PendDelete(new [] { (LocalPath)fileName }, RecursionType.None, false, out failures);
+            Assert.Empty(failures);
+            Assert.False(File.Exists(fileName));
+            item = workspace.GetItem(fileName, ItemType.File, false);
+            Assert.Null(item);
         }
 
         [Fact]
@@ -82,7 +89,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var directory = _fixture.GetWorkspaceTopFolder();
             Directory.Delete(directory, true);
             Directory.CreateDirectory(directory);
-            workspace.Get(new GetRequest(RepositoryPath.RootPath, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll, new NullProgressMonitor());
+            workspace.Get(new GetRequest(RepositoryPath.RootPath, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll);
         }
     }
 }

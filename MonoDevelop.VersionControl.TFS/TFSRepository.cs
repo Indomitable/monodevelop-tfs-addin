@@ -45,12 +45,12 @@ namespace MonoDevelop.VersionControl.TFS
 {
     public class TFSRepository : Repository
     {
-        private readonly Workspace workspace;
+        private readonly IWorkspace workspace;
         private readonly RepositoryCache cache;
 
-        internal TFSRepository(Workspace workspace, string rootPath)
+        internal TFSRepository(string rootPath)
         {
-            this.workspace = workspace;
+            this.workspace = DependencyInjection.Container.GetInstance<IWorkspace>();
             this.RootPath = rootPath;
             this.cache = new RepositoryCache(this);
         }
@@ -216,7 +216,7 @@ namespace MonoDevelop.VersionControl.TFS
                                         .Where(IsFileInWorkspace)
                                         .Select(file => new GetRequest(file, recurse ? RecursionType.Full : RecursionType.None, VersionSpec.Latest))
                                         .ToList();
-            workspace.Get(getRequests, GetOptions.None, monitor);
+            workspace.Get(getRequests, GetOptions.None);
             cache.RefreshItems(localPaths.Select(x => (LocalPath)x));
         }
 
@@ -249,7 +249,7 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnRevert(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
         {
             var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None));
-            var operations = workspace.Undo(specs, monitor);
+            var operations = workspace.Undo(specs);
             cache.RefreshItems(operations);
             FileService.NotifyFilesChanged(operations.Select(o => (FilePath)o));
 
@@ -266,7 +266,7 @@ namespace MonoDevelop.VersionControl.TFS
             var spec = new ItemSpec(localPath, localPath.IsDirectory ? RecursionType.Full : RecursionType.None);
             var rev = (TFSRevision)revision;
             var request = new GetRequest(spec, new ChangesetVersionSpec(rev.Version));
-            workspace.Get(request, GetOptions.None, monitor);
+            workspace.Get(request, GetOptions.None);
             cache.RefreshItem(localPath);
         }
 
@@ -506,7 +506,7 @@ namespace MonoDevelop.VersionControl.TFS
             using (var progress = VersionControlService.GetProgressMonitor("CheckOut"))
             {
                 progress.Log.WriteLine("Start check out item: " + path);
-                workspace.Get(new GetRequest(path, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll, progress);
+                workspace.Get(new GetRequest(path, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);
                 var failures = workspace.PendEdit(new [] { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
                 FailuresDisplayDialog.ShowFailures(failures);
                 cache.RefreshItem(path);
@@ -526,7 +526,7 @@ namespace MonoDevelop.VersionControl.TFS
             workspace.RefreshPendingChanges();
         }
 
-        internal Workspace Workspace { get { return workspace; }}
+        internal IWorkspace Workspace { get { return workspace; }}
     }
 }
 

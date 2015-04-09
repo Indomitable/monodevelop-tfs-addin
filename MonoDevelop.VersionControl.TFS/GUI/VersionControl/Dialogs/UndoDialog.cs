@@ -118,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                     {
                         progress.BeginTask("Undo", changesToUndo.Count);
                         var itemSpecs = changesToUndo.Select(change => new ItemSpec(change.LocalItem, change.ItemType == ItemType.File ? RecursionType.None : RecursionType.Full));
-                        workspace.Undo(itemSpecs, progress);
+                        workspace.Undo(itemSpecs);
                         progress.EndTask();
                         progress.ReportSuccess("Finish Undo");
                     }

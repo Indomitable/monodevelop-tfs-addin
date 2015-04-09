@@ -114,7 +114,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             lock(locker)
             {
                 List<ExtendedItem> items = new List<ExtendedItem>();
-                var workspaceFilesMapping = new Dictionary<Workspace, List<ItemSpec>>();
+                var workspaceFilesMapping = new Dictionary<IWorkspace, List<ItemSpec>>();
                 foreach (var path in paths) 
                 {
                     var workspace = repo.Workspace;

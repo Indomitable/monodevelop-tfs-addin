@@ -30,8 +30,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
@@ -86,7 +84,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
             if (workspace.PendingChanges.Any())
             {
                 var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));
-                workspace.Undo(undoItems, new NullProgressMonitor());
+                workspace.Undo(undoItems);
             }
             return workspace;
         }

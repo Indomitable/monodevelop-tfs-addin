@@ -128,7 +128,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                         foreach (var item in itemsToCheckOut)
                         {
                             var path = item.IsInWorkspace ? item.LocalPath : workspace.Data.GetLocalPathForServerPath(item.ServerPath);
-                            workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None, progress);
+                            workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None);
                             progress.Log.WriteLine("Check out item: " + item.ServerPath);
                             var failures = workspace.PendEdit(new [] { path }, RecursionType.Full, dialog.LockLevel);
                             if (failures != null && failures.Any())

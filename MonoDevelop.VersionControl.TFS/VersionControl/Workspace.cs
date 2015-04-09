@@ -35,10 +35,8 @@ using System.Text;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using MonoDevelop.Core;
-using MonoDevelop.Ide;
-using MonoDevelop.Projects;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
@@ -46,20 +44,28 @@ using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl
 {
-    sealed class Workspace : IEquatable<Workspace>, IComparable<Workspace>
+    sealed class Workspace : IWorkspace
     {
         private readonly ProjectCollection collection;
         private readonly WorkspaceData workspaceData;
+        private readonly ILoggingService _loggingService;
+        private readonly IProjectService _projectService;
+        private readonly IProgressService _progressService;
         private readonly List<PendingChange> pendingChanges = new List<PendingChange>(); 
 
-        public Workspace(ProjectCollection collection, WorkspaceData workspaceData)
+        internal Workspace(IContextProvider contextProvider, ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
         {
-            this.workspaceData = workspaceData;
-            this.collection = collection;
+            _loggingService = loggingService;
+            _projectService = projectService;
+            _progressService = progressService;
+            var context = contextProvider.GetContext();
+            this.workspaceData = context.WorkspaceData;
+            this.collection = context.ProjectCollection;
+
             RefreshPendingChanges();
         }
 
-        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems, IProgressMonitor monitor = null)
+        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             foreach (var change in changes)
             {
@@ -72,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
             }
             this.RefreshPendingChanges();
-            ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get, monitor);
+            ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
             foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
             {
                 MakeFileReadOnly(file);
@@ -164,19 +170,19 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region Version Control Operations
 
-        public GetStatus Get(GetRequest request, GetOptions options, IProgressMonitor monitor = null)
+        public GetStatus Get(GetRequest request, GetOptions options)
         {
             var requests = new List<GetRequest> { request };
-            return Get(requests, options, monitor);
+            return Get(requests, options);
         }
 
-        public GetStatus Get(List<GetRequest> requests, GetOptions options, IProgressMonitor monitor = null)
+        public GetStatus Get(List<GetRequest> requests, GetOptions options)
         {
             bool force = options.HasFlag(GetOptions.GetAll);
             bool noGet = options.HasFlag(GetOptions.Preview);
 
             var getOperations = this.collection.Get(workspaceData, requests, force, noGet);   
-            ProcessGetOperations(getOperations, ProcessType.Get, monitor);
+            ProcessGetOperations(getOperations, ProcessType.Get);
             return new GetStatus(getOperations.Count);
         }
 
@@ -189,13 +195,10 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 paths.Add(new ChangeRequest((LocalPath)dir, RequestType.Add, ItemType.Folder));
                 CollectPaths(dir, paths);
             }
-            foreach (var file in Directory.EnumerateFiles(root))
-            {
-                paths.Add(new ChangeRequest((LocalPath)file, RequestType.Add, ItemType.File));
-            }
+            paths.AddRange(Directory.EnumerateFiles(root).Select(file => new ChangeRequest((LocalPath) file, RequestType.Add, ItemType.File)));
         }
 
-        public int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive, IProgressMonitor monitor = null)
+        public int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
 
@@ -214,13 +217,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             List<Failure> failures;
             var operations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(operations, ProcessType.Add, monitor);
+            ProcessGetOperations(operations, ProcessType.Add);
             this.RefreshPendingChanges();
             return operations.Count;
         }
 
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures, IProgressMonitor monitor = null)
+        public void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, Directory.Exists(p) ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
 
@@ -232,11 +235,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             var processType = keepLocal ? ProcessType.DeleteKeep : ProcessType.Delete;
-            ProcessGetOperations(getOperations, processType, monitor);
+            ProcessGetOperations(getOperations, processType);
             this.RefreshPendingChanges();
         }
 
-        public List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel, IProgressMonitor monitor = null)
+        public List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
         {
             LockLevel lockLevel = LockLevel.None;
             switch (checkOutlockLevel)
@@ -256,28 +259,28 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Edit, monitor);
+            ProcessGetOperations(getOperations, ProcessType.Edit);
             this.RefreshPendingChanges();
             return failures;
         }
 
-        public void PendRename(LocalPath oldPath, LocalPath newPath, out List<Failure> failures, IProgressMonitor monitor = null)
+        public void PendRename(LocalPath oldPath, LocalPath newPath, out List<Failure> failures)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>
             {
                 new ChangeRequest(oldPath, newPath, RequestType.Rename, oldPath.IsDirectory ? ItemType.Folder : ItemType.File)
             };
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Rename, monitor);
+            ProcessGetOperations(getOperations, ProcessType.Rename);
             this.RefreshPendingChanges();
         }
 
-        public List<LocalPath> Undo(IEnumerable<ItemSpec> items, IProgressMonitor monitor = null)
+        public List<LocalPath> Undo(IEnumerable<ItemSpec> items)
         {
             var operations = this.collection.UndoPendChanges(workspaceData, items);
-            UndoGetOperations(operations, monitor);
+            UndoGetOperations(operations);
             this.RefreshPendingChanges();
-            return operations.Select(op => (LocalPath) op.TargetLocalItem).ToList();
+            return operations.Select(op => op.TargetLocalItem).ToList();
         }
 
 //        public void LockFiles(IEnumerable<LocalPath> paths, LockLevel lockLevel)
@@ -292,7 +295,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
 
 
-        public void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel, IProgressMonitor monitor = null)
+        public void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, 
                                                               ItemType.Any,
@@ -304,7 +307,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
-            ProcessGetOperations(getOperations, ProcessType.Get, monitor);
+            ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
         }
 
@@ -324,10 +327,10 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return this.collection.QueryConflicts(workspaceData, itemSpecs);
         }
 
-        public void Resolve(Conflict conflict, ResolutionType resolutionType, IProgressMonitor monitor = null)
+        public void Resolve(Conflict conflict, ResolutionType resolutionType)
         {
             var result = this.collection.Resolve(workspaceData, conflict, resolutionType);
-            ProcessGetOperations(result.GetOperations, ProcessType.Get, monitor);
+            ProcessGetOperations(result.GetOperations, ProcessType.Get);
             this.Undo(result.UndoOperations.Select(x => new ItemSpec(x.TargetLocalItem, RecursionType.None)));
         }
 
@@ -372,7 +375,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region IComparable<Workspace> Members
 
-        public int CompareTo(Workspace other)
+        public int CompareTo(IWorkspace other)
         {
             var nameCompare = string.Compare(this.Data.Name, other.Data.Name, StringComparison.Ordinal);
             if (nameCompare != 0)
@@ -384,7 +387,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region IEquatable<Workspace> Members
 
-        public bool Equals(Workspace other)
+        public bool Equals(IWorkspace other)
         {
             if (ReferenceEquals(null, other))
                 return false;
@@ -401,7 +404,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 return false;
             if (ReferenceEquals(this, obj))
                 return true;
-            Workspace cast = obj as Workspace;
+            var cast = obj as IWorkspace;
             if (cast == null)
                 return false;
             return Equals(cast);
@@ -430,19 +433,19 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         private string DownloadFile(GetOperation operation)
         {
-            string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
-            if (string.IsNullOrEmpty(path))
+            var path = operation.TargetLocalItem.IsEmpty ? operation.SourceLocalItem : operation.TargetLocalItem;
+            if (path.IsEmpty)
                 return string.Empty;
             if (operation.ItemType == ItemType.Folder)
             {
-                if (!Directory.Exists(path))
+                if (!path.Exists())
                     Directory.CreateDirectory(path);
                 return path;
             }
             if (operation.ItemType == ItemType.File)
             {
-                if (!Directory.Exists(Path.GetDirectoryName(path)))
-                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                if (!path.GetDirectory().Exists())
+                    Directory.CreateDirectory(path.GetDirectory());
                 return this.collection.Download(path, operation.ArtifactUri);
             }
             return string.Empty;
@@ -490,23 +493,10 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             if (processDirection == ProcessDirection.Undo)
             {
                 var update = ProcessGet(operation, ProcessDirection.Normal);
-                var filePath = operation.TargetLocalItem;
-                var projects = IdeApp.Workspace.GetAllProjects();
-                foreach (var project in projects)
-                {
-                    if (filePath.IsChildOrEqualOf(project.BaseDirectory))
-                    {
-                        if (operation.ItemType == ItemType.File)
-                            project.AddFile(operation.TargetLocalItem);
-                        if (operation.ItemType == ItemType.Folder)
-                            project.AddDirectory(operation.TargetLocalItem.ToRelativeOf(project.BaseDirectory));
-                        break;
-                    }
-                }
+                _projectService.AddFile(operation.TargetLocalItem);
                 return update;
             }
-            else
-                return InternalProcessDelete(operation, processType);
+            return InternalProcessDelete(operation, processType);
         }
 
         private UpdateLocalVersion InternalProcessDelete(GetOperation operation, ProcessType processType)
@@ -527,122 +517,28 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 }
                 catch
                 {
-                    LoggingService.Log(MonoDevelop.Core.Logging.LogLevel.Info, "Can not delete path:" + path);
+                    _loggingService.Log("Can not delete path:" + path);
                 }
             }
             return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
         }
 
-        private void ProjectMoveFile(Project project, FilePath source, string destination)
-        {
-            foreach (var file in project.Files)
-            {
-                if (file.FilePath == source)
-                {
-                    project.Files.Remove(file);
-                    break;
-                }
-            }
-            project.AddFile(destination);
-        }
-
-        private Project FindProjectContainingFolder(FilePath folder)
-        {
-            Project project = null;
-            foreach (var prj in IdeApp.Workspace.GetAllProjects())
-            {
-                foreach (var file in prj.Files)
-                {
-                    if (file.Subtype == Subtype.Directory && file.FilePath == folder)
-                    {
-                        project = prj;
-                        break;
-                    }
-                    if (file.Subtype == Subtype.Code && file.FilePath.IsChildPathOf(folder))
-                    {
-                        project = prj;
-                        break;
-                    }
-                }
-            }
-            return project;
-        }
-
-        private void ProjectMoveFolder(Project project, FilePath source, FilePath destination)
-        {
-            var filesToMove = new List<ProjectFile>();
-            ProjectFile folderFile = null;
-            foreach (var file in project.Files)
-            {
-                if (file.FilePath == source)
-                {
-                    folderFile = file;
-                }
-                if (file.FilePath.IsChildPathOf(source))
-                {
-                    filesToMove.Add(file);
-                }
-            }
-            if (folderFile != null)
-                project.Files.Remove(folderFile);
-
-            var relativePath = destination.ToRelative(project.BaseDirectory);
-            project.AddDirectory(relativePath);
-            foreach (var file in filesToMove)
-            {
-                project.Files.Remove(file);
-                var fileRelativePath = file.FilePath.ToRelative(source);
-                var fileToAdd = Path.Combine(destination, fileRelativePath);
-                if (FileHelper.HasFolder(fileToAdd))
-                {
-                    fileRelativePath = ((FilePath)fileToAdd).ToRelative(project.BaseDirectory);
-                    project.AddDirectory(fileRelativePath);
-                }
-                else
-                    project.AddFile(fileToAdd);
-            }
-        }
-
-        private UpdateLocalVersion ProcessRename(GetOperation operation, ProcessDirection processDirection, IProgressMonitor monitor)
+        private UpdateLocalVersion ProcessRename(GetOperation operation)
         {
             //If the operation is called by Repository OnMoveFile or OnMoveDirectory file/folder is moved before this method.
             //When is called by Source Exporer or By Revert command file is not moved
             bool hasBeenMoved = !FileHelper.Exists(operation.SourceLocalItem) && FileHelper.Exists(operation.TargetLocalItem);
             if (!hasBeenMoved)
             {
-                var found = false;
                 if (operation.ItemType == ItemType.File)
                 {
-                    var project = IdeApp.Workspace.GetProjectContainingFile(operation.SourceLocalItem);
-                    if (project != null)
-                    {
-                        found = true;
-                        FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                        this.ProjectMoveFile(project, operation.SourceLocalItem, operation.TargetLocalItem);
-                        project.Save(monitor);
-                    }
+                    FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
+                    _projectService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
                 }
-                else
+                else if (operation.ItemType == ItemType.Folder)
                 {
-                    var project = FindProjectContainingFolder(operation.SourceLocalItem);
-                    if (project != null)
-                    {
-                        found = true;
-                        FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                        this.ProjectMoveFolder(project, operation.SourceLocalItem, operation.TargetLocalItem);
-                        project.Save(monitor);
-                    }
-                }
-                if (!found)
-                {
-                    if (operation.ItemType == ItemType.File)
-                    {
-                        FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                    }
-                    else if (operation.ItemType == ItemType.Folder)
-                    {
-                        FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
-                    }
+                    FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
+                    _projectService.MoveFolder(operation.SourceLocalItem, operation.TargetLocalItem);
                 }
             }
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
@@ -664,23 +560,22 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             DeleteKeep
         }
 
-        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType, IProgressMonitor monitor)
+        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
         {
             if (getOperations == null || getOperations.Count == 0)
                 return;
-            IProgressMonitor progress = monitor ?? new Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
-            try
+            using (var progressDisplay = _progressService.CreateProgress())
             {
-                progress.BeginTask("Process", getOperations.Count);
+                progressDisplay.BeginTask("Process", getOperations.Count);
                 UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
                 foreach (var operation in getOperations)
                 {
                     try
                     {
-                        if (progress.IsCancelRequested)
+                        if (progressDisplay.IsCancelRequested)
                             break;
-                        progress.BeginTask(processType + " " + operation.TargetLocalItem, 1);
-                        UpdateLocalVersion update = null;
+                        progressDisplay.BeginTask(processType + " " + operation.TargetLocalItem, 1);
+                        UpdateLocalVersion update;
 
                         switch (processType)
                         {
@@ -694,7 +589,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                                 update = ProcessGet(operation, ProcessDirection.Normal);
                                 break;
                             case ProcessType.Rename:
-                                update = ProcessRename(operation, ProcessDirection.Normal, progress);
+                                update = ProcessRename(operation);
                                 break;
                             case ProcessType.Delete:
                             case ProcessType.DeleteKeep:
@@ -710,37 +605,32 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                     }
                     finally
                     {
-                        progress.EndTask();
+                        progressDisplay.EndTask();
                     }
                 }
                 updates.Flush();
-                progress.EndTask();
-            }
-            finally
-            {
-                if (monitor == null && progress != null)
-                    progress.Dispose();
+                progressDisplay.EndTask();
             }
         }
 
-        private void UndoGetOperations(List<GetOperation> getOperations, IProgressMonitor monitor = null)
+        private void UndoGetOperations(List<GetOperation> getOperations)
         {
             if (getOperations == null || getOperations.Count == 0)
                 return;
-            IProgressMonitor progress = monitor ?? new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
-            try
+           // IProgressMonitor progress = monitor ?? new MonoDevelop.Ide.ProgressMonitoring.MessageDialogProgressMonitor(DispatchService.IsGuiThread, false, false);
+            using (var progressDisplay = _progressService.CreateProgress())
             {
-                progress.BeginTask("Undo", getOperations.Count);
+                progressDisplay.BeginTask("Undo", getOperations.Count);
                 UpdateLocalVersionQueue updates = new UpdateLocalVersionQueue(this);
                 foreach (var operation in getOperations)
                 {
                     try
                     {
-                        if (progress.IsCancelRequested)
+                        if (progressDisplay.IsCancelRequested)
                             break;
                         string stepName = operation.ChangeType == ChangeType.None ? "Undo " : operation.ChangeType.ToString();
-                        progress.BeginTask(stepName + " " + operation.TargetLocalItem, 1);
-                        UpdateLocalVersion update = null;
+                        progressDisplay.BeginTask(stepName + " " + operation.TargetLocalItem, 1);
+                        UpdateLocalVersion update;
 
                         if (operation.IsAdd)
                         {
@@ -759,7 +649,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
                         if (operation.IsRename)
                         {
-                            update = ProcessRename(operation, ProcessDirection.Undo, progress);
+                            update = ProcessRename(operation);
                             if (update != null)
                                 updates.QueueUpdate(update);
                         }
@@ -769,21 +659,14 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                             if (update != null)
                                 updates.QueueUpdate(update);
                         }
-
-
                     }
                     finally
                     {
-                        progress.EndTask();
+                        progressDisplay.EndTask();
                     }
                 }
                 updates.Flush();
-                progress.EndTask();
-            }
-            finally
-            {
-                if (monitor == null && progress != null)
-                    progress.Dispose();
+                progressDisplay.EndTask();
             }
         }
 

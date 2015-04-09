@@ -38,6 +38,7 @@ using MonoDevelop.Ide.Gui;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs;
 using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
@@ -434,7 +435,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             if (_workspaceComboBox.GetActiveIter(out workspaceIter))
             {
                 var workspaceData = (WorkspaceData)_workspaceStore.GetValue(workspaceIter, 0);
-                _currentWorkspace = new Workspace(this.projectCollection, workspaceData);
+                TFSContext.Current.Set(projectCollection, workspaceData);
+                _currentWorkspace = DependencyInjection.Container.GetInstance<Workspace>();
                 TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspaceData.Name);
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))
@@ -821,7 +823,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 {
                     progress.Log.WriteLine(request);
                 }
-                _currentWorkspace.Get(requests, option, progress);
+                _currentWorkspace.Get(requests, option);
                 progress.ReportSuccess("Finish Downloading.");
             }
             RefreshList(items);

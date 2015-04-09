@@ -42,7 +42,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
     public class ResolveConflictsView : AbstractXwtViewContent
     {
-        private Workspace workspace;
+        private IWorkspace workspace;
         private readonly List<LocalPath> paths = new List<LocalPath>();
         private readonly VBox view = new VBox();
         private readonly ListView listView = new ListView();
@@ -66,7 +66,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             BuildGui();
         }
 
-        private void SetData(Workspace workspace, List<LocalPath> paths)
+        private void SetData(IWorkspace workspace, List<LocalPath> paths)
         {
             this.workspace = workspace;
             this.paths.Clear();
@@ -258,7 +258,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        internal static void Open(Workspace workspace, List<LocalPath> paths)
+        internal static void Open(IWorkspace workspace, List<LocalPath> paths)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
