@@ -114,7 +114,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(List<ExtendedItem> items, MonoDevelop.VersionControl.TFS.VersionControl.Workspace workspace)
+        internal static void Open(List<ExtendedItem> items, TFS.VersionControl.IWorkspace workspace)
         {
             using (var dialog = new CheckOutDialog())
             {

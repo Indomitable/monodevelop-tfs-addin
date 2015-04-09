@@ -60,7 +60,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private readonly TreeStore _treeStore = new TreeStore(typeof(ServerItem), typeof(Pixbuf), typeof(string));
         private ProjectCollection projectCollection;
         private readonly List<WorkspaceData> _workspaces = new List<WorkspaceData>();
-        private Workspace _currentWorkspace;
+        private IWorkspace _currentWorkspace;
 
         public SourceControlExplorerView()
         {
@@ -436,7 +436,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var workspaceData = (WorkspaceData)_workspaceStore.GetValue(workspaceIter, 0);
                 TFSContext.Current.Set(projectCollection, workspaceData);
-                _currentWorkspace = DependencyInjection.Container.GetInstance<Workspace>();
+                _currentWorkspace = DependencyInjection.Container.GetInstance<IWorkspace>();
                 TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspaceData.Name);
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))

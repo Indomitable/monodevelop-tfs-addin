@@ -31,6 +31,7 @@ using System.Linq;
 using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
@@ -58,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
         }
 
 
-        internal Workspace GetWorkspace(ProjectCollection collection)
+        internal IWorkspace GetWorkspace(ProjectCollection collection)
         {
             var workspaceDatas = collection.GetLocalWorkspaces();
             var workspaceData = workspaceDatas.SingleOrDefault(wd => string.Equals(wd.Name, WorkspaceName, StringComparison.OrdinalIgnoreCase));
@@ -80,7 +81,8 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
             {
                 Directory.CreateDirectory(topFolder);
             }
-            var workspace = new Workspace(collection, workspaceData);
+            TFSContext.Current.Set(collection, workspaceData);
+            var workspace = DependencyInjection.Container.GetInstance<IWorkspace>();
             if (workspace.PendingChanges.Any())
             {
                 var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));

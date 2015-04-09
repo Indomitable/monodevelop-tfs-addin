@@ -118,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(List<ExtendedItem> items, Workspace workspace)
+        internal static void Open(List<ExtendedItem> items, IWorkspace workspace)
         {
             using (var dialog = new LockDialog())
             {

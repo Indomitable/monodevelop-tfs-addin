@@ -42,6 +42,14 @@
     <MonoDevelopRoot>C:\Program Files (x86)\Xamarin Studio</MonoDevelopRoot>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="SimpleInjector, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
+      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="SimpleInjector.Diagnostics, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
+      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="MonoDevelop.Core">
       <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>

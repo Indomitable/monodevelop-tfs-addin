@@ -48,9 +48,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         readonly CheckBox forceGet = new CheckBox(GettextCatalog.GetString("Force get of file versions already in workspace"));
         //readonly CheckBox overrideGet = new CheckBox(GettextCatalog.GetString("Overwrite writeable files that are not checked out"));
         readonly SpinButton changeSetNumber = new SpinButton();
-        readonly Workspace workspace;
+        readonly IWorkspace workspace;
 
-        internal GetSpecVersionDialog(Workspace workspace)
+        internal GetSpecVersionDialog(IWorkspace workspace)
         {
             this.workspace = workspace;
             BuildGui();

@@ -70,7 +70,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static string Open(ExtendedItem item, Workspace workspace)
+        internal static string Open(ExtendedItem item, IWorkspace workspace)
         {
             using (var dialog = new RenameDialog(item))
             {
