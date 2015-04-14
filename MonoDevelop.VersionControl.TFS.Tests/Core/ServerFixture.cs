@@ -56,6 +56,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
 
             Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
             Server.LoadStructure();
+            DependencyInjection.Register(new TestServiceBuilder());
         }
 
 
@@ -81,8 +82,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
             {
                 Directory.CreateDirectory(topFolder);
             }
-            TFSContext.Current.Set(collection, workspaceData);
-            var workspace = DependencyInjection.Container.GetInstance<IWorkspace>();
+            var workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
             if (workspace.PendingChanges.Any())
             {
                 var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));

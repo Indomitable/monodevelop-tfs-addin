@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Autofac;
 using Gdk;
 using Gtk;
 using Microsoft.TeamFoundation.VersionControl.Client;
@@ -435,8 +436,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             if (_workspaceComboBox.GetActiveIter(out workspaceIter))
             {
                 var workspaceData = (WorkspaceData)_workspaceStore.GetValue(workspaceIter, 0);
-                TFSContext.Current.Set(projectCollection, workspaceData);
-                _currentWorkspace = DependencyInjection.Container.GetInstance<IWorkspace>();
+                _currentWorkspace = DependencyInjection.GetWorkspace(workspaceData, projectCollection);
                 TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspaceData.Name);
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))

@@ -42,12 +42,8 @@
     <MonoDevelopRoot>C:\Program Files (x86)\Xamarin Studio</MonoDevelopRoot>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SimpleInjector, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
-      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SimpleInjector.Diagnostics, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
-      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
+    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
@@ -82,6 +78,11 @@
   <ItemGroup>
     <Compile Include="BaseTFSConnectTest.cs" />
     <Compile Include="Core\EmptyProgressMonitor.cs" />
+    <Compile Include="Core\MonoDevelopServices\TestLoggingService.cs" />
+    <Compile Include="Core\MonoDevelopServices\TestProgressDisplay.cs" />
+    <Compile Include="Core\MonoDevelopServices\TestProgressService.cs" />
+    <Compile Include="Core\MonoDevelopServices\TestProjectService.cs" />
+    <Compile Include="Core\TestServiceBuilder.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />
     <Compile Include="QueryTests.cs" />

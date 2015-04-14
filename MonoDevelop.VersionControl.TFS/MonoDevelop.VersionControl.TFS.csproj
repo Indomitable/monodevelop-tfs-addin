@@ -63,7 +63,7 @@
     <Compile Include="GUI\Server\Authorization\NoAuthorizationConfig.cs" />
     <Compile Include="GUI\Server\Authorization\NtlmAuthorizationConfig.cs" />
     <Compile Include="GUI\Server\Authorization\UserPasswordAuthorizationConfig.cs" />
-    <Compile Include="Infrastructure\DependencyInjectionRegistration.cs" />
+    <Compile Include="Infrastructure\DependencyInjection.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressDisplay.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressService.cs" />
     <Compile Include="MonoDevelopWrappers\IProgressDisplay.cs" />
@@ -73,7 +73,6 @@
     <Compile Include="MonoDevelopWrappers\Implementation\LoggingService.cs" />
     <Compile Include="MonoDevelopWrappers\IProgressService.cs" />
     <Compile Include="TFSClient.cs" />
-    <Compile Include="TFSContext.cs" />
     <Compile Include="TFSRepository.cs" />
     <Compile Include="Commands\TFSCommands.cs" />
     <Compile Include="Commands\ConnectToServerHandler.cs" />
@@ -306,6 +305,10 @@
     <EmbeddedResource Include="Properties\Manifest.addin.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="MonoDevelop.Core">
       <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\MonoDevelop.Core.dll</HintPath>
       <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\bin\MonoDevelop.Core.dll</HintPath>
@@ -321,14 +324,6 @@
     <Reference Include="gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <Reference Include="glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
-    <Reference Include="SimpleInjector, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
-      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SimpleInjector.Diagnostics, Version=2.7.3.0, Culture=neutral, PublicKeyToken=984cb50dea722e99, processorArchitecture=MSIL">
-      <HintPath>..\packages\SimpleInjector.2.7.3\lib\net45\SimpleInjector.Diagnostics.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Xwt">

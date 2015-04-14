@@ -34,6 +34,7 @@ using Mono.TextEditor;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
+using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
@@ -48,9 +49,9 @@ namespace MonoDevelop.VersionControl.TFS
         private readonly IWorkspace workspace;
         private readonly RepositoryCache cache;
 
-        internal TFSRepository(string rootPath)
+        internal TFSRepository(string rootPath, WorkspaceData workspaceData, ProjectCollection collection)
         {
-            this.workspace = DependencyInjection.Container.GetInstance<IWorkspace>();
+            this.workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
             this.RootPath = rootPath;
             this.cache = new RepositoryCache(this);
         }

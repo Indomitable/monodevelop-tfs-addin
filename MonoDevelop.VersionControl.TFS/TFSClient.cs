@@ -48,13 +48,17 @@ namespace MonoDevelop.VersionControl.TFS
                     pad.Destroy();
                 }
             }
+            else
+            {
+                DependencyInjection.Register(new ServiceBuilder());
+            }
         }
 
         #region implemented abstract members of VersionControlSystem
 
         protected override Repository OnCreateRepositoryInstance()
         {
-            return new TFSRepository(null);
+            return new TFSRepository(null, null, null);
         }
 
         public override IRepositoryEditor CreateRepositoryEditor(Repository repo)
@@ -148,9 +152,7 @@ namespace MonoDevelop.VersionControl.TFS
                 var workspaceData = workspaceDatas.SingleOrDefault(w => w.IsLocalPathMapped(path));
                 if (workspaceData != null)
                 {
-                    //var workspace = new Workspace(projectCollection, workspaceData);
-                    TFSContext.Current.Set(projectCollection, workspaceData);
-                    return new TFSRepository(path);
+                    return new TFSRepository(path, workspaceData, projectCollection);
                 }
             }
             return null;

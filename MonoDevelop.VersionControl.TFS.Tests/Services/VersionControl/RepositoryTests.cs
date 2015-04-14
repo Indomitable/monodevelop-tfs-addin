@@ -12,6 +12,7 @@ using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Tests.Core;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xunit;
@@ -41,7 +42,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
         }
 
         [Fact]
-        public void AddFile()
+        public void AddAndDeleteFile()
         {
             var workspace = _fixture.GetWorkspace(_project.Collection);
             //Prepare file.
@@ -88,8 +89,13 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             var workspace = _fixture.GetWorkspace(_project.Collection);
             var directory = _fixture.GetWorkspaceTopFolder();
             Directory.Delete(directory, true);
-            Directory.CreateDirectory(directory);
+            var files = workspace.GetItems(new [] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) }, new LatestVersionSpec(), DeletedState.NonDeleted, ItemType.File, false);
             workspace.Get(new GetRequest(RepositoryPath.RootPath, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll);
+            foreach (var file in files)
+            {
+                Assert.True(File.Exists(workspace.Data.GetLocalPathForServerPath(file.ServerPath)));
+            }
         }
+
     }
 }

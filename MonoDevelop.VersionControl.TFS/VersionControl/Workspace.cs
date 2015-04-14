@@ -53,14 +53,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         private readonly IProgressService _progressService;
         private readonly List<PendingChange> pendingChanges = new List<PendingChange>(); 
 
-        internal Workspace(IContextProvider contextProvider, ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
+        public Workspace(WorkspaceData data, ProjectCollection collection, ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
         {
             _loggingService = loggingService;
             _projectService = projectService;
             _progressService = progressService;
-            var context = contextProvider.GetContext();
-            this.workspaceData = context.WorkspaceData;
-            this.collection = context.ProjectCollection;
+            this.workspaceData = data;
+            this.collection = collection;
 
             RefreshPendingChanges();
         }
