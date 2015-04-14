@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Core;
 using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.Ide;
@@ -13,7 +12,7 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
 {
     internal sealed class ProjectService : IProjectService
     {
-        private void ProjectMoveFile(Project project, FilePath source, string destination)
+        private void ProjectMoveFile(Project project, LocalPath source, string destination)
         {
             var file = project.Files.FirstOrDefault(f => f.FilePath == source);
             if (file != null)
@@ -21,7 +20,7 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             project.AddFile(destination);
         }
 
-        private Project FindProjectContainingFolder(FilePath folder)
+        private Project FindProjectContainingFolder(LocalPath folder)
         {
             Project project = null;
             foreach (var prj in IdeApp.Workspace.GetAllProjects())
@@ -33,7 +32,7 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
                         project = prj;
                         break;
                     }
-                    if (!file.FilePath.IsDirectory && file.FilePath.IsChildPathOf(folder))
+                    if (!file.FilePath.IsDirectory && file.FilePath.IsChildPathOf(new FilePath(folder)))
                     {
                         project = prj;
                         break;
@@ -43,7 +42,7 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             return project;
         }
 
-        private void ProjectMoveFolder(Project project, FilePath source, FilePath destination)
+        private void ProjectMoveFolder(Project project, LocalPath source, LocalPath destination)
         {
             var filesToMove = new List<ProjectFile>();
             ProjectFile folderFile = null;
@@ -53,7 +52,7 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
                 {
                     folderFile = file;
                 }
-                if (file.FilePath.IsChildPathOf(source))
+                if (file.FilePath.IsChildPathOf(new FilePath(source)))
                 {
                     filesToMove.Add(file);
                 }
@@ -61,12 +60,12 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             if (folderFile != null)
                 project.Files.Remove(folderFile);
         
-            var relativePath = destination.ToRelative(project.BaseDirectory);
+            var relativePath = destination.ToRelativeOf(new LocalPath(project.BaseDirectory));
             project.AddDirectory(relativePath);
             foreach (var file in filesToMove)
             {
                 project.Files.Remove(file);
-                var fileRelativePath = file.FilePath.ToRelative(source);
+                var fileRelativePath = file.FilePath.ToRelative(new FilePath(source));
                 var fileToAdd = Path.Combine(destination, fileRelativePath);
                 if (FileHelper.HasFolder(fileToAdd))
                 {
@@ -103,10 +102,10 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             var projects = IdeApp.Workspace.GetAllProjects();
             foreach (var project in projects)
             {
-                if (path.IsChildOrEqualOf(project.BaseDirectory))
+                if (path.IsChildOrEqualOf(new LocalPath(project.BaseDirectory)))
                 {
                     if (path.IsDirectory)
-                        project.AddDirectory(path.ToRelativeOf(project.BaseDirectory));
+                        project.AddDirectory(path.ToRelativeOf(new LocalPath(project.BaseDirectory)));
                     else
                         project.AddFile(path);
                 }

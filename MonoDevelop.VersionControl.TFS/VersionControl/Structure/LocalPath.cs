@@ -85,15 +85,15 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Structure
             return new LocalPath(path);
         }
 
-        public static implicit operator LocalPath(FilePath path)
-        {
-            return new LocalPath(path);
-        }
-
-        public static implicit operator FilePath(LocalPath path)
-        {
-            return path.Path;
-        }
+//        public static implicit operator LocalPath(FilePath path)
+//        {
+//            return new LocalPath(path);
+//        }
+//
+//        public static implicit operator FilePath(LocalPath path)
+//        {
+//            return path.Path;
+//        }
         
         public override string ToString()
         {

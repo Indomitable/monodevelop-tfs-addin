@@ -63,13 +63,13 @@ namespace MonoDevelop.VersionControl.TFS.Commands
             var solution = IdeApp.ProjectOperations.CurrentSelectedSolution;
             var paths = new List<LocalPath>();
             //Add Solution
-            paths.Add(solution.BaseDirectory);
+            paths.Add(new LocalPath(solution.BaseDirectory));
             //Add linked files.
             foreach (var path in solution.GetItemFiles(true))
             {
                 if (!path.IsChildPathOf(solution.BaseDirectory))
                 {
-                    paths.Add(path);
+                    paths.Add(new LocalPath(path));
                 }
             }
             var repo = (TFSRepository)VersionControlService.GetRepository(solution);

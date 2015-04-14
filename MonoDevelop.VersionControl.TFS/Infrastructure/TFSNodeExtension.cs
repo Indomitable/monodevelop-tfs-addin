@@ -60,7 +60,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             foreach (var item in base.GetItems(false))
             {
                 var repo = (TFSRepository)item.Repository;
-                repo.CheckoutFile(item.Path);
+                repo.CheckoutFile(new LocalPath(item.Path));
             }
         }
 
@@ -112,20 +112,20 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             if (solution != null)
             {
                 //Add Solution
-                paths.Add(solution.BaseDirectory);
+                paths.Add(new LocalPath(solution.BaseDirectory));
                 //Add linked files.
                 foreach (var path in solution.GetItemFiles(true))
                 {
                     if (!path.IsChildPathOf(solution.BaseDirectory))
                     {
-                        paths.Add(path);
+                        paths.Add(new LocalPath(path));
                     }
                 }
             }
             else
             {
                 var project = (Project)item.WorkspaceObject;
-                paths.Add(project.BaseDirectory);
+                paths.Add(new LocalPath(project.BaseDirectory));
             }
             return paths;
         }
@@ -166,7 +166,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 fileName = path.FileName;
                 path = path.ParentDirectory;
             }
-            var serverPath = repo.Workspace.Data.GetServerPathForLocalPath(path);
+            var serverPath = repo.Workspace.Data.GetServerPathForLocalPath(new LocalPath(path));
             SourceControlExplorerView.Open(repo.Workspace.ProjectCollection, serverPath, fileName);
         }
 

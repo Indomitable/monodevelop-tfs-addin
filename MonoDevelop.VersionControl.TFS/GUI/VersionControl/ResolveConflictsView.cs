@@ -123,7 +123,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void RowClicked()
         {
             var conflict = listStore.GetValue(listView.SelectedRow, itemField);
-            var doc = IdeApp.Workbench.OpenDocument(conflict.TargetLocalItem, (MonoDevelop.Projects.Project)null);
+            var doc = IdeApp.Workbench.OpenDocument(new FilePath(conflict.TargetLocalItem), (MonoDevelop.Projects.Project)null);
             if (doc != null)
             {
                 doc.Window.SwitchView(doc.Window.FindView<MonoDevelop.VersionControl.Views.IDiffView>());
@@ -242,7 +242,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 var row = this.listStore.AddRow();
                 this.listStore.SetValue(row, itemField, conflict);
                 this.listStore.SetValue(row, typeField, conflict.ConflictType.ToString());
-                var path = ((FilePath)conflict.TargetLocalItem).ToRelative(paths[0]);
+                var path = conflict.TargetLocalItem.ToRelativeOf(paths[0]);
                 this.listStore.SetValue(row, nameField, path);
                 this.listStore.SetValue(row, versionBaseField, conflict.BaseVersion);
                 this.listStore.SetValue(row, versionTheirField, conflict.TheirVersion);

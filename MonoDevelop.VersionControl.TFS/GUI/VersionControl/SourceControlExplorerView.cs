@@ -510,19 +510,19 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 {
                     if (item.IsInWorkspace)
                     {
-                        if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalPath))
+                        if (Projects.Services.ProjectService.IsWorkspaceItemFile(item.LocalPath))
                         {
                             IdeApp.Workspace.OpenWorkspaceItem(item.LocalPath, true);
                         }
                         else
                         {
-                            IdeApp.Workbench.OpenDocument(item.LocalPath, null, true);
+                            IdeApp.Workbench.OpenDocument(new FilePath(item.LocalPath), null, true);
                         }
                     }
                     else
                     {
                         var filePath = this.DownloadItemToTemp(item);
-                        if (MonoDevelop.Projects.Services.ProjectService.IsWorkspaceItemFile(filePath))
+                        if (Projects.Services.ProjectService.IsWorkspaceItemFile(filePath))
                         {
                             var parentFolder = _currentWorkspace.GetExtendedItem(item.ServerPath.ParentPath, ItemType.Folder);
                             if (parentFolder == null)
@@ -765,9 +765,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             openFolder.Activated += (sender, e) =>
             {
                 var path = item.LocalPath;
-                if (string.IsNullOrEmpty(path))
+                if (path.IsEmpty)
                     path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
-                DesktopService.OpenFolder(path);
+                DesktopService.OpenFolder(new FilePath(path));
             };
             return openFolder;
         }
@@ -792,13 +792,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FireFilesChanged(List<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
-            FileService.NotifyFilesChanged(items.Select(i => (FilePath)_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath)), true);
+            FileService.NotifyFilesChanged(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))), true);
         }
 
         private void FireFilesRemoved(List<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
-            FileService.NotifyFilesRemoved(items.Select(i => (FilePath)_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath)));
+            FileService.NotifyFilesRemoved(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))));
         }
 
         private void RefreshList(List<ExtendedItem> items)

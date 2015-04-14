@@ -7,16 +7,11 @@ using System.Text;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using MonoDevelop.Core;
-using MonoDevelop.Core.ProgressMonitoring;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Tests.Core;
-using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
-using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
 {

@@ -32,6 +32,7 @@ using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.Server;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS
 {
@@ -149,7 +150,7 @@ namespace MonoDevelop.VersionControl.TFS
             foreach (var projectCollection in server.ProjectCollections)
             {
                 var workspaceDatas = projectCollection.GetLocalWorkspaces();
-                var workspaceData = workspaceDatas.SingleOrDefault(w => w.IsLocalPathMapped(path));
+                var workspaceData = workspaceDatas.SingleOrDefault(w => w.IsLocalPathMapped(new LocalPath(path)));
                 if (workspaceData != null)
                 {
                     return new TFSRepository(path, workspaceData, projectCollection);
