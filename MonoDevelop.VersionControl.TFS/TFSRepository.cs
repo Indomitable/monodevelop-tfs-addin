@@ -297,19 +297,20 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths, RecursionType.None, monitor, keepLocal);
+            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), RecursionType.None, monitor, keepLocal);
+            FileService.NotifyFilesChanged(localPaths);
         }
 
         protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths, RecursionType.Full, monitor, keepLocal);
+            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), RecursionType.Full, monitor, keepLocal);
+            FileService.NotifyFilesChanged(localPaths);
         }
 
-        private void DeletePaths(FilePath[] localPaths, RecursionType recursion, IProgressMonitor monitor, bool keepLocal)
+        private void DeletePaths(LocalPath[] localPaths, RecursionType recursion, IProgressMonitor monitor, bool keepLocal)
         {
             List<Failure> failures;
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            workspace.PendDelete(paths.Where(IsFileInWorkspace), recursion, keepLocal, out failures);
+            workspace.PendDelete(localPaths.Where(IsFileInWorkspace), recursion, keepLocal, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
             {
                 foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
@@ -317,10 +318,8 @@ namespace MonoDevelop.VersionControl.TFS
                     monitor.ReportError(failure.Code, new Exception(failure.Message));
                 }
             }
-            cache.RefreshItems(paths);
-            FileService.NotifyFilesChanged(localPaths);
+            cache.RefreshItems(localPaths);
         }
-
 
         protected override string OnGetTextAtRevision(FilePath repositoryPath, Revision revision)
         {
@@ -502,18 +501,20 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnLock(IProgressMonitor monitor, params FilePath[] localPaths)
         {
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            workspace.LockItems(paths, LockLevel.CheckOut);
-            cache.RefreshItems(paths);
+            LockItems(localPaths.Select(x => new LocalPath(x)).ToArray(), LockLevel.CheckOut);
             FileService.NotifyFilesChanged(localPaths);
         }
 
         protected override void OnUnlock(IProgressMonitor monitor, params FilePath[] localPaths)
         {
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            workspace.LockItems(paths, LockLevel.None);
-            cache.RefreshItems(paths);
+            LockItems(localPaths.Select(x => new LocalPath(x)).ToArray(), LockLevel.None);
             FileService.NotifyFilesChanged(localPaths);
+        }
+
+        private void LockItems(LocalPath[] localPaths, LockLevel lockLevel)
+        {
+            workspace.LockItems(localPaths, lockLevel);
+            cache.RefreshItems(localPaths);
         }
 
         #endregion
