@@ -78,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         private void FillStore(List<ExtendedItem> items, IWorkspace workspace)
         {
             fileStore.Clear();
-            var pendingChanges = workspace.GetPendingChanges(items, false);
+            var pendingChanges = workspace.GetPendingChanges(items);
             foreach (var pendingChange in pendingChanges)
             {
                 var row = fileStore.AddRow();

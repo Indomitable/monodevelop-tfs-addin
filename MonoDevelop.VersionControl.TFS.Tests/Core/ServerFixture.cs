@@ -48,6 +48,8 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
 
         public ServerFixture()
         {
+            DependencyInjection.Register(new TestServiceBuilder());
+
             const string xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
   <Auth>
     <Ntlm UserName=""mono_tfs_plugin_cp"" Password=""mono_tfs_plugin"" Domain=""snd"" />
@@ -56,7 +58,6 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
 
             Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
             Server.LoadStructure();
-            DependencyInjection.Register(new TestServiceBuilder());
         }
 
 

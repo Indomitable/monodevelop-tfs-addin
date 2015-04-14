@@ -2,6 +2,8 @@
 {
     interface ILoggingService
     {
-        void Log(string message);
+        bool IsDebugMode { get; }
+        void LogToDebug(string message);
+        void LogToInfo(string message);
     }
 }

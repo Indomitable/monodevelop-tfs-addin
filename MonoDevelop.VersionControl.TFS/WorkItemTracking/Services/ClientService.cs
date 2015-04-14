@@ -81,7 +81,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
         private List<T> GetMetadata<T>(MetadataRowSetNames table)
             where T: class
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var envelope = invoker.CreateEnvelope("GetMetadataEx2", headerName);
             envelope.Header.Add(GetHeaderElement());
             envelope.Body.Add(new XElement(MessageNs + "metadataHave",
@@ -121,7 +121,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
 
         public List<StoredQuery> GetStoredQueries(WorkItemProject project)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("GetStoredQueries", headerName);
             msg.Header.Add(GetHeaderElement());
             msg.Body.Add(new XElement(MessageNs + "rowVersion", 0));
@@ -135,7 +135,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
         {
             WorkItemContext context = new WorkItemContext { ProjectId = query.ProjectId, Me = WorkItemsContext.WhoAmI };
 
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var envelope = invoker.CreateEnvelope("QueryWorkitems", headerName);
             envelope.Header.Add(GetHeaderElement());
             XNamespace queryNs = XNamespace.Get("");
@@ -178,7 +178,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
 
         public WorkItem GetWorkItem(int id)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("GetWorkItem", headerName);
             msg.Header.Add(GetHeaderElement());
             msg.Body.Add(new XElement(MessageNs + "workItemId", id));
@@ -199,7 +199,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
         {
             if (ids.Count > 50)
                 throw new Exception("Page only by 50");
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("PageWorkitemsByIds", headerName);
             msg.Header.Add(GetHeaderElement());
             msg.Body.Add(new XElement(MessageNs + "ids", ids.Select(i => new XElement(MessageNs + "int", i))));
@@ -231,7 +231,7 @@ namespace MonoDevelop.VersionControl.TFS.WorkItemTracking.Services
             string oneLineComment = comment.Replace(Environment.NewLine, " ");
             oneLineComment = oneLineComment.Substring(0, Math.Min(oneLineComment.Length, 120));
 
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("Update", headerName);
             msg.Header.Add(GetHeaderElement());
 

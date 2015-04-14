@@ -100,7 +100,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 var item = cachedItems.SingleOrDefault(ex => ex.ServerPath == serverPath);
                 if (item == null)
                 {
-                    var repoItem = workspace.GetExtendedItem(serverPath, ItemType.Any);
+                    var repoItem = workspace.GetExtendedItem(ItemSpec.FromLocalPath(localPath), ItemType.Any);
                     AddToCache(repoItem);
                     return repoItem;
                 }
@@ -158,8 +158,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 var workspace = repo.Workspace;
                 if (workspace == null)
                     return;
-                var serverPath = workspace.Data.GetServerPathForLocalPath(localPath);
-                var repoItem = workspace.GetExtendedItem(serverPath, ItemType.Any);
+                var repoItem = workspace.GetExtendedItem(ItemSpec.FromLocalPath(localPath), ItemType.Any);
                 AddToCache(repoItem);
             }
         }

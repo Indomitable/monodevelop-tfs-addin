@@ -58,7 +58,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
 
         private IEnumerable<XElement> GetXmlCollections()
         {
-            SoapInvoker invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             //var serviceNs = 
             var message = invoker.CreateEnvelope("QueryResourcesByType");
             message.AddElement(new XElement("resourceTypes", new XElement("guid", projectCollectionsTypeId)));

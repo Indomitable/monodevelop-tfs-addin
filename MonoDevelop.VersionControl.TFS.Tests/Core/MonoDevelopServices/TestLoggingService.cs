@@ -5,7 +5,14 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core.MonoDevelopServices
 {
     internal sealed class TestLoggingService : ILoggingService
     {
-        public void Log(string message)
+        public bool IsDebugMode { get { return true; } }
+
+        public void LogToDebug(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+        public void LogToInfo(string message)
         {
             Console.WriteLine(message);
         }

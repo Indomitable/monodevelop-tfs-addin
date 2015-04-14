@@ -1,6 +1,6 @@
-﻿using System;
-using System.Reflection;
-using Autofac;
+﻿using Autofac;
+using MonoDevelop.VersionControl.TFS.Core;
+using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation;
@@ -14,8 +14,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         public static void Register(ContainerBuilder builder)
         {
             builder.RegisterType<Workspace>().As<IWorkspace>();
-//                .FindConstructorsWith(t => 
-//                new [] { t.GetConstructor(BindingFlags.Instance | BindingFlags.NonPublic, null, new Type[] { typeof() }, null) });
+            builder.RegisterType<SoapInvoker>().As<ISoapInvoker>();
             Container = builder.Build();
         }
 
@@ -26,6 +25,12 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             return Container.Resolve<IWorkspace>(new TypedParameter(typeof(WorkspaceData), workspaceData),
                                                  new TypedParameter(typeof(ProjectCollection), collection));
         }
+
+        public static ISoapInvoker GetSoapInvoker(TFSService service)
+        {
+            return Container.Resolve<ISoapInvoker>(new TypedParameter(typeof(TFSService), service));
+        }
+
     }
 
 

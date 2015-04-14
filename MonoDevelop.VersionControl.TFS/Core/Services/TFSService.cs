@@ -28,6 +28,7 @@ using System.Xml.Linq;
 using System.Xml;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 
 namespace MonoDevelop.VersionControl.TFS.Core.Services
 {
@@ -58,6 +59,11 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
                 manager.AddNamespace("msg", MessageNs.ToString());
                 return manager;
             }
+        }
+
+        protected ISoapInvoker GetSoapInvoker()
+        {
+            return DependencyInjection.GetSoapInvoker(this);
         }
     }
 }

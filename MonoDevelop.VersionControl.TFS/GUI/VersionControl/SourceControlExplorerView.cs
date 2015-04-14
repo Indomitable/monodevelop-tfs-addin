@@ -487,7 +487,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private string DownloadItemToTemp(ExtendedItem extendedItem)
         {
-            var item = _currentWorkspace.GetItem(extendedItem.ServerPath, ItemType.File, true);
+            var item = _currentWorkspace.GetItem(ItemSpec.FromServerPath(extendedItem.ServerPath), ItemType.File, true);
             var filePath = _currentWorkspace.DownloadToTempWithName(item.ArtifactUri, item.ServerPath.ItemName);
             return filePath;
         }
@@ -524,7 +524,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                         var filePath = this.DownloadItemToTemp(item);
                         if (Projects.Services.ProjectService.IsWorkspaceItemFile(filePath))
                         {
-                            var parentFolder = _currentWorkspace.GetExtendedItem(item.ServerPath.ParentPath, ItemType.Folder);
+                            var parentFolder = _currentWorkspace.GetExtendedItem(ItemSpec.FromServerPath(item.ServerPath.ParentPath), ItemType.Folder);
                             if (parentFolder == null)
                                 return;
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });

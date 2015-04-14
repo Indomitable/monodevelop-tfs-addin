@@ -174,11 +174,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         private string GetBaseText(LocalPath localFile)
         {
-            var serverPath = workspace.Data.GetServerPathForLocalPath(localFile);
-            if (string.IsNullOrEmpty(serverPath))
-                return string.Empty;
-
-            var item = workspace.GetItem(serverPath, ItemType.File, true);
+            var item = workspace.GetItem(ItemSpec.FromLocalPath(localFile), ItemType.File, true);
             return workspace.GetItemContent(item);
         }
 
@@ -393,7 +389,7 @@ namespace MonoDevelop.VersionControl.TFS
                 }
                 if (versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
                 {
-                    var item = workspace.GetItem(versionInfo.RepositoryPath, ItemType.File, true);
+                    var item = workspace.GetItem(ItemSpec.FromServerPath(new RepositoryPath(versionInfo.RepositoryPath, false)), ItemType.File, true);
                     var lines = workspace.GetItemContent(item).Split(new [] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     text = string.Join(Environment.NewLine, lines.Select(l => "-" + l));
                     return new DiffInfo(baseLocalPath, versionInfo.LocalPath, text);

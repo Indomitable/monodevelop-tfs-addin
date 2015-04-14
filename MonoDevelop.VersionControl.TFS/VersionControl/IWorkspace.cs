@@ -16,18 +16,25 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         List<PendingChange> PendingChanges { get; }
         WorkspaceData Data { get; }
         ProjectCollection ProjectCollection { get; }
-        List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items, bool includeDownloadInfo);
-        List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths, bool includeDownloadInfo);
-        List<PendingSet> GetPendingSets(string item, RecursionType recurse);
-        Item GetItem(string path, ItemType itemType);
-        Item GetItem(string path, ItemType itemType, bool includeDownloadUrl);
-        List<Item> GetItems(IEnumerable<ItemSpec> itemSpecs, VersionSpec versionSpec, DeletedState deletedState, ItemType itemType, bool includeDownloadUrl);
-        ExtendedItem GetExtendedItem(string path, ItemType itemType);
-        List<ExtendedItem> GetExtendedItems(IEnumerable<ItemSpec> itemSpecs, DeletedState deletedState, ItemType itemType);
+
         void Map(string serverPath, string localPath);
         void ResetDownloadStatus(int itemId);
+
+        List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items);
+        List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths);
+        List<PendingSet> GetPendingSets(string item, RecursionType recurse);
+
+        Item GetItem(ItemSpec item, ItemType itemType, bool includeDownloadUrl);
+        List<Item> GetItems(IEnumerable<ItemSpec> itemSpecs, VersionSpec versionSpec, DeletedState deletedState, ItemType itemType, bool includeDownloadUrl);
+
+        ExtendedItem GetExtendedItem(ItemSpec item, ItemType itemType);
+        List<ExtendedItem> GetExtendedItems(IEnumerable<ItemSpec> itemSpecs, DeletedState deletedState, ItemType itemType);
+
+        
         GetStatus Get(GetRequest request, GetOptions options);
-        GetStatus Get(List<GetRequest> requests, GetOptions options);
+        GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options);
+
+
         int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive);
         void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures);
         List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel);
@@ -37,6 +44,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, VersionSpec versionFrom, VersionSpec versionTo, short maxCount);
         Changeset QueryChangeset(int changeSetId, bool includeChanges = false, bool includeDownloadUrls = false, bool includeSourceRenames = true);
         List<Conflict> GetConflicts(IEnumerable<LocalPath> paths);
+        void CheckOut(IEnumerable<LocalPath> paths, out ICollection<Failure> failures);
         void Resolve(Conflict conflict, ResolutionType resolutionType);
         string DownloadToTempWithName(string downloadUrl, string fileName);
         string DownloadToTemp(string downloadUrl);

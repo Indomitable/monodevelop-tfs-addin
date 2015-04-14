@@ -23,33 +23,36 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
+using System.IO;
 using System.Net;
+using System.Text;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using System.IO;
-using System.Text;
-using MonoDevelop.VersionControl.TFS;
-using MonoDevelop.VersionControl.TFS.Core.ServerAuthentication;
+using MonoDevelop.VersionControl.TFS.Core.Services;
+using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 
 namespace MonoDevelop.VersionControl.TFS.Core
 {
-    internal sealed class SoapInvoker
+    internal sealed class SoapInvoker : ISoapInvoker
     {
         readonly XNamespace xsiNs = XmlSchema.InstanceNamespace;
         readonly XNamespace xsdNs = XmlSchema.Namespace;
         readonly XNamespace soapNs = "http://schemas.xmlsoap.org/soap/envelope/";
-        readonly static object locker = new object();
+        
 
-        readonly Services.TFSService service;
+        readonly TFSService service;
+        private readonly ILoggingService _loggingService;
         readonly XNamespace messagegNs;
         readonly Uri url;
         readonly XDocument document;
         string methodName;
 
-        public SoapInvoker(Services.TFSService service)
+        public SoapInvoker(TFSService service, ILoggingService loggingService)
         {
             this.service = service;
+            _loggingService = loggingService;
             this.url = service.Url;
             this.messagegNs = service.MessageNs;
             this.document = new XDocument(
@@ -87,12 +90,6 @@ namespace MonoDevelop.VersionControl.TFS.Core
         {
             var responseElement = InvokeResponse();
             return MethodResultExtractor(responseElement);
-        }
-
-        private FileStream GetLogFileStream()
-        {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "TFS.VersionControl.Debug.log");
-            return File.Open(path, FileMode.OpenOrCreate, FileAccess.Write);
         }
 
         public XElement InvokeResponse()
@@ -160,19 +157,7 @@ namespace MonoDevelop.VersionControl.TFS.Core
             }
             finally
             {
-                if (TFSVersionControlService.Instance.IsDebugMode)
-                {
-                    lock (locker)
-                    {
-                        using (var stream = GetLogFileStream())
-                        {
-                            stream.Seek(0, SeekOrigin.End);
-                            byte[] bytes = Encoding.UTF8.GetBytes(logBuilder.ToString());
-                            stream.Write(bytes, 0, bytes.Length);
-                            stream.Flush();
-                        }
-                    }
-                }
+                _loggingService.LogToDebug(logBuilder.ToString());
             }
         }
 

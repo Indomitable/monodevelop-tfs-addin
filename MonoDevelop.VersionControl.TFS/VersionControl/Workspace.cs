@@ -93,17 +93,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         {
             this.PendingChanges.Clear();
             var paths = this.Data.WorkingFolders.Select(f => f.LocalItem);
-            this.PendingChanges.AddRange(this.GetPendingChanges(paths, false));
+            this.PendingChanges.AddRange(this.GetPendingChanges(paths));
         }
 
-        public List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items, bool includeDownloadInfo)
+        public List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items)
         {
             return this.collection.QueryPendingChangesForWorkspace(workspaceData, items.Select(ItemSpec.FromServerItem), false);
         }
 
-        public List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths, bool includeDownloadInfo)
+        public List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths)
         {
-            return this.collection.QueryPendingChangesForWorkspace(workspaceData, paths.Select(ItemSpec.FromLocalItem), false);
+            return this.collection.QueryPendingChangesForWorkspace(workspaceData, paths.Select(ItemSpec.FromLocalPath), false);
         }
 
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
@@ -116,15 +116,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region GetItems
 
-        public Item GetItem(string path, ItemType itemType)
+        public Item GetItem(ItemSpec item, ItemType itemType, bool includeDownloadUrl)
         {
-            return GetItem(path, itemType, false);
-        }
-
-        public Item GetItem(string path, ItemType itemType, bool includeDownloadUrl)
-        {
-            var itemSpec = new ItemSpec(path, RecursionType.None);
-            var items = this.GetItems(new [] { itemSpec }, VersionSpec.Latest, DeletedState.Any, itemType, includeDownloadUrl);
+            var items = this.GetItems(new[] { item }, VersionSpec.Latest, DeletedState.Any, itemType, includeDownloadUrl);
             return items.SingleOrDefault();
         }
 
@@ -133,10 +127,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return this.collection.QueryItems(workspaceData, itemSpecs, versionSpec, deletedState, itemType, includeDownloadUrl);
         }
 
-        public ExtendedItem GetExtendedItem(string path, ItemType itemType)
+        public ExtendedItem GetExtendedItem(ItemSpec item, ItemType itemType)
         {
-            var itemSpec = new ItemSpec(path, RecursionType.None);
-            var items = this.collection.QueryItemsExtended(workspaceData, new [] { itemSpec }, DeletedState.Any, itemType);
+            var items = this.collection.QueryItemsExtended(workspaceData, new[] { item }, DeletedState.Any, itemType);
             return items.SingleOrDefault();
         }
 
@@ -175,7 +168,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return Get(requests, options);
         }
 
-        public GetStatus Get(List<GetRequest> requests, GetOptions options)
+        public GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options)
         {
             bool force = options.HasFlag(GetOptions.GetAll);
             bool noGet = options.HasFlag(GetOptions.Preview);
@@ -348,6 +341,12 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.collection.UpdateLocalVersion(this.workspaceData, updateLocalVersionQueue);
         }
 
+        public void CheckOut(IEnumerable<LocalPath> paths, out ICollection<Failure> failures)
+        {
+            failures = new List<Failure>();
+        }
+
+
         #endregion
 
         internal void MakeFileReadOnly(string path)
@@ -516,7 +515,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 }
                 catch
                 {
-                    _loggingService.Log("Can not delete path:" + path);
+                    _loggingService.LogToInfo("Can not delete path:" + path);
                 }
             }
             return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);

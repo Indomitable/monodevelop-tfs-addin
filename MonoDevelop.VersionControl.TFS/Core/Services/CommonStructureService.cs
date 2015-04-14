@@ -23,9 +23,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
+using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Core.Services.Resolvers;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
@@ -41,7 +43,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
             
         }
 
-        public override System.Xml.Linq.XNamespace MessageNs
+        public override XNamespace MessageNs
         {
             get
             {
@@ -51,7 +53,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
 
         public List<ProjectInfo> ListAllProjects(ProjectCollection collection)
         {
-            SoapInvoker invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             invoker.CreateEnvelope("ListAllProjects");
             var resultEl = invoker.InvokeResult();
             return new List<ProjectInfo>(resultEl.GetElements("ProjectInfo").Select(e => ProjectInfo.FromServerXml(e, collection)).OrderBy(p => p.Name));

@@ -75,7 +75,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public WorkspaceData QueryWorkspace(string ownerName, string workspaceName)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             XElement msg = invoker.CreateEnvelope("QueryWorkspace");
             msg.AddElement("workspaceName", workspaceName);
             msg.AddElement("ownerName", ownerName);
@@ -86,7 +86,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public List<WorkspaceData> QueryWorkspaces(string ownerName, string computer)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             XElement msg = invoker.CreateEnvelope("QueryWorkspaces");
             if (!string.IsNullOrEmpty(ownerName))
                 msg.AddElement("ownerName", ownerName);
@@ -100,7 +100,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         public WorkspaceData UpdateWorkspace(string oldWorkspaceName, string ownerName,
                                          WorkspaceData newWorkspace)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             XElement msg = invoker.CreateEnvelope("UpdateWorkspace");
 
             msg.AddElement("oldWorkspaceName", oldWorkspaceName);
@@ -113,7 +113,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public WorkspaceData CreateWorkspace(WorkspaceData workspace)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             XElement msg = invoker.CreateEnvelope("CreateWorkspace");
             msg.AddElement(workspace.ToXml("workspace"));
             XElement result = invoker.InvokeResult();
@@ -122,7 +122,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public void DeleteWorkspace(string workspaceName, string ownerName)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("DeleteWorkspace");
             msg.AddElement("workspaceName", workspaceName);
             msg.AddElement("ownerName", ownerName);
@@ -133,7 +133,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal void UpdateLocalVersion(WorkspaceData workspaceData, UpdateLocalVersionQueue updateLocalVersionQueue)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("UpdateLocalVersion");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("ownerName", workspaceData.Owner);
@@ -147,7 +147,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
                                      DeletedState deletedState, ItemType itemType, 
                                      bool includeDownloadInfo)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryItems");
             if (workspaceData != null)
             {
@@ -173,7 +173,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         public List<ExtendedItem> QueryItemsExtended(WorkspaceData workspaceData, IEnumerable<ItemSpec>  itemSpecs,
                                                      DeletedState deletedState, ItemType itemType)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryItemsExtended");
             if (workspaceData != null)
             {
@@ -195,7 +195,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         {
             if (workspaceData == null)
                 throw new System.ArgumentNullException("workspaceData");
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("Get");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("ownerName", workspaceData.Owner);
@@ -219,7 +219,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
                                                  string queryWorkspaceName, string ownerName,
                                                  IEnumerable<ItemSpec> itemSpecs, bool generateDownloadUrls)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryPendingSets");
             msg.AddElement("localWorkspaceName", localWorkspaceName);
             msg.AddElement("localWorkspaceOwner", localWorkspaceOwner);
@@ -240,7 +240,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal List<GetOperation> PendChanges(WorkspaceData workspaceData, IEnumerable<ChangeRequest> changeRequest, out List<Failure> failures)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("PendChanges");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("ownerName", workspaceData.Owner);
@@ -253,7 +253,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal List<GetOperation> UndoPendChanges(WorkspaceData workspaceData, IEnumerable<ItemSpec> itemSpecs)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("UndoPendingChanges");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("ownerName", workspaceData.Owner);
@@ -264,7 +264,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal List<PendingChange> QueryPendingChangesForWorkspace(WorkspaceData workspaceData, IEnumerable<ItemSpec> itemSpecs, bool includeDownloadInfo)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryPendingChangesForWorkspace");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("workspaceOwner", workspaceData.Owner);
@@ -277,7 +277,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         public List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, 
                                             VersionSpec versionFrom, VersionSpec versionTo, short maxCount)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryHistory");
             msg.AddElement(item.ToXml("itemSpec"));
             msg.AddElement(versionItem.ToXml("versionItem"));
@@ -297,7 +297,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         public Changeset QueryChangeset(int changeSetId, bool includeChanges, bool includeDownloadUrls, bool includeSourceRenames)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryChangeset");
             msg.Add(new XElement(MessageNs + "changesetId", changeSetId));
             msg.Add(new XElement(MessageNs + "includeChanges", includeChanges));
@@ -340,7 +340,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal CheckInResult CheckIn(WorkspaceData workspaceData, IEnumerable<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("CheckIn");
             msg.Add(new XElement(MessageNs + "workspaceName", workspaceData.Name));
             msg.Add(new XElement(MessageNs + "ownerName", workspaceData.Owner));
@@ -371,7 +371,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal List<Conflict> QueryConflicts(WorkspaceData workspaceData, IEnumerable<ItemSpec> items)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("QueryConflicts");
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("ownerName", workspaceData.Owner);
@@ -383,7 +383,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         internal ResolveResult Resolve(WorkspaceData workspaceData, Conflict conflict, ResolutionType resolutionType)
         {
-            var invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("Resolve");
             msg.Add(new XElement(MessageNs + "workspaceName", workspaceData.Name));
             msg.Add(new XElement(MessageNs + "ownerName", workspaceData.Owner));

@@ -50,6 +50,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\MonoDevelop.Addins.0.2.3\build\net40\MonoDevelop.Addins.targets" Condition="Exists('..\packages\MonoDevelop.Addins.0.2.3\build\net40\MonoDevelop.Addins.targets')" />
   <ItemGroup>
+    <Compile Include="Core\ISoapInvoker.cs" />
     <Compile Include="Core\ServerAuthorization\BasicAuthorization.cs" />
     <Compile Include="Core\ServerAuthorization\Config\INtlmAuthorizationConfig.cs" />
     <Compile Include="Core\ServerAuthorization\Config\IUserPasswordAuthorizationConfig.cs" />

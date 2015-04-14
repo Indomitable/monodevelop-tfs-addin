@@ -31,7 +31,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
         public void GetRoot()
         {
             var workspace = _fixture.GetWorkspace(_project.Collection);
-            var item = workspace.GetExtendedItem(RepositoryPath.RootPath, ItemType.Folder);
+            var item = workspace.GetExtendedItem(ItemSpec.FromServerPath(RepositoryPath.RootPath), ItemType.Folder);
             Assert.NotNull(item);
             Assert.Equal(item.ServerPath, RepositoryPath.RootPath);
         }
@@ -61,7 +61,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
 
             Assert.Equal(0, workspace.PendingChanges.Count);
 
-            var item = workspace.GetItem(fileName, ItemType.File, true);
+            var item = workspace.GetItem(ItemSpec.FromLocalPath(fileName), ItemType.File, true);
 
             Assert.Equal(fileName, workspace.Data.GetLocalPathForServerPath(item.ServerPath));
             Assert.Equal(checkinResult.ChangeSet, item.ChangesetId);
@@ -74,7 +74,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             workspace.PendDelete(new [] { (LocalPath)fileName }, RecursionType.None, false, out failures);
             Assert.Empty(failures);
             Assert.False(File.Exists(fileName));
-            item = workspace.GetItem(fileName, ItemType.File, false);
+            item = workspace.GetItem(ItemSpec.FromLocalPath(fileName), ItemType.File, false);
             Assert.Null(item);
         }
 
@@ -88,9 +88,33 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             workspace.Get(new GetRequest(RepositoryPath.RootPath, RecursionType.Full, new LatestVersionSpec()), GetOptions.GetAll);
             foreach (var file in files)
             {
-                Assert.True(File.Exists(workspace.Data.GetLocalPathForServerPath(file.ServerPath)));
+                var path = workspace.Data.GetLocalPathForServerPath(file.ServerPath);
+                Assert.True(File.Exists(path));
+                Assert.True(File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly));
             }
         }
 
+
+        [Fact]
+        public void EditFile()
+        {
+            var workspace = _fixture.GetWorkspace(_project.Collection);
+            var files = workspace.GetItems(new[] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) }, new LatestVersionSpec(), DeletedState.NonDeleted, ItemType.File, false);
+            var file = files.First();
+            
+        }
+
+
+        [Fact]
+        public void GetItem()
+        {
+            var workspace = _fixture.GetWorkspace(_project.Collection);
+            var directory = _fixture.GetWorkspaceTopFolder();
+            foreach (var file in Directory.EnumerateFiles(directory))
+            {
+                var item = workspace.GetItem(ItemSpec.FromLocalPath(file), ItemType.File, false);
+                Assert.NotNull(item);
+            }
+        }
     }
 }

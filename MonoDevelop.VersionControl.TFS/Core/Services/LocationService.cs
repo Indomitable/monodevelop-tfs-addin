@@ -53,7 +53,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Services
 
         public TFSService LoadService(System.Type serviceType)
         {
-            SoapInvoker invoker = new SoapInvoker(this);
+            var invoker = GetSoapInvoker();
             invoker.CreateEnvelope("QueryServices");
             var resultEl = invoker.InvokeResult();
 
