@@ -27,7 +27,6 @@ using System;
 using System.Net;
 using System.Xml.Linq;
 using System.Xml.Schema;
-using System.Web.Services.Protocols;
 
 namespace Tests
 {

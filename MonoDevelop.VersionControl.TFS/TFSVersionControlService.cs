@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
@@ -99,7 +100,7 @@ namespace MonoDevelop.VersionControl.TFS
                         Arguments = mergeToolElement.Attribute("Arguments").Value,
                     };
                 }
-                checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? CheckOutLockLevel.Unchanged : (CheckOutLockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
+                checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? LockLevel.Unchanged : (LockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
                 this.isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
             }
             catch (Exception e)
@@ -172,9 +173,9 @@ namespace MonoDevelop.VersionControl.TFS
 
         public MergeToolInfo MergeToolInfo { get; set; }
 
-        private CheckOutLockLevel checkOutLockLevel;
+        private LockLevel checkOutLockLevel;
 
-        public CheckOutLockLevel CheckOutLockLevel
+        public LockLevel CheckOutLockLevel
         {
             get { return checkOutLockLevel; }
             set

@@ -39,6 +39,7 @@ using MonoDevelop.Ide.Gui;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs;
 using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
+using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
@@ -664,7 +665,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 MenuItem unLockItem = new MenuItem(GettextCatalog.GetString("UnLock"));
                 unLockItem.Activated += (sender, e) =>
                 {
-                    _currentWorkspace.LockItems(unLockItems.Select(i => i.ServerPath), LockLevel.None);
+                    _currentWorkspace.UnLockItems(unLockItems.Select(i => i.ServerPath));
                     FireFilesChanged(unLockItems);
                     RefreshList(items);
                 };
@@ -678,7 +679,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 renameItem.Activated += (sender, e) =>
                 {
                     RenameDialog.Open(ableToRename, _currentWorkspace);
-                    FireFilesChanged(new List<ExtendedItem> { ableToRename });
+                    FireFilesChanged(ableToRename.ToEnumerable());
                     RefreshList(items);
                 };
                 groupItems.Add(renameItem);
@@ -751,8 +752,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             else
                                 files.Add(fileName);
                         }
-                        _currentWorkspace.PendAdd(files, false);
-                        CheckInDialog.Open(new List<ExtendedItem> { item }, _currentWorkspace);
+                        ICollection<Failure> failures;
+                        _currentWorkspace.PendAdd(files, false, out failures);
+                        if (failures.Any())
+                            FailuresDisplayDialog.ShowFailures(failures);
+                        else
+                            CheckInDialog.Open(item.ToEnumerable(), _currentWorkspace);
                     }
                 }
             };
@@ -789,13 +794,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        private void FireFilesChanged(List<ExtendedItem> items)
+        private void FireFilesChanged(IEnumerable<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
             FileService.NotifyFilesChanged(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))), true);
         }
 
-        private void FireFilesRemoved(List<ExtendedItem> items)
+        private void FireFilesRemoved(IEnumerable<ExtendedItem> items)
         {
             TFSVersionControlService.Instance.RefreshWorkingRepositories();
             FileService.NotifyFilesRemoved(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))));
@@ -843,7 +848,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void DeleteItems(List<ExtendedItem> items)
         {
-            List<Failure> failures;
+            ICollection<Failure> failures;
             _currentWorkspace.PendDelete(items.Select(x => x.LocalPath), RecursionType.Full, false, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 FailuresDisplayDialog.ShowFailures(failures);

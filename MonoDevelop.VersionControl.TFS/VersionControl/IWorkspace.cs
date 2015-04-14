@@ -29,23 +29,27 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         ExtendedItem GetExtendedItem(ItemSpec item, ItemType itemType);
         List<ExtendedItem> GetExtendedItems(IEnumerable<ItemSpec> itemSpecs, DeletedState deletedState, ItemType itemType);
-
         
         GetStatus Get(GetRequest request, GetOptions options);
         GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options);
 
+        void PendAdd(IEnumerable<LocalPath> paths, bool isRecursive, out ICollection<Failure> failures);
+        void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out ICollection<Failure> failures);
+        void PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, LockLevel lockLevel, out ICollection<Failure> failures);
+        void PendRename(LocalPath oldPath, LocalPath newPath, out ICollection<Failure> failures);
+        void CheckOut(IEnumerable<LocalPath> paths, out ICollection<Failure> failures);
 
-        int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive);
-        void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures);
-        List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel);
-        void PendRename(LocalPath oldPath, LocalPath newPath, out List<Failure> failures);
         List<LocalPath> Undo(IEnumerable<ItemSpec> items);
+        
+        void UnLockItems(IEnumerable<BasePath> paths);
         void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel);
+        
         List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, VersionSpec versionFrom, VersionSpec versionTo, short maxCount);
         Changeset QueryChangeset(int changeSetId, bool includeChanges = false, bool includeDownloadUrls = false, bool includeSourceRenames = true);
+
         List<Conflict> GetConflicts(IEnumerable<LocalPath> paths);
-        void CheckOut(IEnumerable<LocalPath> paths, out ICollection<Failure> failures);
         void Resolve(Conflict conflict, ResolutionType resolutionType);
+
         string DownloadToTempWithName(string downloadUrl, string fileName);
         string DownloadToTemp(string downloadUrl);
         void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue);

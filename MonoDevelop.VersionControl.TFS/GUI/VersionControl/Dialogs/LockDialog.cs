@@ -110,11 +110,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
         {
             get
             {
-                var checkOutLockLevel = (CheckOutLockLevel)lockLevelBox.SelectedItem;
-                if (checkOutLockLevel == CheckOutLockLevel.CheckOut)
-                    return LockLevel.CheckOut;
-                else
-                    return LockLevel.Checkin;
+                return (LockLevel)lockLevelBox.SelectedItem;
             }
         }
 

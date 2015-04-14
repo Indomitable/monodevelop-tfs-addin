@@ -23,9 +23,9 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
+
+using Microsoft.TeamFoundation.VersionControl.Client;
 using Xwt;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -37,11 +37,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             lockLevelBox.WidthRequest = 150;
 
             if (!forceLock)
-                lockLevelBox.Items.Add(CheckOutLockLevel.Unchanged, "Unchanged - Keep any existing lock.");
-            lockLevelBox.Items.Add(CheckOutLockLevel.CheckOut, "Check Out - Prevent other users from checking out and checking in");
-            lockLevelBox.Items.Add(CheckOutLockLevel.CheckIn, "Check In - Prevent other users from checking in but allow checking out");
-            if (forceLock && TFSVersionControlService.Instance.CheckOutLockLevel == CheckOutLockLevel.Unchanged)
-                lockLevelBox.SelectedItem = CheckOutLockLevel.CheckOut;
+                lockLevelBox.Items.Add(LockLevel.Unchanged, "Unchanged - Keep any existing lock.");
+            lockLevelBox.Items.Add(LockLevel.CheckOut, "Check Out - Prevent other users from checking out and checking in");
+            lockLevelBox.Items.Add(LockLevel.Checkin, "Check In - Prevent other users from checking in but allow checking out");
+            if (forceLock && TFSVersionControlService.Instance.CheckOutLockLevel == LockLevel.Unchanged)
+                lockLevelBox.SelectedItem = LockLevel.CheckOut;
             else
                 lockLevelBox.SelectedItem = TFSVersionControlService.Instance.CheckOutLockLevel;
             return lockLevelBox;

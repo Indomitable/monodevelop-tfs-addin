@@ -208,7 +208,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             return this.repositoryService.Value.QueryPendingChangesForWorkspace(workspaceData, itemSpecs, includeDownloadInfo);
         }
 
-        public List<GetOperation> PendChanges(WorkspaceData workspaceData, IEnumerable<ChangeRequest> changes, out List<Failure> failures)
+        public List<GetOperation> PendChanges(WorkspaceData workspaceData, IEnumerable<ChangeRequest> changes, out ICollection<Failure> failures)
         {
             return this.repositoryService.Value.PendChanges(workspaceData, changes, out failures);
         }

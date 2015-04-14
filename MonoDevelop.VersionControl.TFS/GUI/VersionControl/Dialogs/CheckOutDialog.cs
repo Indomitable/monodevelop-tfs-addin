@@ -32,6 +32,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using System.Linq;
 using MonoDevelop.Ide;
+using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
@@ -106,11 +107,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal CheckOutLockLevel LockLevel
+        internal LockLevel LockLevel
         {
             get
             {
-                return (CheckOutLockLevel)lockLevelBox.SelectedItem;
+                return (LockLevel)lockLevelBox.SelectedItem;
             }
         }
 
@@ -130,7 +131,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                             var path = item.IsInWorkspace ? item.LocalPath : workspace.Data.GetLocalPathForServerPath(item.ServerPath);
                             workspace.Get(new GetRequest(item.ServerPath, RecursionType.Full, VersionSpec.Latest), GetOptions.None);
                             progress.Log.WriteLine("Check out item: " + item.ServerPath);
-                            var failures = workspace.PendEdit(new [] { path }, RecursionType.Full, dialog.LockLevel);
+                            ICollection<Failure> failures;
+                            workspace.PendEdit(path.ToEnumerable(), RecursionType.Full, dialog.LockLevel, out failures);
                             if (failures != null && failures.Any())
                             {
                                 if (failures.Any(f => f.SeverityType == SeverityType.Error))

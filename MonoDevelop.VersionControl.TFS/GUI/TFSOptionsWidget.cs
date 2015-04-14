@@ -24,9 +24,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.Core;
 using Xwt;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
@@ -69,7 +69,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         public void ApplyChanges()
         {
-            TFSVersionControlService.Instance.CheckOutLockLevel = (CheckOutLockLevel)lockLevelBox.SelectedItem;
+            TFSVersionControlService.Instance.CheckOutLockLevel = (LockLevel)lockLevelBox.SelectedItem;
             TFSVersionControlService.Instance.IsDebugMode = debugModeBox.Active;
         }
     }

@@ -36,6 +36,7 @@ using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using MonoDevelop.VersionControl.TFS.VersionControl;
@@ -286,9 +287,11 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnAdd(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
         {
             var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            workspace.PendAdd(paths, recurse);
+            ICollection<Failure> failures;
+            workspace.PendAdd(paths, recurse, out failures);
             cache.RefreshItems(paths);
             FileService.NotifyFilesChanged(localPaths);
+            FailuresDisplayDialog.ShowFailures(failures);
         }
 
         protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
@@ -305,7 +308,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         private void DeletePaths(LocalPath[] localPaths, RecursionType recursion, IProgressMonitor monitor, bool keepLocal)
         {
-            List<Failure> failures;
+            ICollection<Failure> failures;
             workspace.PendDelete(localPaths.Where(IsFileInWorkspace), recursion, keepLocal, out failures);
             if (failures.Any(f => f.SeverityType == SeverityType.Error))
             {
@@ -327,8 +330,8 @@ namespace MonoDevelop.VersionControl.TFS
             if (string.IsNullOrEmpty(serverPath))
                 return string.Empty;
 
-            var items = workspace.GetItems(new [] { new ItemSpec(serverPath, RecursionType.None) }, 
-                                           new ChangesetVersionSpec(tfsRevision.Version), DeletedState.Any, ItemType.Any, true);
+            var item = new ItemSpec(serverPath, RecursionType.None);
+            var items = workspace.GetItems(item.ToEnumerable(), new ChangesetVersionSpec(tfsRevision.Version), DeletedState.Any, ItemType.Any, true);
             if (items.Count == 0)
                 return string.Empty;
             return workspace.GetItemContent(items[0]);
@@ -412,7 +415,7 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnMoveFile(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
-            List<Failure> failures;
+            ICollection<Failure> failures;
             workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
             cache.RefreshItem(new LocalPath(localDestPath));
             FailuresDisplayDialog.ShowFailures(failures);
@@ -421,7 +424,7 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnMoveDirectory(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
-            List<Failure> failures;
+            ICollection<Failure> failures;
             workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
             cache.RefreshItem(new LocalPath(localDestPath));
             FailuresDisplayDialog.ShowFailures(failures);
@@ -455,7 +458,8 @@ namespace MonoDevelop.VersionControl.TFS
                     progress.Log.WriteLine("Start editing item: " + path);
                     try
                     {
-                        var failures = workspace.PendEdit(new [] { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
+                        ICollection<Failure> failures;
+                        workspace.PendEdit(path.ToEnumerable(), RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel, out failures);
                         if (failures.Any(f => f.SeverityType == SeverityType.Error))
                         {
                             foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
@@ -512,7 +516,7 @@ namespace MonoDevelop.VersionControl.TFS
             workspace.LockItems(localPaths, lockLevel);
             cache.RefreshItems(localPaths);
         }
-
+        
         #endregion
 
         internal void CheckoutFile(LocalPath path)
@@ -520,8 +524,8 @@ namespace MonoDevelop.VersionControl.TFS
             using (var progress = VersionControlService.GetProgressMonitor("CheckOut"))
             {
                 progress.Log.WriteLine("Start check out item: " + path);
-                workspace.Get(new GetRequest(path, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);
-                var failures = workspace.PendEdit(new [] { path }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel);
+                ICollection<Failure> failures;
+                workspace.CheckOut(path.ToEnumerable(), out failures);
                 FailuresDisplayDialog.ShowFailures(failures);
                 cache.RefreshItem(path);
                 FileService.NotifyFileChanged(new FilePath(path));

@@ -27,11 +27,11 @@ using System;
 
 namespace Microsoft.TeamFoundation.VersionControl.Client.Enums
 {
-    public enum CheckOutLockLevel
-    {
-        Unchanged = 0,
-        CheckOut = 1,
-        CheckIn = 2
-    }
+//    public enum CheckOutLockLevel
+//    {
+//        Unchanged = 0,
+//        CheckOut = 1,
+//        CheckIn = 2
+//    }
 }
 

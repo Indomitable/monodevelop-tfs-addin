@@ -79,7 +79,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
                     using (var progress = VersionControlService.GetProgressMonitor("Undo", VersionControlOperationType.Pull))
                     {
                         progress.BeginTask("Rename", 1);
-                        List<Failure> failures;
+                        ICollection<Failure> failures;
                         workspace.PendRename(item.LocalPath, dialog.NewPath, out failures);
                         if (failures != null && failures.Any(f => f.SeverityType == Microsoft.TeamFoundation.VersionControl.Client.Enums.SeverityType.Error))
                         {

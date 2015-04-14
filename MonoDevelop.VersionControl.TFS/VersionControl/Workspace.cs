@@ -36,6 +36,7 @@ using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
@@ -118,7 +119,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         public Item GetItem(ItemSpec item, ItemType itemType, bool includeDownloadUrl)
         {
-            var items = this.GetItems(new[] { item }, VersionSpec.Latest, DeletedState.Any, itemType, includeDownloadUrl);
+            var items = this.GetItems(item.ToEnumerable(), VersionSpec.Latest, DeletedState.Any, itemType, includeDownloadUrl);
             return items.SingleOrDefault();
         }
 
@@ -164,8 +165,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         public GetStatus Get(GetRequest request, GetOptions options)
         {
-            var requests = new List<GetRequest> { request };
-            return Get(requests, options);
+            return Get(request.ToEnumerable(), options);
         }
 
         public GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options)
@@ -190,7 +190,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             paths.AddRange(Directory.EnumerateFiles(root).Select(file => new ChangeRequest((LocalPath) file, RequestType.Add, ItemType.File)));
         }
 
-        public int PendAdd(IEnumerable<LocalPath> paths, bool isRecursive)
+        public void PendAdd(IEnumerable<LocalPath> paths, bool isRecursive, out ICollection<Failure> failures)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>();
 
@@ -205,17 +205,18 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             }
 
             if (changes.Count == 0)
-                return 0;
+            {
+                failures = new List<Failure>();
+                return;
+            }
 
-            List<Failure> failures;
             var operations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(operations, ProcessType.Add);
             this.RefreshPendingChanges();
-            return operations.Count;
         }
 
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
-        public void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out List<Failure> failures)
+        public void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out ICollection<Failure> failures)
         {
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Delete, Directory.Exists(p) ? ItemType.Folder : ItemType.File, recursionType, LockLevel.None, VersionSpec.Latest)).ToList();
 
@@ -231,32 +232,21 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.RefreshPendingChanges();
         }
 
-        public List<Failure> PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, CheckOutLockLevel checkOutlockLevel)
+        public void PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, LockLevel lockLevel, out ICollection<Failure> failures)
         {
-            LockLevel lockLevel = LockLevel.None;
-            switch (checkOutlockLevel)
-            {
-                case CheckOutLockLevel.CheckOut:
-                    lockLevel = LockLevel.CheckOut;
-                    break;
-                case CheckOutLockLevel.CheckIn:
-                    lockLevel = LockLevel.Checkin;
-                    break;
-            }
             var changes = paths.Select(p => new ChangeRequest(p, RequestType.Edit, ItemType.File, recursionType, lockLevel, VersionSpec.Latest)).ToList();
             if (changes.Count == 0)
             {
-                return new List<Failure>();
+                failures = new List<Failure>();
+                return;
             }
 
-            List<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Edit);
             this.RefreshPendingChanges();
-            return failures;
         }
 
-        public void PendRename(LocalPath oldPath, LocalPath newPath, out List<Failure> failures)
+        public void PendRename(LocalPath oldPath, LocalPath newPath, out ICollection<Failure> failures)
         {
             List<ChangeRequest> changes = new List<ChangeRequest>
             {
@@ -275,17 +265,10 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             return operations.Select(op => op.TargetLocalItem).ToList();
         }
 
-//        public void LockFiles(IEnumerable<LocalPath> paths, LockLevel lockLevel)
-//        {
-//            SetLock(paths, ItemType.File, lockLevel, RecursionType.None);
-//        }
-//
-//        public void LockFolders(IEnumerable<LocalPath> paths, LockLevel lockLevel)
-//        {
-//            SetLock(paths, ItemType.File, lockLevel, RecursionType.Full);
-//        }
-
-
+        public void UnLockItems(IEnumerable<BasePath> paths)
+        {
+            this.LockItems(paths, LockLevel.None);
+        }
 
         public void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel)
         {
@@ -297,7 +280,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             if (changes.Count == 0)
                 return;
 
-            List<Failure> failures;
+            ICollection<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
             this.RefreshPendingChanges();
@@ -343,6 +326,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         public void CheckOut(IEnumerable<LocalPath> paths, out ICollection<Failure> failures)
         {
+            foreach (var localPath in paths)
+            {
+                Get(new GetRequest(localPath, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);    
+                PendEdit(new[] { localPath }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel, out failures);
+                if (failures.Any())
+                    return;
+            }
             failures = new List<Failure>();
         }
 

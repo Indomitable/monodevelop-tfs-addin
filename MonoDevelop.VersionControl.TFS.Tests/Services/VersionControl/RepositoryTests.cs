@@ -53,7 +53,8 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
                 content = Convert.ToBase64String(buffer);
             }
             File.WriteAllText(fileName, content, Encoding.UTF8);
-            workspace.PendAdd(new [] { (LocalPath)fileName}, false);
+            ICollection<Failure> failures;
+            workspace.PendAdd(new [] { (LocalPath)fileName}, false, out failures);
             
             Assert.Equal(1, workspace.PendingChanges.Count);
 
@@ -70,7 +71,6 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
 
             Assert.Equal(content, downloadFileContent);
 
-            List<Failure> failures;
             workspace.PendDelete(new [] { (LocalPath)fileName }, RecursionType.None, false, out failures);
             Assert.Empty(failures);
             Assert.False(File.Exists(fileName));
@@ -116,5 +116,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
                 Assert.NotNull(item);
             }
         }
+
+
     }
 }

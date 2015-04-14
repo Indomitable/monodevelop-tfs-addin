@@ -68,7 +68,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             this.ShowAll();
         }
 
-        void FillData(List<Failure> failures)
+        void FillData(ICollection<Failure> failures)
         {
             failuresStore.Clear();
             foreach (var item in failures)
@@ -92,7 +92,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        public static void ShowFailures(List<Failure> failures)
+        public static void ShowFailures(ICollection<Failure> failures)
         {
             if (failures == null || failures.Count == 0)
                 return;

@@ -238,7 +238,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 //            return new Tuple<List<PendingChange>, List<Failure>>(changes, faillist);
         }
 
-        internal List<GetOperation> PendChanges(WorkspaceData workspaceData, IEnumerable<ChangeRequest> changeRequest, out List<Failure> failures)
+        internal List<GetOperation> PendChanges(WorkspaceData workspaceData, IEnumerable<ChangeRequest> changeRequest, out ICollection<Failure> failures)
         {
             var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("PendChanges");
