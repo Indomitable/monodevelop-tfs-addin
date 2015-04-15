@@ -354,6 +354,8 @@
     <Copy Condition=" '$(OS)' == 'Windows_NT' " SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll" DestinationFolder="$(MonoDevelopRoot)\AddIns\VersionControl\" SkipUnchangedFiles="false" />
     <Copy Condition=" '$(OS)' != 'Windows_NT' " SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.dll.mdb" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
     <Copy Condition=" '$(OS)' == 'Windows_NT' " SourceFiles="..\Output\MonoDevelop.VersionControl.TFS.pdb" DestinationFolder="$(MonoDevelopRoot)\AddIns\VersionControl\" SkipUnchangedFiles="false" />
+    <Copy Condition=" '$(OS)' != 'Windows_NT' " SourceFiles="..\Output\Autofac.dll" DestinationFolder="..\External\monodevelop\main\build\AddIns\VersionControl\" SkipUnchangedFiles="false" />
+    <Copy Condition=" '$(OS)' == 'Windows_NT' " SourceFiles="..\Output\Autofac.dll" DestinationFolder="$(MonoDevelopRoot)\AddIns\VersionControl\" SkipUnchangedFiles="false" />
   </Target>
   <ItemGroup>
     <None Include="packages.config" />

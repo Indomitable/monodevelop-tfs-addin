@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using Autofac;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
@@ -49,18 +50,24 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
         public ServerFixture()
         {
             DependencyInjection.Register(new TestServiceBuilder());
-
-            const string xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
+            var versionControlService =  DependencyInjection.Container.Resolve<TFSVersionControlService>();
+            if (!versionControlService.Servers.Any())
+            {
+                const string xmlConfig = @"<Server Name=""CodePlex"" Uri=""https://tfs.codeplex.com/tfs"" UserName=""mono_tfs_plugin_cp"">
   <Auth>
     <Ntlm UserName=""mono_tfs_plugin_cp"" Password=""mono_tfs_plugin"" Domain=""snd"" />
   </Auth>
 </Server>";
-
-            Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
-            Server.LoadStructure();
+                Server = TeamFoundationServer.FromConfigXml(XElement.Parse(xmlConfig));
+                Server.LoadStructure();
+                versionControlService.AddServer(Server);
+            }
+            else
+            {
+                Server = versionControlService.Servers.First();
+            }
         }
-
-
+        
         internal IWorkspace GetWorkspace(ProjectCollection collection)
         {
             var workspaceDatas = collection.GetLocalWorkspaces();

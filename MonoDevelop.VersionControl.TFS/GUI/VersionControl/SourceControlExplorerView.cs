@@ -48,7 +48,7 @@ using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 {
-    public class SourceControlExplorerView : AbstractViewContent
+    public sealed class SourceControlExplorerView : AbstractViewContent
     {
         private readonly VBox _view = new VBox();
         private readonly Label _localFolder = new Label();
@@ -75,13 +75,14 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         internal static void Open(ProjectInfo projectInfo)
         {
             var collection = projectInfo.Collection;
+            var path = new RepositoryPath(RepositoryPath.RootPath + projectInfo.Name, true);
             foreach (var view in IdeApp.Workbench.Documents)
             {
                 var sourceDoc = view.GetContent<SourceControlExplorerView>();
                 if (sourceDoc != null)
                 {
                     sourceDoc.Load(collection);
-                    sourceDoc.ExpandPath(RepositoryPath.RootPath + projectInfo.Name);
+                    sourceDoc.ExpandPath(path);
                     view.Window.SelectWindow();
                     return;
                 }
@@ -89,7 +90,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
             var sourceControlExplorerView = new SourceControlExplorerView();
             sourceControlExplorerView.Load(collection);
-            sourceControlExplorerView.ExpandPath(RepositoryPath.RootPath + projectInfo.Name);
+            sourceControlExplorerView.ExpandPath(path);
             IdeApp.Workbench.OpenDocument(sourceControlExplorerView, true);
         }
 
@@ -98,7 +99,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             Open(collection, RepositoryPath.RootPath, null);
         }
 
-        internal static void Open(ProjectCollection collection, string path, string fileName)
+        internal static void Open(ProjectCollection collection, RepositoryPath path, string fileName)
         {
             foreach (var view in IdeApp.Workbench.Documents)
             {
@@ -361,7 +362,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        private void ExpandPath(string path)
+        private void ExpandPath(RepositoryPath path)
         {
             if (string.IsNullOrEmpty(path))
                 return;
@@ -369,7 +370,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             _treeStore.Foreach((m, p, i) =>
             {
                 var item = ((ServerItem)m.GetValue(i, 0));
-                if (string.Equals(item.ServerPath, path, StringComparison.OrdinalIgnoreCase))
+                if (item.ServerPath == path)
                 {
                     iter = i;
                     return true;
@@ -420,14 +421,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 _localFolder.Text = GettextCatalog.GetString("Not Mapped");
                 return;
             }
-            var mappedFolder = _currentWorkspace.Data.WorkingFolders.First(f => serverPath.IsChildOrEqualOf(f.ServerItem));
-            if (string.Equals(serverPath, mappedFolder.ServerItem, StringComparison.Ordinal))
-                _localFolder.Text = mappedFolder.LocalItem;
-            else
-            {
-                string rest = serverPath.ToRelativeOf(mappedFolder.ServerItem);
-                _localFolder.Text = Path.Combine(mappedFolder.LocalItem, rest);
-            }
+            _localFolder.Text = _currentWorkspace.Data.GetLocalPathForServerPath(serverPath);
         }
 
         #region Events
@@ -479,11 +473,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         void OnRefresh(object sender, EventArgs e)
         {
             TreeIter iter;
-            string selectedPath = string.Empty;
+            RepositoryPath selectedPath = null;
             if (_treeView.Selection.GetSelected(out iter))
                 selectedPath = ((ServerItem)_treeStore.GetValue(iter, 0)).ServerPath;
             FillTreeView();
-            if (!string.IsNullOrEmpty(selectedPath))
+            if (selectedPath != null)
                 ExpandPath(selectedPath);
         }
 
@@ -503,7 +497,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var item = (ExtendedItem)_listStore.GetValue(iter, 0);
             if (item.ItemType == ItemType.Folder)
             {
-                ExpandPath(item.TargetServerItem);
+                ExpandPath(item.ServerPath);
                 return;
             }
             if (item.ItemType == ItemType.File)

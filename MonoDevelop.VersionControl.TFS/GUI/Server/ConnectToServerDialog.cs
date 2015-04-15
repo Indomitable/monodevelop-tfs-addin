@@ -132,7 +132,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                             {
                                 if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjectColletions.Any())
                                 {
-                                    server.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
+                                    //server has all project collections and projects, filter only sected.
+                                    server.ProjectCollections.RemoveAll(pc => projectsDialog.SelectedProjectColletions.All(spc => spc != pc));
+                                    foreach (var projectCollection in server.ProjectCollections)
+                                    {
+                                        var selectedProjectCollection = projectsDialog.SelectedProjectColletions.Single(spc => spc == projectCollection);
+                                        projectCollection.Projects.RemoveAll(p => selectedProjectCollection.Projects.All(sp => sp != p));
+                                    }
                                     _service.AddServer(server);
                                     UpdateServersList();
                                 }

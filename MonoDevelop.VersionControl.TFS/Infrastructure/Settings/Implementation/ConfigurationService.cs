@@ -56,7 +56,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Settings.Implementation
 
             var isDebugElement = document.Root.Element("DebugMode");
             if (isDebugElement != null)
-                configuration.IsDebugMode = Convert.ToBoolean(isDebugElement);
+                configuration.IsDebugMode = Convert.ToBoolean(isDebugElement.Value);
 
             return configuration;
         }

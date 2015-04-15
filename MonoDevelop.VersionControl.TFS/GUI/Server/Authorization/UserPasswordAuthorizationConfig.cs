@@ -72,7 +72,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server.Authorization
                 //Try store credentials in storage
                 CredentialsManager.StoreCredential(_serverUri, passwordEntry.Password);
                 var password = CredentialsManager.GetPassword(_serverUri); //Try Get Password
-                clearSavePassword = password == null;
+                clearSavePassword = password != passwordEntry.Password;
                 return passwordEntry.Password;
             }
         }

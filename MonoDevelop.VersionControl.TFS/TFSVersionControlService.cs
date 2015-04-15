@@ -71,7 +71,7 @@ namespace MonoDevelop.VersionControl.TFS
             return _configuration.Servers.Any(s => s.Uri == url);
         }
 
-        public List<TeamFoundationServer> Servers { get { return _configuration.Servers; } }
+        public IReadOnlyCollection<TeamFoundationServer> Servers { get { return _configuration.Servers; } }
 
         public event Action OnServersChange;
 

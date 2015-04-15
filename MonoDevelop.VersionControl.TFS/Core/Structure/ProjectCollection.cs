@@ -51,6 +51,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         private ProjectCollection(TeamFoundationServer server)
         {
             this.Server = server;
+            this.ActiveWorkspaceName = string.Empty;
             repositoryService = new Lazy<RepositoryService>(this.GetService<RepositoryService>);
             clientService = new Lazy<ClientService>(this.GetService<ClientService>);
             commonStructureService = new Lazy<CommonStructureService>(this.GetService<CommonStructureService>);

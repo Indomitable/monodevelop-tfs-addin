@@ -118,7 +118,7 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             }
         }
         #else
-		public static bool IsRunningKDE { get { return false; } }
+        public static bool IsRunningKDE { get { return false; } }
         #endif
         /// <summary>
         /// Stores the credential.

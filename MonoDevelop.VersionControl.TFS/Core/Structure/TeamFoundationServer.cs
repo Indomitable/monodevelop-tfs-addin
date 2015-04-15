@@ -44,7 +44,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             var element = new XElement("Server",
                                 new XAttribute("Name", this.Name),
                                 new XAttribute("Uri", this.Uri),
-                                new XAttribute("UserName", this.Uri));
+                                new XAttribute("UserName", this.UserName));
             element.Add(new XElement("Auth", Authorization.ToConfigXml()));
             element.Add(new XElement("ProjectCollections", this.ProjectCollections.Select(pc => pc.ToConfigXml())));
             return element;

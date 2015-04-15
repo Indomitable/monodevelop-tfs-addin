@@ -54,6 +54,8 @@ namespace MonoDevelop.VersionControl.TFS
 
         internal TFSRepository(string rootPath, WorkspaceData workspaceData, ProjectCollection collection)
         {
+            if (workspaceData == null || collection == null)
+                return;
             this.workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
             _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             this.RootPath = rootPath;
