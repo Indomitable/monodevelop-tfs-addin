@@ -160,7 +160,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             return false;
         }
 
-        private void FillStore(IEnumerable<ExtendedItem> items, IWorkspace workspace)
+        private void FillStore(IEnumerable<ServerItem> items, IWorkspace workspace)
         {
             fileStore.Clear();
             var pendingChanges = workspace.GetPendingChanges(items);
@@ -213,7 +213,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(IEnumerable<ExtendedItem> items, IWorkspace workspace)
+        internal static void Open(IEnumerable<ServerItem> items, IWorkspace workspace)
         {
             using (var dialog = new CheckInDialog())
             {

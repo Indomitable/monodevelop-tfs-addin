@@ -128,7 +128,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void Load(ProjectCollection collection)
         {
-            if (this.projectCollection != null && collection.Id ==  this.projectCollection.Id)
+            if (this.projectCollection != null && collection.Id == this.projectCollection.Id)
             {
                 return;
             }
@@ -224,6 +224,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             manageButton.Clicked += OnManageWorkspaces;
             refreshButton.Clicked += OnRefresh;
             _treeView.Selection.Changed += OnFolderChanged;
+            _treeView.ButtonPressEvent += OnTreeViewMouseClick;
             _treeView.RowActivated += OnTreeViewItemClicked;
             _listView.RowActivated += OnListItemClicked;
             _listView.ButtonPressEvent += OnListViewMouseClick;
@@ -262,12 +263,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillTreeView()
         {
             _treeStore.Clear();
-            var items = this._currentWorkspace.GetItems(new[] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) }, 
+            var items = this._currentWorkspace.GetItems(new[] { new ItemSpec(RepositoryPath.RootPath, RecursionType.Full) },
                                                         VersionSpec.Latest, DeletedState.NonDeleted, ItemType.Folder, false);
 
             var root = ItemSetToHierarchItemConverter.Convert(items);
             var node = _treeStore.AppendNode();
-            _treeStore.SetValues(node, root.Item, GetRepositoryImage(), root.Name);
+            //If Server name is equal to the server url get host.
+            var serverName = string.Equals(projectCollection.Server.Name, projectCollection.Server.Uri.OriginalString, StringComparison.OrdinalIgnoreCase)
+                ? projectCollection.Server.Uri.Host
+                : projectCollection.Server.Name;
+            var rootName = string.Format("{0}\\{1}", serverName, projectCollection.Name);
+            _treeStore.SetValues(node, root.Item, GetRepositoryImage(), rootName);
             AddChilds(node, root.Children);
             TreeIter firstNode;
             if (_treeStore.GetIterFirst(out firstNode))
@@ -312,7 +318,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private void FillListView(string serverPath)
         {
             _listStore.Clear();
-            var itemSet = this._currentWorkspace.GetExtendedItems(new [] { new ItemSpec(serverPath, RecursionType.OneLevel) }, DeletedState.NonDeleted, ItemType.Any);
+            var itemSet = this._currentWorkspace.GetExtendedItems(new[] { new ItemSpec(serverPath, RecursionType.OneLevel) }, DeletedState.NonDeleted, ItemType.Any);
             foreach (var item in itemSet.Skip(1).OrderBy(i => i.ItemType).ThenBy(i => i.TargetServerItem))
             {
                 var row = _listStore.Append();
@@ -453,7 +459,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter;
             if (!_treeView.Selection.GetSelected(out iter))
                 return;
-        
+
             var item = (ServerItem)_treeStore.GetValue(iter, 0);
             FillListView(item.ServerPath);
             ShowMappingPath(item.ServerPath);
@@ -553,21 +559,66 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         #endregion
 
-        #region Popup Menu
+        enum MenuCaller
+        {
+            Tree,
+            List
+        }
+
+        #region Tree View Popup Menu
 
         [GLib.ConnectBefore]
-        private void OnListViewMouseClick(object o, ButtonPressEventArgs args)
+        private void OnTreeViewMouseClick(object o, ButtonPressEventArgs args)
         {
-            if (args.Event.Button == 3 && _listView.Selection.GetSelectedRows().Any())
+            TreeIter iter;
+            if (args.Event.Button == 3 && _treeView.Selection.GetSelected(out iter))
             {
-                var menu = BuildPopupMenu();
+                var item = (ServerItem)_treeStore.GetValue(iter, 0);
+                var menu = BuildTreePopupMenu(item);
                 if (menu.Children.Length > 0)
                     menu.Popup();
                 args.RetVal = true;
             }
         }
 
-        private Menu BuildPopupMenu()
+        private Menu BuildTreePopupMenu(ServerItem item)
+        {
+            Menu menu = new Menu();
+            //Nothing to display for root
+            if (item == null || item.ServerPath == RepositoryPath.RootPath)
+                return menu;
+            if (!IsMapped(item.ServerPath))
+            {
+                menu.Add(NotMappedMenu(item.ToEnumerable(), MenuCaller.Tree));
+            }
+            else
+            {
+                foreach (var menuItem in ForlderMenuItems(item, MenuCaller.Tree))
+                {
+                    menu.Add(menuItem);
+                }
+            }
+            menu.ShowAll();
+            return menu;
+        }
+
+        #endregion
+
+        #region List View Popup Menu
+
+        [GLib.ConnectBefore]
+        private void OnListViewMouseClick(object o, ButtonPressEventArgs args)
+        {
+            if (args.Event.Button == 3 && _listView.Selection.GetSelectedRows().Any())
+            {
+                var menu = BuildListViewPopupMenu();
+                if (menu.Children.Length > 0)
+                    menu.Popup();
+                args.RetVal = true;
+            }
+        }
+
+        private Menu BuildListViewPopupMenu()
         {
             Menu menu = new Menu();
             var items = new List<ExtendedItem>();
@@ -577,56 +628,47 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 _listStore.GetIter(out iter, path);
                 items.Add((ExtendedItem)_listStore.GetValue(iter, 0));
             }
-        
+
             if (items.All(i => IsMapped(i.ServerPath)))
             {
                 foreach (var item in GetGroup(items))
                 {
                     menu.Add(item);
                 }
-                var editGroup = EditGroup(items);
-                if (editGroup.Any())
+                menu.Add(new SeparatorMenuItem());
+                foreach (var item in EditGroup(items))
                 {
-                    menu.Add(new SeparatorMenuItem());
-                    foreach (var item in editGroup)
-                    {
-                        menu.Add(item);
-                    }
+                    menu.Add(item);
                 }
-                if (items.Count == 1 && items[0].ItemType == ItemType.Folder)
+                if (items.Count == 1)
                 {
-                    menu.Add(CreateAddFileMenuItem(items[0]));
-                    menu.Add(new SeparatorMenuItem());
-                    menu.Add(CreateOpenFolderMenuItem(items[0]));
+                    foreach (var menuItem in ForlderMenuItems(items[0], MenuCaller.List))
+                    {
+                        menu.Add(menuItem);
+                    }
                 }
             }
             else
             {
-                foreach (var item in NotMappedMenu(items))
-                {
-                    menu.Add(item);
-                }
+                menu.Add(NotMappedMenu(items, MenuCaller.List));
             }
             menu.ShowAll();
             return menu;
         }
 
-        private List<MenuItem> GetGroup(List<ExtendedItem> items)
+        private IEnumerable<MenuItem> GetGroup(List<ExtendedItem> items)
         {
-            var groupItems = new List<MenuItem>();
             MenuItem getLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Latest Version"));
             getLatestVersionItem.Activated += (sender, e) => GetLatestVersion(items);
-            groupItems.Add(getLatestVersionItem);
-        
+            yield return getLatestVersionItem;
+
             MenuItem forceGetLatestVersionItem = new MenuItem(GettextCatalog.GetString("Get Specific Version"));
             forceGetLatestVersionItem.Activated += (sender, e) => ForceGetLatestVersion(items);
-            groupItems.Add(forceGetLatestVersionItem);
-            return groupItems;
+            yield return forceGetLatestVersionItem;
         }
 
-        private List<MenuItem> EditGroup(List<ExtendedItem> items)
+        private IEnumerable<MenuItem> EditGroup(List<ExtendedItem> items)
         {
-            var groupItems = new List<MenuItem>();
             //Check Out
             var checkOutItems = items.Where(i => i.ChangeType == ChangeType.None || i.ChangeType == ChangeType.Lock || i.ItemType == ItemType.Folder).ToList();
             if (checkOutItems.Any())
@@ -638,7 +680,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(checkOutItems);
                     RefreshList(items);
                 };
-                groupItems.Add(checkOutItem);
+                yield return checkOutItem;
             }
             //Lock
             var lockItems = items.Where(i => !i.IsLocked).ToList();
@@ -651,7 +693,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(lockItems);
                     RefreshList(items);
                 };
-                groupItems.Add(lockItem);
+                yield return lockItem;
             }
             //UnLock
             var unLockItems = items.Where(i => i.IsLocked && !i.HasOtherPendingChange).ToList();
@@ -664,7 +706,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(unLockItems);
                     RefreshList(items);
                 };
-                groupItems.Add(unLockItem);
+                yield return unLockItem;
             }
             //Rename
             var ableToRename = items.FirstOrDefault(i => !i.ChangeType.HasFlag(ChangeType.Delete));
@@ -677,7 +719,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(ableToRename.ToEnumerable());
                     RefreshList(items);
                 };
-                groupItems.Add(renameItem);
+                yield return renameItem;
             }
             //Delete
             var ableToDelete = items.Where(i => !i.ChangeType.HasFlag(ChangeType.Delete)).ToList();
@@ -685,7 +727,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 MenuItem deleteItem = new MenuItem(GettextCatalog.GetString("Delete"));
                 deleteItem.Activated += (sender, e) => DeleteItems(ableToDelete);
-                groupItems.Add(deleteItem);
+                yield return deleteItem;
             }
             //Undo
             var undoItems = items.Where(i => !i.ChangeType.HasFlag(ChangeType.None) || i.ItemType == ItemType.Folder).ToList();
@@ -698,7 +740,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(undoItems);
                     RefreshList(items);
                 };
-                groupItems.Add(revertItem);
+                yield return revertItem;
 
                 MenuItem checkinItem = new MenuItem(GettextCatalog.GetString("Check In pending changes"));
                 checkinItem.Activated += (sender, e) =>
@@ -707,26 +749,33 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     FireFilesChanged(undoItems);
                     RefreshList(items);
                 };
-                groupItems.Add(checkinItem);
+                yield return checkinItem;
             }
-            return groupItems;
         }
 
-        private List<MenuItem> NotMappedMenu(List<ExtendedItem> items)
+        private MenuItem NotMappedMenu(IEnumerable<ServerItem> items, MenuCaller caller)
         {
             MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
-            mapItem.Activated += (sender, e) => MapItem(items);
-            return new List<MenuItem> { mapItem };
+            var item = items.FirstOrDefault(i => i.ItemType == ItemType.Folder);
+            mapItem.Activated += (sender, e) => MapItem(item, caller);
+            return mapItem;
         }
 
-        private MenuItem CreateAddFileMenuItem(ExtendedItem item)
+        private IEnumerable<MenuItem> ForlderMenuItems(ServerItem item, MenuCaller caller)
+        {
+            if (item.ItemType != ItemType.Folder)
+                yield break;
+            yield return CreateAddFileMenuItem(item, caller);
+            yield return new SeparatorMenuItem();
+            yield return CreateOpenFolderMenuItem(item);
+        }
+
+        private MenuItem CreateAddFileMenuItem(ServerItem item, MenuCaller caller)
         {
             MenuItem addItem = new MenuItem(GettextCatalog.GetString("Add new item"));
             addItem.Activated += (sender, e) =>
             {
-                var path = item.LocalPath;
-                if (string.IsNullOrEmpty(path))
-                    path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
+                var path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
 
                 using (Xwt.OpenFileDialog openFileDialog = new Xwt.OpenFileDialog("Browse For File"))
                 {
@@ -735,7 +784,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                     if (openFileDialog.Run())
                     {
                         var files = new List<LocalPath>();
-                        foreach (var fileName in openFileDialog.FileNames) 
+                        foreach (var fileName in openFileDialog.FileNames)
                         {
                             //Check if file is in other folder
                             if (!string.Equals(Path.GetDirectoryName(fileName), path))
@@ -752,29 +801,29 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                         if (failures.Any())
                             FailuresDisplayDialog.ShowFailures(failures);
                         else
+                        {
                             CheckInDialog.Open(item.ToEnumerable(), _currentWorkspace);
+                            Refresh(item, caller);
+                        }
                     }
                 }
             };
             return addItem;
         }
 
-        private MenuItem CreateOpenFolderMenuItem(ExtendedItem item)
+        private MenuItem CreateOpenFolderMenuItem(ServerItem item)
         {
             MenuItem openFolder = new MenuItem(GettextCatalog.GetString("Open mapped folder"));
             openFolder.Activated += (sender, e) =>
             {
-                var path = item.LocalPath;
-                if (path.IsEmpty)
-                    path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
+                var path = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
                 DesktopService.OpenFolder(new FilePath(path));
             };
             return openFolder;
         }
 
-        private void MapItem(List<ExtendedItem> items)
+        private void MapItem(ServerItem item, MenuCaller caller)
         {
-            var item = items.FirstOrDefault(i => i.ItemType == ItemType.Folder);
             if (_currentWorkspace == null || item == null)
                 return;
             using (Xwt.SelectFolderDialog folderSelect = new Xwt.SelectFolderDialog("Browse For Folder"))
@@ -785,7 +834,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 {
                     _currentWorkspace.Map(item.ServerPath, folderSelect.Folder);
                 }
-                RefreshList(items);
+                Refresh(item, caller);
             }
         }
 
@@ -801,10 +850,25 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             FileService.NotifyFilesRemoved(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))));
         }
 
-        private void RefreshList(List<ExtendedItem> items)
+        private void Refresh(ServerItem item, MenuCaller caller)
         {
-            if (items.Any())
-                FillListView(items[0].ServerPath.ParentPath);
+            if (item != null)
+            {
+                switch (caller)
+                {
+                    case MenuCaller.List:
+                        FillListView(item.ServerPath.ParentPath);
+                        break;
+                    case MenuCaller.Tree:
+                        FillListView(item.ServerPath);
+                        break;
+                }
+            }
+        }
+
+        private void RefreshList(IEnumerable<ServerItem> items)
+        {
+            Refresh(items.FirstOrDefault(), MenuCaller.List);
         }
 
         private void GetLatestVersion(List<ExtendedItem> items)
