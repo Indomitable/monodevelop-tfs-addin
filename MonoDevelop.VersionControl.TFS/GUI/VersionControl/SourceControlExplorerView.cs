@@ -63,10 +63,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private ProjectCollection projectCollection;
         private readonly List<WorkspaceData> _workspaces = new List<WorkspaceData>();
         private IWorkspace _currentWorkspace;
+        private readonly TFSVersionControlService _versionControlService;
 
         public SourceControlExplorerView()
         {
             ContentName = GettextCatalog.GetString("Source Explorer");
+            _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             BuildGui();
         }
 
@@ -228,7 +230,6 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void FillWorkspaces()
         {
-            string activeWorkspace = TFSVersionControlService.Instance.GetActiveWorkspace(projectCollection);
             _workspaceComboBox.Changed -= OnChangeActiveWorkspaces;
             _workspaceStore.Clear();
             _workspaces.Clear();
@@ -237,7 +238,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             foreach (var workspace in _workspaces)
             {
                 var iter = _workspaceStore.AppendValues(workspace, workspace.Name);
-                if (string.Equals(workspace.Name, activeWorkspace, StringComparison.Ordinal))
+                if (string.Equals(workspace.Name, projectCollection.ActiveWorkspaceName, StringComparison.Ordinal))
                 {
                     activeWorkspaceRow = iter;
                 }
@@ -438,7 +439,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             {
                 var workspaceData = (WorkspaceData)_workspaceStore.GetValue(workspaceIter, 0);
                 _currentWorkspace = DependencyInjection.GetWorkspace(workspaceData, projectCollection);
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, workspaceData.Name);
+                _versionControlService.SetActiveWorkspace(projectCollection, workspaceData.Name);
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))
                 {
@@ -449,7 +450,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
             else
             {
-                TFSVersionControlService.Instance.SetActiveWorkspace(projectCollection, string.Empty);
+                _versionControlService.SetActiveWorkspace(projectCollection, string.Empty);
             }
         }
 
@@ -796,13 +797,13 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void FireFilesChanged(IEnumerable<ExtendedItem> items)
         {
-            TFSVersionControlService.Instance.RefreshWorkingRepositories();
+            _versionControlService.RefreshWorkingRepositories();
             FileService.NotifyFilesChanged(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))), true);
         }
 
         private void FireFilesRemoved(IEnumerable<ExtendedItem> items)
         {
-            TFSVersionControlService.Instance.RefreshWorkingRepositories();
+            _versionControlService.RefreshWorkingRepositories();
             FileService.NotifyFilesRemoved(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))));
         }
 

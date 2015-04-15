@@ -27,6 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using Autofac;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
@@ -58,10 +59,12 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private readonly Button acceptMerge = new Button(GettextCatalog.GetString("Merge"));
         private readonly Button viewBase = new Button(GettextCatalog.GetString("View Base"));
         private readonly Button viewTheir = new Button(GettextCatalog.GetString("View Server"));
+        private TFSVersionControlService _versionControlService;
 
         private ResolveConflictsView()
         {
             this.ContentName = GettextCatalog.GetString("Resolve Conflicts");
+            _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             listStore = new ListStore(typeField, nameField, itemField, versionBaseField, versionTheirField, versionYourField);
             BuildGui();
         }
@@ -170,16 +173,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
 
         private void AcceptMergeClicked()
         {
-            var mergeToolInfo = TFSVersionControlService.Instance.MergeToolInfo;
-            if (mergeToolInfo == null)
+            var mergeToolInfo = _versionControlService.MergeToolInfo;
+            if (string.IsNullOrEmpty(mergeToolInfo.CommandName))
             {
                 using (var mergeToolConfigDialog = new MergeToolConfigDialog())
                 {
                     if (mergeToolConfigDialog.Run(this.Widget.ParentWindow) == Command.Ok)
                     {
-                        TFSVersionControlService.Instance.MergeToolInfo = mergeToolConfigDialog.MergeToolInfo;
-                        TFSVersionControlService.Instance.StorePrefs();
-                        if (TFSVersionControlService.Instance.MergeToolInfo != null)
+                        _versionControlService.MergeToolInfo = mergeToolConfigDialog.MergeToolInfo;
+                        if (!string.IsNullOrEmpty(_versionControlService.MergeToolInfo.CommandName))
                             StartMerging();
                     }
                 }
@@ -196,7 +198,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var baseFile = workspace.DownloadToTemp(conflict.BaseDowloadUrl);
             var theirsFile = workspace.DownloadToTemp(conflict.TheirDowloadUrl);
 
-            var mergeToolInfo = TFSVersionControlService.Instance.MergeToolInfo;
+            var mergeToolInfo = _versionControlService.MergeToolInfo;
             var arguments = mergeToolInfo.Arguments;
             arguments = arguments.Replace("%1", "\"" + conflict.TargetLocalItem + "\"");
             arguments = arguments.Replace("%2", "\"" + baseFile + "\"");

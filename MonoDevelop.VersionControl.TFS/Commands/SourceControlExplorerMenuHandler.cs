@@ -23,10 +23,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System;
+
+using System.Linq;
+using Autofac;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
-using System.Linq;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 
 namespace MonoDevelop.VersionControl.TFS.Commands
 {
@@ -34,7 +36,8 @@ namespace MonoDevelop.VersionControl.TFS.Commands
     {
         protected override void Update(CommandInfo info)
         {
-            var collectionsCount = TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).Count();
+            var service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
+            var collectionsCount = service.Servers.SelectMany(x => x.ProjectCollections).Count();
             if (collectionsCount != 1)
             {
                 info.Visible = false;
@@ -44,7 +47,8 @@ namespace MonoDevelop.VersionControl.TFS.Commands
 
         protected override void Run()
         {
-            var collection = TFSVersionControlService.Instance.Servers.SelectMany(x => x.ProjectCollections).First();
+            var service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
+            var collection = service.Servers.SelectMany(x => x.ProjectCollections).First();
             var project = collection.Projects.FirstOrDefault();
             if (project != null)
             {

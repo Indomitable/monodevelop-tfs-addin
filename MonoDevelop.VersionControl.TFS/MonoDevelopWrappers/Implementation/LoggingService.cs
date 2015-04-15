@@ -2,22 +2,25 @@
 using System.IO;
 using System.Text;
 using MonoDevelop.Core.Logging;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Settings;
 
 namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
 {
     sealed class LoggingService : ILoggingService
     {
+        private readonly IConfigurationService _configurationService;
         readonly static object locker = new object();
+        private Configuration _configuration;
 
-        public bool IsDebugMode
+        public LoggingService(IConfigurationService configurationService)
         {
-            get { return TFSVersionControlService.Instance.IsDebugMode; }
+            _configurationService = configurationService;
+            _configuration = _configurationService.Load();
         }
-
 
         public void LogToDebug(string message)
         {
-            if (IsDebugMode)
+            if (_configuration.IsDebugMode)
             {
                 lock (locker)
                 {

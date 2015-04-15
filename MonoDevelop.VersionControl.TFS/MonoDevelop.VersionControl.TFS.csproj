@@ -65,6 +65,9 @@
     <Compile Include="GUI\Server\Authorization\NtlmAuthorizationConfig.cs" />
     <Compile Include="GUI\Server\Authorization\UserPasswordAuthorizationConfig.cs" />
     <Compile Include="Helpers\CollectionHelper.cs" />
+    <Compile Include="Infrastructure\Settings\Configuration.cs" />
+    <Compile Include="Infrastructure\Settings\IConfigurationService.cs" />
+    <Compile Include="Infrastructure\Settings\Implementation\ConfigurationService.cs" />
     <Compile Include="Infrastructure\DependencyInjection.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressDisplay.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressService.cs" />

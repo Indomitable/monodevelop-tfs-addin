@@ -25,10 +25,12 @@
 // THE SOFTWARE.
 using System;
 using System.Linq;
+using Autofac;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
@@ -37,13 +39,15 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
     {
         private readonly ListView serverList = new ListView();
         private readonly DataField<string> nameField = new DataField<string>();
-        private readonly DataField<string> urlField = new DataField<string>();
+        private readonly DataField<Uri> urlField = new DataField<Uri>();
         private readonly DataField<TeamFoundationServer> serverField = new DataField<TeamFoundationServer>();
         private readonly ListStore serverStore;
+        private readonly TFSVersionControlService _service;
 
         public ConnectToServerDialog()
         {
             serverStore = new ListStore(nameField, urlField, serverField);
+            _service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             BuildGui();
             UpdateServersList();
         }
@@ -96,8 +100,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                 {
                     serverConfig.ProjectCollections.Clear();
                     serverConfig.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
-                    TFSVersionControlService.Instance.RaiseServersChange();
-                    TFSVersionControlService.Instance.StorePrefs();
+                    _service.ServersChange();
                 }
             }
         }
@@ -109,9 +112,9 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                 if (addServerDialog.Run(this) == Command.Ok)
                 {
                     var addServerResult = addServerDialog.Result;
-                    if (TFSVersionControlService.Instance.HasServer(addServerResult.Name))
+                    if (_service.HasServer(addServerResult.Url))
                     {
-                        MessageService.ShowError("Server with same name already exists!");
+                        MessageService.ShowError("Server with same url already exists!");
                         return;
                     }
                     using (var credentialsDialog = new CredentialsDialog(addServerResult.Url))
@@ -130,7 +133,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
                                 if (projectsDialog.Run(this) == Command.Ok && projectsDialog.SelectedProjectColletions.Any())
                                 {
                                     server.ProjectCollections.AddRange(projectsDialog.SelectedProjectColletions);
-                                    TFSVersionControlService.Instance.AddServer(server);
+                                    _service.AddServer(server);
                                     UpdateServersList();
                                 }
                             }
@@ -144,8 +147,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         {
             if (MessageService.Confirm("Are you sure you want to delete this server!", AlertButton.Delete))
             {
-                var serverName = serverStore.GetValue(serverList.SelectedRow, nameField);
-                TFSVersionControlService.Instance.RemoveServer(serverName);
+                var serverUrl = serverStore.GetValue(serverList.SelectedRow, urlField);
+                _service.RemoveServer(serverUrl);
                 UpdateServersList();
             }
         }
@@ -153,11 +156,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI.Server
         private void UpdateServersList()
         {
             serverStore.Clear();
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var server in _service.Servers)
             {
                 var row = serverStore.AddRow();
                 serverStore.SetValue(row, nameField, server.Name);
-                serverStore.SetValue(row, urlField, server.Uri.OriginalString);
+                serverStore.SetValue(row, urlField, server.Uri);
                 serverStore.SetValue(row, serverField, server);
             }
         }

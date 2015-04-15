@@ -26,177 +26,100 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml.Linq;
 using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using MonoDevelop.Core;
-using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Settings;
 
 namespace MonoDevelop.VersionControl.TFS
 {
     sealed class TFSVersionControlService
     {
-        private readonly List<TeamFoundationServer> _registredServers = new List<TeamFoundationServer>();
-        /// <summary>
-        /// Store default workspaces for each saved project collection. The Key - Project Collection Id, The Value - Workspace Name.
-        /// </summary>
-        private readonly Dictionary<Guid, string> _defaultWorkspaces = new Dictionary<Guid, string>();
-        private static TFSVersionControlService instance;
+        private readonly IConfigurationService _configurationService;
+        private readonly Configuration _configuration;
 
-        public TFSVersionControlService()
+        public TFSVersionControlService(IConfigurationService configurationService)
         {
-            LoadPrefs();
-        }
-
-        public static TFSVersionControlService Instance { get { return instance ?? (instance = new TFSVersionControlService()); } }
-
-        private string ConfigFile { get { return UserProfile.Current.ConfigDir.Combine("VersionControl.TFS.config"); } }
-
-        public void StorePrefs()
-        {
-            using (var file = File.Create(ConfigFile))
-            {
-                XDocument doc = new XDocument();
-                doc.Add(new XElement("TFSRoot"));
-                doc.Root.Add(new XElement("Servers", _registredServers.Select(x => x.ToConfigXml())));
-                doc.Root.Add(new XElement("Workspaces", _defaultWorkspaces.Select(a => new XElement("Workspace", new XAttribute("Id", a.Key), new XAttribute("Name", a.Value)))));
-                if (this.MergeToolInfo != null)
-                    doc.Root.Add(new XElement("MergeTool", new XAttribute("Command", this.MergeToolInfo.CommandName), new XAttribute("Arguments", this.MergeToolInfo.Arguments)));
-                doc.Root.Add(new XElement("CheckOutLockLevel", (int)CheckOutLockLevel));
-                doc.Root.Add(new XElement("DebugMode", IsDebugMode));
-                doc.Save(file);
-                file.Close();
-            }
-        }
-
-        public void LoadPrefs()
-        {
-            _registredServers.Clear();
-            if (!File.Exists(ConfigFile))
-                return;
-            try
-            {
-                var xmlConfig = File.ReadAllText(ConfigFile);
-                XDocument doc = XDocument.Parse(xmlConfig);
-                foreach (var serverElement in doc.Root.Element("Servers").Elements("Server"))
-                {
-                    var server = TeamFoundationServer.FromConfigXml(serverElement);
-                    _registredServers.Add(server);
-                }
-                foreach (var workspace in doc.Root.Element("Workspaces").Elements("Workspace"))
-                {
-                    _defaultWorkspaces.Add(Guid.Parse(workspace.Attribute("Id").Value), workspace.Attribute("Name").Value);
-                }
-                var mergeToolElement = doc.Root.Element("MergeTool");
-                if (mergeToolElement != null)
-                {
-                    this.MergeToolInfo = new MergeToolInfo
-                    {
-                        CommandName = mergeToolElement.Attribute("Command").Value,
-                        Arguments = mergeToolElement.Attribute("Arguments").Value,
-                    };
-                }
-                checkOutLockLevel = doc.Root.Element("CheckOutLockLevel") == null ? LockLevel.Unchanged : (LockLevel)Convert.ToInt32(doc.Root.Element("CheckOutLockLevel").Value);
-                this.isDebugMode = doc.Root.Element("DebugMode") != null && Convert.ToBoolean(doc.Root.Element("DebugMode").Value);
-            }
-            catch (Exception e)
-            {
-                MessageService.ShowException(e);
-                return;
-            }
-            if (_registredServers.Any())
-            {
-                RaiseServersChange();
-            }
+            _configurationService = configurationService;
+            _configuration = _configurationService.Load();
         }
 
         public void AddServer(TeamFoundationServer server)
         {
-            if (HasServer(server.Name))
-                RemoveServer(server.Name);
-            _registredServers.Add(server);
-            RaiseServersChange();
-            StorePrefs();
+            if (HasServer(server.Uri))
+                RemoveServer(server.Uri);
+            _configuration.Servers.Add(server);
+            ServersChange();
         }
 
-        public void RemoveServer(string name)
+        public void RemoveServer(Uri url)
         {
-            if (!HasServer(name))
+            if (!HasServer(url))
                 return;
-            _registredServers.RemoveAll(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
-            RaiseServersChange();
-            StorePrefs();
+            _configuration.Servers.RemoveAll(s => s.Uri == url);
+            ServersChange();
         }
 
-        public TeamFoundationServer GetServer(string name)
+        public TeamFoundationServer GetServer(Uri url)
         {
-            return _registredServers.SingleOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            return _configuration.Servers.SingleOrDefault(s => s.Uri == url);
         }
 
-        public bool HasServer(string name)
+        public bool HasServer(Uri url)
         {
-            return _registredServers.Any(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            return _configuration.Servers.Any(s => s.Uri == url);
         }
 
-        public List<TeamFoundationServer> Servers { get { return _registredServers; } }
+        public List<TeamFoundationServer> Servers { get { return _configuration.Servers; } }
 
         public event Action OnServersChange;
 
-        public void RaiseServersChange()
+        public void ServersChange()
         {
+            Save();
             if (OnServersChange != null)
             {
                 OnServersChange();
             }
         }
 
-        public string GetActiveWorkspace(ProjectCollection collection)
-        {
-            if (!_defaultWorkspaces.ContainsKey(collection.Id))
-                return string.Empty;
-            return _defaultWorkspaces[collection.Id];
-        }
-
         public void SetActiveWorkspace(ProjectCollection collection, string workspaceName)
         {
-            if (!_defaultWorkspaces.ContainsKey(collection.Id))
-                _defaultWorkspaces.Add(collection.Id, workspaceName);
-            else
-                _defaultWorkspaces[collection.Id] = workspaceName;
-
-            StorePrefs();
+            collection.ActiveWorkspaceName = workspaceName;
+            Save();
         }
 
-        public MergeToolInfo MergeToolInfo { get; set; }
-
-        private LockLevel checkOutLockLevel;
-
-        public LockLevel CheckOutLockLevel
+        public MergeToolInfo MergeToolInfo
         {
-            get { return checkOutLockLevel; }
+            get { return _configuration.MergeToolInfo; }
             set
             {
-                checkOutLockLevel = value;
-                StorePrefs();
+                _configuration.MergeToolInfo = value;
+                Save();
             }
         }
 
-        private bool isDebugMode;
+        public LockLevel CheckOutLockLevel
+        {
+            get { return _configuration.DefaultLockLevel; }
+            set
+            {
+                _configuration.DefaultLockLevel = value;
+                Save();
+            }
+        }
 
         public bool IsDebugMode
         { 
             get
             {
-                return isDebugMode;
+                return _configuration.IsDebugMode;
             }
             set
             {
-                isDebugMode = value;
-                StorePrefs();
+                _configuration.IsDebugMode = value;
+                Save();
             }
         }
 
@@ -210,6 +133,11 @@ namespace MonoDevelop.VersionControl.TFS
                     tfsSystem.RefreshRepositories();
                 }
             }
+        }
+
+        private void Save()
+        {
+            _configurationService.Save(_configuration);
         }
     }
 }

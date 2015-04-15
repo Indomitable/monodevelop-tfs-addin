@@ -42,12 +42,13 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 {
     sealed class ProjectCollection : IEquatable<ProjectCollection>, IComparable<ProjectCollection>
     {
-        Lazy<RepositoryService> repositoryService;
-        Lazy<ClientService> clientService;
-        Lazy<CommonStructureService> commonStructureService;
+        readonly Lazy<RepositoryService> repositoryService;
+        readonly Lazy<ClientService> clientService;
+        readonly Lazy<CommonStructureService> commonStructureService;
+
         private readonly List<ProjectInfo> projects = new List<ProjectInfo>(); 
 
-        public ProjectCollection(TeamFoundationServer server)
+        private ProjectCollection(TeamFoundationServer server)
         {
             this.Server = server;
             repositoryService = new Lazy<RepositoryService>(this.GetService<RepositoryService>);
@@ -60,6 +61,8 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         public string Name { get; private set; }
 
         public string LocationServicePath { get; private set; }
+
+        public string ActiveWorkspaceName { get; set; }
 
         private List<ProjectInfo> FetchProjects()
         {
@@ -109,7 +112,8 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             var element = new XElement("ProjectCollection",
                                 new XAttribute("Id", this.Id),
                                 new XAttribute("Name", this.Name),
-                                new XAttribute("LocationServicePath", this.LocationServicePath));
+                                new XAttribute("LocationServicePath", this.LocationServicePath),
+                                new XAttribute("ActiveWorkspaceName", this.ActiveWorkspaceName));
 
             element.Add(Projects.Select(p => p.ToConfigXml()));
             return element;
@@ -138,7 +142,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             projectCollection.Id = element.GetGuidAttribute("Id");
             projectCollection.Name = element.GetAttributeValue("Name");
             projectCollection.LocationServicePath = element.GetAttributeValue("LocationServicePath");
-
+            projectCollection.ActiveWorkspaceName = element.GetAttributeValue("ActiveWorkspaceName");
             projectCollection.Projects.AddRange(element.Elements("Project").Select(e => ProjectInfo.FromConfigXml(e, projectCollection)));
 
             return projectCollection;

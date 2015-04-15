@@ -24,7 +24,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using Autofac;
 using Microsoft.TeamFoundation.VersionControl.Client;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using Xwt;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
@@ -33,17 +35,17 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     {
         public static ComboBox GetLockLevelComboBox(bool forceLock = false)
         {
-            ComboBox lockLevelBox = new ComboBox();
-            lockLevelBox.WidthRequest = 150;
+            ComboBox lockLevelBox = new ComboBox { WidthRequest = 150 };
 
             if (!forceLock)
                 lockLevelBox.Items.Add(LockLevel.Unchanged, "Unchanged - Keep any existing lock.");
             lockLevelBox.Items.Add(LockLevel.CheckOut, "Check Out - Prevent other users from checking out and checking in");
             lockLevelBox.Items.Add(LockLevel.Checkin, "Check In - Prevent other users from checking in but allow checking out");
-            if (forceLock && TFSVersionControlService.Instance.CheckOutLockLevel == LockLevel.Unchanged)
+            var service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
+            if (forceLock && service.CheckOutLockLevel == LockLevel.Unchanged)
                 lockLevelBox.SelectedItem = LockLevel.CheckOut;
             else
-                lockLevelBox.SelectedItem = TFSVersionControlService.Instance.CheckOutLockLevel;
+                lockLevelBox.SelectedItem = service.CheckOutLockLevel;
             return lockLevelBox;
         }
     }

@@ -30,6 +30,7 @@ using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
 using System.IO;
 using System.Linq;
+using Autofac;
 using Mono.TextEditor;
 using MonoDevelop.Ide;
 using Microsoft.TeamFoundation.VersionControl.Client.Objects;
@@ -49,10 +50,12 @@ namespace MonoDevelop.VersionControl.TFS
     {
         private readonly IWorkspace workspace;
         private readonly RepositoryCache cache;
+        private readonly TFSVersionControlService _versionControlService;
 
         internal TFSRepository(string rootPath, WorkspaceData workspaceData, ProjectCollection collection)
         {
             this.workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
+            _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             this.RootPath = rootPath;
             this.cache = new RepositoryCache(this);
         }
@@ -459,7 +462,7 @@ namespace MonoDevelop.VersionControl.TFS
                     try
                     {
                         ICollection<Failure> failures;
-                        workspace.PendEdit(path.ToEnumerable(), RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel, out failures);
+                        workspace.PendEdit(path.ToEnumerable(), RecursionType.None, _versionControlService.CheckOutLockLevel, out failures);
                         if (failures.Any(f => f.SeverityType == SeverityType.Error))
                         {
                             foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))

@@ -25,6 +25,7 @@
 // THE SOFTWARE.
 using System;
 using System.Linq;
+using Autofac;
 using MonoDevelop.Components.Commands;
 using MonoDevelop.Ide;
 using MonoDevelop.Ide.Gui;
@@ -32,6 +33,7 @@ using MonoDevelop.VersionControl.TFS.Commands;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xwt;
 
@@ -57,11 +59,24 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private readonly DataField<NodeType> _type = new DataField<NodeType>();
         private readonly DataField<object> _item = new DataField<object>();
         private readonly TreeStore _treeStore;
-        private System.Action onServersChanged;
+        private readonly System.Action onServersChanged;
+        private readonly TFSVersionControlService _service;
 
         public TeamExplorerPad()
         {
             _treeStore = new TreeStore(_name, _type, _item);
+            _service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
+            onServersChanged = DispatchService.GuiDispatch<System.Action>(UpdateData);
+            _service.OnServersChange += onServersChanged;
+            BuildGui();
+        }
+
+        private void BuildGui()
+        {
+            _treeView.Columns.Add(new ListViewColumn(string.Empty, new TextCellView(_name)));
+            _treeView.DataSource = _treeStore;
+            _content.PackStart(_treeView, true, true);
+            _treeView.RowActivated += OnRowClicked;
         }
 
         #region IPadContent implementation
@@ -71,15 +86,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             var toolBar = window.GetToolbar(Gtk.PositionType.Top);
             CommandToolButton button = new CommandToolButton(TFSCommands.ConnectToServer, IdeApp.CommandService) { StockId = Gtk.Stock.Add };
             toolBar.Add(button);
-            _treeView.Columns.Add(new ListViewColumn(string.Empty, new TextCellView(_name)));
-            _treeView.DataSource = _treeStore;
-            _content.PackStart(_treeView, true, true);
             UpdateData();
-
-            onServersChanged = DispatchService.GuiDispatch<System.Action>(UpdateData);
-            TFSVersionControlService.Instance.OnServersChange += onServersChanged;
-
-            _treeView.RowActivated += OnRowClicked;
         }
 
         public void RedrawContent()
@@ -95,7 +102,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
 
         public void Dispose()
         {
-            TFSVersionControlService.Instance.OnServersChange -= onServersChanged;
+            _service.OnServersChange -= onServersChanged;
             _treeView.Dispose();
             _treeStore.Dispose();
             _content.Dispose();
@@ -106,7 +113,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI
         private void UpdateData()
         {
             _treeStore.Clear();
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var server in _service.Servers)
             {
                 var node = _treeStore.AddNode().SetValue(_name, server.Name)
                                                .SetValue(_type, NodeType.Server)

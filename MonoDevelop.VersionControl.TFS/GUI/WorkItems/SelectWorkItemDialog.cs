@@ -25,10 +25,12 @@
 // THE SOFTWARE.
 using Xwt;
 using System.Linq;
+using Autofac;
 using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 
 
 namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
@@ -41,6 +43,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         private readonly DataField<ProjectCollection> collectionField = new DataField<ProjectCollection>();
         private readonly TreeStore queryStore;
         private readonly WorkItemListWidget workItemList = new WorkItemListWidget();
+        private readonly TFSVersionControlService _versionControlService;
 
         public WorkItemListWidget WorkItemList
         {
@@ -53,6 +56,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         public SelectWorkItemDialog()
         {
             queryStore = new TreeStore(titleField, queryField, collectionField);
+            _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             BuildGui();
         }
 
@@ -92,7 +96,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.WorkItems
         void BuildQueryView()
         {
             queryStore.Clear();
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var server in _versionControlService.Servers)
             {
                 var node = queryStore.AddNode().SetValue(titleField, server.Name);
                 foreach (var projectCollection in server.ProjectCollections)

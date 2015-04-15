@@ -24,10 +24,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
+using Autofac;
 using Microsoft.TeamFoundation.VersionControl.Client;
 using MonoDevelop.Core;
 using Xwt;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI
 {
@@ -35,9 +37,11 @@ namespace MonoDevelop.VersionControl.TFS.GUI
     {
         readonly ComboBox lockLevelBox = GuiHelper.GetLockLevelComboBox();
         readonly CheckBox debugModeBox = new CheckBox(GettextCatalog.GetString("Debug Mode"));
+        private readonly TFSVersionControlService _service;
 
         public TFSOptionsWidget()
         {
+            _service = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             BuildGui();
         }
 
@@ -51,26 +55,25 @@ namespace MonoDevelop.VersionControl.TFS.GUI
             this.PackStart(mergeToolButton);
 
             debugModeBox.AllowMixed = false;
-            debugModeBox.Active = TFSVersionControlService.Instance.IsDebugMode;
+            debugModeBox.Active = _service.IsDebugMode;
             this.PackStart(debugModeBox);
         }
 
         void OnConfigMergeTool(object sender, EventArgs e)
         {
-            using (var mergeToolDialog = new MergeToolConfigDialog(TFSVersionControlService.Instance.MergeToolInfo))
+            using (var mergeToolDialog = new MergeToolConfigDialog(_service.MergeToolInfo))
             {
                 if (mergeToolDialog.Run(this.ParentWindow) == Command.Ok)
                 {
-                    TFSVersionControlService.Instance.MergeToolInfo = mergeToolDialog.MergeToolInfo;
-                    TFSVersionControlService.Instance.StorePrefs();
+                    _service.MergeToolInfo = mergeToolDialog.MergeToolInfo;
                 }
             }
         }
 
         public void ApplyChanges()
         {
-            TFSVersionControlService.Instance.CheckOutLockLevel = (LockLevel)lockLevelBox.SelectedItem;
-            TFSVersionControlService.Instance.IsDebugMode = debugModeBox.Active;
+            _service.CheckOutLockLevel = (LockLevel)lockLevelBox.SelectedItem;
+            _service.IsDebugMode = debugModeBox.Active;
         }
     }
 }

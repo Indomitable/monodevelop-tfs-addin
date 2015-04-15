@@ -23,15 +23,18 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Autofac;
 using MonoDevelop.Core;
+using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.GUI;
 using MonoDevelop.VersionControl.TFS.GUI.Server;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
-using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS
@@ -39,11 +42,13 @@ namespace MonoDevelop.VersionControl.TFS
     public class TFSClient : VersionControlSystem
     {
         private readonly Dictionary<FilePath, TFSRepository> repositoriesCache = new Dictionary<FilePath, TFSRepository>();
+        private readonly TFSVersionControlService _versionControlService;
+
         public TFSClient()
         {
             if (VersionControlService.IsGloballyDisabled)
             {
-                var pad = Ide.IdeApp.Workbench.GetPad<GUI.TeamExplorerPad>();
+                var pad = IdeApp.Workbench.GetPad<TeamExplorerPad>();
                 if (pad != null)
                 {
                     pad.Destroy();
@@ -52,6 +57,7 @@ namespace MonoDevelop.VersionControl.TFS
             else
             {
                 DependencyInjection.Register(new ServiceBuilder());
+                _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             }
         }
 
@@ -122,7 +128,7 @@ namespace MonoDevelop.VersionControl.TFS
             if (parts.Length != 2)
                 return null;
             var serverPath = new Uri(parts[1].Trim());
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var server in _versionControlService.Servers)
             {
                 if (string.Equals(serverPath.Host, server.Uri.Host, StringComparison.OrdinalIgnoreCase))
                 {
@@ -136,7 +142,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         private TFSRepository FindByPath(FilePath path)
         {
-            foreach (var server in TFSVersionControlService.Instance.Servers)
+            foreach (var server in _versionControlService.Servers)
             {
                 var repo = GetRepoFromServer(server, path);
                 if (repo != null)

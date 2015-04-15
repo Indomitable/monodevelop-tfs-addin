@@ -48,20 +48,22 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
     sealed class Workspace : IWorkspace
     {
         private readonly ProjectCollection collection;
+        private readonly TFSVersionControlService _versionControlService;
         private readonly WorkspaceData workspaceData;
         private readonly ILoggingService _loggingService;
         private readonly IProjectService _projectService;
         private readonly IProgressService _progressService;
         private readonly List<PendingChange> pendingChanges = new List<PendingChange>(); 
 
-        public Workspace(WorkspaceData data, ProjectCollection collection, ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
+        public Workspace(WorkspaceData data, ProjectCollection collection, TFSVersionControlService versionControlService,
+            ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
         {
+            this.workspaceData = data;
+            this.collection = collection;
+            _versionControlService = versionControlService;
             _loggingService = loggingService;
             _projectService = projectService;
             _progressService = progressService;
-            this.workspaceData = data;
-            this.collection = collection;
-
             RefreshPendingChanges();
         }
 
@@ -328,8 +330,8 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         {
             foreach (var localPath in paths)
             {
-                Get(new GetRequest(localPath, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);    
-                PendEdit(new[] { localPath }, RecursionType.None, TFSVersionControlService.Instance.CheckOutLockLevel, out failures);
+                Get(new GetRequest(localPath, RecursionType.None, VersionSpec.Latest), GetOptions.GetAll);
+                PendEdit(new[] { localPath }, RecursionType.None, _versionControlService.CheckOutLockLevel, out failures);
                 if (failures.Any())
                     return;
             }
