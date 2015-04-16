@@ -44,9 +44,9 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
     public class ServerFixture
     {
         internal TeamFoundationServer Server;
-        internal const string WorkspaceName = "TEST_COMPUTER_WORKSPACE";
-        internal readonly string MapFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TFS_ADDIN_TEST_Projects");
-        internal readonly string RootFolder = "monotfstestproject";
+        private const string WorkspaceName = "TEST_COMPUTER_WORKSPACE";
+        private readonly string MapFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "TFS_ADDIN_TEST_Projects");
+        private readonly string RootFolder = "monotfstestproject";
 
         public ServerFixture()
         {

@@ -1,7 +1,11 @@
 CHANGE LOG
 ==========
+* 2.0
+    - Code refactoring.
+    - Update TFS server registration.
+    - New Config format
 * 1.7
-	- Update addin to use MonoDevelop 5.7.1
+    - Update addin to use MonoDevelop 5.7.1
 
 * 1.6
     - Add ability to connect to VisualStudio.com
@@ -11,6 +15,6 @@ CHANGE LOG
 
 * 1.3
     - Add Debug Mode
-   
+
 * 1.2
     - Upload files on chunks

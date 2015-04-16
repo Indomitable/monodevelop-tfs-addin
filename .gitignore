@@ -114,3 +114,4 @@ UpgradeLog*.XML
 
 #Output/
 MonoDevelop.Repository/
+!.nuget/

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ExtensionModel>
+	<Runtime>
+		<Import assembly="Autofac.dll"/>
+	</Runtime>
+	
 	<Extension path="/MonoDevelop/VersionControl/VersionControlSystems">
 		<Class class="MonoDevelop.VersionControl.TFS.TFSClient"/>
 	</Extension>
@@ -17,49 +21,49 @@
 			<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"
 				_label = "_Check Out"
 				description = "Check Out File."/>
-            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"
-                _label = "_Locate in source explorer"
-                description = "Locate in source explorer."/>
-            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
-                _label = "_Resolve Conflicts"
-                description = "Resolve Conflicts."/>
-            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu"
-                _label = "_Resolve Conflicts"
-                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ResolveConflictsHandler"
-                description = "Resolve Conflicts."/>
-            <Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu"
-                _label = "_Source Control Explorer"
-                defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerMenuHandler"
-                description = "Source Control Explorer."/>
+						<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"
+								_label = "_Locate in source explorer"
+								description = "Locate in source explorer."/>
+						<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts"
+								_label = "_Resolve Conflicts"
+								description = "Resolve Conflicts."/>
+						<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu"
+								_label = "_Resolve Conflicts"
+								defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.ResolveConflictsHandler"
+								description = "Resolve Conflicts."/>
+						<Command id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu"
+								_label = "_Source Control Explorer"
+								defaultHandler = "MonoDevelop.VersionControl.TFS.Commands.SourceControlExplorerMenuHandler"
+								description = "Source Control Explorer."/>
 		</Category>
 	</Extension>
 
-    <Extension path = "/MonoDevelop/Ide/MainMenu/VersionControl">
-        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.Annotate"/>
-        <ItemSet id = "TeamFoundation" _label = "TFS"  autohide="true" >
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu" />
-            <SeparatorItem/>
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu" />
-        </ItemSet>
-    </Extension>
+		<Extension path = "/MonoDevelop/Ide/MainMenu/VersionControl">
+				<SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.Annotate"/>
+				<ItemSet id = "TeamFoundation" _label = "TFS"  autohide="true" >
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.TeamExplorer" />
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ConnectToServer" />
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.SourceControlExplorerMenu" />
+						<SeparatorItem/>
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflictsMenu" />
+				</ItemSet>
+		</Extension>
 
 	<Extension path = "/MonoDevelop/Ide/Pads/ProjectPad">
 		<NodeBuilder class = "MonoDevelop.VersionControl.TFS.Infrastructure.TFSNodeExtension"/>
 	</Extension>
 
 	<Extension path = "/MonoDevelop/Ide/ContextMenu/ProjectPad/VersionControl">
-        <SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.SolutionStatus"/>
+				<SeparatorItem insertafter="MonoDevelop.VersionControl.Commands.SolutionStatus"/>
 		<Condition id="ItemType" value="IFileItem">
 			<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.Checkout"/>
 		</Condition>
-        <Condition id="ItemType" value="Solution|Project">
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" />
-        </Condition>
-        <Condition id="ItemType" value="IFileItem|IFolderItem">
-            <CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"/>
-        </Condition>
+				<Condition id="ItemType" value="Solution|Project">
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.ResolveConflicts" />
+				</Condition>
+				<Condition id="ItemType" value="IFileItem|IFolderItem">
+						<CommandItem id = "MonoDevelop.VersionControl.TFS.Commands.TFSCommands.LocateInSourceExplorer"/>
+				</Condition>
 	</Extension>
 	
 	<Extension path = "/MonoDevelop/Ide/Pads">
@@ -71,18 +75,18 @@
 		<Class class="MonoDevelop.VersionControl.TFS.GUI.TFSCommitDialogExtension" />
 	</Extension>
 
-    <Extension path = "/MonoDevelop/Ide/GlobalOptionsDialog/VersionControl">
-        <Section id = "TFS" _label = "TFS" class = "MonoDevelop.VersionControl.TFS.GUI.TFSOptionsPanel" />
-    </Extension>
+		<Extension path = "/MonoDevelop/Ide/GlobalOptionsDialog/VersionControl">
+				<Section id = "TFS" _label = "TFS" class = "MonoDevelop.VersionControl.TFS.GUI.TFSOptionsPanel" />
+		</Extension>
 
 <!--
-    <Extension path = "/MonoDevelop/Core/StockIcons">
-        <StockIcon stockid = "vc-repository" file = "Icons/repository.png" size="Menu" />
-    </Extension>
+		<Extension path = "/MonoDevelop/Core/StockIcons">
+				<StockIcon stockid = "vc-repository" file = "Icons/repository.png" size="Menu" />
+		</Extension>
 -->
 
 	<Extension path = "/MonoDevelop/Core/UserDataMigration">
-		<!-- 4.0+ -->
-		<Migration sourceVersion="4.0+" kind="Config" path="VersionControl.TFS.config" />
+		<!-- 5.8+ -->
+		<Migration sourceVersion="5.8+" kind="Config" path="VersionControl.TFS.2.0.config" />
 	</Extension>
 </ExtensionModel>
