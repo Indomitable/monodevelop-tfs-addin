@@ -1,21 +1,22 @@
-//
 // SourceControlExplorerView.cs
-//
+// 
 // Author:
-//       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
-//
-// Copyright (c) 2013 Ventsislav Mladenov
-//
+//       Ventsislav Mladenov
+// 
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,6 +24,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -30,9 +32,6 @@ using System.Linq;
 using Autofac;
 using Gdk;
 using Gtk;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.Ide.Gui;
@@ -41,9 +40,11 @@ using MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs;
 using MonoDevelop.VersionControl.TFS.GUI.WorkspaceManagement;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
-using MonoDevelop.VersionControl.TFS.Infrastructure.Objects;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Models;
 using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
@@ -59,7 +60,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         private readonly Button manageButton = new Button(GettextCatalog.GetString("Manage"));
         private readonly Button refreshButton = new Button(GettextCatalog.GetString("Refresh"));
         private readonly TreeView _treeView = new TreeView();
-        private readonly TreeStore _treeStore = new TreeStore(typeof(ServerItem), typeof(Pixbuf), typeof(string));
+        private readonly TreeStore _treeStore = new TreeStore(typeof(BaseItem), typeof(Pixbuf), typeof(string));
         private ProjectCollection projectCollection;
         private readonly List<WorkspaceData> _workspaces = new List<WorkspaceData>();
         private IWorkspace _currentWorkspace;
@@ -375,7 +376,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter = TreeIter.Zero;
             _treeStore.Foreach((m, p, i) =>
             {
-                var item = ((ServerItem)m.GetValue(i, 0));
+                var item = ((BaseItem)m.GetValue(i, 0));
                 if (item.ServerPath == path)
                 {
                     iter = i;
@@ -398,7 +399,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter = TreeIter.Zero;
             _listStore.Foreach((model, path, it) =>
             {
-                var item = ((ServerItem)model.GetValue(it, 0));
+                var item = ((BaseItem)model.GetValue(it, 0));
                 if (string.Equals(item.ServerPath.ItemName, name, StringComparison.OrdinalIgnoreCase))
                 {
                     iter = it;
@@ -443,7 +444,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 TreeIter treeIter;
                 if (_treeView.Selection.GetSelected(out treeIter))
                 {
-                    var currentItem = (ServerItem)_treeStore.GetValue(treeIter, 0);
+                    var currentItem = (BaseItem)_treeStore.GetValue(treeIter, 0);
                     ShowMappingPath(currentItem.ServerPath);
                     FillListView(currentItem.ServerPath);
                 }
@@ -460,7 +461,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             if (!_treeView.Selection.GetSelected(out iter))
                 return;
 
-            var item = (ServerItem)_treeStore.GetValue(iter, 0);
+            var item = (BaseItem)_treeStore.GetValue(iter, 0);
             FillListView(item.ServerPath);
             ShowMappingPath(item.ServerPath);
         }
@@ -481,7 +482,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter;
             RepositoryPath selectedPath = null;
             if (_treeView.Selection.GetSelected(out iter))
-                selectedPath = ((ServerItem)_treeStore.GetValue(iter, 0)).ServerPath;
+                selectedPath = ((BaseItem)_treeStore.GetValue(iter, 0)).ServerPath;
             FillTreeView();
             if (selectedPath != null)
                 ExpandPath(selectedPath);
@@ -573,7 +574,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             TreeIter iter;
             if (args.Event.Button == 3 && _treeView.Selection.GetSelected(out iter))
             {
-                var item = (ServerItem)_treeStore.GetValue(iter, 0);
+                var item = (BaseItem)_treeStore.GetValue(iter, 0);
                 var menu = BuildTreePopupMenu(item);
                 if (menu.Children.Length > 0)
                     menu.Popup();
@@ -581,7 +582,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        private Menu BuildTreePopupMenu(ServerItem item)
+        private Menu BuildTreePopupMenu(BaseItem item)
         {
             Menu menu = new Menu();
             //Nothing to display for root
@@ -753,7 +754,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        private MenuItem NotMappedMenu(IEnumerable<ServerItem> items, MenuCaller caller)
+        private MenuItem NotMappedMenu(IEnumerable<BaseItem> items, MenuCaller caller)
         {
             MenuItem mapItem = new MenuItem(GettextCatalog.GetString("Map"));
             var item = items.FirstOrDefault(i => i.ItemType == ItemType.Folder);
@@ -761,7 +762,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             return mapItem;
         }
 
-        private IEnumerable<MenuItem> ForlderMenuItems(ServerItem item, MenuCaller caller)
+        private IEnumerable<MenuItem> ForlderMenuItems(BaseItem item, MenuCaller caller)
         {
             if (item.ItemType != ItemType.Folder)
                 yield break;
@@ -770,7 +771,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             yield return CreateOpenFolderMenuItem(item);
         }
 
-        private MenuItem CreateAddFileMenuItem(ServerItem item, MenuCaller caller)
+        private MenuItem CreateAddFileMenuItem(BaseItem item, MenuCaller caller)
         {
             MenuItem addItem = new MenuItem(GettextCatalog.GetString("Add new item"));
             addItem.Activated += (sender, e) =>
@@ -811,7 +812,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             return addItem;
         }
 
-        private MenuItem CreateOpenFolderMenuItem(ServerItem item)
+        private MenuItem CreateOpenFolderMenuItem(BaseItem item)
         {
             MenuItem openFolder = new MenuItem(GettextCatalog.GetString("Open mapped folder"));
             openFolder.Activated += (sender, e) =>
@@ -822,7 +823,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             return openFolder;
         }
 
-        private void MapItem(ServerItem item, MenuCaller caller)
+        private void MapItem(BaseItem item, MenuCaller caller)
         {
             if (_currentWorkspace == null || item == null)
                 return;
@@ -850,7 +851,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             FileService.NotifyFilesRemoved(items.Select(i => new FilePath(_currentWorkspace.Data.GetLocalPathForServerPath(i.ServerPath))));
         }
 
-        private void Refresh(ServerItem item, MenuCaller caller)
+        private void Refresh(BaseItem item, MenuCaller caller)
         {
             if (item != null)
             {
@@ -866,7 +867,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             }
         }
 
-        private void RefreshList(IEnumerable<ServerItem> items)
+        private void RefreshList(IEnumerable<BaseItem> items)
         {
             Refresh(items.FirstOrDefault(), MenuCaller.List);
         }

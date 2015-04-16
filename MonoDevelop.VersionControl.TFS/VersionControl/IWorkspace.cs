@@ -1,11 +1,36 @@
+// IWorkspace.cs
+// 
+// Author:
+//       Ventsislav Mladenov
+// 
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+
 using System;
 using System.Collections.Generic;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl
@@ -20,8 +45,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         void Map(string serverPath, string localPath);
         void ResetDownloadStatus(int itemId);
 
-        List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items);
-        List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths);
+        List<PendingChange> GetPendingChanges(IEnumerable<BaseItem> items);
         List<PendingSet> GetPendingSets(string item, RecursionType recurse);
 
         Item GetItem(ItemSpec item, ItemType itemType, bool includeDownloadUrl);
@@ -30,8 +54,8 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         ExtendedItem GetExtendedItem(ItemSpec item, ItemType itemType);
         List<ExtendedItem> GetExtendedItems(IEnumerable<ItemSpec> itemSpecs, DeletedState deletedState, ItemType itemType);
         
-        GetStatus Get(GetRequest request, GetOptions options);
-        GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options);
+        void Get(GetRequest request, GetOptions options);
+        void Get(IEnumerable<GetRequest> requests, GetOptions options);
 
         void PendAdd(IEnumerable<LocalPath> paths, bool isRecursive, out ICollection<Failure> failures);
         void PendDelete(IEnumerable<LocalPath> paths, RecursionType recursionType, bool keepLocal, out ICollection<Failure> failures);

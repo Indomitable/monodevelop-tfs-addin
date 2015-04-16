@@ -1,21 +1,22 @@
-﻿//
-// CheckInDialog.cs
-//
+﻿// CheckInDialog.cs
+// 
 // Author:
-//       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
-//
-// Copyright (c) 2013 Ventsislav Mladenov
-//
+//       Ventsislav Mladenov
+// 
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,20 +24,19 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
 using MonoDevelop.VersionControl.TFS.GUI.WorkItems;
+using MonoDevelop.VersionControl.TFS.VersionControl;
+using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 using Xwt;
-using MonoDevelop.VersionControl.TFS.VersionControl;
-using MonoDevelop.VersionControl.TFS.VersionControl.Models;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
 {
@@ -160,7 +160,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             return false;
         }
 
-        private void FillStore(IEnumerable<ServerItem> items, IWorkspace workspace)
+        private void FillStore(IEnumerable<BaseItem> items, IWorkspace workspace)
         {
             fileStore.Clear();
             var pendingChanges = workspace.GetPendingChanges(items);
@@ -213,7 +213,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             }
         }
 
-        internal static void Open(IEnumerable<ServerItem> items, IWorkspace workspace)
+        internal static void Open(IEnumerable<BaseItem> items, IWorkspace workspace)
         {
             using (var dialog = new CheckInDialog())
             {

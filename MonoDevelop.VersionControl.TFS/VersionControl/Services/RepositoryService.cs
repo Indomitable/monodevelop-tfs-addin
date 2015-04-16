@@ -1,21 +1,22 @@
-//
-// VersionControlService.cs
-//
+// RepositoryService.cs
+// 
 // Author:
-//       Ventsislav Mladenov <vmladenov.mladenov@gmail.com>
-//
-// Copyright (c) 2013 Ventsislav Mladenov
-//
+//       Ventsislav Mladenov
+// 
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,23 +24,20 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-using System.Xml.Linq;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml.Linq;
 using System.Xml.XPath;
-using System;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
-using Microsoft.TeamFoundation.VersionControl.Client.Helpers;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.Core.Services.Resolvers;
-using MonoDevelop.VersionControl.TFS.VersionControl.Services.Resolvers;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using MonoDevelop.VersionControl.TFS.Core;
-using MonoDevelop.VersionControl.TFS.Infrastructure;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
+using MonoDevelop.VersionControl.TFS.Infrastructure;
+using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
+using MonoDevelop.VersionControl.TFS.VersionControl.Services.Resolvers;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
@@ -158,7 +156,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             msg.AddElement(versionSpec.ToXml("version"));
             msg.AddElement("deletedState", deletedState);
             msg.AddElement("itemType", itemType);
-            msg.AddElement("generateDownloadUrls", includeDownloadInfo.ToLowString());
+            msg.AddElement("generateDownloadUrls", includeDownloadInfo);
 
             var result = invoker.InvokeResult();
             return result.GetDescendants("Item").Select(Item.FromXml).ToList();
@@ -201,9 +199,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             msg.AddElement("ownerName", workspaceData.Owner);
             msg.AddElement("requests", requests.Select(r => r.ToXml()));
             if (force)
-                msg.AddElement("force", force.ToLowString());
+                msg.AddElement("force", force);
             if (noGet)
-                msg.AddElement("noGet", noGet.ToLowString());
+                msg.AddElement("noGet", noGet);
 
             List<GetOperation> operations = new List<GetOperation>();
             var result = invoker.InvokeResult();
@@ -226,7 +224,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             msg.AddElement("queryWorkspaceName", queryWorkspaceName);
             msg.AddElement("ownerName", ownerName);
             msg.AddElement("itemSpecs", itemSpecs.Select(i => i.ToXml("ItemSpec")));
-            msg.AddElement("generateDownloadUrls", generateDownloadUrls.ToLowString());
+            msg.AddElement("generateDownloadUrls", generateDownloadUrls);
 
             var result = invoker.InvokeResult();
             return new List<PendingSet>(result.GetElements("PendingSet").Select(PendingSet.FromXml));
@@ -269,7 +267,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             msg.AddElement("workspaceName", workspaceData.Name);
             msg.AddElement("workspaceOwner", workspaceData.Owner);
             msg.AddElement("itemSpecs", itemSpecs.Select(i => i.ToXml("ItemSpec")));
-            msg.AddElement("generateDownloadUrls", includeDownloadInfo.ToLowString());
+            msg.AddElement("generateDownloadUrls", includeDownloadInfo);
             var result = invoker.InvokeResult();
             return result.GetElements("PendingChange").Select(PendingChange.FromXml).ToList();
         }

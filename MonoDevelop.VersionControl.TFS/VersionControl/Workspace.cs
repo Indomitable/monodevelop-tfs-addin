@@ -1,45 +1,42 @@
-//
-// Microsoft.TeamFoundation.VersionControl.Client.Workspace
-//
-// Authors:
-//	Joel Reed (joelwreed@gmail.com)
-//  Ventsislav Mladenov (ventsislav.mladenov@gmail.com)
-//
-// Copyright (C) 2013 Joel Reed, Ventsislav Mladenov
-//
-// Permission is hereby granted, free of charge, to any person obtaining
-// a copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to
-// permit persons to whom the Software is furnished to do so, subject to
-// the following conditions:
+// Workspace.cs
 // 
-// The above copyright notice and this permission notice shall be
-// included in all copies or substantial portions of the Software.
+// Author:
+//       Ventsislav Mladenov
 // 
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-//
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Microsoft.TeamFoundation.VersionControl.Client;
-using Microsoft.TeamFoundation.VersionControl.Client.Enums;
-using Microsoft.TeamFoundation.VersionControl.Client.Objects;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
+using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
-using MonoDevelop.VersionControl.TFS.VersionControl.Structure;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
@@ -99,14 +96,14 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.PendingChanges.AddRange(this.GetPendingChanges(paths));
         }
 
-        public List<PendingChange> GetPendingChanges(IEnumerable<ServerItem> items)
-        {
-            return this.collection.QueryPendingChangesForWorkspace(workspaceData, items.Select(ItemSpec.FromServerItem), false);
-        }
-
-        public List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths)
+        private List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths)
         {
             return this.collection.QueryPendingChangesForWorkspace(workspaceData, paths.Select(ItemSpec.FromLocalPath), false);
+        }
+
+        public List<PendingChange> GetPendingChanges(IEnumerable<BaseItem> items)
+        {
+            return this.collection.QueryPendingChangesForWorkspace(workspaceData, items.Select(ItemSpec.FromServerItem), false);
         }
 
         public List<PendingSet> GetPendingSets(string item, RecursionType recurse)
@@ -165,19 +162,18 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region Version Control Operations
 
-        public GetStatus Get(GetRequest request, GetOptions options)
+        public void Get(GetRequest request, GetOptions options)
         {
-            return Get(request.ToEnumerable(), options);
+            Get(request.ToEnumerable(), options);
         }
 
-        public GetStatus Get(IEnumerable<GetRequest> requests, GetOptions options)
+        public void Get(IEnumerable<GetRequest> requests, GetOptions options)
         {
             bool force = options.HasFlag(GetOptions.GetAll);
             bool noGet = options.HasFlag(GetOptions.Preview);
 
             var getOperations = this.collection.Get(workspaceData, requests, force, noGet);   
             ProcessGetOperations(getOperations, ProcessType.Get);
-            return new GetStatus(getOperations.Count);
         }
 
         private void CollectPaths(LocalPath root, List<ChangeRequest> paths)
