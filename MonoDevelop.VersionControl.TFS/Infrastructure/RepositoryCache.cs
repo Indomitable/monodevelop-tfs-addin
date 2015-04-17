@@ -78,34 +78,14 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             cachedItems.Clear();
         }
 
-        public bool HasItem(RepositoryPath serverPath)
+        private bool HasItem(RepositoryPath serverPath)
         {
             return cachedItems.Any(c => c.ServerPath == serverPath);
         }
 
-        public ExtendedItem GetItem(RepositoryPath serverPath)
+        private ExtendedItem GetItem(RepositoryPath serverPath)
         {
             return cachedItems.Single(c => c.ServerPath == serverPath);
-        }
-
-        public ExtendedItem GetItem(LocalPath localPath)
-        {
-            lock (locker)
-            {
-                var workspace = repo.Workspace;
-                if (workspace == null)
-                    return null;
-                var serverPath = workspace.Data.GetServerPathForLocalPath(localPath);
-                var item = cachedItems.SingleOrDefault(ex => ex.ServerPath == serverPath);
-                if (item == null)
-                {
-                    var repoItem = workspace.GetExtendedItem(ItemSpec.FromLocalPath(localPath), ItemType.Any);
-                    AddToCache(repoItem);
-                    return repoItem;
-                }
-                else
-                    return item;
-            }
         }
 
         public List<ExtendedItem> GetItems(List<LocalPath> paths, RecursionType recursionType)

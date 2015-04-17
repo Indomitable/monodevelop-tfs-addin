@@ -25,7 +25,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Helpers
 {
@@ -37,6 +39,25 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             yield return item;
         }
 
-        
+        public static void RemoveAll<T>(this ICollection<T> collection, Func<T, bool> predicate)
+        {
+            if (predicate == null)
+                return;
+            var toRemove = collection.Where(predicate).ToArray();
+            foreach (var item in toRemove)
+            {
+                collection.Remove(item);
+            }
+        }
+
+        public static void ForEach<T>(this IEnumerable<T> enumerable, Action<T> action)
+        {
+            if (action == null)
+                return;
+            foreach (var item in enumerable)
+            {
+                action(item);
+            }
+        }
     }
 }

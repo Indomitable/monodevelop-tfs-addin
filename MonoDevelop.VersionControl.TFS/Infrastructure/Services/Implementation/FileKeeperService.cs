@@ -1,4 +1,4 @@
-﻿// ILoggingService.cs
+﻿// FileKeeperService.cs
 // 
 // Author:
 //       Ventsislav Mladenov
@@ -24,12 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers
+
+using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
+
+namespace MonoDevelop.VersionControl.TFS.Infrastructure.Services.Implementation
 {
-    interface ILoggingService
+    internal sealed class FileKeeperService : IFileKeeperService
     {
-        void LogToDebug(string message);
-        void LogToInfo(string message);
-        void LogToError(string message);
+        private readonly ILoggingService _loggingService;
+
+        public FileKeeperService(ILoggingService loggingService)
+        {
+            _loggingService = loggingService;
+        }
+
+        public IFileKeepSession StartSession()
+        {
+            return new FileKeepSession(_loggingService);
+        }
     }
 }

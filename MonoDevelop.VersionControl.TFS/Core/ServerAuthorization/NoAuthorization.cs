@@ -26,6 +26,7 @@
 // THE SOFTWARE.
 
 using System.Net;
+using System.Net.Http;
 using System.Xml.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
@@ -40,6 +41,11 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
         public void Authorize(WebClient client)
         {
             //Pass request with no modifications
+        }
+
+        public void Authorize(HttpClientHandler clientHandler, HttpRequestMessage message)
+        {
+            
         }
 
         public XElement ToConfigXml()

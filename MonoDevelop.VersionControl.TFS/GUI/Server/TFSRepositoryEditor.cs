@@ -26,7 +26,7 @@
 // THE SOFTWARE.
 namespace MonoDevelop.VersionControl.TFS.GUI.Server
 {
-    public class TFSRepositoryEditor : IRepositoryEditor
+    internal class TFSRepositoryEditor : IRepositoryEditor
     {
         //        readonly AddServerWidget widget;
         //        readonly TFSRepository repo;

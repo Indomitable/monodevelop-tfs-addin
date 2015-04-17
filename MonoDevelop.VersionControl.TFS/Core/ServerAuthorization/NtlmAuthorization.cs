@@ -27,6 +27,7 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
 using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization.Config;
 using MonoDevelop.VersionControl.TFS.Helpers;
@@ -49,6 +50,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
         {
             client.Credentials = new NetworkCredential(UserName, Password, Domain);
         }
+
+        public void Authorize(HttpClientHandler clientHandler, HttpRequestMessage message)
+        {
+            clientHandler.Credentials = new NetworkCredential(UserName, Password, Domain);
+        }
+
 
         public string Domain { get; private set; }
 

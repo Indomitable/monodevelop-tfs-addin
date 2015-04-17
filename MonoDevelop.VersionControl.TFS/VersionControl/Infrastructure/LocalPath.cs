@@ -26,7 +26,9 @@
 // THE SOFTWARE.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 
@@ -59,7 +61,12 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
 
         public override bool IsDirectory
         {
-            get { return Directory.Exists(Path); }
+            get { return !IsEmpty && Directory.Exists(Path); }
+        }
+
+        public bool IsFile
+        {
+            get { return !IsEmpty && File.Exists(Path); }
         }
 
         public bool IsEmpty
@@ -90,9 +97,27 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
             return new LocalPath(System.IO.Path.GetDirectoryName(Path));
         }
 
-        public bool Exists()
+        public IEnumerable<LocalPath> CollectSubPathsAndSelf()
         {
-            return !IsEmpty && (Directory.Exists(Path) || File.Exists(Path));
+            yield return this;
+            //Get Files
+            foreach (var file in Directory.EnumerateFiles(this))
+            {
+                yield return file;
+            }
+            //Get Directories recurse.
+            foreach (var subDirs in Directory.EnumerateDirectories(this))
+            {
+                foreach (var path in ((LocalPath)subDirs).CollectSubPathsAndSelf())
+                {
+                    yield return path;
+                }
+            }
+        }
+
+        public bool Exists
+        {
+            get { return !IsEmpty && (Directory.Exists(Path) || File.Exists(Path)); }
         }
 
         //TFS requires local file names to be in Windows format to have a drive letter and to use \ slash

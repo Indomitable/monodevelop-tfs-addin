@@ -29,15 +29,16 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Autofac;
 using Mono.TextEditor;
+using Mono.TextEditor.Utils;
 using MonoDevelop.Core;
 using MonoDevelop.Ide;
-using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.GUI.VersionControl;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.Infrastructure;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Models;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Services;
+using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
 using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
@@ -47,129 +48,68 @@ using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
 
 namespace MonoDevelop.VersionControl.TFS
 {
-    public class TFSRepository : Repository
+    internal class TFSRepository : Repository
     {
         private readonly IWorkspace workspace;
-        private readonly RepositoryCache cache;
+        //private readonly RepositoryCache cache;
+        private readonly VersionInfoResolver _versionInfoResolver;
         private readonly TFSVersionControlService _versionControlService;
+        private readonly IFileKeeperService _fileKeeperService;
 
-        internal TFSRepository(string rootPath, WorkspaceData workspaceData, ProjectCollection collection)
+        public TFSRepository(string rootPath, IWorkspace workspace,
+                             TFSVersionControlService versionControlService, IFileKeeperService fileKeeperService)
         {
-            if (workspaceData == null || collection == null)
+            if (workspace == null)
                 return;
-            this.workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
-            _versionControlService = DependencyInjection.Container.Resolve<TFSVersionControlService>();
             this.RootPath = rootPath;
-            this.cache = new RepositoryCache(this);
+            this.workspace = workspace;
+            _versionControlService = versionControlService;
+            _fileKeeperService = fileKeeperService;
+            _versionInfoResolver = new VersionInfoResolver(this);
         }
 
-        internal bool IsFileInWorkspace(LocalPath path)
+        public INotificationService NotificationService { get; set; }
+
+        private bool IsFileInWorkspace(LocalPath path)
         {
             return workspace.Data.IsLocalPathMapped(path);
         }
 
-        private bool IsRepositoryFileInWorkspace(RepositoryPath path)
+//        private IEnumerable<VersionInfo> GetItemVersionInfo(ExtendedItem item, bool getRemoteStatus)
+//        {
+//            var localStatus = GetLocalVersionStatus(item);
+//            var localRevision = GetLocalRevision(item);
+//            var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
+//            var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
+//            var path = item.LocalPath;
+//            if (string.IsNullOrEmpty(path) && item.ChangeType.HasFlag(ChangeType.Delete)) //Pending for delete.
+//            {
+//                path = workspace.Data.GetLocalPathForServerPath(item.ServerPath);
+//            }
+//            yield return new VersionInfo(new FilePath(path), item.ServerPath, item.ItemType == ItemType.Folder, 
+//                localStatus, localRevision, remoteStatus, remoteRevision);
+//        }
+
+        private VersionInfo[] GetItemsVersionInfo(IEnumerable<LocalPath> paths, bool recursive = false)
         {
-            return workspace.Data.IsServerPathMapped(path);
-        }
+            return _versionInfoResolver.GetStatus(paths, recursive).Values.ToArray();
 
-        private VersionStatus GetLocalVersionStatus(ExtendedItem item)
-        {
-            if (item == null || !IsRepositoryFileInWorkspace(item.ServerPath))
-                return VersionStatus.Unversioned;
 
-            var status = VersionStatus.Versioned;
-
-            if (item.IsLocked) //Locked
-            {
-                if (item.HasOtherPendingChange)//Locked by someone else
-                    status |= VersionStatus.Locked;
-                else
-                    status |= VersionStatus.LockOwned; //Locked by me
-            }
-
-            var changes = workspace.PendingChanges.Where(ch => string.Equals(ch.ServerItem, item.ServerPath, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            if (changes.Any(change => change.IsAdd || change.Version == 0))
-            {
-                status |= VersionStatus.ScheduledAdd;
-                return status;
-            }
-            if (changes.Any(change => change.IsDelete))
-            {
-                status |= VersionStatus.ScheduledDelete;
-                return status;
-            }
-            if (changes.Any(change => change.IsRename))
-            {
-                status = status | VersionStatus.ScheduledAdd;
-                return status;
-            }
-            if (changes.Any(change => change.IsEdit || change.IsEncoding))
-            {
-                status = status | VersionStatus.Modified;
-                return status;
-            }
-            return status;
-        }
-
-        private VersionStatus GetServerVersionStatus(ExtendedItem item)
-        {
-            if (item == null)
-                return VersionStatus.Unversioned;
-            var status = VersionStatus.Versioned;
-            if (item.IsLocked)
-                status = status | VersionStatus.Locked;
-            if (item.DeletionId > 0)
-                return status | VersionStatus.Missing;
-            if (item.VersionLatest > item.VersionLocal)
-                return status | VersionStatus.Modified;
-
-            return status;
-        }
-
-        private Revision GetLocalRevision(ExtendedItem item)
-        {
-            return new TFSRevision(this, item.VersionLocal, item.SourceServerItem);
-        }
-
-        private Revision GetServerRevision(ExtendedItem item)
-        {
-            return new TFSRevision(this, item.VersionLatest, item.SourceServerItem);
-        }
-
-        private IEnumerable<VersionInfo> GetItemVersionInfo(ExtendedItem item, bool getRemoteStatus)
-        {
-            var localStatus = GetLocalVersionStatus(item);
-            var localRevision = GetLocalRevision(item);
-            var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
-            var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
-            var path = item.LocalPath;
-            if (string.IsNullOrEmpty(path) && item.ChangeType.HasFlag(ChangeType.Delete)) //Pending for delete.
-            {
-                path = workspace.Data.GetLocalPathForServerPath(item.ServerPath);
-            }
-            yield return new VersionInfo(new FilePath(path), item.ServerPath, item.ItemType == ItemType.Folder, 
-                localStatus, localRevision, remoteStatus, remoteRevision);
-        }
-
-        private VersionInfo[] GetItemsVersionInfo(List<LocalPath> paths, bool getRemoteStatus, RecursionType recursive)
-        {
-            List<VersionInfo> infos = new List<VersionInfo>();
-            var extendedItems = cache.GetItems(paths, recursive);
-            foreach (var item in extendedItems.Where(i => i.IsInWorkspace || (!i.IsInWorkspace && i.ChangeType.HasFlag(ChangeType.Delete))).Distinct())
-            {
-                infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
-            }
-            foreach (var path in paths)
-            {
-                var path1 = path;
-                if (infos.All(i => path1 != i.LocalPath))
-                {
-                    infos.Add(VersionInfo.CreateUnversioned(new FilePath(path1), FileHelper.HasFolder(path1)));
-                }
-            }
-            return infos.ToArray();
+//            List<VersionInfo> infos = new List<VersionInfo>();
+//            var extendedItems = cache.GetItems(paths, recursive);
+//            foreach (var item in extendedItems.Where(i => i.IsInWorkspace || (!i.IsInWorkspace && i.ChangeType.HasFlag(ChangeType.Delete))).Distinct())
+//            {
+//                infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
+//            }
+//            foreach (var path in paths)
+//            {
+//                var path1 = path;
+//                if (infos.All(i => path1 != i.LocalPath))
+//                {
+//                    infos.Add(VersionInfo.CreateUnversioned(new FilePath(path1), FileHelper.HasFolder(path1)));
+//                }
+//            }
+//            return infos.ToArray();
         }
 
         #region implemented members of Repository
@@ -202,16 +142,12 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override IEnumerable<VersionInfo> OnGetVersionInfo(IEnumerable<FilePath> paths, bool getRemoteStatus)
         {
-            return OnGetVersionInfo(paths.Select(p => new LocalPath(p)), getRemoteStatus);
-        }
-
-        private IEnumerable<VersionInfo> OnGetVersionInfo(IEnumerable<LocalPath> paths, bool getRemoteStatus)
-        {
-            return GetItemsVersionInfo(paths.ToList(), getRemoteStatus, RecursionType.None);
+            return GetItemsVersionInfo(paths.Select(p => new LocalPath(p)));
         }
 
         protected override VersionInfo[] OnGetDirectoryVersionInfo(FilePath localDirectory, bool getRemoteStatus, bool recursive)
         {
+            //Get only files in current solution.
             var solutions = IdeApp.Workspace.GetAllSolutions().Where(s => s.BaseDirectory.IsChildPathOf(localDirectory) || s.BaseDirectory == localDirectory);
             var paths = new List<LocalPath> { new LocalPath(localDirectory) };
             foreach (var solution in solutions)
@@ -219,9 +155,7 @@ namespace MonoDevelop.VersionControl.TFS
                 var sfiles = solution.GetItemFiles(true);
                 paths.AddRange(sfiles.Where(f => f != localDirectory).Select(f => new LocalPath(f)));
             }
-
-            RecursionType recursionType = recursive ? RecursionType.Full : RecursionType.OneLevel;
-            return GetItemsVersionInfo(paths, getRemoteStatus, recursionType);
+            return GetItemsVersionInfo(paths, recursive);
         }
 
         protected override Repository OnPublish(string serverPath, FilePath localPath, FilePath[] files, string message, IProgressMonitor monitor)
@@ -237,16 +171,24 @@ namespace MonoDevelop.VersionControl.TFS
                                    .Select(file => new GetRequest(file, recurse ? RecursionType.Full : RecursionType.None, VersionSpec.Latest))
                                    .ToList();
             workspace.Get(getRequests, GetOptions.None);
-            cache.RefreshItems(paths);
+            _versionInfoResolver.InvalidateCache(paths);
         }
 
         protected override void OnCommit(ChangeSet changeSet, IProgressMonitor monitor)
         {
-            var changes = workspace.PendingChanges.Where(pc => changeSet.Items.Any(it => string.Equals(pc.LocalItem, it.LocalPath))).ToList();
+            var commitItems = (from it in changeSet.Items
+                let path = new LocalPath(it.LocalPath)
+                let needUpload = path.IsFile && (it.Status.HasFlag(VersionStatus.ScheduledAdd) || it.Status.HasFlag(VersionStatus.Modified))
+                select new CommitItem
+                {
+                    LocalPath = path,
+                    NeedUpload = needUpload
+                }).ToArray();
+
             Dictionary<int, WorkItemCheckinAction> workItems = null;
             if (changeSet.ExtendedProperties.Contains("TFS.WorkItems"))
                 workItems = (Dictionary<int, WorkItemCheckinAction>)changeSet.ExtendedProperties["TFS.WorkItems"];
-            var result = workspace.CheckIn(changes, changeSet.GlobalComment, workItems);
+            var result = workspace.CheckIn(commitItems, changeSet.GlobalComment, workItems);
             if (result.Failures != null && result.Failures.Any(x => x.SeverityType == SeverityType.Error))
             {
                 MessageService.ShowError("Commit failed!", string.Join(Environment.NewLine, result.Failures.Select(f => f.Message)));
@@ -255,10 +197,11 @@ namespace MonoDevelop.VersionControl.TFS
 
             foreach (var file in changeSet.Items.Where(i => !i.IsDirectory))
             {
+                VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs());
                 FileService.NotifyFileChanged(file.LocalPath);
             }
 
-            cache.RefreshItems(changeSet.Items.Select(i => new LocalPath(i.LocalPath)));
+            _versionInfoResolver.InvalidateCache(commitItems.Select(i => i.LocalPath));
         }
 
         protected override void OnCheckout(FilePath targetLocalPath, Revision rev, bool recurse, IProgressMonitor monitor)
@@ -270,9 +213,8 @@ namespace MonoDevelop.VersionControl.TFS
         {
             var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None));
             var operations = workspace.Undo(specs);
-            cache.RefreshItems(operations);
+            _versionInfoResolver.InvalidateCache(operations);
             FileService.NotifyFilesChanged(operations.Select(o => new FilePath(o)));
-
             FileService.NotifyFilesRemoved(localPaths.Where(x => !FileHelper.HasFile(x)));
         }
 
@@ -287,44 +229,62 @@ namespace MonoDevelop.VersionControl.TFS
             var rev = (TFSRevision)revision;
             var request = new GetRequest(spec, new ChangesetVersionSpec(rev.Version));
             workspace.Get(request, GetOptions.None);
-            cache.RefreshItem(new LocalPath(localPath));
+            _versionInfoResolver.InvalidateCache(localPath);
         }
 
         protected override void OnAdd(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
         {
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
+            var paths = localPaths.Select(x => new LocalPath(x)).Where(IsFileInWorkspace).ToArray();
             ICollection<Failure> failures;
             workspace.PendAdd(paths, recurse, out failures);
-            cache.RefreshItems(paths);
+            _versionInfoResolver.InvalidateCache(paths, recurse);
             FileService.NotifyFilesChanged(localPaths);
             FailuresDisplayDialog.ShowFailures(failures);
         }
 
         protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), RecursionType.None, monitor, keepLocal);
+            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), false, monitor, keepLocal);
             FileService.NotifyFilesChanged(localPaths);
         }
 
         protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), RecursionType.Full, monitor, keepLocal);
+            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), true, monitor, keepLocal);
             FileService.NotifyFilesChanged(localPaths);
         }
 
-        private void DeletePaths(LocalPath[] localPaths, RecursionType recursion, IProgressMonitor monitor, bool keepLocal)
+        private void DeletePaths(LocalPath[] localPaths, bool recursive, IProgressMonitor monitor, bool keepLocal)
         {
-            ICollection<Failure> failures;
-            workspace.PendDelete(localPaths.Where(IsFileInWorkspace), recursion, keepLocal, out failures);
-            if (failures.Any(f => f.SeverityType == SeverityType.Error))
+            using (var keeper = _fileKeeperService.StartSession())
             {
-                foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                if (keepLocal) keeper.Save(localPaths, recursive);
+
+                var statuses = _versionInfoResolver.GetStatus(localPaths, recursive);
+                //Remove files which are versioned and not added.
+                var forRemove = statuses.Where(s => s.Value.IsVersioned &&
+                                                    !s.Value.HasLocalChange(VersionStatus.ScheduledAdd)).Select(s => s.Key);
+
+                ICollection<Failure> failures;
+                workspace.PendDelete(forRemove, recursive ? RecursionType.Full : RecursionType.None, keepLocal, out failures);
+                if (failures.Any(f => f.SeverityType == SeverityType.Error))
                 {
-                    monitor.ReportError(failure.Code, new Exception(failure.Message));
+                    foreach (var failure in failures.Where(f => f.SeverityType == SeverityType.Error))
+                    {
+                        monitor.ReportError(failure.Code, new Exception(failure.Message));
+                    }
                 }
+
+                //Rever added files.
+                var addedFiles = statuses.Where(s => s.Value.HasLocalChange(VersionStatus.ScheduledAdd)).Select(s => new FilePath(s.Key)).ToArray();
+                this.Revert(addedFiles, recursive, monitor);
+
+                _versionInfoResolver.InvalidateCache(localPaths, recursive);
+
             }
-            cache.RefreshItems(localPaths);
         }
+
+
 
         protected override string OnGetTextAtRevision(FilePath repositoryPath, Revision revision)
         {
@@ -413,7 +373,7 @@ namespace MonoDevelop.VersionControl.TFS
 
                 var serverText = OnGetTextAtRevision(versionInfo.LocalPath, versionInfo.Revision);
                 var server = new TextDocument(serverText);
-                var diff = Mono.TextEditor.Utils.Diff.GetDiffString(server, local);
+                var diff = Diff.GetDiffString(server, local);
                 return new DiffInfo(baseLocalPath, versionInfo.LocalPath, diff);
             }
         }
@@ -423,7 +383,7 @@ namespace MonoDevelop.VersionControl.TFS
             base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
             ICollection<Failure> failures;
             workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
-            cache.RefreshItem(new LocalPath(localDestPath));
+            _versionInfoResolver.InvalidateCache(localDestPath);
             FailuresDisplayDialog.ShowFailures(failures);
         }
 
@@ -432,12 +392,16 @@ namespace MonoDevelop.VersionControl.TFS
             base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
             ICollection<Failure> failures;
             workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
-            cache.RefreshItem(new LocalPath(localDestPath));
+            _versionInfoResolver.InvalidateCache(localDestPath);
             FailuresDisplayDialog.ShowFailures(failures);
         }
 
         protected override VersionControlOperation GetSupportedOperations(VersionInfo vinfo)
         {
+            if (!this.IsFileInWorkspace(new LocalPath(vinfo.LocalPath)))
+            {
+                return VersionControlOperation.None;
+            }
             var supportedOperations = base.GetSupportedOperations(vinfo);
             if (vinfo.HasLocalChanges) //Disable update for modified files.
                 supportedOperations &= ~VersionControlOperation.Update;
@@ -475,7 +439,7 @@ namespace MonoDevelop.VersionControl.TFS
                         }
                         else
                         {
-                            cache.RefreshItem(path);
+                            _versionInfoResolver.InvalidateCache(path);
                             progress.ReportSuccess("Finish editing item.");
                         }
                     }
@@ -520,7 +484,7 @@ namespace MonoDevelop.VersionControl.TFS
         private void LockItems(LocalPath[] localPaths, LockLevel lockLevel)
         {
             workspace.LockItems(localPaths, lockLevel);
-            cache.RefreshItems(localPaths);
+            _versionInfoResolver.InvalidateCache(localPaths);
         }
         
         #endregion
@@ -533,7 +497,7 @@ namespace MonoDevelop.VersionControl.TFS
                 ICollection<Failure> failures;
                 workspace.CheckOut(path.ToEnumerable(), out failures);
                 FailuresDisplayDialog.ShowFailures(failures);
-                cache.RefreshItem(path);
+                _versionInfoResolver.InvalidateCache(path);
                 FileService.NotifyFileChanged(new FilePath(path));
                 progress.ReportSuccess("Finish check out.");
             }
@@ -546,7 +510,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         internal void Refresh()
         {
-            this.cache.ClearCache();
+            this._versionInfoResolver.InvalidateCache();
             workspace.RefreshPendingChanges();
         }
 

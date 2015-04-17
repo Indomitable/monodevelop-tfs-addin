@@ -1,4 +1,4 @@
-﻿// ILoggingService.cs
+﻿// VersionInfoStatus.cs
 // 
 // Author:
 //       Ventsislav Mladenov
@@ -24,12 +24,34 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers
+
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
+
+namespace MonoDevelop.VersionControl.TFS.Infrastructure.Models
 {
-    interface ILoggingService
+    internal sealed class VersionInfoStatus
     {
-        void LogToDebug(string message);
-        void LogToInfo(string message);
-        void LogToError(string message);
+        public RepositoryPath RemotePath { get; set; }
+        public VersionStatus LocalStatus { get; set; }
+        public TFSRevision LocalRevision { get; set; }
+        public VersionStatus RemoteStatus { get; set; }
+        public TFSRevision RemoteRevision { get; set; }
+
+        public bool IsUnversioned
+        {
+            get { return LocalStatus == VersionStatus.Unversioned; }
+        }
+        
+        public static VersionInfoStatus Unversioned
+        {
+            get
+            {
+                return new VersionInfoStatus
+                {
+                    LocalStatus = VersionStatus.Unversioned,
+                };
+            }
+        }
+
     }
 }

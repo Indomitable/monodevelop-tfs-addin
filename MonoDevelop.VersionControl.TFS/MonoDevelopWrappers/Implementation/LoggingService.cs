@@ -35,14 +35,12 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
 {
     sealed class LoggingService : ILoggingService
     {
-        private readonly IConfigurationService _configurationService;
         readonly static object locker = new object();
-        private Configuration _configuration;
+        private readonly Configuration _configuration;
 
         public LoggingService(IConfigurationService configurationService)
         {
-            _configurationService = configurationService;
-            _configuration = _configurationService.Load();
+            _configuration = configurationService.Load();
         }
 
         public void LogToDebug(string message)
@@ -60,6 +58,11 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
         public void LogToInfo(string message)
         {
             MonoDevelop.Core.LoggingService.Log(LogLevel.Info, message);
+        }
+
+        public void LogToError(string message)
+        {
+            MonoDevelop.Core.LoggingService.Log(LogLevel.Error, message);
         }
     }
 }

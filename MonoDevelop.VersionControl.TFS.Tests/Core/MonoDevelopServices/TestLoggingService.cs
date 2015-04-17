@@ -43,5 +43,10 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core.MonoDevelopServices
         {
             Console.WriteLine(message);
         }
+
+        public void LogToError(string message)
+        {
+            Console.WriteLine(message);
+        }
     }
 }

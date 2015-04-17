@@ -46,7 +46,9 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
         readonly Lazy<ClientService> clientService;
         readonly Lazy<CommonStructureService> commonStructureService;
 
-        private readonly List<ProjectInfo> projects = new List<ProjectInfo>(); 
+        private readonly List<ProjectInfo> projects = new List<ProjectInfo>();
+        private IReadOnlyCollection<WorkspaceData> _localWorkspaces;
+        private static readonly object locker = new object();
 
         private ProjectCollection(TeamFoundationServer server)
         {
@@ -164,9 +166,15 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 
         #region Workspace Management
 
-        public List<WorkspaceData> GetLocalWorkspaces()
+        public IReadOnlyCollection<WorkspaceData> GetLocalWorkspaces()
         {
-            return repositoryService.Value.QueryWorkspaces(Server.UserName, Environment.MachineName);
+            lock (locker)
+            {
+                if (_localWorkspaces != null)
+                    return _localWorkspaces;
+                _localWorkspaces = repositoryService.Value.QueryWorkspaces(Server.UserName, Environment.MachineName);
+                return _localWorkspaces;
+            }
         }
 
         public List<WorkspaceData> GetRemoteWorkspaces()
@@ -198,14 +206,14 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
 
         #region Version Control Repository
 
-        public void UploadFile(WorkspaceData workspaceData, PendingChange pendingChange)
+        public void UploadFile(WorkspaceData workspaceData, CommitItem commitItem)
         {
-            this.repositoryService.Value.UploadFile(workspaceData, pendingChange);
+            this.repositoryService.Value.UploadFile(workspaceData, commitItem);
         }
 
-        public CheckInResult CheckIn(WorkspaceData workspaceData, IEnumerable<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        public CheckInResult CheckIn(WorkspaceData workspaceData, IEnumerable<RepositoryPath> repositoryPaths, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
-            return this.repositoryService.Value.CheckIn(workspaceData, changes, comment, workItems);
+            return this.repositoryService.Value.CheckIn(workspaceData, repositoryPaths, comment, workItems);
         }
 
         public List<PendingChange> QueryPendingChangesForWorkspace(WorkspaceData workspaceData, IEnumerable<ItemSpec> itemSpecs, bool includeDownloadInfo)

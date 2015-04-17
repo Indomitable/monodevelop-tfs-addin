@@ -183,7 +183,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             msg.AddElement("itemType", itemType);
 
             var result = invoker.InvokeResult();
-            return result.GetDescendants("ExtendedItem").Select(ExtendedItem.FromXml).ToList();
+            return result.GetDescendants("ExtendedItem").Select(ExtendedItem.FromXml).Distinct().ToList();
         }
 
         #endregion
@@ -306,12 +306,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             return Changeset.FromXml(result);
         }
 
-        internal void UploadFile(WorkspaceData workspaceData, PendingChange change)
+        internal void UploadFile(WorkspaceData workspaceData, CommitItem commitItem)
         {
-            if (change.ItemType != ItemType.File)
-                return;
-            if (change.ChangeType.HasFlag(ChangeType.Edit) || change.ChangeType.HasFlag(ChangeType.Add))
-                UploadFile(workspaceData.Name, workspaceData.Owner, change);
+            UploadService.UploadFileAsync(workspaceData.Name, workspaceData.Owner, commitItem).Wait();
         }
 
         #region Result Extractors
@@ -336,13 +333,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         #endregion
 
-        internal CheckInResult CheckIn(WorkspaceData workspaceData, IEnumerable<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        internal CheckInResult CheckIn(WorkspaceData workspaceData, IEnumerable<RepositoryPath> repositoryPaths, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
             var invoker = GetSoapInvoker();
             var msg = invoker.CreateEnvelope("CheckIn");
             msg.Add(new XElement(MessageNs + "workspaceName", workspaceData.Name));
             msg.Add(new XElement(MessageNs + "ownerName", workspaceData.Owner));
-            msg.Add(new XElement(MessageNs + "serverItems", changes.Select(x => x.ServerItem).Distinct().Select(s => new XElement(MessageNs + "string", s))));
+            msg.Add(new XElement(MessageNs + "serverItems", repositoryPaths.Select(s => new XElement(MessageNs + "string", s))));
             msg.Add(new XElement(MessageNs + "info",
                 new XAttribute("date", new DateTime(0).ToString("s")),
                 new XAttribute("cset", 0),
@@ -398,10 +395,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
         //		{
         //			UploadFile(workspaceName, ownerName, change);
         //		}
-        private void UploadFile(string workspaceName, string ownerName, PendingChange change)
-        {
-            UploadService.UploadFile(workspaceName, ownerName, change);
-        }
     }
 }
 

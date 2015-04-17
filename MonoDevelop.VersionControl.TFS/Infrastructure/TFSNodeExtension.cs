@@ -147,7 +147,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             }
             var item = items[0];
             var repo = item.Repository as TFSRepository;
-            if (repo == null)
+            if (repo == null || !item.VersionInfo.IsVersioned)
             {
                 commandInfo.Visible = false;
                 return;

@@ -50,7 +50,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Models
             var el = new XElement("LocalVersionUpdate",
                          new XAttribute("itemid", ItemId),
                          new XAttribute("lver", LocalVersion));
-            if (!string.IsNullOrEmpty(TargetLocalItem))
+            if (!TargetLocalItem.IsEmpty)
                 el.Add(new XAttribute("tlocal", TargetLocalItem.ToRepositoryLocalPath()));
             return el;
         }

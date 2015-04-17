@@ -28,12 +28,14 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.Core.Services.Resolvers;
-using MonoDevelop.VersionControl.TFS.VersionControl.Models;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Services.Resolvers;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
@@ -57,7 +59,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         #region implemented abstract members of TfsService
 
-        public override System.Xml.Linq.XNamespace MessageNs
+        public override XNamespace MessageNs
         {
             get
             {
@@ -94,9 +96,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             }
         }
 
-        public void UploadFile(string workspaceName, string workspaceOwner, PendingChange change)
+        public async Task UploadFileAsync(string workspaceName, string workspaceOwner, CommitItem item)
         {
-            var fileContent = File.ReadAllBytes(change.LocalItem);
+            var fileContent = File.ReadAllBytes(item.LocalPath);
             var fileHash = Hash(fileContent);
             string contentType = uncompressedContentType;
 
@@ -107,41 +109,62 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
                 while((cnt = memory.Read(buffer, 0, ChunkSize)) > 0)
                 {
                     var range = GetRange(memory.Position - cnt, memory.Position, fileContent.Length);
-                    UploadPart(change.ServerItem, workspaceName, workspaceOwner, fileContent.Length, fileHash, range, contentType, buffer, cnt);
+                    await UploadPart(item.RepositoryPath, workspaceName, workspaceOwner, fileContent.Length, fileHash, range, contentType, buffer, cnt);
                 }
             }
         }
 
-        private void UploadPart(string fileName, string workspaceName, string workspaceOwner, int fileSize, string fileHash, string range, string contentType, byte[] bytes, int copyBytes)
+        private async Task<HttpResponseMessage> UploadPart(string fileName, string workspaceName, string workspaceOwner, int fileSize, string fileHash, string range, string contentType, byte[] bytes, int copyBytes)
         {
-            var request = (HttpWebRequest)WebRequest.Create(this.Url);
-            request.Method = "POST";
-            this.Server.Authorization.Authorize(request);
-            request.AllowWriteStreamBuffering = true;
-            request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
+            var handler = new HttpClientHandler { PreAuthenticate = true };
+            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, this.Url);
+            this.Server.Authorization.Authorize(handler, message);
 
-            var template = GetTemplate();
-            var content = string.Format(template, fileName, workspaceName, workspaceOwner, fileSize, fileHash, range, "item", contentType);
-            var contentBytes = Encoding.UTF8.GetBytes(content.Replace(Environment.NewLine, NewLine));
+            HttpClient client = new HttpClient(handler);
+            
+            
+            var content = new MultipartFormDataContent(Boundary);
+            content.Add(new StringContent(fileName), "item");
+            content.Add(new StringContent(workspaceName), "wsname");
+            content.Add(new StringContent(workspaceOwner), "wsowner");
+            content.Add(new StringContent(fileSize.ToString()), "filelength");
+            content.Add(new StringContent(fileHash), "hash");
+            content.Add(new StringContent(range), "range");
+            content.Add(new StringContent("Content-Type: " + contentType), "content", "item");
+            content.Add(new ByteArrayContent(bytes, 0, copyBytes));
 
-            using (var stream = new MemoryStream())
-            {
-                stream.Write(contentBytes, 0, contentBytes.Length);
-                stream.Write(bytes, 0, copyBytes);
-                var footContent = Encoding.UTF8.GetBytes(NewLine + Boundary + "--" + NewLine);
-                stream.Write(footContent, 0, footContent.Length);
-                stream.Flush();
-                contentBytes = stream.ToArray();
-            }
+            message.Content = content;
+            return await client.SendAsync(message);
 
-            //request.ContentLength = contentBytes.Length;
 
-            using (var requestStream = request.GetRequestStream())
-            {
-                CopyBytes(contentBytes, requestStream);
-            }
-                           
-            request.GetResponse();
+//            var request = (HttpWebRequest)WebRequest.Create(this.Url);
+//            request.Method = "POST";
+//            this.Server.Authorization.Authorize(request);
+//            request.AllowWriteStreamBuffering = true;
+//            request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
+//
+//            var template = GetTemplate();
+//            var content = string.Format(template, fileName, workspaceName, workspaceOwner, fileSize, fileHash, range, "item", contentType);
+//            var contentBytes = Encoding.UTF8.GetBytes(content.Replace(Environment.NewLine, NewLine));
+//
+//            using (var stream = new MemoryStream())
+//            {
+//                stream.Write(contentBytes, 0, contentBytes.Length);
+//                stream.Write(bytes, 0, copyBytes);
+//                var footContent = Encoding.UTF8.GetBytes(NewLine + Boundary + "--" + NewLine);
+//                stream.Write(footContent, 0, footContent.Length);
+//                stream.Flush();
+//                contentBytes = stream.ToArray();
+//            }
+//
+//            //request.ContentLength = contentBytes.Length;
+//
+//            using (var requestStream = request.GetRequestStream())
+//            {
+//                CopyBytes(contentBytes, requestStream);
+//            }
+//                           
+//            request.GetResponse();
         }
 
         private string GetTemplate()

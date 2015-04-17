@@ -37,7 +37,8 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 {
     internal interface IWorkspace : IEquatable<IWorkspace>, IComparable<IWorkspace>
     {
-        CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems);
+        CheckInResult CheckIn(ICollection<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems);
+        CheckInResult CheckIn(CommitItem[] changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems);
         List<PendingChange> PendingChanges { get; }
         WorkspaceData Data { get; }
         ProjectCollection ProjectCollection { get; }

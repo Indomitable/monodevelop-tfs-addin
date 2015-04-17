@@ -27,6 +27,8 @@
 
 using System;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Xml.Linq;
 using MonoDevelop.VersionControl.TFS.Core.ServerAuthorization.Config;
@@ -48,6 +50,11 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
         public void Authorize(WebClient client)
         {
             client.Headers.Add(HttpRequestHeader.Authorization, this.AuthorizationHeader);
+        }
+
+        public void Authorize(HttpClientHandler clientHandler, HttpRequestMessage message)
+        {
+            message.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes(this.UserName + ":" + this.Password)));
         }
 
         public static BasicAuthorization FromConfigXml(XElement element, Uri serverUri)

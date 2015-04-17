@@ -67,12 +67,20 @@
     <Compile Include="GUI\Server\Authorization\NtlmAuthorizationConfig.cs" />
     <Compile Include="GUI\Server\Authorization\UserPasswordAuthorizationConfig.cs" />
     <Compile Include="Helpers\CollectionHelper.cs" />
+    <Compile Include="Infrastructure\Models\VersionInfoStatus.cs" />
+    <Compile Include="Infrastructure\Services\Implementation\FileKeepSession.cs" />
+    <Compile Include="Infrastructure\Services\IFileKeeperService.cs" />
+    <Compile Include="Infrastructure\Services\IFileKeepSession.cs" />
+    <Compile Include="Infrastructure\Services\Implementation\FileKeeperService.cs" />
     <Compile Include="Infrastructure\Settings\Configuration.cs" />
     <Compile Include="Infrastructure\Settings\IConfigurationService.cs" />
     <Compile Include="Infrastructure\Settings\Implementation\ConfigurationService.cs" />
     <Compile Include="Infrastructure\DependencyInjection.cs" />
+    <Compile Include="Infrastructure\VersionInfoResolver.cs" />
+    <Compile Include="MonoDevelopWrappers\Implementation\NotificationService.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressDisplay.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressService.cs" />
+    <Compile Include="MonoDevelopWrappers\INotificationService.cs" />
     <Compile Include="MonoDevelopWrappers\IProgressDisplay.cs" />
     <Compile Include="MonoDevelopWrappers\IProjectService.cs" />
     <Compile Include="MonoDevelopWrappers\ILoggingService.cs" />
@@ -121,6 +129,7 @@
     <Compile Include="GUI\VersionControl\Dialogs\LockDialog.cs" />
     <Compile Include="Infrastructure\RepositoryCache.cs" />
     <Compile Include="GUI\VersionControl\Dialogs\CheckInDialog.cs" />
+    <Compile Include="VersionControl\Infrastructure\CommitItem.cs" />
     <Compile Include="VersionControl\Models\ChangeRequest.cs" />
     <Compile Include="VersionControl\Enums\DeletedState.cs" />
     <Compile Include="VersionControl\Enums\FailureException.cs" />
@@ -261,7 +270,9 @@
     <EmbeddedResource Include="Icons\repository.png" />
     <EmbeddedResource Include="Icons\open-folder-16.png" />
     <EmbeddedResource Include="Icons\text-file-16.png" />
-    <EmbeddedResource Include="Properties\Manifest.addin.xml" />
+    <EmbeddedResource Include="Properties\Manifest.addin.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Autofac, Version=3.5.0.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
@@ -285,6 +296,7 @@
     <Reference Include="atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="Xwt">
       <HintPath Condition=" '$(OS)' != 'Windows_NT' ">..\External\monodevelop\main\build\bin\Xwt.dll</HintPath>
       <HintPath Condition=" '$(OS)' == 'Windows_NT' ">$(MonoDevelopRoot)\bin\Xwt.dll</HintPath>

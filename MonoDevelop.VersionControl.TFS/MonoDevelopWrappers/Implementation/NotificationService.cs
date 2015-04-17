@@ -1,4 +1,4 @@
-﻿// ILoggingService.cs
+﻿// NotificationService.cs
 // 
 // Author:
 //       Ventsislav Mladenov
@@ -24,12 +24,32 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers
+
+using MonoDevelop.Core;
+
+namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
 {
-    interface ILoggingService
+    internal sealed class NotificationService : INotificationService
     {
-        void LogToDebug(string message);
-        void LogToInfo(string message);
-        void LogToError(string message);
+        private readonly TFSRepository _repository;
+
+        public NotificationService(TFSRepository repository)
+        {
+            _repository = repository;
+        }
+
+        public void NotifyFileChanged(string path)
+        {
+            var fp = new FilePath(path);
+            VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(_repository, fp, fp.IsDirectory));
+            FileService.NotifyFileChanged(fp);
+        }
+
+        public void NotifyFileRemoved(string path)
+        {
+            var fp = new FilePath(path);
+            VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(_repository, fp, fp.IsDirectory));
+            FileService.NotifyFileRemoved(fp);
+        }
     }
 }

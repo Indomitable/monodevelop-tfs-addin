@@ -30,6 +30,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
@@ -55,6 +56,8 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         public Workspace(WorkspaceData data, ProjectCollection collection, TFSVersionControlService versionControlService,
             ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
         {
+            if (data == null || collection == null)
+                return;
             this.workspaceData = data;
             this.collection = collection;
             _versionControlService = versionControlService;
@@ -64,13 +67,27 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             RefreshPendingChanges();
         }
 
-        public CheckInResult CheckIn(List<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        public CheckInResult CheckIn(ICollection<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
         {
-            foreach (var change in changes)
+            var commitItems = (from it in changes
+                               let needUpload = it.LocalItem.IsFile && (it.IsAdd || it.IsEdit)
+                               select new CommitItem
+                               {
+                                   LocalPath = it.LocalItem,
+                                   NeedUpload = needUpload
+                               }).ToArray();
+            return CheckIn(commitItems, comment, workItems);
+        }
+
+        public CheckInResult CheckIn(CommitItem[] changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
+        {
+            changes.RemoveAll(ch => !Data.IsLocalPathMapped(ch.LocalPath));
+            changes.ForEach(ch => ch.RepositoryPath = Data.GetServerPathForLocalPath(ch.LocalPath));
+            foreach (var commitItem in changes.Where(c => c.NeedUpload))
             {
-                this.collection.UploadFile(this.workspaceData, change);
+                this.collection.UploadFile(this.workspaceData, commitItem);
             }
-            var result = this.collection.CheckIn(this.workspaceData, changes, comment, workItems);
+            var result = this.collection.CheckIn(this.workspaceData, changes.Select(c => c.RepositoryPath), comment, workItems);
             if (result.ChangeSet > 0)
             {
                 WorkItemManager wm = new WorkItemManager(this.collection);
@@ -78,9 +95,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             }
             this.RefreshPendingChanges();
             ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
-            foreach (var file in changes.Where(ch => ch.ItemType == ItemType.File && !string.IsNullOrEmpty(ch.LocalItem)).Select(ch => ch.LocalItem).Distinct())
+            foreach (var path in changes.Select(c => c.LocalPath))
             {
-                MakeFileReadOnly(file);
+                MakeFileReadOnly(path);
             }
             return result;
         }
@@ -337,15 +354,15 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #endregion
 
-        internal void MakeFileReadOnly(string path)
+        private static void MakeFileReadOnly(LocalPath path)
         {
-            if (File.Exists(path))
+            if (path.Exists && !path.IsDirectory)
                 File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.ReadOnly);
         }
 
-        internal void MakeFileWritable(string path)
+        private static void MakeFileWritable(LocalPath path)
         {
-            if (File.Exists(path))
+            if (path.Exists && !path.IsDirectory)
                 File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
         }
 
@@ -424,13 +441,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 return string.Empty;
             if (operation.ItemType == ItemType.Folder)
             {
-                if (!path.Exists())
+                if (!path.Exists)
                     Directory.CreateDirectory(path);
                 return path;
             }
             if (operation.ItemType == ItemType.File)
             {
-                if (!path.GetDirectory().Exists())
+                if (!path.GetDirectory().Exists)
                     Directory.CreateDirectory(path.GetDirectory());
                 return this.collection.Download(path, operation.ArtifactUri);
             }

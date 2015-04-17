@@ -62,7 +62,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Settings.Implementation
         public Configuration Load()
         {
             var configuration = Configuration.Default();
-            if (!_configurationPath.Exists())
+            if (!_configurationPath.Exists)
                 return configuration;
             
             var document = XDocument.Load(_configurationPath);

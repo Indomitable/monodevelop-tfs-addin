@@ -30,6 +30,8 @@ using MonoDevelop.Core;
 using MonoDevelop.VersionControl.TFS.Core;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Services;
+using MonoDevelop.VersionControl.TFS.Infrastructure.Services.Implementation;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Settings;
 using MonoDevelop.VersionControl.TFS.Infrastructure.Settings.Implementation;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
@@ -44,6 +46,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
     {
         public static void Register(ContainerBuilder builder)
         {
+            builder.RegisterType<FileKeeperService>().As<IFileKeeperService>().SingleInstance();
             builder.RegisterType<TFSVersionControlService>().SingleInstance();
             builder.RegisterType<Workspace>().As<IWorkspace>();
             builder.RegisterType<SoapInvoker>().As<ISoapInvoker>();
@@ -56,6 +59,15 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             return Container.Resolve<IWorkspace>(new TypedParameter(typeof(WorkspaceData), workspaceData),
                                                  new TypedParameter(typeof(ProjectCollection), collection));
+        }
+
+        public static TFSRepository GetTFSRepository(string path, WorkspaceData workspaceData, ProjectCollection collection)
+        {
+            using (var scope = Container.BeginLifetimeScope())
+            {
+                var workspace = GetWorkspace(workspaceData, collection);
+                return scope.Resolve<TFSRepository>(new NamedParameter("rootPath", path), new TypedParameter(typeof (IWorkspace), workspace));
+            }
         }
 
         public static ISoapInvoker GetSoapInvoker(TFSService service)
@@ -78,6 +90,9 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return service;
             }).As<IConfigurationService>().SingleInstance();
             this.RegisterType<LoggingService>().As<ILoggingService>().SingleInstance();
+            this.RegisterType<NotificationService>().As<INotificationService>();
+            this.RegisterType<TFSRepository>().InstancePerLifetimeScope().OnActivated(a => a.Instance.NotificationService = a.Context.Resolve<INotificationService>() );
+            
         }
     }
 }

@@ -25,7 +25,9 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System;
 using System.Net;
+using System.Net.Http;
 using System.Xml.Linq;
 
 namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
@@ -34,6 +36,7 @@ namespace MonoDevelop.VersionControl.TFS.Core.ServerAuthorization
     {
         void Authorize(HttpWebRequest request);
         void Authorize(WebClient client);
+        void Authorize(HttpClientHandler clientHandler, HttpRequestMessage message);
         XElement ToConfigXml();
     }
 }
