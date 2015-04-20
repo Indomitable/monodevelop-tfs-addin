@@ -81,11 +81,7 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Services.VersionControl
             ICollection<Failure> failures;
             workspace.PendAdd(new [] { (LocalPath)fileName}, false, out failures);
             
-            Assert.Equal(1, workspace.PendingChanges.Count);
-
-            var checkinResult = workspace.CheckIn(workspace.PendingChanges, "Test Check In", null);
-
-            Assert.Equal(0, workspace.PendingChanges.Count);
+            var checkinResult = workspace.CheckIn(new[] { new CommitItem { LocalPath = fileName, NeedUpload = true }  }, "Test Check In", null);
 
             var item = workspace.GetItem(ItemSpec.FromLocalPath(fileName), ItemType.File, true);
 

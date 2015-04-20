@@ -168,7 +168,7 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl.Dialogs
             {
                 var row = fileStore.AddRow();
                 fileStore.SetValue(row, isCheckedField, true);
-                var path = (RepositoryPath)pendingChange.ServerItem;
+                var path = pendingChange.ServerItem;
                 fileStore.SetValue(row, nameField, path.ItemName);
                 fileStore.SetValue(row, changesField, pendingChange.ChangeType.ToString());
                 fileStore.SetValue(row, folderField, path.ParentPath);

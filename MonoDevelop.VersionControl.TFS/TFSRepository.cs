@@ -515,7 +515,6 @@ namespace MonoDevelop.VersionControl.TFS
         internal void Refresh()
         {
             this._versionInfoResolver.InvalidateCache();
-            workspace.RefreshPendingChanges();
         }
 
         internal IWorkspace Workspace { get { return workspace; }}

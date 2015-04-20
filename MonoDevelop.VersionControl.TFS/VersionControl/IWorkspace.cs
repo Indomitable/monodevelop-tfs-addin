@@ -39,7 +39,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
     {
         CheckInResult CheckIn(ICollection<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems);
         CheckInResult CheckIn(CommitItem[] changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems);
-        List<PendingChange> PendingChanges { get; }
         WorkspaceData Data { get; }
         ProjectCollection ProjectCollection { get; }
 
@@ -79,6 +78,5 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         LocalPath DownloadToTemp(string downloadUrl);
         void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue);
         string GetItemContent(Item item);
-        void RefreshPendingChanges();
     }
 }

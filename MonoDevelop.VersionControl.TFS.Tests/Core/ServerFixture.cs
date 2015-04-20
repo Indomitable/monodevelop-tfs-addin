@@ -92,11 +92,11 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
                 Directory.CreateDirectory(topFolder);
             }
             var workspace = DependencyInjection.GetWorkspace(workspaceData, collection);
-            if (workspace.PendingChanges.Any())
-            {
-                var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));
-                workspace.Undo(undoItems);
-            }
+//            if (workspace.PendingChanges.Any())
+//            {
+//                var undoItems = workspace.PendingChanges.Select(pc => new ItemSpec(pc.LocalItem, RecursionType.Full));
+//                workspace.Undo(undoItems);
+//            }
             return workspace;
         }
 

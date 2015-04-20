@@ -30,12 +30,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using MonoDevelop.VersionControl.TFS.Core.Structure;
 using MonoDevelop.VersionControl.TFS.Helpers;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
-using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking;
@@ -51,7 +49,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         private readonly ILoggingService _loggingService;
         private readonly IProjectService _projectService;
         private readonly IProgressService _progressService;
-        private readonly List<PendingChange> pendingChanges = new List<PendingChange>(); 
 
         public Workspace(WorkspaceData data, ProjectCollection collection, TFSVersionControlService versionControlService,
             ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
@@ -64,7 +61,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             _loggingService = loggingService;
             _projectService = projectService;
             _progressService = progressService;
-            RefreshPendingChanges();
         }
 
         public CheckInResult CheckIn(ICollection<PendingChange> changes, string comment, Dictionary<int, WorkItemCheckinAction> workItems)
@@ -93,7 +89,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 WorkItemManager wm = new WorkItemManager(this.collection);
                 wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
             }
-            this.RefreshPendingChanges();
             ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
             foreach (var path in changes.Select(c => c.LocalPath))
             {
@@ -103,20 +98,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         }
 
         #region Pending Changes
-
-        public List<PendingChange> PendingChanges { get { return pendingChanges; } }
-
-        public void RefreshPendingChanges()
-        {
-            this.PendingChanges.Clear();
-            var paths = this.Data.WorkingFolders.Select(f => f.LocalItem);
-            this.PendingChanges.AddRange(this.GetPendingChanges(paths));
-        }
-
-        private List<PendingChange> GetPendingChanges(IEnumerable<LocalPath> paths)
-        {
-            return this.collection.QueryPendingChangesForWorkspace(workspaceData, paths.Select(ItemSpec.FromLocalPath), false);
-        }
 
         public List<PendingChange> GetPendingChanges(IEnumerable<BaseItem> items)
         {
@@ -227,7 +208,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             var operations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(operations, ProcessType.Add);
-            this.RefreshPendingChanges();
         }
 
         //Delete from Version Control, but don't delete file from file system - Monodevelop Logic.
@@ -244,7 +224,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             var processType = keepLocal ? ProcessType.DeleteKeep : ProcessType.Delete;
             ProcessGetOperations(getOperations, processType);
-            this.RefreshPendingChanges();
         }
 
         public void PendEdit(IEnumerable<BasePath> paths, RecursionType recursionType, LockLevel lockLevel, out ICollection<Failure> failures)
@@ -258,7 +237,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Edit);
-            this.RefreshPendingChanges();
         }
 
         public void PendRename(LocalPath oldPath, LocalPath newPath, out ICollection<Failure> failures)
@@ -269,14 +247,12 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             };
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Rename);
-            this.RefreshPendingChanges();
         }
 
         public List<LocalPath> Undo(IEnumerable<ItemSpec> items)
         {
             var operations = this.collection.UndoPendChanges(workspaceData, items);
             UndoGetOperations(operations);
-            this.RefreshPendingChanges();
             return operations.Select(op => op.TargetLocalItem).ToList();
         }
 
@@ -298,7 +274,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             ICollection<Failure> failures;
             var getOperations = this.collection.PendChanges(workspaceData, changes, out failures);
             ProcessGetOperations(getOperations, ProcessType.Get);
-            this.RefreshPendingChanges();
         }
 
         public List<Changeset> QueryHistory(ItemSpec item, VersionSpec versionItem, VersionSpec versionFrom, VersionSpec versionTo, short maxCount)
@@ -527,14 +502,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             if (!hasBeenMoved)
             {
                 operation.SourceLocalItem.MoveTo(operation.TargetLocalItem);
-                if (operation.ItemType == ItemType.File)
-                {
-                    _projectService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
-                }
-                else if (operation.ItemType == ItemType.Folder)
-                {
-                    _projectService.MoveFolder(operation.SourceLocalItem, operation.TargetLocalItem);
-                }
             }
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }

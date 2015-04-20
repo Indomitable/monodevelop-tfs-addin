@@ -40,7 +40,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
     internal sealed class VersionInfoResolver
     {
         private readonly TFSRepository _repository;
-        private readonly Dictionary<LocalPath, VersionInfo> _cache = new Dictionary<LocalPath, VersionInfo>();
+        private static readonly Dictionary<LocalPath, VersionInfo> Cache = new Dictionary<LocalPath, VersionInfo>();
         private static readonly object Locker = new object();
         private readonly PropertyInfo _requiredRefresh;
 
@@ -62,9 +62,9 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     if (recurse)
                     {
                         var path = localPath;
-                        _cache.RemoveAll(x => x.Key.IsChildOrEqualOf(path));
+                        Cache.RemoveAll(x => x.Key.IsChildOrEqualOf(path));
                     }
-                    _cache.Remove(localPath);
+                    Cache.Remove(localPath);
                 }
             }
         }
@@ -78,7 +78,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             lock (Locker)
             {
-                _cache.Clear();
+                Cache.Clear();
             }
         }
 
@@ -86,10 +86,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             lock (Locker)
             {
-                if (_cache.ContainsKey(path))
-                    _cache[path] = status;
+                if (Cache.ContainsKey(path))
+                    Cache[path] = status;
                 else
-                    _cache.Add(path, status);
+                    Cache.Add(path, status);
             }
         }
 
@@ -97,8 +97,8 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
         {
             lock (Locker)
             {
-                if (_cache.ContainsKey(path))
-                    return _cache[path];
+                if (Cache.ContainsKey(path))
+                    return Cache[path];
                 return null;
             }
         }
@@ -119,7 +119,10 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     status |= VersionStatus.LockOwned; //Locked by me
             }
 
-            if (item.ChangeType.HasFlag(ChangeType.Add))
+            //Situations:
+            //1. New file in local workspace and remote repository: ChangeType == ChangeType.Add
+            //2. File deleted in past, now we add with same name: ChangeType == ChangeType.None, but VersionLocal == 0 and DeleteId > 0
+            if (item.ChangeType.HasFlag(ChangeType.Add) || (item.VersionLocal == 0 && item.DeletionId > 0))
             {
                 status |= VersionStatus.ScheduledAdd;
                 return status;
@@ -137,9 +140,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                 return status;
             }
 
-            var changes = _repository.Workspace.PendingChanges.Where(ch => ch.ServerItem == item.ServerPath).ToList();
-
-            if (changes.Any(change => change.IsRename))
+            if (item.ChangeType.HasFlag(ChangeType.Rename))
             {
                 status = status | VersionStatus.ScheduledAdd;
                 return status;
@@ -229,19 +230,23 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             var itemSpecs = from p in paths
                             where _repository.Workspace.Data.IsLocalPathMapped(p)
                             let recursion = p.IsDirectory ? (recursive ? RecursionType.Full : RecursionType.OneLevel) : RecursionType.None
-                            select new ItemSpec(p, recursion);
+                            let path = p.Exists ? (string)p : (string)_repository.Workspace.Data.GetServerPathForLocalPath(p)
+                            select new ItemSpec(path, recursion);
             var items = _repository.Workspace.GetExtendedItems(itemSpecs, DeletedState.Any, ItemType.Any);
 
             var result = new Dictionary<LocalPath, VersionInfoStatus>();
             foreach (var localPath in paths)
             {
-                var item = items.SingleOrDefault(i => i.LocalPath == localPath);
-                var versionInfo = item == null ? VersionInfoStatus.Unversioned  : new VersionInfoStatus
+                var serverPath = _repository.Workspace.Data.GetServerPathForLocalPath(localPath);
+                //Compare server paths, When file is deleted and then is added again Local Path will be empty
+                var item = items.SingleOrDefault(i => i.ServerPath == serverPath);
+                var versionInfo = item == null ? VersionInfoStatus.Unversioned : new VersionInfoStatus
                 {
                     RemotePath = item.ServerPath,
                     LocalStatus = GetLocalVersionStatus(item),
                     LocalRevision = GetLocalRevision(item),
-                    RemoteStatus = GetServerVersionStatus(item),
+                    //Bug in Monodevelop ? When refresh does not update Remote Status on new items.
+                    RemoteStatus = VersionStatus.Versioned, // GetServerVersionStatus(item1),
                     RemoteRevision = GetServerRevision(item)
                 };
                 result.Add(localPath, versionInfo);
