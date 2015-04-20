@@ -133,7 +133,6 @@
     <Compile Include="VersionControl\Models\ChangeRequest.cs" />
     <Compile Include="VersionControl\Enums\DeletedState.cs" />
     <Compile Include="VersionControl\Enums\FailureException.cs" />
-    <Compile Include="VersionControl\Helpers\FileHelper.cs" />
     <Compile Include="VersionControl\Models\GetOperation.cs" />
     <Compile Include="VersionControl\Enums\GetOptions.cs" />
     <Compile Include="VersionControl\Models\GetRequest.cs" />

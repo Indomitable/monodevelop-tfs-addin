@@ -88,7 +88,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                 this.collection.UploadFile(this.workspaceData, commitItem);
             }
             var result = this.collection.CheckIn(this.workspaceData, changes.Select(c => c.RepositoryPath), comment, workItems);
-            if (result.ChangeSet > 0)
+            if (result.ChangeSet > 0 && workItems.Count > 0)
             {
                 WorkItemManager wm = new WorkItemManager(this.collection);
                 wm.UpdateWorkItems(result.ChangeSet, workItems, comment);
@@ -324,12 +324,12 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.Undo(result.UndoOperations.Select(x => new ItemSpec(x.TargetLocalItem, RecursionType.None)));
         }
 
-        public string DownloadToTempWithName(string downloadUrl, string fileName)
+        public LocalPath DownloadToTempWithName(string downloadUrl, string fileName)
         {
             return this.collection.DownloadToTempWithName(downloadUrl, fileName);
         }
 
-        public string DownloadToTemp(string downloadUrl)
+        public LocalPath DownloadToTemp(string downloadUrl)
         {
             return this.collection.DownloadToTemp(downloadUrl);
         }
@@ -458,7 +458,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         {
             if (processDirection == ProcessDirection.Undo)
             {
-                FileHelper.Delete(operation.ItemType, operation.TargetLocalItem);
+                operation.TargetLocalItem.Delete();
             }
             return null;
         }
@@ -509,14 +509,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             {
                 try
                 {
-                    if (operation.ItemType == ItemType.File)
-                    {
-                        FileHelper.FileDelete(path);
-                    }
-                    else
-                    {
-                        FileHelper.FolderDelete(path);
-                    }
+                    path.Delete();
                 }
                 catch
                 {
@@ -530,17 +523,16 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         {
             //If the operation is called by Repository OnMoveFile or OnMoveDirectory file/folder is moved before this method.
             //When is called by Source Exporer or By Revert command file is not moved
-            bool hasBeenMoved = !FileHelper.Exists(operation.SourceLocalItem) && FileHelper.Exists(operation.TargetLocalItem);
+            bool hasBeenMoved = !operation.SourceLocalItem.Exists && operation.TargetLocalItem.Exists;
             if (!hasBeenMoved)
             {
+                operation.SourceLocalItem.MoveTo(operation.TargetLocalItem);
                 if (operation.ItemType == ItemType.File)
                 {
-                    FileHelper.FileMove(operation.SourceLocalItem, operation.TargetLocalItem);
                     _projectService.MoveFile(operation.SourceLocalItem, operation.TargetLocalItem);
                 }
                 else if (operation.ItemType == ItemType.Folder)
                 {
-                    FileHelper.FolderMove(operation.SourceLocalItem, operation.TargetLocalItem);
                     _projectService.MoveFolder(operation.SourceLocalItem, operation.TargetLocalItem);
                 }
             }
@@ -684,7 +676,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             var tempName = this.collection.DownloadToTemp(item.ArtifactUri);
             var text = item.Encoding > 0 ? File.ReadAllText(tempName, Encoding.GetEncoding(item.Encoding)) :
                        File.ReadAllText(tempName);
-            FileHelper.FileDelete(tempName);
+            tempName.Delete();
             return text;
         }
 

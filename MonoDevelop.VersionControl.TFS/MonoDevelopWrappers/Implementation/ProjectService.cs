@@ -93,10 +93,10 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             {
                 project.Files.Remove(file);
                 var fileRelativePath = file.FilePath.ToRelative(new FilePath(source));
-                var fileToAdd = Path.Combine(destination, fileRelativePath);
-                if (FileHelper.HasFolder(fileToAdd))
+                var fileToAdd = new LocalPath(Path.Combine(destination, fileRelativePath));
+                if (fileToAdd.IsDirectory)
                 {
-                    fileRelativePath = ((FilePath)fileToAdd).ToRelative(project.BaseDirectory);
+                    fileRelativePath = fileToAdd.ToRelativeOf((string)project.BaseDirectory);
                     project.AddDirectory(fileRelativePath);
                 }
                 else

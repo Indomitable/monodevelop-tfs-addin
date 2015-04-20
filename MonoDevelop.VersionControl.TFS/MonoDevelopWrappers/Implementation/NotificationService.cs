@@ -25,7 +25,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System.Collections.Generic;
+using System.Linq;
 using MonoDevelop.Core;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 
 namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
 {
@@ -45,11 +48,37 @@ namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.Implementation
             FileService.NotifyFileChanged(fp);
         }
 
+        public void NotifyFilesChanged(IEnumerable<string> paths)
+        {
+            foreach (var path in paths)
+            {
+                NotifyFileChanged(path);
+            }
+        }
+
+        public void NotifyFilesChanged(IEnumerable<LocalPath> paths)
+        {
+            NotifyFilesChanged(paths.Select(x => (string)x));
+        }
+
         public void NotifyFileRemoved(string path)
         {
             var fp = new FilePath(path);
             VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs(_repository, fp, fp.IsDirectory));
             FileService.NotifyFileRemoved(fp);
+        }
+
+        public void NotifyFilesRemoved(IEnumerable<string> paths)
+        {
+            foreach (var path in paths)
+            {
+                NotifyFileRemoved(path);
+            }
+        }
+
+        public void NotifyFilesRemoved(IEnumerable<LocalPath> paths)
+        {
+            NotifyFilesRemoved(paths.Select(x => (string)x));
         }
     }
 }

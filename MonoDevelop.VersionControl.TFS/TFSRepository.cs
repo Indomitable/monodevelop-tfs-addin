@@ -41,7 +41,6 @@ using MonoDevelop.VersionControl.TFS.Infrastructure.Services;
 using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 using MonoDevelop.VersionControl.TFS.VersionControl;
 using MonoDevelop.VersionControl.TFS.VersionControl.Enums;
-using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
 using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Models;
 using MonoDevelop.VersionControl.TFS.WorkItemTracking.Structure;
@@ -172,6 +171,7 @@ namespace MonoDevelop.VersionControl.TFS
                                    .ToList();
             workspace.Get(getRequests, GetOptions.None);
             _versionInfoResolver.InvalidateCache(paths);
+            NotificationService.NotifyFilesChanged(paths);
         }
 
         protected override void OnCommit(ChangeSet changeSet, IProgressMonitor monitor)
@@ -198,7 +198,7 @@ namespace MonoDevelop.VersionControl.TFS
             foreach (var file in changeSet.Items.Where(i => !i.IsDirectory))
             {
                 VersionControlService.NotifyFileStatusChanged(new FileUpdateEventArgs());
-                FileService.NotifyFileChanged(file.LocalPath);
+                NotificationService.NotifyFileChanged(file.LocalPath);
             }
 
             _versionInfoResolver.InvalidateCache(commitItems.Select(i => i.LocalPath));
@@ -214,8 +214,9 @@ namespace MonoDevelop.VersionControl.TFS
             var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None));
             var operations = workspace.Undo(specs);
             _versionInfoResolver.InvalidateCache(operations);
-            FileService.NotifyFilesChanged(operations.Select(o => new FilePath(o)));
-            FileService.NotifyFilesRemoved(localPaths.Where(x => !FileHelper.HasFile(x)));
+
+            NotificationService.NotifyFilesChanged(operations);
+            NotificationService.NotifyFilesRemoved(localPaths.Select(p => new LocalPath(p)).Where(p => !p.Exists));
         }
 
         protected override void OnRevertRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
@@ -230,6 +231,7 @@ namespace MonoDevelop.VersionControl.TFS
             var request = new GetRequest(spec, new ChangesetVersionSpec(rev.Version));
             workspace.Get(request, GetOptions.None);
             _versionInfoResolver.InvalidateCache(localPath);
+            NotificationService.NotifyFileChanged(localPath);
         }
 
         protected override void OnAdd(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
@@ -237,21 +239,21 @@ namespace MonoDevelop.VersionControl.TFS
             var paths = localPaths.Select(x => new LocalPath(x)).Where(IsFileInWorkspace).ToArray();
             ICollection<Failure> failures;
             workspace.PendAdd(paths, recurse, out failures);
-            _versionInfoResolver.InvalidateCache(paths, recurse);
-            FileService.NotifyFilesChanged(localPaths);
             FailuresDisplayDialog.ShowFailures(failures);
+            _versionInfoResolver.InvalidateCache(paths, recurse);
+            NotificationService.NotifyFilesChanged(paths);
         }
 
         protected override void OnDeleteFiles(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), false, monitor, keepLocal);
-            FileService.NotifyFilesChanged(localPaths);
+            var paths = localPaths.Select(p => new LocalPath(p)).ToArray();
+            DeletePaths(paths, false, monitor, keepLocal);
         }
 
         protected override void OnDeleteDirectories(FilePath[] localPaths, bool force, IProgressMonitor monitor, bool keepLocal)
         {
-            DeletePaths(localPaths.Select(p => new LocalPath(p)).ToArray(), true, monitor, keepLocal);
-            FileService.NotifyFilesChanged(localPaths);
+            var paths = localPaths.Select(p => new LocalPath(p)).ToArray();
+            DeletePaths(paths, true, monitor, keepLocal);
         }
 
         private void DeletePaths(LocalPath[] localPaths, bool recursive, IProgressMonitor monitor, bool keepLocal)
@@ -280,7 +282,7 @@ namespace MonoDevelop.VersionControl.TFS
                 this.Revert(addedFiles, recursive, monitor);
 
                 _versionInfoResolver.InvalidateCache(localPaths, recursive);
-
+                NotificationService.NotifyFilesRemoved(localPaths);
             }
         }
 
@@ -381,19 +383,24 @@ namespace MonoDevelop.VersionControl.TFS
         protected override void OnMoveFile(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             base.OnMoveFile(localSrcPath, localDestPath, force, monitor);
-            ICollection<Failure> failures;
-            workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
-            _versionInfoResolver.InvalidateCache(localDestPath);
-            FailuresDisplayDialog.ShowFailures(failures);
+            Move(new LocalPath(localSrcPath), new LocalPath(localDestPath));
         }
 
         protected override void OnMoveDirectory(FilePath localSrcPath, FilePath localDestPath, bool force, IProgressMonitor monitor)
         {
             base.OnMoveDirectory(localSrcPath, localDestPath, force, monitor);
+            Move(new LocalPath(localSrcPath), new LocalPath(localDestPath));
+        }
+
+        private void Move(LocalPath from, LocalPath to)
+        {
             ICollection<Failure> failures;
-            workspace.PendRename(new LocalPath(localSrcPath), new LocalPath(localDestPath), out failures);
-            _versionInfoResolver.InvalidateCache(localDestPath);
+            workspace.PendRename(from, to, out failures);
             FailuresDisplayDialog.ShowFailures(failures);
+            _versionInfoResolver.InvalidateCache(to);
+
+            NotificationService.NotifyFileRemoved(from);
+            NotificationService.NotifyFileChanged(to);
         }
 
         protected override VersionControlOperation GetSupportedOperations(VersionInfo vinfo)
@@ -423,7 +430,7 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 foreach (var path in paths.Select(p => new LocalPath(p)))
                 {
-                    if (!File.Exists(path) || !File.GetAttributes(path).HasFlag(FileAttributes.ReadOnly))
+                    if (!path.Exists || !path.IsReadOnly)
                         continue;
                     progress.Log.WriteLine("Start editing item: " + path);
                     try
@@ -439,7 +446,8 @@ namespace MonoDevelop.VersionControl.TFS
                         }
                         else
                         {
-                            _versionInfoResolver.InvalidateCache(path);
+                            _versionInfoResolver.InvalidateCache(path);                            
+                            NotificationService.NotifyFileChanged(path);
                             progress.ReportSuccess("Finish editing item.");
                         }
                     }
@@ -471,20 +479,21 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override void OnLock(IProgressMonitor monitor, params FilePath[] localPaths)
         {
-            LockItems(localPaths.Select(x => new LocalPath(x)).ToArray(), LockLevel.CheckOut);
-            FileService.NotifyFilesChanged(localPaths);
+            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
+            LockItems(paths, LockLevel.CheckOut);
         }
 
         protected override void OnUnlock(IProgressMonitor monitor, params FilePath[] localPaths)
         {
-            LockItems(localPaths.Select(x => new LocalPath(x)).ToArray(), LockLevel.None);
-            FileService.NotifyFilesChanged(localPaths);
+            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
+            LockItems(paths, LockLevel.None);
         }
 
         private void LockItems(LocalPath[] localPaths, LockLevel lockLevel)
         {
             workspace.LockItems(localPaths, lockLevel);
             _versionInfoResolver.InvalidateCache(localPaths);
+            NotificationService.NotifyFilesChanged(localPaths);
         }
         
         #endregion
@@ -498,14 +507,9 @@ namespace MonoDevelop.VersionControl.TFS
                 workspace.CheckOut(path.ToEnumerable(), out failures);
                 FailuresDisplayDialog.ShowFailures(failures);
                 _versionInfoResolver.InvalidateCache(path);
-                FileService.NotifyFileChanged(new FilePath(path));
+                NotificationService.NotifyFileChanged(path);
                 progress.ReportSuccess("Finish check out.");
             }
-        }
-
-        internal void Resolve(Conflict conflict, ResolutionType resolutionType)
-        {
-            this.workspace.Resolve(conflict, resolutionType);
         }
 
         internal void Refresh()

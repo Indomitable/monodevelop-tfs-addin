@@ -265,12 +265,12 @@ namespace MonoDevelop.VersionControl.TFS.Core.Structure
             return this.repositoryService.Value.DownloadService.Download(path, downloadUrl);
         }
 
-        public string DownloadToTemp(string downloadUrl)
+        public LocalPath DownloadToTemp(string downloadUrl)
         {
             return this.repositoryService.Value.DownloadService.DownloadToTemp(downloadUrl);
         }
 
-        public string DownloadToTempWithName(string downloadUrl, string fileName)
+        public LocalPath DownloadToTempWithName(string downloadUrl, string fileName)
         {
             return this.repositoryService.Value.DownloadService.DownloadToTempWithName(downloadUrl, fileName);
         }

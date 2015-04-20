@@ -145,18 +145,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
         {
             var conflict = listStore.GetValue(listView.SelectedRow, itemField);
             var fileName = this.workspace.DownloadToTemp(conflict.BaseDowloadUrl);
-            var doc = IdeApp.Workbench.OpenDocument(fileName, (MonoDevelop.Projects.Project)null);
+            var doc = IdeApp.Workbench.OpenDocument(new FilePath(fileName), (MonoDevelop.Projects.Project)null);
             doc.Window.ViewContent.ContentName = Path.GetFileName(conflict.TargetLocalItem) + " - v" + conflict.BaseVersion;
-            doc.Closed += (o, e) => FileHelper.FileDelete(fileName);
+            doc.Closed += (o, e) => fileName.Delete();
         }
 
         private void ViewTheirClicked()
         {
             var conflict = listStore.GetValue(listView.SelectedRow, itemField);
             var fileName = this.workspace.DownloadToTemp(conflict.TheirDowloadUrl);
-            var doc = IdeApp.Workbench.OpenDocument(fileName, (MonoDevelop.Projects.Project)null);
+            var doc = IdeApp.Workbench.OpenDocument(new FilePath(fileName), (MonoDevelop.Projects.Project)null);
             doc.Window.ViewContent.ContentName = Path.GetFileName(conflict.TargetLocalItem) + " - v" + conflict.TheirVersion;
-            doc.Closed += (o, e) => FileHelper.FileDelete(fileName);
+            doc.Closed += (o, e) => fileName.Delete();
         }
 
         private void AcceptYoursClicked()
@@ -216,8 +216,8 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
             var process = System.Diagnostics.Process.Start(info);
             process.WaitForExit();
             //Move merged base file to target.
-            FileHelper.FileMove(baseFile, conflict.TargetLocalItem, true);
-            FileHelper.FileDelete(theirsFile);
+            baseFile.MoveTo(conflict.TargetLocalItem, true);
+            theirsFile.Delete();
             EndMerging();
         }
 

@@ -31,7 +31,7 @@ using System.IO.Compression;
 using System.Net;
 using MonoDevelop.VersionControl.TFS.Core.Services;
 using MonoDevelop.VersionControl.TFS.Core.Services.Resolvers;
-using MonoDevelop.VersionControl.TFS.VersionControl.Helpers;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
 using MonoDevelop.VersionControl.TFS.VersionControl.Services.Resolvers;
 
 namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
@@ -67,7 +67,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
 
         readonly Random random = new Random();
 
-        private string GetTempFileName(string extension)
+        private LocalPath GetTempFileName(string extension)
         {
             var num = random.Next();
             var tempDir = Path.Combine(Path.GetTempPath(), "TfSAddinDownload");
@@ -76,18 +76,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             return Path.Combine(tempDir, "tfsTemp" + num.ToString("X") + extension);// Files are gzipped
         }
 
-        public string DownloadToTemp(string artifactUri)
+        public LocalPath DownloadToTemp(string artifactUri)
         {
             try
             {
                 var client = new WebClient();
                 this.Server.Authorization.Authorize(client);
                 var tempFileName = this.GetTempFileName(".gz");
-                UriBuilder bulder = new UriBuilder(this.Url);
-                bulder.Query = artifactUri;
+                var bulder = new UriBuilder(this.Url) { Query = artifactUri };
                 client.DownloadFile(bulder.Uri, tempFileName);
 
-                if (string.Equals(client.ResponseHeaders[HttpResponseHeader.ContentType], "application/gzip"))
+                if (string.Equals(client.ResponseHeaders[HttpResponseHeader.ContentType], "application/gzip", StringComparison.OrdinalIgnoreCase))
                 {
                     string newTempFileName = this.GetTempFileName(".tmp");
                     using (var inStream = new GZipStream(File.OpenRead(tempFileName), CompressionMode.Decompress))
@@ -100,7 +99,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
                         }
                         inStream.Close();
                     }
-                    FileHelper.FileDelete(tempFileName); //Delete zipped tmp.
+                    tempFileName.Delete(); //Delete zipped tmp.
                     return newTempFileName;
                 }
                 else
@@ -114,26 +113,23 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             }
         }
 
-        public string DownloadToTempWithName(string downloadUri, string fileName)
+        public LocalPath DownloadToTempWithName(string downloadUri, string fileName)
         {
             var path = this.DownloadToTemp(downloadUri);
-            if (File.Exists(path))
+            if (path.Exists)
             {
                 var name = Path.GetFileName(fileName);
-                var newName = Path.Combine(Path.GetDirectoryName(path), name);
-                if (FileHelper.FileMove(path, newName, true))
-                    return newName;
-                else
-                    return string.Empty;
+                var newName = path.GetDirectory() + name;
+                return path.MoveTo(newName, true) ? newName : LocalPath.Empty();
             }
-            return string.Empty;
+            return LocalPath.Empty();
         }
 
-        public string Download(string path, string artifactUri)
+        public LocalPath Download(LocalPath path, string artifactUri)
         {
             var tempPath = this.DownloadToTemp(artifactUri);
-            if (string.IsNullOrEmpty(tempPath) || !FileHelper.FileMove(tempPath, path, true))
-                return string.Empty;
+            if (!tempPath.Exists || !tempPath.MoveTo(path, true))
+                return LocalPath.Empty();
             return path;
         }
     }

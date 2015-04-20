@@ -25,11 +25,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+using System.Collections.Generic;
+using MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure;
+
 namespace MonoDevelop.VersionControl.TFS.MonoDevelopWrappers
 {
     interface INotificationService
     {
         void NotifyFileChanged(string path);
+        void NotifyFilesChanged(IEnumerable<string> paths);
+        void NotifyFilesChanged(IEnumerable<LocalPath> paths);
         void NotifyFileRemoved(string path);
+        void NotifyFilesRemoved(IEnumerable<string> paths);
+        void NotifyFilesRemoved(IEnumerable<LocalPath> paths);
     }
 }

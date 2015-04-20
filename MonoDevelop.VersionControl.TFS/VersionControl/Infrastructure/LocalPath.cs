@@ -74,6 +74,16 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
             get { return string.IsNullOrEmpty(Path); }
         }
 
+        public bool Exists
+        {
+            get { return !IsEmpty && (Directory.Exists(Path) || File.Exists(Path)); }
+        }
+
+        public bool IsReadOnly
+        {
+            get { return Exists && File.GetAttributes(Path).HasFlag(FileAttributes.ReadOnly); }
+        }
+
         public bool IsChildOrEqualOf(LocalPath other)
         {
             if (other.IsEmpty)
@@ -115,9 +125,9 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
             }
         }
 
-        public bool Exists
+        public static LocalPath Empty()
         {
-            get { return !IsEmpty && (Directory.Exists(Path) || File.Exists(Path)); }
+            return new LocalPath(string.Empty);
         }
 
         //TFS requires local file names to be in Windows format to have a drive letter and to use \ slash
@@ -194,5 +204,56 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
         }
 
         #endregion Equal
+
+        #region Operations
+
+        public static LocalPath operator +(LocalPath path1, string path2)
+        {
+            return System.IO.Path.Combine(path1, path2);
+        }
+
+        public bool Delete()
+        {
+            if (!Exists)
+                return false;
+            try
+            {
+                if (IsDirectory)
+                    Directory.Delete(Path, true);
+                else
+                    File.Delete(Path);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool MoveTo(LocalPath destination, bool overwrite = false)
+        {
+            if (!Exists)
+                return false;
+            try
+            {
+                if (destination.Exists)
+                {
+                    if (!overwrite)
+                        return false;
+                    destination.Delete();
+                }
+                if (IsDirectory)
+                    Directory.Move(Path, destination);
+                else
+                    File.Move(Path, destination);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        #endregion
     }
 }

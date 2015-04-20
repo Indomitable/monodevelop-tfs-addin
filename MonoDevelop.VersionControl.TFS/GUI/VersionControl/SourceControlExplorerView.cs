@@ -488,11 +488,10 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                 ExpandPath(selectedPath);
         }
 
-        private string DownloadItemToTemp(ExtendedItem extendedItem)
+        private LocalPath DownloadItemToTemp(ExtendedItem extendedItem)
         {
             var item = _currentWorkspace.GetItem(ItemSpec.FromServerPath(extendedItem.ServerPath), ItemType.File, true);
-            var filePath = _currentWorkspace.DownloadToTempWithName(item.ArtifactUri, item.ServerPath.ItemName);
-            return filePath;
+            return _currentWorkspace.DownloadToTempWithName(item.ArtifactUri, item.ServerPath.ItemName);
         }
 
         private void OnListItemClicked(object sender, RowActivatedArgs e)
@@ -533,18 +532,18 @@ namespace MonoDevelop.VersionControl.TFS.GUI.VersionControl
                             GetLatestVersion(new List<ExtendedItem> { parentFolder });
                             var futurePath = _currentWorkspace.Data.GetLocalPathForServerPath(item.ServerPath);
                             IdeApp.Workspace.OpenWorkspaceItem(futurePath, true);
-                            FileHelper.FileDelete(filePath);
+                            filePath.Delete();
                         }
                         else
                         {
-                            IdeApp.Workbench.OpenDocument(filePath, null, null);
+                            IdeApp.Workbench.OpenDocument(new FilePath(filePath), null, null);
                         }
                     }
                 }
                 else
                 {
                     var filePath = this.DownloadItemToTemp(item);
-                    IdeApp.Workbench.OpenDocument(filePath, null, true);
+                    IdeApp.Workbench.OpenDocument(new FilePath(filePath), null, true);
                 }
             }
         }

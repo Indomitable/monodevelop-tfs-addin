@@ -75,8 +75,8 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         List<Conflict> GetConflicts(IEnumerable<LocalPath> paths);
         void Resolve(Conflict conflict, ResolutionType resolutionType);
 
-        string DownloadToTempWithName(string downloadUrl, string fileName);
-        string DownloadToTemp(string downloadUrl);
+        LocalPath DownloadToTempWithName(string downloadUrl, string fileName);
+        LocalPath DownloadToTemp(string downloadUrl);
         void UpdateLocalVersion(UpdateLocalVersionQueue updateLocalVersionQueue);
         string GetItemContent(Item item);
         void RefreshPendingChanges();

@@ -29,6 +29,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -114,119 +115,41 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Services
             }
         }
 
+        private void AddContent(MultipartFormDataContent container, string value, string name, string fileName = "")
+        {
+            if (string.IsNullOrEmpty(fileName))
+                container.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(value)), name);
+            else
+                container.Add(new ByteArrayContent(Encoding.UTF8.GetBytes(value)), name, fileName);
+        }
+
         private async Task<HttpResponseMessage> UploadPart(string fileName, string workspaceName, string workspaceOwner, int fileSize, string fileHash, string range, string contentType, byte[] bytes, int copyBytes)
         {
             var handler = new HttpClientHandler { PreAuthenticate = true };
-            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post, this.Url);
+            var message = new HttpRequestMessage(HttpMethod.Post, this.Url);
             this.Server.Authorization.Authorize(handler, message);
 
             HttpClient client = new HttpClient(handler);
             
-            
             var content = new MultipartFormDataContent(Boundary);
-            content.Add(new StringContent(fileName), "item");
-            content.Add(new StringContent(workspaceName), "wsname");
-            content.Add(new StringContent(workspaceOwner), "wsowner");
-            content.Add(new StringContent(fileSize.ToString()), "filelength");
-            content.Add(new StringContent(fileHash), "hash");
-            content.Add(new StringContent(range), "range");
-            content.Add(new StringContent("Content-Type: " + contentType), "content", "item");
-            content.Add(new ByteArrayContent(bytes, 0, copyBytes));
+            AddContent(content, fileName, "item");
+            AddContent(content, workspaceName, "wsname");
+            AddContent(content, workspaceOwner, "wsowner");
+            AddContent(content, fileSize.ToString(), "filelength");
+            AddContent(content, fileHash, "hash");
+            AddContent(content, range, "range");
+
+            var fileContent = new ByteArrayContent(bytes, 0, copyBytes);
+            fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+            {
+                Name = "content",
+                FileName = "item"
+            };
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+            content.Add(fileContent);
 
             message.Content = content;
             return await client.SendAsync(message);
-
-
-//            var request = (HttpWebRequest)WebRequest.Create(this.Url);
-//            request.Method = "POST";
-//            this.Server.Authorization.Authorize(request);
-//            request.AllowWriteStreamBuffering = true;
-//            request.ContentType = "multipart/form-data; boundary=" + Boundary.Substring(2);
-//
-//            var template = GetTemplate();
-//            var content = string.Format(template, fileName, workspaceName, workspaceOwner, fileSize, fileHash, range, "item", contentType);
-//            var contentBytes = Encoding.UTF8.GetBytes(content.Replace(Environment.NewLine, NewLine));
-//
-//            using (var stream = new MemoryStream())
-//            {
-//                stream.Write(contentBytes, 0, contentBytes.Length);
-//                stream.Write(bytes, 0, copyBytes);
-//                var footContent = Encoding.UTF8.GetBytes(NewLine + Boundary + "--" + NewLine);
-//                stream.Write(footContent, 0, footContent.Length);
-//                stream.Flush();
-//                contentBytes = stream.ToArray();
-//            }
-//
-//            //request.ContentLength = contentBytes.Length;
-//
-//            using (var requestStream = request.GetRequestStream())
-//            {
-//                CopyBytes(contentBytes, requestStream);
-//            }
-//                           
-//            request.GetResponse();
-        }
-
-        private string GetTemplate()
-        {
-            var builder = new StringBuilder();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("item");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{0}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("wsname");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{1}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("wsowner");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{2}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("filelength");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{3}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("hash");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{4}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("range");
-            builder.AppendLine("\"");
-            builder.AppendLine();
-            builder.Append("{5}");
-            builder.AppendLine();
-            builder.AppendLine(Boundary);
-            builder.Append("Content-Disposition: form-data; name=\"");
-            builder.Append("content");
-            builder.Append("\"; filename=\"");
-            builder.Append("{6}");
-            builder.AppendLine("\"");
-            builder.Append("Content-Type: ");
-            builder.Append("{7}");
-            builder.AppendLine();
-            builder.AppendLine();
-//			builder.Append("{8}");
-//			builder.AppendLine();
-//			builder.Append("----------------------------8e5m2D6l5Q4h6");
-//			builder.AppendLine("--");
-            return builder.ToString();
         }
 
         private byte[] Compress(byte[] input)
