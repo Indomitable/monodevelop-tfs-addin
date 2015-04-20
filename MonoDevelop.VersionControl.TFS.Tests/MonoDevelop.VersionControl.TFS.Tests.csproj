@@ -70,7 +70,6 @@
     <Compile Include="Core\MonoDevelopServices\TestLoggingService.cs" />
     <Compile Include="Core\MonoDevelopServices\TestProgressDisplay.cs" />
     <Compile Include="Core\MonoDevelopServices\TestProgressService.cs" />
-    <Compile Include="Core\MonoDevelopServices\TestProjectService.cs" />
     <Compile Include="Core\TestServiceBuilder.cs" />
     <Compile Include="ServiceChecker.cs" />
     <Compile Include="LocationServiceChecker.cs" />

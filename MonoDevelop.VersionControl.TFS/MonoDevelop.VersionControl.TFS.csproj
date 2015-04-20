@@ -82,9 +82,7 @@
     <Compile Include="MonoDevelopWrappers\Implementation\ProgressService.cs" />
     <Compile Include="MonoDevelopWrappers\INotificationService.cs" />
     <Compile Include="MonoDevelopWrappers\IProgressDisplay.cs" />
-    <Compile Include="MonoDevelopWrappers\IProjectService.cs" />
     <Compile Include="MonoDevelopWrappers\ILoggingService.cs" />
-    <Compile Include="MonoDevelopWrappers\Implementation\ProjectService.cs" />
     <Compile Include="MonoDevelopWrappers\Implementation\LoggingService.cs" />
     <Compile Include="MonoDevelopWrappers\IProgressService.cs" />
     <Compile Include="TFSClient.cs" />

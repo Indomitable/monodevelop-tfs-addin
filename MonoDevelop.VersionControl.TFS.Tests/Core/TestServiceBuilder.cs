@@ -38,7 +38,6 @@ namespace MonoDevelop.VersionControl.TFS.Tests.Core
     {
         public TestServiceBuilder()
         {
-            this.RegisterType<TestProjectService>().As<IProjectService>().SingleInstance();
             this.RegisterType<TestProgressService>().As<IProgressService>().SingleInstance();
             this.Register<ConfigurationService>(ctx =>
             {

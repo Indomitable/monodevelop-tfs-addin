@@ -47,11 +47,10 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         private readonly TFSVersionControlService _versionControlService;
         private readonly WorkspaceData workspaceData;
         private readonly ILoggingService _loggingService;
-        private readonly IProjectService _projectService;
         private readonly IProgressService _progressService;
 
         public Workspace(WorkspaceData data, ProjectCollection collection, TFSVersionControlService versionControlService,
-            ILoggingService loggingService, IProjectService projectService, IProgressService progressService)
+            ILoggingService loggingService, IProgressService progressService)
         {
             if (data == null || collection == null)
                 return;
@@ -59,7 +58,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             this.collection = collection;
             _versionControlService = versionControlService;
             _loggingService = loggingService;
-            _projectService = projectService;
             _progressService = progressService;
         }
 
@@ -471,7 +469,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             if (processDirection == ProcessDirection.Undo)
             {
                 var update = ProcessGet(operation, ProcessDirection.Normal);
-                _projectService.AddFile(operation.TargetLocalItem);
                 return update;
             }
             return InternalProcessDelete(operation, processType);

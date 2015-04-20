@@ -81,7 +81,6 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
     {
         public ServiceBuilder()
         {
-            this.RegisterType<ProjectService>().As<IProjectService>().SingleInstance();
             this.RegisterType<ProgressService>().As<IProgressService>().SingleInstance();
             this.Register<ConfigurationService>(ctx =>
             {
