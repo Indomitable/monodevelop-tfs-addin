@@ -140,7 +140,19 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
                 return "U:" + this.Path.Replace('/', '\\'); //Use U: like git-tf
             }
         }
-        
+
+        public void MakeWritable()
+        {
+            if (IsFile)
+                File.SetAttributes(Path, File.GetAttributes(Path) & ~FileAttributes.ReadOnly);
+        }
+
+        public void MakeReadOnly()
+        {
+            if (IsFile)
+                File.SetAttributes(Path, File.GetAttributes(Path) | FileAttributes.ReadOnly);
+        }
+
         public static implicit operator LocalPath(string path)
         {
             return new LocalPath(path);
@@ -221,7 +233,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl.Infrastructure
                 if (IsDirectory)
                     Directory.Delete(Path, true);
                 else
+                {
+                    if (IsReadOnly)
+                        MakeWritable();
                     File.Delete(Path);
+                }
                 return true;
             }
             catch

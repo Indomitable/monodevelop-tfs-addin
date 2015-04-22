@@ -44,7 +44,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         void Map(string serverPath, string localPath);
         void ResetDownloadStatus(int itemId);
-
+        List<PendingChange> GetPendingChanges(IEnumerable<ItemSpec> items);
         List<PendingChange> GetPendingChanges(IEnumerable<BaseItem> items);
         List<PendingSet> GetPendingSets(string item, RecursionType recurse);
 

@@ -28,6 +28,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mono.CSharp;
 
 namespace MonoDevelop.VersionControl.TFS.Helpers
 {
@@ -57,6 +58,16 @@ namespace MonoDevelop.VersionControl.TFS.Helpers
             foreach (var item in enumerable)
             {
                 action(item);
+            }
+        }
+
+        public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IEnumerable<KeyValuePair<TKey, TValue>> items)
+        {
+            if (items == null)
+                return;
+            foreach (var pair in items)
+            {
+                dictionary.Add(pair);
             }
         }
     }

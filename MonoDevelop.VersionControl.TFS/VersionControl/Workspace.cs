@@ -90,12 +90,17 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             ProcessGetOperations(result.LocalVersionUpdates, ProcessType.Get);
             foreach (var path in changes.Select(c => c.LocalPath))
             {
-                MakeFileReadOnly(path);
+                path.MakeReadOnly();
             }
             return result;
         }
 
         #region Pending Changes
+
+        public List<PendingChange> GetPendingChanges(IEnumerable<ItemSpec> items)
+        {
+            return this.collection.QueryPendingChangesForWorkspace(workspaceData, items, false);
+        }
 
         public List<PendingChange> GetPendingChanges(IEnumerable<BaseItem> items)
         {
@@ -150,7 +155,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         public void ResetDownloadStatus(int itemId)
         {
-            var updateVer = new UpdateLocalVersion(itemId, string.Empty, 0);
+            var updateVer = new UpdateLocalVersion(itemId, LocalPath.Empty(), 0);
             var queue = new UpdateLocalVersionQueue(this);
             queue.QueueUpdate(updateVer);
             queue.Flush();
@@ -261,12 +266,13 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         public void LockItems(IEnumerable<BasePath> paths, LockLevel lockLevel)
         {
-            var changes = paths.Select(p => new ChangeRequest(p, RequestType.Lock, 
-                                                              ItemType.Any,
-                                                              p.IsDirectory ? RecursionType.Full : RecursionType.None, 
-                                                              lockLevel, 
-                                                              VersionSpec.Latest)).ToList();
-            if (changes.Count == 0)
+            var changes = (from p in paths
+                let path = p is LocalPath ? Data.GetServerPathForLocalPath((LocalPath) p) : (RepositoryPath) p
+                let recur = p.IsDirectory ? RecursionType.Full : RecursionType.None
+                let itemType = p.IsDirectory ? ItemType.Folder : ItemType.File
+                select new ChangeRequest(path, RequestType.Lock, itemType, recur, lockLevel, VersionSpec.Latest)).ToArray();
+
+            if (changes.Length == 0)
                 return;
 
             ICollection<Failure> failures;
@@ -326,18 +332,6 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
 
         #endregion
-
-        private static void MakeFileReadOnly(LocalPath path)
-        {
-            if (path.Exists && !path.IsDirectory)
-                File.SetAttributes(path, File.GetAttributes(path) | FileAttributes.ReadOnly);
-        }
-
-        private static void MakeFileWritable(LocalPath path)
-        {
-            if (path.Exists && !path.IsDirectory)
-                File.SetAttributes(path, File.GetAttributes(path) & ~FileAttributes.ReadOnly);
-        }
 
         internal void UnsetDirectoryAttributes(string path)
         {
@@ -407,11 +401,11 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
 
         #region Process Get Operations
 
-        private string DownloadFile(GetOperation operation)
+        private LocalPath DownloadFile(GetOperation operation)
         {
             var path = operation.TargetLocalItem.IsEmpty ? operation.SourceLocalItem : operation.TargetLocalItem;
             if (path.IsEmpty)
-                return string.Empty;
+                return LocalPath.Empty();
             if (operation.ItemType == ItemType.Folder)
             {
                 if (!path.Exists)
@@ -424,7 +418,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                     Directory.CreateDirectory(path.GetDirectory());
                 return this.collection.Download(path, operation.ArtifactUri);
             }
-            return string.Empty;
+            return LocalPath.Empty();
         }
 
         private UpdateLocalVersion ProcessAdd(GetOperation operation, ProcessDirection processDirection)
@@ -440,25 +434,25 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
         {
             if (processDirection == ProcessDirection.Undo)
             {
-                var path = DownloadFile(operation);
+                LocalPath path = DownloadFile(operation);
                 if (operation.ItemType == ItemType.File)
-                    MakeFileReadOnly(path);
+                    path.MakeReadOnly();
             }
             else
             {
-                string path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
-                MakeFileWritable(path);
+                var path = string.IsNullOrEmpty(operation.TargetLocalItem) ? operation.SourceLocalItem : operation.TargetLocalItem;
+                path.MakeWritable();
             }
             return new UpdateLocalVersion(operation.ItemId, operation.TargetLocalItem, operation.VersionServer);
         }
 
         private UpdateLocalVersion ProcessGet(GetOperation operation, ProcessDirection processDirection)
         {
-            if (processDirection == ProcessDirection.Normal)
+            if (processDirection == ProcessDirection.Normal && !string.IsNullOrEmpty(operation.ArtifactUri))
             {
-                var path = DownloadFile(operation);
+                LocalPath path = DownloadFile(operation);
                 if (operation.ItemType == ItemType.File)
-                    MakeFileReadOnly(path);
+                    path.MakeReadOnly();
                 return new UpdateLocalVersion(operation.ItemId, path, operation.VersionServer);
             }
             return null;
@@ -488,7 +482,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
                     _loggingService.LogToInfo("Can not delete path:" + path);
                 }
             }
-            return new UpdateLocalVersion(operation.ItemId, null, operation.VersionServer);
+            return new UpdateLocalVersion(operation.ItemId, LocalPath.Empty(), operation.VersionServer);
         }
 
         private UpdateLocalVersion ProcessRename(GetOperation operation)
@@ -519,7 +513,7 @@ namespace MonoDevelop.VersionControl.TFS.VersionControl
             DeleteKeep
         }
 
-        private void ProcessGetOperations(List<GetOperation> getOperations, ProcessType processType)
+        private void ProcessGetOperations(IReadOnlyCollection<GetOperation> getOperations, ProcessType processType)
         {
             if (getOperations == null || getOperations.Count == 0)
                 return;

@@ -53,5 +53,14 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure.Models
             }
         }
 
+
+        public static VersionInfoStatus Versioned(RepositoryPath remotePath)
+        {
+            return new VersionInfoStatus
+            {
+                RemotePath = remotePath,
+                LocalStatus = VersionStatus.Versioned,
+            };
+        }
     }
 }

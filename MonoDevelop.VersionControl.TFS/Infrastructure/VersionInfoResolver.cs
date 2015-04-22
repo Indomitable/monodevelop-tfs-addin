@@ -107,7 +107,7 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
 
         #region Version Status Info
 
-        private VersionStatus GetLocalVersionStatus(ExtendedItem item)
+        private VersionStatus GetLocalVersionStatus(ExtendedItem item, IList<PendingChange> pendingChanges)
         {
             var status = VersionStatus.Versioned;
 
@@ -119,32 +119,35 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
                     status |= VersionStatus.LockOwned; //Locked by me
             }
 
+            var changesForItem = pendingChanges.Where(ch => ch.ServerItem == item.ServerPath).ToArray();
             //Situations:
             //1. New file in local workspace and remote repository: ChangeType == ChangeType.Add
             //2. File deleted in past, now we add with same name: ChangeType == ChangeType.None, but VersionLocal == 0 and DeleteId > 0
-            if (item.ChangeType.HasFlag(ChangeType.Add) || (item.VersionLocal == 0 && item.DeletionId > 0))
+            if (changesForItem.Any(ch => ch.IsAdd))
             {
                 status |= VersionStatus.ScheduledAdd;
                 return status;
             }
 
-            if (item.ChangeType.HasFlag(ChangeType.Delete))
+            if (changesForItem.Any(ch => ch.IsDelete))
             {
                 status = status | VersionStatus.ScheduledDelete;
                 return status;
             }
 
-            if (item.ChangeType.HasFlag(ChangeType.Edit) || item.ChangeType.HasFlag(ChangeType.Encoding))
+            if (changesForItem.Any(ch => ch.IsRename))
+            {
+                status = status | VersionStatus.ScheduledAdd;
+                return status;
+            }
+
+            if (changesForItem.Any(ch => ch.IsEdit || ch.IsEncoding))
             {
                 status = status | VersionStatus.Modified;
                 return status;
             }
 
-            if (item.ChangeType.HasFlag(ChangeType.Rename))
-            {
-                status = status | VersionStatus.ScheduledAdd;
-                return status;
-            }
+            
             return status;
         }
 
@@ -171,23 +174,11 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             return new TFSRevision(_repository, item.VersionLatest, item.SourceServerItem);
         }
 
-        private VersionInfo ConvertToInfo(LocalPath path, VersionInfoStatus status)
-        {
-            if (status.IsUnversioned)
-                return VersionInfo.CreateUnversioned(new FilePath(path), path.IsDirectory);
-            else
-            {
-                return new VersionInfo(new FilePath(path), status.RemotePath, path.IsDirectory,
-                        status.LocalStatus, status.LocalRevision,
-                        status.RemoteStatus, status.RemoteRevision);
-            }
-        }
+
 
         #endregion
 
-
-
-        public Dictionary<LocalPath, VersionInfo> GetStatus(IEnumerable<LocalPath> paths, bool recursive)
+        public Dictionary<LocalPath, VersionInfo> GetFileStatus(IEnumerable<LocalPath> paths)
         {
             var result = new Dictionary<LocalPath, VersionInfo>();
             var pathsWhichNeedServerRequest = new List<LocalPath>();
@@ -214,45 +205,102 @@ namespace MonoDevelop.VersionControl.TFS.Infrastructure
             }
             if (pathsWhichNeedServerRequest.Any())
             {
-                var statuses = ProcessUnCachedItems(pathsWhichNeedServerRequest, recursive);
-                foreach (var status in statuses)
-                {
-                    var info = ConvertToInfo(status.Key, status.Value);
-                    result.Add(status.Key, info);
-                    UpdateCache(status.Key, info);
-                }
+                var statuses = ProcessUnCachedItems(pathsWhichNeedServerRequest);
+                result.AddRange(statuses);
             }
             return result;
         }
 
-        private Dictionary<LocalPath, VersionInfoStatus> ProcessUnCachedItems(List<LocalPath> paths, bool recursive)
+
+        public Dictionary<LocalPath, VersionInfo> GetDirectoryStatus(LocalPath localPath)
         {
-            var itemSpecs = from p in paths
-                            where _repository.Workspace.Data.IsLocalPathMapped(p)
-                            let recursion = p.IsDirectory ? (recursive ? RecursionType.Full : RecursionType.OneLevel) : RecursionType.None
-                            let path = p.Exists ? (string)p : (string)_repository.Workspace.Data.GetServerPathForLocalPath(p)
-                            select new ItemSpec(path, recursion);
-            var items = _repository.Workspace.GetExtendedItems(itemSpecs, DeletedState.Any, ItemType.Any);
+            //For folder status we won't use cache.
+            var localItems = localPath.CollectSubPathsAndSelf().ToArray();
+            var itemSpecs = new[] { new ItemSpec(_repository.Workspace.Data.GetServerPathForLocalPath(localPath), RecursionType.Full) };
+            var pendingChanges = _repository.Workspace.GetPendingChanges(itemSpecs);
+            var serverItems = _repository.Workspace.GetExtendedItems(itemSpecs, DeletedState.NonDeleted, ItemType.Any);
 
-            var result = new Dictionary<LocalPath, VersionInfoStatus>();
-            foreach (var localPath in paths)
+            return ExtractVersionInfo(localItems, serverItems, pendingChanges);
+        }
+
+        private Dictionary<LocalPath, VersionInfo> ProcessUnCachedItems(List<LocalPath> paths)
+        {
+            var itemSpecs = (from p in paths
+                             where _repository.Workspace.Data.IsLocalPathMapped(p)
+                             let recursion = p.IsDirectory ? RecursionType.OneLevel : RecursionType.None
+                             let path = p.Exists ? (string)p : (string)_repository.Workspace.Data.GetServerPathForLocalPath(p)
+                             select new ItemSpec(path, recursion)).ToList();
+            var items = _repository.Workspace.GetExtendedItems(itemSpecs, DeletedState.NonDeleted, ItemType.Any);
+            var pendingChanges = _repository.Workspace.GetPendingChanges(itemSpecs);
+
+            return ExtractVersionInfo(paths, items, pendingChanges);
+        }
+
+        private Dictionary<LocalPath, VersionInfo> ExtractVersionInfo(IList<LocalPath> localItems, IList<ExtendedItem> serverItems, IList<PendingChange> pendingChanges)
+        {
+            var result = new Dictionary<LocalPath, VersionInfo>();
+            //Fetch all server Items with changes
+            foreach (var serverItem in serverItems.Where(si => pendingChanges.Any(pc => pc.ServerItem == si.ServerPath)))
             {
-                var serverPath = _repository.Workspace.Data.GetServerPathForLocalPath(localPath);
-                //Compare server paths, When file is deleted and then is added again Local Path will be empty
-                var item = items.SingleOrDefault(i => i.ServerPath == serverPath);
-                var versionInfo = item == null ? VersionInfoStatus.Unversioned : new VersionInfoStatus
+                var info = ConvertToInfo(serverItem.LocalPath, GetVersionInfoStatus(serverItem, pendingChanges));
+                result.Add(serverItem.LocalPath, info);
+                UpdateCache(serverItem.LocalPath, info);
+            }
+            //All Mapped w/o changes
+            foreach (var serverItem in serverItems.Where(si => !si.LocalPath.IsEmpty && pendingChanges.All(pc => pc.ServerItem != si.ServerPath)))
+            {
+                var info = ConvertToInfo(serverItem.LocalPath, VersionInfoStatus.Versioned(serverItem.ServerPath));
+                result.Add(serverItem.LocalPath, info);
+                UpdateCache(serverItem.LocalPath, info);
+            }
+            //For all local files not mapped with no pending changes.
+            foreach (var localItem in localItems.Where(i => serverItems.All(s => s.LocalPath != i) && pendingChanges.All(pc => pc.LocalItem != i)))
+            {
+                //Check if Item exists on server and local but is market as not downloaded.
+                var serverPath = _repository.Workspace.Data.GetServerPathForLocalPath(localItem);
+                var item = serverItems.SingleOrDefault(si => si.ServerPath == serverPath);
+                VersionInfo info;
+                if (item == null)
                 {
-                    RemotePath = item.ServerPath,
-                    LocalStatus = GetLocalVersionStatus(item),
-                    LocalRevision = GetLocalRevision(item),
-                    //Bug in Monodevelop ? When refresh does not update Remote Status on new items.
-                    RemoteStatus = VersionStatus.Versioned, // GetServerVersionStatus(item1),
-                    RemoteRevision = GetServerRevision(item)
-                };
-                result.Add(localPath, versionInfo);
+                    info = ConvertToInfo(localItem, VersionInfoStatus.Unversioned);
+                }
+                else
+                {
+                    var status = VersionInfoStatus.Versioned(serverPath);
+                    info = ConvertToInfo(localItem, status);
+                }
+                result.Add(localItem, info);
+                UpdateCache(localItem, info);
             }
             return result;
         }
 
+
+        private VersionInfoStatus GetVersionInfoStatus(ExtendedItem item, IList<PendingChange> pendingChanges)
+        {
+            if (item == null)
+                return VersionInfoStatus.Unversioned;
+            return new VersionInfoStatus
+            {
+                RemotePath = item.ServerPath,
+                LocalStatus = GetLocalVersionStatus(item, pendingChanges),
+                LocalRevision = GetLocalRevision(item),
+                //Bug in Monodevelop ? When refresh does not update Remote Status on new items.
+                RemoteStatus = VersionStatus.Versioned, // GetServerVersionStatus(item1),
+                RemoteRevision = GetServerRevision(item)
+            };
+        }
+
+        private VersionInfo ConvertToInfo(LocalPath path, VersionInfoStatus status)
+        {
+            if (status.IsUnversioned)
+                return VersionInfo.CreateUnversioned(new FilePath(path), path.IsDirectory);
+            else
+            {
+                return new VersionInfo(new FilePath(path), status.RemotePath, path.IsDirectory,
+                        status.LocalStatus, status.LocalRevision,
+                        status.RemoteStatus, status.RemoteRevision);
+            }
+        }
     }
 }

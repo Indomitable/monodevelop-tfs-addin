@@ -1,22 +1,22 @@
 // TFSRepository.cs
-// 
+//
 // Author:
 //       Ventsislav Mladenov
-// 
+//
 // The MIT License (MIT)
-// 
+//
 // Copyright (c) 2013-2015 Ventsislav Mladenov
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -70,68 +70,40 @@ namespace MonoDevelop.VersionControl.TFS
         public INotificationService NotificationService { get; set; }
 
         private bool IsFileInWorkspace(LocalPath path)
-        {
+        {      
             return workspace.Data.IsLocalPathMapped(path);
-        }
-
-//        private IEnumerable<VersionInfo> GetItemVersionInfo(ExtendedItem item, bool getRemoteStatus)
-//        {
-//            var localStatus = GetLocalVersionStatus(item);
-//            var localRevision = GetLocalRevision(item);
-//            var remoteStatus = getRemoteStatus ? GetServerVersionStatus(item) : VersionStatus.Versioned;
-//            var remoteRevision = getRemoteStatus ? GetServerRevision(item) : (TFSRevision)null;
-//            var path = item.LocalPath;
-//            if (string.IsNullOrEmpty(path) && item.ChangeType.HasFlag(ChangeType.Delete)) //Pending for delete.
-//            {
-//                path = workspace.Data.GetLocalPathForServerPath(item.ServerPath);
-//            }
-//            yield return new VersionInfo(new FilePath(path), item.ServerPath, item.ItemType == ItemType.Folder, 
-//                localStatus, localRevision, remoteStatus, remoteRevision);
-//        }
-
-        private VersionInfo[] GetItemsVersionInfo(IEnumerable<LocalPath> paths, bool recursive = false)
-        {
-            return _versionInfoResolver.GetStatus(paths, recursive).Values.ToArray();
-
-
-//            List<VersionInfo> infos = new List<VersionInfo>();
-//            var extendedItems = cache.GetItems(paths, recursive);
-//            foreach (var item in extendedItems.Where(i => i.IsInWorkspace || (!i.IsInWorkspace && i.ChangeType.HasFlag(ChangeType.Delete))).Distinct())
-//            {
-//                infos.AddRange(GetItemVersionInfo(item, getRemoteStatus));
-//            }
-//            foreach (var path in paths)
-//            {
-//                var path1 = path;
-//                if (infos.All(i => path1 != i.LocalPath))
-//                {
-//                    infos.Add(VersionInfo.CreateUnversioned(new FilePath(path1), FileHelper.HasFolder(path1)));
-//                }
-//            }
-//            return infos.ToArray();
         }
 
         #region implemented members of Repository
 
-        public override string GetBaseText(FilePath localFile)
+        #region Not Implemented
+
+        protected override Repository OnPublish(string serverPath, FilePath localPath, FilePath[] files, string message, IProgressMonitor monitor)
         {
-            return GetBaseText(new LocalPath(localFile));
+            throw new NotSupportedException("Publish is not supported");
         }
 
-        private string GetBaseText(LocalPath localFile)
+        protected override void OnCheckout(FilePath targetLocalPath, Revision rev, bool recurse, IProgressMonitor monitor)
         {
-            var item = workspace.GetItem(ItemSpec.FromLocalPath(localFile), ItemType.File, true);
+            throw new NotSupportedException("CheckOut is not supported");
+        }
+
+        protected override void OnRevertRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
+        {
+            throw new NotImplementedException();
+        }
+
+        #endregion
+
+        public override string GetBaseText(FilePath localFile)
+        {
+            var item = workspace.GetItem(ItemSpec.FromLocalPath(new LocalPath(localFile)), ItemType.File, true);
             return workspace.GetItemContent(item);
         }
 
         protected override Revision[] OnGetHistory(FilePath localFile, Revision since)
         {
-            return OnGetHistory(new LocalPath(localFile), since);
-        }
-
-        private Revision[] OnGetHistory(LocalPath localFile, Revision since)
-        {
-            var serverPath = workspace.Data.GetServerPathForLocalPath(localFile);
+            var serverPath = workspace.Data.GetServerPathForLocalPath(new LocalPath(localFile));
             ItemSpec spec = new ItemSpec(serverPath, RecursionType.None);
             ChangesetVersionSpec versionFrom = null;
             if (since != null)
@@ -141,25 +113,21 @@ namespace MonoDevelop.VersionControl.TFS
 
         protected override IEnumerable<VersionInfo> OnGetVersionInfo(IEnumerable<FilePath> paths, bool getRemoteStatus)
         {
-            return GetItemsVersionInfo(paths.Select(p => new LocalPath(p)));
+            var localPaths = paths.Select(p => new LocalPath(p));
+            return _versionInfoResolver.GetFileStatus(localPaths).Values.ToArray();
         }
 
         protected override VersionInfo[] OnGetDirectoryVersionInfo(FilePath localDirectory, bool getRemoteStatus, bool recursive)
         {
             //Get only files in current solution.
-            var solutions = IdeApp.Workspace.GetAllSolutions().Where(s => s.BaseDirectory.IsChildPathOf(localDirectory) || s.BaseDirectory == localDirectory);
-            var paths = new List<LocalPath> { new LocalPath(localDirectory) };
-            foreach (var solution in solutions)
-            {
-                var sfiles = solution.GetItemFiles(true);
-                paths.AddRange(sfiles.Where(f => f != localDirectory).Select(f => new LocalPath(f)));
-            }
-            return GetItemsVersionInfo(paths, recursive);
-        }
-
-        protected override Repository OnPublish(string serverPath, FilePath localPath, FilePath[] files, string message, IProgressMonitor monitor)
-        {
-            throw new NotImplementedException();
+//            var solutions = IdeApp.Workspace.GetAllSolutions().Where(s => s.BaseDirectory.IsChildPathOf(localDirectory) || s.BaseDirectory == localDirectory);
+//            var paths = new List<LocalPath> { new LocalPath(localDirectory) };
+//            foreach (var solution in solutions)
+//            {
+//                var sfiles = solution.GetItemFiles(true);
+//                paths.AddRange(sfiles.Where(f => f != localDirectory).Select(f => new LocalPath(f)));
+//            }
+            return _versionInfoResolver.GetDirectoryStatus(new LocalPath(localDirectory)).Values.ToArray();
         }
 
         protected override void OnUpdate(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
@@ -204,11 +172,6 @@ namespace MonoDevelop.VersionControl.TFS
             _versionInfoResolver.InvalidateCache(commitItems.Select(i => i.LocalPath));
         }
 
-        protected override void OnCheckout(FilePath targetLocalPath, Revision rev, bool recurse, IProgressMonitor monitor)
-        {
-            throw new NotSupportedException("CheckOut is not supported");
-        }
-
         protected override void OnRevert(FilePath[] localPaths, bool recurse, IProgressMonitor monitor)
         {
             var specs = localPaths.Select(x => new ItemSpec(x, recurse ? RecursionType.Full : RecursionType.None));
@@ -217,11 +180,6 @@ namespace MonoDevelop.VersionControl.TFS
 
             NotificationService.NotifyFilesChanged(operations);
             NotificationService.NotifyFilesRemoved(localPaths.Select(p => new LocalPath(p)).Where(p => !p.Exists));
-        }
-
-        protected override void OnRevertRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
-        {
-            throw new NotImplementedException();
         }
 
         protected override void OnRevertToRevision(FilePath localPath, Revision revision, IProgressMonitor monitor)
@@ -262,7 +220,7 @@ namespace MonoDevelop.VersionControl.TFS
             {
                 if (keepLocal) keeper.Save(localPaths, recursive);
 
-                var statuses = _versionInfoResolver.GetStatus(localPaths, recursive);
+                var statuses = _versionInfoResolver.GetFileStatus(localPaths);
                 //Remove files which are versioned and not added.
                 var forRemove = statuses.Where(s => s.Value.IsVersioned &&
                                                     !s.Value.HasLocalChange(VersionStatus.ScheduledAdd)).Select(s => s.Key);
@@ -285,8 +243,6 @@ namespace MonoDevelop.VersionControl.TFS
                 NotificationService.NotifyFilesRemoved(localPaths);
             }
         }
-
-
 
         protected override string OnGetTextAtRevision(FilePath repositoryPath, Revision revision)
         {
@@ -347,7 +303,7 @@ namespace MonoDevelop.VersionControl.TFS
 
         public override DiffInfo GenerateDiff(FilePath baseLocalPath, VersionInfo versionInfo)
         {
-            if (Directory.Exists(versionInfo.LocalPath))
+            if (versionInfo.LocalPath.IsDirectory)
                 return null;
             string text;
             if (versionInfo.Status.HasFlag(VersionStatus.ScheduledAdd) || versionInfo.Status.HasFlag(VersionStatus.ScheduledDelete))
@@ -403,6 +359,30 @@ namespace MonoDevelop.VersionControl.TFS
             NotificationService.NotifyFileChanged(to);
         }
 
+        protected override void OnLock(IProgressMonitor monitor, params FilePath[] localPaths)
+        {
+            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
+            LockItems(paths, LockLevel.CheckOut);
+        }
+
+        protected override void OnUnlock(IProgressMonitor monitor, params FilePath[] localPaths)
+        {
+            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
+            LockItems(paths, LockLevel.None);
+        }
+
+        public override Annotation[] GetAnnotations(FilePath repositoryPath)
+        {
+            return new Annotation[0];
+        }
+
+        private void LockItems(LocalPath[] localPaths, LockLevel lockLevel)
+        {
+            workspace.LockItems(localPaths, lockLevel);
+            _versionInfoResolver.InvalidateCache(localPaths);
+            NotificationService.NotifyFilesChanged(localPaths);
+        }
+
         protected override VersionControlOperation GetSupportedOperations(VersionInfo vinfo)
         {
             if (!this.IsFileInWorkspace(new LocalPath(vinfo.LocalPath)))
@@ -446,7 +426,7 @@ namespace MonoDevelop.VersionControl.TFS
                         }
                         else
                         {
-                            _versionInfoResolver.InvalidateCache(path);                            
+                            _versionInfoResolver.InvalidateCache(path);
                             NotificationService.NotifyFileChanged(path);
                             progress.ReportSuccess("Finish editing item.");
                         }
@@ -461,41 +441,12 @@ namespace MonoDevelop.VersionControl.TFS
             return true;
         }
 
-        public override bool AllowLocking
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool AllowLocking { get { return true; } }
 
-        public override bool AllowModifyUnlockedFiles
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public override bool AllowModifyUnlockedFiles { get { return true; } }
 
-        protected override void OnLock(IProgressMonitor monitor, params FilePath[] localPaths)
-        {
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            LockItems(paths, LockLevel.CheckOut);
-        }
+        public override bool SupportsRemoteStatus { get { return false; } }
 
-        protected override void OnUnlock(IProgressMonitor monitor, params FilePath[] localPaths)
-        {
-            var paths = localPaths.Select(x => new LocalPath(x)).ToArray();
-            LockItems(paths, LockLevel.None);
-        }
-
-        private void LockItems(LocalPath[] localPaths, LockLevel lockLevel)
-        {
-            workspace.LockItems(localPaths, lockLevel);
-            _versionInfoResolver.InvalidateCache(localPaths);
-            NotificationService.NotifyFilesChanged(localPaths);
-        }
-        
         #endregion
 
         internal void CheckoutFile(LocalPath path)
@@ -520,4 +471,3 @@ namespace MonoDevelop.VersionControl.TFS
         internal IWorkspace Workspace { get { return workspace; }}
     }
 }
-
