@@ -1,0 +1,73 @@
+﻿<#@ template debug="false" hostspecific="true" language="C#" #>
+<#@ assembly name="System" #>
+<#@ assembly name="System.Core" #>
+<#@ assembly name="$(TargetPath)" #>
+<#@ import namespace="System.IO" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ import namespace="System.Reflection" #>
+<#@ output extension=".cs" #>
+// AddinInfo.cs
+// 
+// Author:
+//       Ventsislav Mladenov
+// 
+// The MIT License (MIT)
+// 
+// Copyright (c) 2013-2015 Ventsislav Mladenov
+// 
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+// 
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+// 
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+<#
+    var assemblyPath = Path.GetFullPath(Path.Combine(Host.ResolvePath(".."), "..", "Output", "MonoDevelop.VersionControl.TFS.dll"));    
+    AppDomain domain = AppDomain.CreateDomain("template");
+    string addinVersion = string.Empty;
+    string monoDevelopVersion = string.Empty;
+    try
+    {
+        AssemblyName assemblyName = new AssemblyName();
+        assemblyName.CodeBase = assemblyPath;
+        Assembly assembly = domain.Load(assemblyName);
+        var version = assembly.GetName().Version;
+        addinVersion = version.Major + "." + version.Minor;
+        var MDVersion = assembly.GetCustomAttribute<MonoDevelop.VersionControl.TFS.MonoDevelopWrappers.MonoDevelopVersionAttribute>().Version;
+        monoDevelopVersion = MDVersion.Major + "." + MDVersion.Minor;
+    }
+    finally
+    {
+        AppDomain.Unload(domain);
+    }
+    
+ #>
+
+using Mono.Addins;
+
+[assembly:Addin(
+    "VersionControl.TFS", Namespace = "MonoDevelop", 
+    Version = "<#= addinVersion #>", Category = "Version Control")]
+
+[assembly:AddinName("TFS support")]
+[assembly:AddinDescription("TFS support for the Version Control Add-in")]
+[assembly:AddinUrl("http://indomitable.github.io/monodevelop-tfs-addin")]
+[assembly:AddinAuthor("Ventsislav Mladenov <ventsislav.mladenov@gmail.com>")]
+
+[assembly:AddinDependency("Core", "<#= monoDevelopVersion #>")]
+[assembly:AddinDependency("Ide", "<#= monoDevelopVersion #>")]
+[assembly:AddinDependency("VersionControl", "<#= monoDevelopVersion #>")]
+
