@@ -39,3 +39,4 @@ using Mono.Addins;
 [assembly:AddinDependency("Core", "5.8")]
 [assembly:AddinDependency("Ide", "5.8")]
 [assembly:AddinDependency("VersionControl", "5.8")]
+

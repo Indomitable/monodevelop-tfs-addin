@@ -10,7 +10,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7AF28D7C-0F39-4FD0-BD04-E779A87B19D8}"
 	ProjectSection(SolutionItems) = preProject
 		addin-project.xml = addin-project.xml
-		Output\addin.info = Output\addin.info
 		CHANGELOG.md = CHANGELOG.md
 		LICENSE = LICENSE
 		README.md = README.md

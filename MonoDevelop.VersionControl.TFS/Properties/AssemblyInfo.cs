@@ -30,6 +30,7 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using MonoDevelop.VersionControl.TFS.MonoDevelopWrappers;
 
 [assembly: AssemblyVersion("2.0.0.0")]
 [assembly: AssemblyTitle("MonoDevelop.VersionControl.TFS.dll")]
@@ -40,3 +41,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDefaultAlias("MonoDevelop.VersionControl.TFS.dll")]
 [assembly: NeutralResourcesLanguage("en-US")]
 [assembly: InternalsVisibleTo("MonoDevelop.VersionControl.TFS.Tests")]
+[assembly: MonoDevelopVersion("5.8")]
