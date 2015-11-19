@@ -1,5 +1,8 @@
 Monodevelop TFS Addin
 =====================
+# This project is discontinued. 
+I switched from TFS to GIT and I don't have anytime to support this project. If somebody wants to continue working on it, he can fork it. I suggest to start from tfs-addin-2.0 branch It is completely refactored. 
+
 
 MonoDevelop Team Foundation Version Control Addin.
 
